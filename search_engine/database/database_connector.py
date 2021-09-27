@@ -1,4 +1,3 @@
-import abc
 import psycopg2
 from sqlalchemy.orm import scoped_session, sessionmaker
 from psycopg2.extras import DictCursor, RealDictCursor, RealDictConnection, DictCursor,DictCursorBase
@@ -8,8 +7,6 @@ from sqlalchemy import create_engine, func, select, exists, text as sqlformat
 
 
 class DatabaseConnector(object):
-    __metaclass__ = abc.ABCMeta
-
     '''
     An abstract base class which is inhearted to provide diffrent database operations, 
     child classes need to implement all its methods:

@@ -3,7 +3,7 @@ import os
 import logging
 from celery import Celery
 from celery.schedules import crontab
-from search_engine.database.omero_database_connector import OmeroDatabaseConnector
+from search_engine.database.database_connector import DatabaseConnector
 from configurations.configuration import configLooader,load_configuration_variables_from_file,set_database_connection_variables
 from logging.handlers import RotatingFileHandler
 
@@ -43,7 +43,7 @@ def create_app(config_name="development"):
     app_config=configLooader.get(config_name)
     load_configuration_variables_from_file(app_config)
     set_database_connection_variables(app_config)
-    database_connector = OmeroDatabaseConnector(app_config.DATABAS_NAME, app_config.DATABASE_URI)
+    database_connector = DatabaseConnector(app_config.DATABAS_NAME, app_config.DATABASE_URI)
     #print (app_config.DATABAS_NAME, app_config.DATABASE_URI)
     search_omero_app.config.from_object(app_config)
     search_omero_app.app_context()
