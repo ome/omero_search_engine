@@ -21,9 +21,13 @@ Omero Search Engine
 ::
 
 import sys
+
 import requests
+
 import json
+
 import time
+
 base_url="http://127.0.0.1:5556/api/v1/"
 image_ext="/resources/image/searchannotation/"
 query_details={"and_filters": [{"Cell Line": "HeLa"},{"Gene Symbol" : "NCAPD2"},{ "Cell Cycle Phase": "anaphase"}], "not_filters": [], "or_filters": []}
@@ -58,4 +62,3 @@ while status!="SUCCESS":
 
 print ("Results: ",results.get('Results').get('results'))
 ::
-'
