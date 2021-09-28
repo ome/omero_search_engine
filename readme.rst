@@ -19,25 +19,17 @@ Omero Search Engine
     * There is a sample script to submit the query and get the results:
 
 ::
+
 import sys
-
 import requests
-
 import json
-
 import time
-
 base_url="http://127.0.0.1:5556/api/v1/"
-
 image_ext="/resources/image/searchannotation/"
-
 query_details={"and_filters": [{"Cell Line": "HeLa"},{"Gene Symbol" : "NCAPD2"},{ "Cell Cycle Phase": "anaphase"}], "not_filters": [], "or_filters": []}
-
 q_data = {"query": {'query_details': query_details}}
 
-aa = json.dumps(q_data)
-
-resp = requests.get(url=base_url + image_ext, data=aa)
+resp = requests.get(url=base_url + image_ext, data=json.dumps(q_data))
 res = resp.text
 ress = json.loads(res)
 task_id = ress.get('task_id')
@@ -65,5 +57,5 @@ while status!="SUCCESS":
         time.sleep(2)
 
 print ("Results: ",results.get('Results').get('results'))
-
-'''
+::
+'
