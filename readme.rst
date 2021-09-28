@@ -4,7 +4,7 @@ Omero Search Engine
 * The app supports asynchronous searching
     * It will not block the server in case of a long query.
     * The user can submit their search and either wait or return later to retrieve the search results
-* I have cached names and values from the database (key-value pairs) in hd5f files.
+* I have cached names and values from the database (key-value pairs) in hdf5 files.
     * It detects the "no existence attributes" before attempting to query the database.
 * Also, the app caches the queries which leads to reduced query time by re-using the cached values
 * When a query is submitted:
