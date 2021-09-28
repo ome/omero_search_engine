@@ -18,47 +18,41 @@ Omero Search Engine
 * The query can be submitted using a script
     * There is a sample script to submit the query and get the results:
 
-::
+.. code-block:: python
 
-import sys
+         import sys
+         import requests
+         import json
+         import time
 
-import requests
+         base_url="http://127.0.0.1:5556/api/v1/"
+         image_ext="/resources/image/searchannotation/"
+         query_details={"and_filters": [{"Cell Line": "HeLa"},{"Gene Symbol" : "NCAPD2"},{ "Cell Cycle Phase": "anaphase"}], "not_filters": [], "or_filters": []}
+         q_data = {"query": {'query_details': query_details}}
 
-import json
+         resp = requests.get(url=base_url + image_ext, data=json.dumps(q_data))
+         res = resp.text
+         ress = json.loads(res)
+         task_id = ress.get('task_id')
 
-import time
+         status="PENDING"
+         url_="http://127.0.0.1:5556/searchresults/?task_id={task_id}".format(task_id=task_id)
 
-base_url="http://127.0.0.1:5556/api/v1/"
-image_ext="/resources/image/searchannotation/"
-query_details={"and_filters": [{"Cell Line": "HeLa"},{"Gene Symbol" : "NCAPD2"},{ "Cell Cycle Phase": "anaphase"}], "not_filters": [], "or_filters": []}
-q_data = {"query": {'query_details': query_details}}
+         while status!="SUCCESS":
+             try:
+                 resp = requests.get(url_)
+                 res=resp.text
+                 results=json.loads(res)
+                 status=results.get("Status")
+                 print ("Ststus: ", status)
+                 print (results.keys())
+                 if status!="SUCCESS":
+                     time.sleep(2)
+                 elif status=="FAILURE":
+                     print ("Failed, reason: {reason}".format(reason=results.get("Results")))
+             except Exception as ex:
+                 print ("Error: {error}".format(error=str(ex)))
+                 time.sleep(2)
 
-resp = requests.get(url=base_url + image_ext, data=json.dumps(q_data))
-res = resp.text
-ress = json.loads(res)
-task_id = ress.get('task_id')
+         print ("Results: ",results.get('Results').get('results'))
 
-status="PENDING"
-url_="http://127.0.0.1:5556/searchresults/?task_id={task_id}".format(task_id=task_id)
-
-while status!="SUCCESS":
-    try:
-        resp = requests.get(url_)
-        res=resp.text
-        results=json.loads(res)
-        status=results.get("Status")
-        print ("Ststus: ", status)
-        print (results.keys())
-        if status!="SUCCESS":
-
-            time.sleep(2)
-
-        elif status=='FAILURE':
-
-            print ("Failed, reason: {reason}".format(reason=results.get("Results")))
-    except Exception as ex:
-        print ("Error: {error}".format(error=str(ex)))
-        time.sleep(2)
-
-print ("Results: ",results.get('Results').get('results'))
-::
