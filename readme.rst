@@ -38,7 +38,7 @@ Omero Search Engine
          status="PENDING"
          url_="http://127.0.0.1:5556/searchresults/?task_id={task_id}".format(task_id=task_id)
 
-         while status!="SUCCESS":
+         while status=="PENDING":
              try:
                  resp = requests.get(url_)
                  res=resp.text
