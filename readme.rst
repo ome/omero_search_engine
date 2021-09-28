@@ -46,7 +46,7 @@ Omero Search Engine
                  status=results.get("Status")
                  print ("Ststus: ", status)
                  print (results.keys())
-                 if status!="SUCCESS":
+                 if status=="PENDING":
                      time.sleep(2)
                  elif status=="FAILURE":
                      print ("Failed, reason: {reason}".format(reason=results.get("Results")))
