@@ -37,7 +37,7 @@ class app_config (object):
     INSTANCE_CONFIG = os.path.join(home_folder, '.app_config.yml')
     if not os.path.isfile(INSTANCE_CONFIG):
         LOCAL_CONFIG_FILE = os.path.join(os.path.abspath(os.path.dirname(__file__)),
-                                         '.app_config.yml')
+                                         'app_config.yml')
         copyfile(LOCAL_CONFIG_FILE, INSTANCE_CONFIG)
         print (LOCAL_CONFIG_FILE, INSTANCE_CONFIG)
 
