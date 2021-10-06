@@ -12,7 +12,7 @@ Omero Search Engine
         * If all or part of the query are cached, then it will use the cached value(s)
         * Otherwise it will query the database and save (cache) the results so that it can be used if it is needed again
 
-* There is a simple GUI (link to the project) which is used to build the query and send it to the search engine
+* There is a simple GUI (https://github.com/ome/omero_search_engine_client) which is used to build the query and send it to the search engine
     * It is used to build the query
     * It will display the results when they are ready
 * The query can be submitted using a script
@@ -30,7 +30,8 @@ Omero Search Engine
          query_details={"and_filters": [{"Cell Line": "HeLa"},{"Gene Symbol" : "NCAPD2"},{ "Cell Cycle Phase": "anaphase"}], "not_filters": [], "or_filters": []}
          q_data = {"query": {'query_details': query_details}}
 
-         resp = requests.get(url=base_url + image_ext, data=json.dumps(q_data))
+         resp = requests.get(url="{base_url}{image_ext}".format(base_url=base_url,image_ext=image_ext), data=json.dumps(q_data))
+
          res = resp.text
          ress = json.loads(res)
          task_id = ress.get('task_id')
@@ -55,4 +56,14 @@ Omero Search Engine
                  time.sleep(2)
 
          print ("Results: ",results.get('Results').get('results'))
-
+Please note that: 
+   * The app requires a direct connection to the PostgreSQL database server.
+   * The app configuration is read from a yml file (".app_config.yml") which is saved in the user's home folder. 
+      * The user should write the yml file to configure the database server and redis server connections.
+* The app needs 
+Known issues
+============
+* Although the search engine will work, in some cases the search takes a long time to complete (Asynchronous search). It is important to improve the user experience and reduce the search time as much as possible.
+* Sometimes the search engine fails to complete a user request when the number of parallel jobs is high and the search contains terms which have a large number of records (e.g. “Home Species” contains more than 12 million records). We may need to customise the queuing system, scale the worker (celery workers), improve the search mechanism, and manage the memory more efficiently.
+* When the data is changed inside the database, this will invalidate the cached data and it will need to be cached again. We need to have a mechanism to update the cached data rather than recreate them.
+* The search engine lacks a user access permission system; this is fine when working with the IDR but if we need to deploy it on an Omero server, the access permission is required.
