@@ -16,8 +16,6 @@ def get_file_name(table,name, operator=None):
         file_name = "{table}_{name}_{operator}.h5".format(table=table, name=name, operator=operator)
     return file_name
 
-
-
 def read_cash_for_table (res_table):
     cash_folder = search_omero_app.config["CASH_FOLDER"]
     metadata=None
@@ -25,7 +23,6 @@ def read_cash_for_table (res_table):
         cash_file_name = os.path.join(cash_folder, "annotation_names.h5")
         if not os.path.exists(cash_file_name):
             return metadata
-
         f= h5py.File(cash_file_name, "r")
         try:
             metadata = json.loads(
@@ -120,8 +117,7 @@ def cash_values():
     cash the tables (e.g. image, project, ..) names and its related values to hd5 file
     '''
     for resource_table, linkedtable in annotation_resource_link.items():
-        if resource_table!='image':
-            continue
+
         search_omero_app.logger.info ("check table: %s ......."%resource_table)
         resource_keys =get_keys(resource_table)
         table_node=DataFrame()
@@ -135,7 +131,7 @@ def cash_values():
 
             co += 1
             search_omero_app.logger.info("Check values for key %s" % key)
-            search_omero_app.logger.info(co, "//", str(len(table_node['key'])))
+            search_omero_app.logger.info(str(co)+ "//"+ str(len(table_node['key'])))
             if "'" in key:
                 key=key.replace("'","''")
 

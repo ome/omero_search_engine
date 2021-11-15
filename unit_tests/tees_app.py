@@ -17,8 +17,8 @@ class BasicTestCase(unittest.TestCase):
     def test_api_v1(self):
         '''test home page'''
         tester = search_omero_app.test_client(self)
-        response = tester.get('/api/v1/resources/images?filters=""', content_type='html/text')
-        self.assertEqual(response.status_code, 308)
+        response = tester.get('/api/v1/resources/image/getannotationvalueskey/?key=Organism', content_type='html/text')
+        self.assertEqual(response.status_code, 200)
 
     def test_not_found(self):
         '''

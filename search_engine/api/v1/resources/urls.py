@@ -2,12 +2,12 @@ from . import resources
 from flask import request, jsonify
 import json
 from search_engine.api.v1.resources.utils import search_resource_annotation, get_annotation_keys, get_resource_annotation_table
-from search_engine.cache_functions.cache_funs import read_name_values_from_hdf5
+from search_engine.cache_functions.hdf_cache_funs import read_name_values_from_hdf5
 
 
 @resources.route('/',methods=['GET'])
 def index():
-    return "Omero search engine '\'"
+    return "Omero search engine (API V1)'\'"
 
 
 @resources.route('/<resource_table>/searchannotation/',methods=['GET'])

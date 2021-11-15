@@ -9,7 +9,7 @@ sys.path.append(mm)
 
 from search_engine import search_omero_app, make_celery
 from app_data.data_attrs import annotation_resource_link
-from search_engine.cache_functions.cache_funs import read_cash_for_table, cashe_query_results, check_cashed_query,read_name_values_from_hdf5
+from search_engine.cache_functions.hdf_cache_funs import read_cash_for_table, cashe_query_results, check_cashed_query,read_name_values_from_hdf5
 annotation_mapvalue="annotation_mapvalue"
 
 celery = make_celery(search_omero_app)
@@ -186,7 +186,7 @@ def search_resource_annotation(table_, query, get_addition_results=False):
     so it will be available in case if it is included in other query
     if the item is
 
-    @tabke_: the resource table, e.g. image. project, etc.
+    @table_: the resource table, e.g. image. project, etc.
     @query: the a dict contains the three filters (or, and and  not) items
     '''
     start_time=time.time()

@@ -2,6 +2,8 @@ from flask import Flask
 import os
 import logging
 from celery import Celery
+from elasticsearch import Elasticsearch
+
 from celery.schedules import crontab
 from search_engine.database.database_connector import DatabaseConnector
 from configurations.configuration import configLooader,load_configuration_variables_from_file,set_database_connection_variables
@@ -52,9 +54,12 @@ def create_app(config_name="development"):
     #celery.conf.update(search_omero_app.config)
     search_omero_app.app_context()
     search_omero_app.app_context().push()
+    es_connector = Elasticsearch(app_config.ELASTICSEARCH__URL,
+                                 timeout=70, max_retries=10, retry_on_timeout=True)
+
     search_omero_app.config["database_connector"]=database_connector
+    search_omero_app.config["es_connector"] = es_connector
     log_folder = os.path.join(os.path.expanduser('~'), 'logs')
-    print ("=====>>>>>>>>>>>>>>",log_folder)
     if not os.path.exists(log_folder):
         os.mkdir(log_folder)
     file_handler = RotatingFileHandler(os.path.join(log_folder, 'omero_search_engine.log'), maxBytes=100240,
@@ -70,8 +75,12 @@ def create_app(config_name="development"):
     return search_omero_app
 
 create_app()
-from search_engine.api.v1.resources import resources as resources_routers_blueprint
-search_omero_app.register_blueprint(resources_routers_blueprint, url_prefix='/api/v1/resources')
+
+from search_engine.api.v1.resources import resources as resources_routers_blueprint_v1
+search_omero_app.register_blueprint(resources_routers_blueprint_v1, url_prefix='/api/v1/resources')
+
+from search_engine.api.v2.resources import resources as resources_routers_blueprint_v2
+search_omero_app.register_blueprint(resources_routers_blueprint_v2, url_prefix='/api/v2/resources')
 
 from search_engine.searchresults import searchresults as search_results_routers_blueprint
 search_omero_app.register_blueprint(search_results_routers_blueprint, url_prefix='/searchresults')

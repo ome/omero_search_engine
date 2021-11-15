@@ -1,13 +1,13 @@
 import os
 import json
-from search_engine import search_omero_app, create_app
+from search_engine import search_omero_app
 from flask_script import Manager
-from flask import jsonify
+
 manager = Manager(search_omero_app)
 #create_app()
 
-from search_engine.cache_functions.cache_funs import update_cash, cash_values,  delete_cashed_key, check_cashed_query
-
+from search_engine.cache_functions.hdf_cache_funs import update_cash, cash_values,  delete_cashed_key, check_cashed_query
+from search_engine.cache_functions.elasticsearch.sql_to_csv import create_csv_for_images, create_csv_for_non_images
 @manager.command
 def update_annotation_namevalue():
     cash_values()
@@ -55,9 +55,9 @@ def update_annotation_namevalue():
 
 
 @manager.command
-def set_cash_pandas_hdf5():
+def set_resource_cash_name_value():
     ''''
-    cahnames and values for each resource (e.ge image, project, ..
+    cah names and values for each resource (e.g image, project)
     '''
     cash_values()
 
@@ -77,7 +77,6 @@ def delete_cashed_key_value():
     value=None#"Normal tissue, NOS"#"KIF11"
 
     delete_cashed_key(resource_table, key, value)
-
 
 @manager.command
 def read_cashed_value():
@@ -102,6 +101,49 @@ def read_cashed_value():
     else:
         print ("No cached results")
 
+@manager.command
+def show_saved_index():
+    from search_engine.cache_functions.elasticsearch.transform_data import  get_all_indexes
+    all_indexes=get_all_indexes()
+    for index in all_indexes:
+        print ("Index: ==>>>",index)
+    return (all_indexes)
+
+
+@manager.command
+def delete_es_index():
+    from search_engine.cache_functions.elasticsearch.transform_data import  delete_index
+    delete_index("image_keyvalue_pair_metadata_new")
+
+@manager.command
+@manager.option('-r', '--resourse_index', help='resourse_index')
+@manager.option('-f', '--data_folder', help='Folder contains the data files')
+def add_resourse_data_to_es_index(resourse_index=None, data_folder=None):
+    '''
+     Insert data inside elastic search index by getting the data from csv files
+    '''
+    from search_engine.cache_functions.elasticsearch.transform_data import insert_resourse_data
+    insert_resourse_data(data_folder, resourse_index)
+
+@manager.command
+def create_index():
+    '''
+    Create Elasticsearch index for each resource
+    '''
+    from search_engine.cache_functions.elasticsearch.transform_data import create_omero_indexes
+    create_omero_indexes()
+
+@manager.command
+@manager.option('-f', '--data_folder', help='Folder is the local folder where the data files are saved')
+def create_csv_for_images_now(folder=None):
+    create_csv_for_images(folder)
+
+
+@manager.command
+@manager.option('-r', '--csv_data_file', help='csv file whihc contains the data')
+@manager.option('-f', '--resource', help='table, e.g project, screen')
+def create_csv_for_non_images_now(resource="screen",csv_data_file=None):
+    create_csv_for_non_images(resource, csv_data_file)
 
 if __name__ == '__main__':
     manager.run()
