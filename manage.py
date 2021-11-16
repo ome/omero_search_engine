@@ -7,51 +7,6 @@ manager = Manager(search_omero_app)
 #create_app()
 
 from search_engine.cache_functions.hdf_cache_funs import update_cash, cash_values,  delete_cashed_key, check_cashed_query
-from search_engine.cache_functions.elasticsearch.sql_to_csv import create_csv_for_images, create_csv_for_non_images
-@manager.command
-def update_annotation_namevalue():
-    cash_values()
-    already_updated = []
-    file_name = 'updated.csv'
-    if os.path.exists(file_name):
-        outfile = open(file_name, 'r')
-        ss = outfile.read()
-        outfile.close()
-        already_updated=ss.split("\n")
-    sql="select id from annotation where discriminator='/map/'"
-    ids=search_omero_app.config["database_connector"].execute_query(sql)
-    print (len(ids), type(ids[0]),ids[0].get('id'))
-    count=0
-    for id_ in ids:
-        id=id_.get('id')
-        print ("Processing  {id},  {count}/ {l}".format(id=id,count=count, l=len(ids)))
-        count+=1
-        if str(id) in already_updated:
-            print ("It is found and processed")
-            continue
-        #print ("Processing  {id},  {count}/ {l}".format(id=id,count=count, l=len(ids)))
-        sql_1="select name, value from annotation_mapvalue where annotation_id ={id}  ".format(id=id)
-        print (sql_1)
-        results=search_omero_app.config["database_connector"].execute_query(sql_1)
-        print ("Results obtained")
-        if len(results)==0:
-            continue
-        jsonb=[]
-        for result in results:
-            print (result)
-            temp_dict={}
-            temp_dict['name']=result.get('name')
-            temp_dict['value']=result.get('value')
-            jsonb.append(temp_dict)
-
-        sql_2="update annotation set namevalue= '{jsonb}' where id = {id}".format(id=id,jsonb=json.dumps(jsonb) )
-        search_omero_app.config["database_connector"].execute_query(sql_2, return_results=False)
-        outfile = open(file_name, 'a')
-        outfile.newlines
-        outfile.write(str(id)+"\n")
-        print ("File is updated ")
-        outfile.close()
-        print ("File is closaeds")
 
 
 @manager.command
@@ -78,28 +33,6 @@ def delete_cashed_key_value():
 
     delete_cashed_key(resource_table, key, value)
 
-@manager.command
-def read_cashed_value():
-    table="image"
-    name="Cell Line"
-    value="HeLa"
-
-    name="Gene Symbol"
-    value="NCAPD2"
-    name="Cell Cycle Phase"
-    value="anaphase"
-    name="Antibody Identifier"
-    value="CAB034889"
-
-    name="Organism Part Identifier"
-    value="T-77100	"
-    name = "Organism"
-    vale = "Part Prostate"
-    val = check_cashed_query(table, name, value)
-    if val:
-        print (len(val))
-    else:
-        print ("No cached results")
 
 @manager.command
 def show_saved_index():
@@ -133,17 +66,7 @@ def create_index():
     from search_engine.cache_functions.elasticsearch.transform_data import create_omero_indexes
     create_omero_indexes()
 
-@manager.command
-@manager.option('-f', '--data_folder', help='Folder is the local folder where the data files are saved')
-def create_csv_for_images_now(folder=None):
-    create_csv_for_images(folder)
 
-
-@manager.command
-@manager.option('-r', '--csv_data_file', help='csv file whihc contains the data')
-@manager.option('-f', '--resource', help='table, e.g project, screen')
-def create_csv_for_non_images_now(resource="screen",csv_data_file=None):
-    create_csv_for_non_images(resource, csv_data_file)
 
 if __name__ == '__main__':
     manager.run()

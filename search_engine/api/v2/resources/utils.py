@@ -13,12 +13,6 @@ sys.path.append(mm)
 from search_engine import search_omero_app
 from search_engine.cache_functions.hdf_cache_funs import read_cash_for_table, read_name_values_from_hdf5
 
-'''
-Elastic search query templates
-Must ==> AND
-must_not ==>  NOT
-should ==>OR
-'''
 
 resource_elasticsearchindex={"project":"project_keyvalue_pair_metadata",
                              "screen":"screen_keyvalue_pair_metadata",
@@ -27,11 +21,11 @@ resource_elasticsearchindex={"project":"project_keyvalue_pair_metadata",
                              "image":"image_keyvalue_pair_metadata_new"
                              }
 
-must_name_condition='''{"match": {"key_values.name.keyword":"%s"}}'''
-must_value_condition='''{"match": {"key_values.value.keyvalue":"%s"}}'''
-wildcard_value_condition='''{"wildcard": {"key_values.value.keyvalue":"%s"}}'''
-must_value_condition_contains='''{"match": {"key_values.value.keyvalue":"%*s*"}}'''
-range_value_condition='''{"range":{"key_values.value.keyvalue":{"%s":"%s"} }}'''
+#must_name_condition='''{"match": {"key_values.name.keyword":"%s"}}'''
+#must_value_condition='''{"match": {"key_values.value.keyvalue":"%s"}}'''
+
+
+
 
 
 
@@ -42,20 +36,34 @@ range_dict={
 "lt" : "<"# "Less-than"
 }
 
+'''
+The following are the templates which are used at run time to build the query.
+Each of them represent Elastic search query template part.
 
+Must ==> AND
+must_not ==>  NOT
+should ==>OR
+'''
 
 must_name_condition='''{"match": {"key_values.name.keyword":"%s"}}'''
 must_value_condition='''{"match": {"key_values.value.keyvalue":"%s"}}'''
-
-
 nested_query_template='''{"nested": {"path": "key_values", "query":{"bool": {"must":[%s ] }}}}'''
-
 nested_query_template_must_not='''{"nested": {"path": "key_values", "query":{"bool": {"must_not":[%s ] }}}}'''
-
+wildcard_value_condition='''{"wildcard": {"key_values.value.keyvalue":"%s"}}''' #Used for contains and not contains
+#must_value_condition_contains='''{"match": {"key_values.value.keyvalue":"%*s*"}}'''
+range_value_condition='''{"range":{"key_values.value.keyvalue":{"%s":"%s"} }}'''
 must_term='''"must" : [%s]''' #==>>equal term
 must_not_term='''"must_not": [%s]''' #===>not equal
 should_term='''"should": [%s],"minimum_should_match" : %s ,"boost" : 1.0'''  #==>or
 query_template='''{"query": {"bool": {%s}}}'''
+
+
+
+def build_error_message(error):
+    '''
+    Build an error respond
+    '''
+    return {"notice": {"Error":error}}
 
 
 def elasticsearch_query_builder(and_filter, or_filters):
@@ -71,7 +79,8 @@ def elasticsearch_query_builder(and_filter, or_filters):
                 value=filter["value"]
                 operator=filter["operator"]
             except:
-                return {"notice":"Each Filter needs to have, name, value and operator keywords."}
+                return build_error_message("Each Filter needs to have, name, value and operator keywords.")
+            search_omero_app.logger.info("%s %s %s"%(operator, key, value))
             search_omero_app.logger.info("%s %s %s"%(operator, key, value))
             _nested_must_part=[]
             if operator=="equals":
@@ -85,7 +94,6 @@ def elasticsearch_query_builder(and_filter, or_filters):
                 nested_must_part.append( nested_query_template % (",".join(_nested_must_part)))
             elif operator in ["not_equals", "not_contains"]:
                 nested_must_part.append(nested_query_template % (must_name_condition % (key)))
-
                 if operator=="not_contains":
                     value="*{value}*".format(value=value)
                     nested_must_not_part.append(nested_query_template % (wildcard_value_condition % (value)))
@@ -220,7 +228,7 @@ def search_index_using_seargc_after(e_index, query, page, bookmark_):
     else:
         add_to_page=1
     no_of_pages= (int) (size/page_size) +add_to_page
-    search_omero_app.logger.info("==>>%s"%no_of_pages)
+    search_omero_app.logger.info("No of pages: %s"%no_of_pages)
     query["sort"]= [
         {"id": "asc"}
     ]
@@ -250,19 +258,23 @@ def search_resource_annotation(table_, query, page=None,bookmark=None):
     @table_: the resource table, e.g. image. project, etc.
     @query: the a dict contains the three filters (or, and and  not) items
     '''
+
     res_index=resource_elasticsearchindex.get(table_)
     if not res_index:
-        return {"error":"{table_} is not valid resurces is provided".format(table_)}
+        return build_error_message("{table_} is not a valid resurce".format(table_=table_))
 
     start_time = time.time()
     query_details = query.get('query_details')
+    print ("Type: ",type(query_details))
 
-    if not query or len(query) == 0:
-        return ""
+    if not query or len(query) == 0 or len(query_details)==0 or isinstance(query_details,str) :
+        return build_error_message("{query} is not a valid query".format(query=query))
     and_filters = query_details.get("and_filters")
     or_filters = query_details.get("or_filters")
     check_filters(table_, [and_filters, or_filters])
     query_string = elasticsearch_query_builder(and_filters,  or_filters)
+    #query_string has to be string, if it is a dict, something went wrong and the message inside the dict
+    #which will be returned to the sender:
     if isinstance(query_string, dict):
         return query_string
 

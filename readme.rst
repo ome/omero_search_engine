@@ -125,14 +125,14 @@ Omero Search Engine
 
 
 
-* There is a simple GUI (https://github.com/ome/omero_search_engine_client)  to build the query and send it to the search engine
+* There is a simple GUI (https://github.com/ome/omero_search_engine_client/tree/elastic_search) to build the query and send it to the search engine
     * It is used to build the query
     * It will display the results when they are ready
 
 * The app uses Elasticsearch
     * There is a method inside manage.py (create_index) to create a separate index for image, project, dataset, screen, plate and well using two templates:
-        * image template (image_template) for image index. It combines many Omero tables into a single Elasticsearch index (image, annoation_mapvalue, imageannotationlink, project, dataset, well, plate and screen to generate a single index.
-        * non-image template (non_image_template) for other indices (project, dataset, well, plate, screen). It combines many Omero tables depending on the resource,  for example for the project, it combines project, projectannotationlink and annotation_mapvalue.
+        * image template (image_template) for image index. It is derived from some Omero tables into a single Elasticsearch index (image, annoation_mapvalue, imageannotationlink, project, dataset, well, plate and screen to generate a single index.
+        * non-image template (non_image_template) for other indices (project, dataset, well, plate, screen). It is derived from some Omero tables depending on the resource,  for example for the project, it combines project, projectannotationlink and annotation_mapvalue.
         * both of the two templates are in \omero_search_engine\search_engine\cache_functions\elasticsearch\elasticsearch_templates.py
     * The data now is moved using SQL queries which generate the CSV files; the queries are in omero_search_engine\search_engine\cache_functions\elasticsearch\sql_to_csv.py
     * There is a method inside manage.py script (add_resourse_data_to_es_index) which reads the CSV files and inserts the data to the Elasticsearch index.

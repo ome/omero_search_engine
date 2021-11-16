@@ -1,7 +1,7 @@
 from . import resources
 from flask import request, jsonify
 import json
-from search_engine.api.v2.resources.utils import search_resource_annotation
+from search_engine.api.v2.resources.utils import search_resource_annotation, build_error_message
 from search_engine.api.v1.resources.utils import get_resource_annotation_table
 
 @resources.route('/',methods=['GET'])
@@ -10,15 +10,18 @@ def index():
 
 @resources.route('/<resource_table>/searchannotation_page/',methods=['GET'])
 def search_resource_page(resource_table):
+    '''
+    used to get the next results page
+    '''
     if not (get_resource_annotation_table):
-        return ("NO data for table {table}".format(table=resource_table))
+        return jsonify (build_error_message("No data for table {table}".format(table=resource_table)))
     data = request.data
     if not data:
-        return "Error: {error}".format(error="No query data is provided ")
+        return jsonify(build_error_message("Error: {error}".format(error="No query data is provided ")))
     try:
         data = json.loads(data)
     except Exception as ex:
-        return "Error: {error}".format(error="No proper query data is provided ")
+        return jsonify(build_error_message("{error}".format(error="No proper query data is provided ")))
 
     if 'query' in data:
         query = data["query"]
@@ -28,7 +31,7 @@ def search_resource_page(resource_table):
         resource_list = search_resource_annotation(resource_table, query, page=page,bookmark=bookmark)
     else:
 
-        return "Error: No query field is provided. please specify an id."
+        return jsonify(build_error_message("Error: No query field is provided. please specify an id."))
     return jsonify(resource_list)
 
 
@@ -48,14 +51,14 @@ def search_resource(resource_table):
        or_filters means that the results should satsify at least one condition inside the filters
      '''
     if not (get_resource_annotation_table):
-        return ("NO data for table {table}".format(table=resource_table))
+        return jsonify({"notice":"NO data for table {table}".format(table=resource_table)})
     data = request.data
     if not data:
-        return "Error: {error}".format(error="No query data is provided ")
+        return jsonify(build_error_message("Error: {error}".format(error="No query data is provided ")))
     try:
         data = json.loads(data)
     except Exception as ex:
-        return "Error: {error}".format(error="No proper query data is provided ")
+        return jsonify(build_error_message("Error: {error}".format(error="No proper query data is provided ")))
 
     if 'query' in data:
         query = data['query']
@@ -63,6 +66,6 @@ def search_resource(resource_table):
         #check if the app configuration will use ASYNCHRONOUS SEARCH or not.
         resource_list = search_resource_annotation(resource_table, query)
     else:
-        return "Error: No query field is provided. please specify an id."
+        return jsonify(build_error_message("Error: No query field is provided. please specify an id."))
 
     return jsonify(resource_list)

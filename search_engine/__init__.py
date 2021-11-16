@@ -55,7 +55,7 @@ def create_app(config_name="development"):
     search_omero_app.app_context()
     search_omero_app.app_context().push()
     es_connector = Elasticsearch(app_config.ELASTICSEARCH__URL,
-                                 timeout=70, max_retries=10, retry_on_timeout=True)
+                                 timeout=30, max_retries=10, retry_on_timeout=True)
 
     search_omero_app.config["database_connector"]=database_connector
     search_omero_app.config["es_connector"] = es_connector
