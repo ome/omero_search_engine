@@ -1,8 +1,11 @@
 from search_engine import search_omero_app
 from elasticsearch import  helpers
-import os
-import pandas as pd
+import  pandas as pd
 import numpy as np
+import os
+from search_engine.api.v2.resources.utils import resource_elasticsearchindex
+from search_engine.cache_functions.elasticsearch.elasticsearch_templates import image_template, non_image_template
+
 import json
 
 def create_index(es_index, template):
@@ -27,17 +30,18 @@ def create_index(es_index, template):
     return True
 
 
+def create_omero_indexes(resourse):
+    if resourse!="all" and not resource_elasticsearchindex.get(resourse):
+        search_omero_app.logger.info("No index template found for resourse: %s"%resourse)
 
-def create_omero_indexes():
-    from search_engine.cache_functions.elasticsearch.elasticsearch_templates import image_template, non_image_template
-    from search_engine.api.v2.resources.utils import resource_elasticsearchindex
-    for resourse, es_index in resource_elasticsearchindex.items():
-        if resourse=='image':
+    for resourse_, es_index in resource_elasticsearchindex.items():
+        if  es_index != 'all' and resourse_ != resourse:
+            continue
+        if resourse_== 'image':
             template=image_template
         else:
             template=non_image_template
-
-        search_omero_app.logger.info(f"Creating index {es_index} for {resourse}".format(es_index=es_index, resourse=resourse))
+        search_omero_app.logger.info(f"Creating index {es_index} for {resourse_}".format(es_index=es_index, resourse=resourse_))
         create_index(es_index, template)
 
 
@@ -60,8 +64,9 @@ def rename_index(old_index, new_index):
         return False
 
 
-def delete_index(es_index):
-    es=search_omero_app.config.get("es_connector")
+
+def delete_es_index(es_index):
+    es = search_omero_app.config.get("es_connector")
     response = es.indices.delete(index=es_index)
     if 'acknowledged' in response:
         if response['acknowledged'] == True:
@@ -69,12 +74,27 @@ def delete_index(es_index):
 
     # catch API error response
     elif 'error' in response:
-        search_omero_app.logger.info("ERROR:"+ response['error']['root_cause'])
-        search_omero_app.logger.info("TYPE:"+ response['error']['type'])
+        search_omero_app.logger.info("ERROR:" + response['error']['root_cause'])
+        search_omero_app.logger.info("TYPE:" + response['error']['type'])
+        return False
+    # print out the response:
+    search_omero_app.logger.info('\nresponse:%s' % str(response))
+    return True
+
+def delete_index(resourse):
+    if resource_elasticsearchindex.get(resourse):
+        es_index=resource_elasticsearchindex[resourse]
+        print ("Index for resourse will be deleted, continue y/n? ")
+        choice = input().lower()
+        if choice!="y" and choice!="yes":
+            return False
+
+        print("Are you sure ")
+        return delete_es_index(es_index)
+    else:
+        search_omero_app.logger.info('\nNo index is found for resourse:%s' %str(resourse))
         return False
 
-    # print out the response:
-    search_omero_app.logger.info('\nresponse:%s' %str(response))
 
 
 def prepare_images_data (data, doc_type):
@@ -102,7 +122,7 @@ def prepare_images_data (data, doc_type):
             row_to_insert["key_values"]=[]
             data_to_be_inserted[row["id"]] = row_to_insert
         key_value=row_to_insert["key_values"]
-        key_value.append({"name": row["mapvalue_name"], "value":row["mapvalue_value"]})
+        key_value.append({"name": row["mapvalue_name"], "value":row["mapvalue_value"], "index":row["mapvalue_index"]})
 
     return data_to_be_inserted
 
@@ -114,7 +134,7 @@ def prepare_data (data, doc_type):
     data_to_be_inserted={}
     for index, row in data.iterrows():
         counter+=1
-        if counter % 1000 == 0:
+        if counter % 10000 == 0:
             search_omero_app.logger.info ("Process : {counter}/{total}".format(counter=counter, total=total))
 
         if row["id"] in data_to_be_inserted:
@@ -129,14 +149,14 @@ def prepare_data (data, doc_type):
             row_to_insert["key_values"] = []
             data_to_be_inserted[row["id"]] = row_to_insert
         key_value=row_to_insert["key_values"]
-        key_value.append({"name": row["mapvalue_name"], "value":row["mapvalue_value"]})
+        key_value.append({"name": row["mapvalue_name"], "value":row["mapvalue_value"], "index":row["mapvalue_index"]})
 
     return data_to_be_inserted
 
 def handle_file(file_name, es_index, cols, is_image=False):
 
     co = 0
-    '''
+
     search_omero_app.logger.info ("Reading the csv file")
     df = pd.read_csv(file_name).replace({np.nan: None})
     search_omero_app.logger.info ("setting the columns")
@@ -150,21 +170,20 @@ def handle_file(file_name, es_index, cols, is_image=False):
     search_omero_app.logger.info (len(data_to_be_inserted))
     with open(file_name+".txt", 'w') as outfile:
         json.dump(data_to_be_inserted, outfile)
-    '''
-    search_omero_app.logger.info ("Reading %s"% file_name)
 
-    with open(file_name) as json_file:
-        data_to_be_inserted = json.load(json_file)
+    #search_omero_app.logger.info ("Reading %s"% file_name)
+
+    #with open(file_name) as json_file:
+    #    data_to_be_inserted = json.load(json_file)
     actions=[]
     bulk_count=0
     for k, record in data_to_be_inserted.items():
         co += 1
         bulk_count+=1
-        if co % 1000 == 0:
+        if co % 10000 == 0:
             search_omero_app.logger.info("Adding:  %s out of %s"%(co, len(data_to_be_inserted)))
 
-        actions.append(
-              {
+        actions.append(              {
                  "_index":es_index,
                 "_source": record#,
                 #"_id": record['id']
@@ -183,19 +202,22 @@ def get_file_list(path_name):
 
     return f
 
-def insert_resourse_data(folder, es_index):
-    search_omero_app.logger.info("Adding data to {} using {}".format(es_index, folder))
-    if "image" in es_index:
+def insert_resourse_data(folder, resourse):
+    search_omero_app.logger.info("Adding data to {} using {}".format(resourse, folder))
+    if not resource_elasticsearchindex.get(resourse):
+        search_omero_app.logger.info("No index found for resourse: %s"%resourse)
+        return
+
+    es_index=resource_elasticsearchindex.get(resourse)
+    if resourse=="image":
         is_image=True
-        cols = ["id", "owner_id", "experiment", "group_id", "name", "mapvalue_name", "mapvalue_value", "project_name",
+        cols = ["id", "owner_id", "experiment", "group_id", "name", "mapvalue_name", "mapvalue_value", "mapvalue_index", "project_name",
                 "project_id", "dataset_name", "dataset_id", "screen_id", "screen_name", "plate_id", "plate_name",
                 "well_id", "wellsample_id"]
     else:
         is_image=False
-        cols=["id", "owner_id", "group_id", "name", "mapvalue_name", "mapvalue_value"]
+        cols=["id", "owner_id", "group_id", "name", "mapvalue_name", "mapvalue_value","mapvalue_index"]
     f_con=0
-
-    #folder=r"D:\data\all_images\final\complter_images_data"#D:\data\all_images\final"
     if os.path.isfile(folder):
         files_list=[folder]
     elif os.path.isdir(folder):
@@ -205,8 +227,6 @@ def insert_resourse_data(folder, es_index):
         return
     for fil in files_list:
         fil=fil.strip()
-        if not fil.endswith(".txt"):
-            continue
         search_omero_app.logger.info ("%s==%s == %s"%(f_con,fil,len(files_list)))
         file_name=os.path.join(folder,fil)
         handle_file(file_name, es_index, cols, is_image)
@@ -215,7 +235,7 @@ def insert_resourse_data(folder, es_index):
             with open(file_name + ".done", 'w') as outfile:
                 json.dump(f_con, outfile)
         except:
-            pass
+            print ("Error .... writing Done file ...")
         f_con+=1
 
 

@@ -42,29 +42,30 @@ def show_saved_index():
         print ("Index: ==>>>",index)
     return (all_indexes)
 
-
 @manager.command
-def delete_es_index():
+@manager.option('-r', '--resourse', help='resourse name, deleting all the indcese for all the resources is the default')
+def delete_es_index(resourse='all'):
     from search_engine.cache_functions.elasticsearch.transform_data import  delete_index
-    delete_index("image_keyvalue_pair_metadata_new")
+    delete_index(resourse)
 
 @manager.command
-@manager.option('-r', '--resourse_index', help='resourse_index')
-@manager.option('-f', '--data_folder', help='Folder contains the data files')
-def add_resourse_data_to_es_index(resourse_index=None, data_folder=None):
+@manager.option('-r', '--resourse', help='resourse name, e.g. image')
+@manager.option('-d', '--data_folder', help='Folder contains the data files')
+def add_resourse_data_to_es_index(resourse=None, data_folder=None):
     '''
      Insert data inside elastic search index by getting the data from csv files
     '''
     from search_engine.cache_functions.elasticsearch.transform_data import insert_resourse_data
-    insert_resourse_data(data_folder, resourse_index)
+    insert_resourse_data(data_folder, resourse)
 
 @manager.command
-def create_index():
+@manager.option('-r', '--resourse', help='resourse name, creating all the indcese for all the resources is the default')
+def create_index(resourse="all"):
     '''
     Create Elasticsearch index for each resource
     '''
     from search_engine.cache_functions.elasticsearch.transform_data import create_omero_indexes
-    create_omero_indexes()
+    create_omero_indexes(resourse)
 
 
 

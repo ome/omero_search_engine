@@ -123,6 +123,7 @@ Omero Search Engine
             logging.info("Sending the second query:")
             results_1 = query_the_search_ending(query_2)
 
+
 * There is a simple GUI (https://github.com/ome/omero_search_engine_client/tree/elastic_search) to build the query and send it to the search engine
     * It is used to build the query
     * It will display the results when they are ready

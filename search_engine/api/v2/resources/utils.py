@@ -12,20 +12,15 @@ sys.path.append(mm)
 
 from search_engine import search_omero_app
 from search_engine.cache_functions.hdf_cache_funs import read_cash_for_table, read_name_values_from_hdf5
+from string import Template
 
 
 resource_elasticsearchindex={"project":"project_keyvalue_pair_metadata",
                              "screen":"screen_keyvalue_pair_metadata",
                              "plate":"plate_keyvalue_pair_metadata",
                              "well":"well_keyvalue_pair_metadata",
-                             "image":"image_keyvalue_pair_metadata_new"
+                             "image":"image_keyvalue_pair_metadata"
                              }
-
-#must_name_condition='''{"match": {"key_values.name.keyword":"%s"}}'''
-#must_value_condition='''{"match": {"key_values.value.keyvalue":"%s"}}'''
-
-
-
 
 
 
@@ -43,19 +38,22 @@ Each of them represent Elastic search query template part.
 Must ==> AND
 must_not ==>  NOT
 should ==>OR
+>>> 
+>>> t = Template('Hey, $name!')
+>>> t.substitute(name=name)
+'
 '''
 
-must_name_condition='''{"match": {"key_values.name.keyword":"%s"}}'''
-must_value_condition='''{"match": {"key_values.value.keyvalue":"%s"}}'''
-nested_query_template='''{"nested": {"path": "key_values", "query":{"bool": {"must":[%s ] }}}}'''
-nested_query_template_must_not='''{"nested": {"path": "key_values", "query":{"bool": {"must_not":[%s ] }}}}'''
-wildcard_value_condition='''{"wildcard": {"key_values.value.keyvalue":"%s"}}''' #Used for contains and not contains
-#must_value_condition_contains='''{"match": {"key_values.value.keyvalue":"%*s*"}}'''
-range_value_condition='''{"range":{"key_values.value.keyvalue":{"%s":"%s"} }}'''
-must_term='''"must" : [%s]''' #==>>equal term
-must_not_term='''"must_not": [%s]''' #===>not equal
-should_term='''"should": [%s],"minimum_should_match" : %s ,"boost" : 1.0'''  #==>or
-query_template='''{"query": {"bool": {%s}}}'''
+must_name_condition_template= Template('''{"match": {"key_values.name.keyword":"$name"}}''')
+must_value_condition_template=Template('''{"match": {"key_values.value.keyvalue":"$value"}}''')
+nested_query_template=Template('''{"nested": {"path": "key_values", "query":{"bool": {"must":[$nested ] }}}}''')
+nested_query_template_must_not=Template('''{"nested": {"path": "key_values", "query":{"bool": {"must_not":[$must_not_value ] }}}}''')
+must_term_template=Template('''"must" : [$must_term]''') #==>>equal term
+must_not_term_template=Template('''"must_not": [$must_not_term]''') #===>not equal
+wildcard_value_condition_template=Template('''{"wildcard": {"key_values.value.keyvalue":"$wild_card_value"}}''') #Used for contains and not contains
+range_value_condition_template=Template('''{"range":{"key_values.value.keyvalue":{"$operator":"$value"} }}''')
+should_term_template=Template('''"should": [$should_term],"minimum_should_match" : $minimum_should_match ,"boost" : 1.0''')  #==>or
+query_template=Template( '''{"query": {"bool": {$query}}}''')
 
 
 
@@ -67,7 +65,7 @@ def build_error_message(error):
 
 
 def elasticsearch_query_builder(and_filter, or_filters):
-    global nested_query_template, must_term, must_not_term,should_term
+    global nested_query_template, must_term_template, must_not_term_template,should_term
     nested_must_part=[]
     nested_must_not_part = []
     should_part_list=[]
@@ -84,24 +82,24 @@ def elasticsearch_query_builder(and_filter, or_filters):
             search_omero_app.logger.info("%s %s %s"%(operator, key, value))
             _nested_must_part=[]
             if operator=="equals":
-                _nested_must_part.append(must_name_condition % (key))
-                _nested_must_part.append(must_value_condition % (value))
-                nested_must_part.append(nested_query_template % (",".join(_nested_must_part)))
+                _nested_must_part.append(must_name_condition_template.substitute(name=key))
+                _nested_must_part.append(must_value_condition_template.substitute(value=value))
+                nested_must_part.append(nested_query_template.substitute(nested= ",".join(_nested_must_part)))
             if operator=="contains":
                 value="*{value}*".format(value=value)
-                _nested_must_part.append(must_name_condition % (key))
-                _nested_must_part.append(wildcard_value_condition % (value))
-                nested_must_part.append( nested_query_template % (",".join(_nested_must_part)))
+                _nested_must_part.append(must_name_condition_template.substitute(name=key))
+                _nested_must_part.append(wildcard_value_condition_template.substitute(wild_card_value=value))
+                nested_must_part.append( nested_query_template.substitute(nested= ",".join(_nested_must_part)))
             elif operator in ["not_equals", "not_contains"]:
-                nested_must_part.append(nested_query_template % (must_name_condition % (key)))
+                nested_must_part.append(nested_query_template.substitute(nested=must_name_condition_template.substitute(name=key)))
                 if operator=="not_contains":
                     value="*{value}*".format(value=value)
-                    nested_must_not_part.append(nested_query_template % (wildcard_value_condition % (value)))
+                    nested_must_not_part.append(nested_query_template.substitute(nested=wildcard_value_condition_template.substitute(wild_card_value=value)))
                 else:
-                    nested_must_not_part.append(nested_query_template % (must_value_condition % (value)))
+                    nested_must_not_part.append(nested_query_template.substitute(nested=must_value_condition_template.substitute(value=value)))
             elif operator in ["lt","lte", "gt","gte"]:
-                nested_must_part.append(nested_query_template % (must_name_condition % (key)))
-                nested_must_part.append(nested_query_template % (range_value_condition%(operator, value)))
+                nested_must_part.append(nested_query_template.substitute(nested=must_name_condition_template.substitute(name=key)))
+                nested_must_part.append(nested_query_template.substitute(nested=range_value_condition_template.substitute(operator=operator, value=value)))
        #must_not_term
     if or_filters and len(or_filters) > 0:
         added_keys=[]
@@ -110,43 +108,47 @@ def elasticsearch_query_builder(and_filter, or_filters):
             should_values=[]
             shoud_not_value=[]
             should_names=[]
-            key=or_filter["name"]
-            value = or_filter["value"]
-            operator=or_filter["operator"]
+            try:
+                key=or_filter["name"]
+                value = or_filter["value"]
+                operator=or_filter["operator"]
+            except:
+                return build_error_message("Each Filter needs to have, name, value and operator keywords.")
+
             if key not in added_keys:
                 added_keys.append(key)
-            should_names.append(must_name_condition % key)
+            should_names.append(must_name_condition_template.substitute(name=key))
             if operator=="equals":
-                should_values.append(must_value_condition % value)
+                should_values.append(must_value_condition_template.substitute(value=value))
             elif operator == "contains":
                 value = "*{value}*".format(value=value)
-                should_values.append(wildcard_value_condition % (value))
+                should_values.append(wildcard_value_condition_template.substitute(wild_card_value=value))
             elif operator in ["not_equals", "not_contains"]:
                 if operator == "not_contains":
                     value = "*{value}*".format(value=value)
-                    shoud_not_value.append(wildcard_value_condition % (value))
+                    shoud_not_value.append(wildcard_value_condition_template.substitute(wild_card_value=value))
                 else:
-                    shoud_not_value.append(must_value_condition % (value))
+                    shoud_not_value.append(must_value_condition_template.substitute(value=value))
             elif operator in ["lt", "lte", "gt", "gte"]:
-                should_values.append(range_value_condition % (operator, value))
-                must_value_condition
+                should_values.append(range_value_condition_template.substitute(operator=operator,value= value))
+                #must_value_condition
 
             ss=",".join(should_names)
-            ff= nested_query_template % ss
+            ff= nested_query_template.substitute(nested= ss)
             should_part_list.append(ff)
             ss = ",".join(should_values)
-            ff = nested_query_template % ss
+            ff = nested_query_template.substitute(nested=ss)
             should_part_list.append(ff)
             if len(shoud_not_value)>0:
                 ss = ",".join(shoud_not_value)
-                ff = nested_query_template_must_not % ss
+                ff = nested_query_template_must_not.substitute(must_not_value=ss)
                 should_part_list.append(ff)
 
     all_terms=""
 
     if len(nested_must_part)>0:
         nested_must_part_ =",".join(nested_must_part)
-        nested_must_part_ = must_term % (nested_must_part_)
+        nested_must_part_ = must_term_template.substitute (must_term=nested_must_part_)
 
         if all_terms:
             all_terms=all_terms+","+nested_must_part_
@@ -156,7 +158,7 @@ def elasticsearch_query_builder(and_filter, or_filters):
     if len(nested_must_not_part) > 0:
 
         nested_must_not_part_=",".join(nested_must_not_part)
-        nested_must_not_part_ = must_not_term % (nested_must_not_part_)
+        nested_must_not_part_ = must_not_term_template.substitute(must_not_term=nested_must_not_part_)
 
         if all_terms:
             all_terms = all_terms + "," + nested_must_not_part_
@@ -166,14 +168,14 @@ def elasticsearch_query_builder(and_filter, or_filters):
     if len(should_part_list) > 0:
         minimum_should_match=int(len(should_part_list)/2+1)
         should_part_ = ",".join(should_part_list)
-        should_part_ = should_term % (should_part_, minimum_should_match)
+        should_part_ = should_term_template.substitute(should_term=should_part_,minimum_should_match=minimum_should_match)
 
         if all_terms:
             all_terms+=","+should_part_
         else:
             all_terms=should_part_
 
-    return query_template %(all_terms)
+    return query_template.substitute(query=all_terms)
 
 def check_filters(res_table, filters):
     names=read_cash_for_table(res_table)
@@ -252,7 +254,6 @@ def search_index_using_seargc_after(e_index, query, page, bookmark_):
         page+=1
     return {"results" : returned_results, "total_pages":no_of_pages,"bookmark":bookmark, "size":size,"page":page}
 
-
 def search_resource_annotation(table_, query, page=None,bookmark=None):
     '''
     @table_: the resource table, e.g. image. project, etc.
@@ -265,7 +266,6 @@ def search_resource_annotation(table_, query, page=None,bookmark=None):
 
     start_time = time.time()
     query_details = query.get('query_details')
-    print ("Type: ",type(query_details))
 
     if not query or len(query) == 0 or len(query_details)==0 or isinstance(query_details,str) :
         return build_error_message("{query} is not a valid query".format(query=query))

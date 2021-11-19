@@ -4,7 +4,7 @@ import os
 
 image_sql='''
 select image.id, image.owner_id, image.experiment, image.group_id,  image.name as name, annotation_mapvalue.name as mapvalue_name, 
-    annotation_mapvalue.value as mapvalue_value,
+    annotation_mapvalue.value as mapvalue_value, annotation_mapvalue.index as mapvalue_index,
     project.name as project_name,project.id as project_id, dataset.name as dataset_name, dataset.id as dataset_id, 
     screen.id as screen_id, screen.name as screen_name, plate.id as plate_id, plate.name as plate_name, well.id as well_id,wellsample.id as wellsample_id 
     from image 
@@ -18,35 +18,35 @@ select image.id, image.owner_id, image.experiment, image.group_id,  image.name a
     left join  plate  on well.plate=plate.id 
     left join screenplatelink on plate.id=screenplatelink.child
     left join screen on screen.id=screenplatelink.parent
-    GROUP BY image.id, annotation_mapvalue.name, annotation_mapvalue.value,project.name, project.id, dataset.name, dataset.id, screen.id, screen.name, plate.id, plate.name, well.id,wellsample.id'''
+    GROUP BY image.id, annotation_mapvalue.index, annotation_mapvalue.name, annotation_mapvalue.value,annotation_mapvalue.index,project.name, project.id, dataset.name, dataset.id, screen.id, screen.name, plate.id, plate.name, well.id,wellsample.id
+'''
 images_sql_to_csv='''
-    \copy ({image_sql}) TO 
-    'images_sorted_projects_screen_ids.csv'  WITH CSV HEADER'''.format(image_sql=image_sql)
+    \copy ({image_sql}) TO 'images_sorted_ids.csv'  WITH CSV HEADER'''.format(image_sql=image_sql)
 
 
 plate_sql='''
 select plate.id, plate.owner_id, plate.group_id,  plate.name as name, annotation_mapvalue.name as mapvalue_name, 
-annotation_mapvalue.value as mapvalue_value  from plate
+annotation_mapvalue.value as mapvalue_value,  annotation_mapvalue.index as mapvalue_index, from plate
 inner join plateannotationlink on plate.id =plateannotationlink.parent inner join annotation_mapvalue on annotation_mapvalue.annotation_id=plateannotationlink.child
-GROUP BY plate.id, annotation_mapvalue.name, annotation_mapvalue.value'''
+GROUP BY plate.id,  annotation_mapvalue.index, annotation_mapvalue.name, annotation_mapvalue.value'''
 plate_sql_to_csv='''
-\copy ({plate_sql}) TO 'plates_sorted_projects_screen_ids.csv'  WITH CSV HEADER'''.format(plate_sql=plate_sql)
+\copy ({plate_sql}) TO 'plates_sorted_ids.csv'  WITH CSV HEADER'''.format(plate_sql=plate_sql)
 
 
 project_sql='''
 select project.id, project.owner_id, project.group_id,  project.name as name, annotation_mapvalue.name as mapvalue_name, 
-annotation_mapvalue.value as mapvalue_value  from project
+annotation_mapvalue.value as mapvalue_value,  annotation_mapvalue.index as mapvalue_index,  from project
 inner join projectannotationlink on project.id =projectannotationlink.parent inner join annotation_mapvalue on annotation_mapvalue.annotation_id=projectannotationlink.child
-GROUP BY project.id, annotation_mapvalue.name, annotation_mapvalue.value'''
+GROUP BY project.id,  annotation_mapvalue.index, annotation_mapvalue.name, annotation_mapvalue.value'''
 project_sql_to_csv='''
 \copy ({project_sql}) TO 'projects_sorted_projects_screen_ids.csv'  WITH CSV HEADER'''.format(project_sql=project_sql)
 
 
 screen_sql='''
 select screen.id, screen.owner_id, screen.group_id,  screen.name as name, annotation_mapvalue.name as mapvalue_name, 
-annotation_mapvalue.value as mapvalue_value  from screen
+annotation_mapvalue.value as mapvalue_value , annotation_mapvalue.index as mapvalue_index from screen
 inner join screenannotationlink on screen.id =screenannotationlink.parent inner join annotation_mapvalue on annotation_mapvalue.annotation_id=screenannotationlink.child
-GROUP BY screen.id, annotation_mapvalue.name, annotation_mapvalue.value
+GROUP BY screen.id, annotation_mapvalue.index, annotation_mapvalue.name, annotation_mapvalue.value
 '''
 screen_sql_to_csv='''
 \copy ({screen_sql}) TO 'screens_sorted_projects_screen_ids.csv'  WITH CSV HEADER'''.format(screen_sql=screen_sql)
@@ -54,9 +54,9 @@ screen_sql_to_csv='''
 
 well_sql='''
 \copy (select well.id, well.owner_id, well.group_id, annotation_mapvalue.name as mapvalue_name, 
-annotation_mapvalue.value as mapvalue_value  from well
+annotation_mapvalue.value as mapvalue_value, annotation_mapvalue.index as mapvalue_index  from well
 inner join wellannotationlink on well.id =wellannotationlink.parent inner join annotation_mapvalue on annotation_mapvalue.annotation_id=wellannotationlink.child
-GROUP BY well.id, annotation_mapvalue.name, annotation_mapvalue.value) TO 'wells_sorted_ids.csv'  WITH CSV HEADER
+GROUP BY well.id,  annotation_mapvalue.index, annotation_mapvalue.name, annotation_mapvalue.value) TO 'wells_sorted_ids.csv'  WITH CSV HEADER
 '''
 
 well_sql_to_csv='''
