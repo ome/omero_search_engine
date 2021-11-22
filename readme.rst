@@ -2,7 +2,7 @@ Omero Search Engine
 --------------------
 * Omero search engine app  is used to search metadata (key-value pairs)
 
-* The search engine query is a dict that has two parts:
+* The search engine query is a dict that has three parts:
 
 * The first part is "and_filter", it is a list, each item in the list is a dict that has three keys:
     * name: attribute name (name in annotation_mapvalue table)
@@ -25,6 +25,8 @@ Omero Search Engine
     * 'bookmark': bookmark to be used to call the next page if the results exceed 10,000 records.
     * 'total_pages': Total number of the pages that contains the results.
     * 'results': a list that contains the results. Each item inside the list is a dict. The dict keys contain, image id, name in addition to all the metadata (key/pair, i.e. "key_values") values for the image. Each item has other data such as the image owner Id and group id, project id and name, etc.
+
+* The third part is the main_attributes, it allows the user to search using one or more of project _id, dataset_id, owner_id, group_id, owner_id, etc. It supports two operators, equals and not_equals. Hence, it is possible to search one project instead of all the projects, also it is possible to search the results which belong to a specific user or a group.
 
 * It is possible to query the search engine to get all the available resources (e.g. image) and their keys (names) using the following URL:
 
@@ -54,8 +56,8 @@ Omero Search Engine
             logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 
-            def query_the_search_ending(query):
-                query_data = {"query": {'query_details': query}}
+            def query_the_search_ending(query, main_attributes):
+                query_data = {"query": {'query_details': query,"main_attributes":main_attributes}}
                 query_data_json = json.dumps(query_data)
                 resp = requests.get(url="%s%s" % (base_url, image_ext), data=query_data_json)
                 res = resp.text
@@ -112,16 +114,26 @@ Omero Search Engine
                 return recieved_results_data
 
 
-            query_1 = {"and_filters": [{"name": "Organism", "value": "Mus musculus", 'operator': 'equals'}]}
-            query_2 = {"and_filters": [{"name": "Organism", "value": "Homo sapiens", "operator": "equals"},
+            query_1 = {"and_filters": [{"name": "Organism", "value": "Homo sapiens", "operator": "equals"},
                                        {"name": "Antibody Identifier", "value": "CAB034889", "operator": "equals"}],
                        "or_filters": [{"name": "Organism Part", "value": "Prostate", "operator": "equals"},
                                       {"name": "Organism Part Identifier", "value": "T-77100", "operator": "equals"}]}
+            query_2 = {"and_filters": [{"name": "Organism", "value": "Mus musculus", 'operator': 'equals'}]}
+            main_attributes=[]
             logging.info("Sending the first query:")
-            results_2 = query_the_search_ending(query_1)
+            results_1 = query_the_search_ending(query_1,main_attributes)
             logging.info("=========================")
             logging.info("Sending the second query:")
-            results_1 = query_the_search_ending(query_2)
+            results_2 = query_the_search_ending(query_2,main_attributes)
+            #The above returns 130834 within 23 projects
+            #[101, 301, 351, 352, 353, 405, 502, 504, 801, 851, 852, 853, 1151, 1158, 1159, 1201, 1202, 1451, 1605, 1606, 1701, 1902, 1903]
+            #It is possible to get the results in one project, e.g. 101 by using main_attributes filters
+            main_attributes_2=[{"name":"project_id","value": 101, "operator":"equals"}]
+            results_3=query_the_search_ending(query_2,main_attributes_2)
+            #It is possible to get the results and exculde one project, e.g. 101
+            main_attributes_3=[{"name":"project_id","value": 101, "operator":"not_equals"}]
+            results_4=query_the_search_ending(query_2,main_attributes_3)
+
 
 
 * There is a simple GUI (https://github.com/ome/omero_search_engine_client/tree/elastic_search) to build the query and send it to the search engine
