@@ -13,6 +13,8 @@ Omero Search Engine
 
 * The second part of the query is or_filters; it has alternatives to search the database; it answers a question like finding the images which can satisfy one or more of conditions inside this list. It is a list of dict also and have the same format as the dict inside and_filter
 
+* The third part is the main_attributes, it allows the user to search using one or more of project _id, dataset_id, owner_id, group_id, owner_id, etc. It supports two operators, equals and not_equals. Hence, it is possible to search one project instead of all the projects, also it is possible to search the results which belong to a specific user or a group.
+
 * The search engine returns the results in a JSON which has the following keys:
 
     * 'notice': A message to report an error or a message to the sender.
@@ -25,8 +27,6 @@ Omero Search Engine
     * 'bookmark': bookmark to be used to call the next page if the results exceed 10,000 records.
     * 'total_pages': Total number of the pages that contains the results.
     * 'results': a list that contains the results. Each item inside the list is a dict. The dict keys contain, image id, name in addition to all the metadata (key/pair, i.e. "key_values") values for the image. Each item has other data such as the image owner Id and group id, project id and name, etc.
-
-* The third part is the main_attributes, it allows the user to search using one or more of project _id, dataset_id, owner_id, group_id, owner_id, etc. It supports two operators, equals and not_equals. Hence, it is possible to search one project instead of all the projects, also it is possible to search the results which belong to a specific user or a group.
 
 * It is possible to query the search engine to get all the available resources (e.g. image) and their keys (names) using the following URL:
 
