@@ -14,4 +14,6 @@ not_valid_or_filters = []
 query = {"query_details":{"and_filters": [{"name": "Organism", "value": "Homo sapiens", "operator": "equals"},
                                 {"name": "Antibody Identifier", "value": "CAB034889", "operator": "equals"}],
                 "or_filters": [{"name": "Organism Part", "value": "Prostate", "operator": "equals"},
-                               {"name": "Organism Part Identifier", "value": "T-77100", "operator": "equals"}]}}
+                               {"name": "Organism Part Identifier", "value": "T-77100", "operator": "equals"}]},
+         "main_attributes":[{"name":"project_id","value": 501, "operator":"equals"}]}
+
