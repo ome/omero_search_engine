@@ -192,6 +192,10 @@ def elasticsearch_query_builder(and_filter, or_filters, main_attributes=None):
 
 def check_filters(res_table, filters):
     names=read_cash_for_table(res_table)
+    if not names or len(names)==0:
+        search_omero_app.logger.info("Could not check filters %s"%str(filters))
+        return
+
     search_omero_app.logger.info (str(filters))
     for filter_ in filters:
         if not filter_:
@@ -285,8 +289,8 @@ def search_resource_annotation(table_, query, page=None,bookmark=None):
         return build_error_message("{query} is not a valid query".format(query=query))
     and_filters = query_details.get("and_filters")
     or_filters = query_details.get("or_filters")
-
-    check_filters(table_, [and_filters, or_filters])
+    #This check has been commited temporary as I am not sure if it is should be carried out in some cases, e.g. contains, not equals, etc..
+    #check_filters(table_, [and_filters, or_filters])
     query_string = elasticsearch_query_builder(and_filters,  or_filters,main_attributes)
     #query_string has to be string, if it is a dict, something went wrong and the message inside the dict
     #which will be returned to the sender:
