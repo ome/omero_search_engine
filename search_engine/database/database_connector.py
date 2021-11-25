@@ -48,7 +48,8 @@ class DatabaseConnector(object):
 
             conn.close()
         except Exception as e:
-            #print ("Error in performing query %s, error message: %s" % (query,e))
+            from search_engine import search_omero_app
+            search_omero_app.logger.info ("Error in performing query %s, error message: %s" % (query,e))
             # return None
             pass
         return results
