@@ -6,6 +6,6 @@ CASH_FOLDER : "path/to/folder/app_data"
 CELERY_BROKER_URL : "redis://localhost:6379"
 CELERY_RESULT_BACKEND : "redis://localhost:6379"
 ASYNCHRONOUS_SEARCH : True
-ELASTICSEARCH__URL : "http://localhost::9200"
+ELASTICSEARCH__URL : "http://localhost:9200"
 PAGE_SIZE : 10000
 MAX_RETUNED_ITEMS : 1700000
