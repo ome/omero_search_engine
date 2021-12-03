@@ -30,12 +30,13 @@ def create_index(es_index, template):
     return True
 
 
-def create_omero_indexes(resourse):
+def  create_omero_indexes(resourse):
     if resourse!="all" and not resource_elasticsearchindex.get(resourse):
         search_omero_app.logger.info("No index template found for resourse: %s"%resourse)
 
     for resourse_, es_index in resource_elasticsearchindex.items():
-        if  es_index != 'all' and resourse_ != resourse:
+        if  resourse != 'all' and resourse_ != resourse:
+            print (resourse_, resourse)
             continue
         if resourse_== 'image':
             template=image_template
@@ -84,7 +85,7 @@ def delete_es_index(es_index):
 def delete_index(resourse):
     if resource_elasticsearchindex.get(resourse):
         es_index=resource_elasticsearchindex[resourse]
-        print ("Index for resourse will be deleted, continue y/n? ")
+        print ("Index for resourse %s will be deleted, continue y/n?"%resourse)
         choice = input().lower()
         if choice!="y" and choice!="yes":
             return False
@@ -153,28 +154,27 @@ def prepare_data (data, doc_type):
 
     return data_to_be_inserted
 
-def handle_file(file_name, es_index, cols, is_image=False):
-
+def handle_file(file_name, es_index, cols, is_image,from_json):
     co = 0
-
     search_omero_app.logger.info ("Reading the csv file")
-    df = pd.read_csv(file_name).replace({np.nan: None})
-    search_omero_app.logger.info ("setting the columns")
-    df.columns=cols
-    search_omero_app.logger.info ("Prepare the data...")
-    if not is_image:
-        data_to_be_inserted=prepare_data(df,es_index)
+    if not from_json:
+        df = pd.read_csv(file_name).replace({np.nan: None})
+        search_omero_app.logger.info ("setting the columns")
+        df.columns=cols
+        search_omero_app.logger.info ("Prepare the data...")
+        if not is_image:
+            data_to_be_inserted=prepare_data(df,es_index)
+        else:
+            data_to_be_inserted=prepare_images_data(df,es_index)
+        print (data_to_be_inserted)
+        search_omero_app.logger.info (len(data_to_be_inserted))
+        with open(file_name+".txt", 'w') as outfile:
+            json.dump(data_to_be_inserted, outfile)
+
     else:
-        data_to_be_inserted=prepare_images_data(df,es_index)
-    #print (data_to_be_inserted)
-    search_omero_app.logger.info (len(data_to_be_inserted))
-    with open(file_name+".txt", 'w') as outfile:
-        json.dump(data_to_be_inserted, outfile)
-
-    #search_omero_app.logger.info ("Reading %s"% file_name)
-
-    #with open(file_name) as json_file:
-    #    data_to_be_inserted = json.load(json_file)
+        search_omero_app.logger.info ("Reading %s"% file_name)
+        with open(file_name) as json_file:
+            data_to_be_inserted = json.load(json_file)
     actions=[]
     bulk_count=0
     for k, record in data_to_be_inserted.items():
@@ -183,13 +183,13 @@ def handle_file(file_name, es_index, cols, is_image=False):
         if co % 10000 == 0:
             search_omero_app.logger.info("Adding:  %s out of %s"%(co, len(data_to_be_inserted)))
 
-        actions.append(              {
+        actions.append(
+            {
                  "_index":es_index,
                 "_source": record#,
                 #"_id": record['id']
               }
         )
-
     es = search_omero_app.config.get("es_connector")
     helpers.bulk(es, actions)
 
@@ -202,7 +202,7 @@ def get_file_list(path_name):
 
     return f
 
-def insert_resourse_data(folder, resourse):
+def insert_resourse_data(folder, resourse, from_json):
     search_omero_app.logger.info("Adding data to {} using {}".format(resourse, folder))
     if not resource_elasticsearchindex.get(resourse):
         search_omero_app.logger.info("No index found for resourse: %s"%resourse)
@@ -227,9 +227,11 @@ def insert_resourse_data(folder, resourse):
         return
     for fil in files_list:
         fil=fil.strip()
+        if from_json and not fil.endswith('.json'):
+            continue
         search_omero_app.logger.info ("%s==%s == %s"%(f_con,fil,len(files_list)))
         file_name=os.path.join(folder,fil)
-        handle_file(file_name, es_index, cols, is_image)
+        handle_file(file_name, es_index, cols, is_image, from_json)
         search_omero_app.logger.info("File: %s has been processed"%fil)
         try:
             with open(file_name + ".done", 'w') as outfile:

@@ -51,12 +51,17 @@ def delete_es_index(resourse='all'):
 @manager.command
 @manager.option('-r', '--resourse', help='resourse name, e.g. image')
 @manager.option('-d', '--data_folder', help='Folder contains the data files')
-def add_resourse_data_to_es_index(resourse=None, data_folder=None):
+@manager.option('-f', '--from_json', help='Folder contains the data files')
+#D:\data\New_idr_database\image_data\image_33\test
+def add_resourse_data_to_es_index(resourse=None, data_folder=None,from_json=False):
     '''
      Insert data inside elastic search index by getting the data from csv files
     '''
+    if not resourse or not data_folder or not os.path.exists(data_folder):
+        search_omero_app.logger.info("Please check the input parameters, resourse: {resourse}, data_folder: {data_folder}".format(resourse=resourse, data_folder=data_folder))
+        return
     from search_engine.cache_functions.elasticsearch.transform_data import insert_resourse_data
-    insert_resourse_data(data_folder, resourse)
+    insert_resourse_data(data_folder, resourse, from_json)
 
 @manager.command
 @manager.option('-r', '--resourse', help='resourse name, creating all the indcese for all the resources is the default')

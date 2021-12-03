@@ -83,7 +83,9 @@ class BasicTestCase(unittest.TestCase):
         test create index in elastic search
         :return:
         '''
-        es_index_name="test_image"
+        from datetime import datetime
+        es_index_name="test_image_%s"%str(datetime.now().second)
+
         self.assertTrue (create_index(es_index_name, image_template))
         self.assertTrue (delete_es_index(es_index_name))
 
