@@ -168,7 +168,7 @@ def handle_file(file_name, es_index, cols, is_image,from_json):
             data_to_be_inserted=prepare_images_data(df,es_index)
         print (data_to_be_inserted)
         search_omero_app.logger.info (len(data_to_be_inserted))
-        with open(file_name+".txt", 'w') as outfile:
+        with open(file_name+".json", 'w') as outfile:
             json.dump(data_to_be_inserted, outfile)
 
     else:
