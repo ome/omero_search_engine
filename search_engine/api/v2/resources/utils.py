@@ -94,14 +94,14 @@ def elasticsearch_query_builder(and_filter, or_filters, main_attributes=None):
                 _nested_must_part.append(must_value_condition_template.substitute(value=value))
                 nested_must_part.append(nested_keyvalue_pair_query_template.substitute(nested=",".join(_nested_must_part)))
             if operator=="contains":
-                value="*{value}*".format(value=value)
+                value="*{value}*".format(value=value.strip())
                 _nested_must_part.append(must_name_condition_template.substitute(name=key))
                 _nested_must_part.append(wildcard_value_condition_template.substitute(wild_card_value=value))
                 nested_must_part.append(nested_keyvalue_pair_query_template.substitute(nested=",".join(_nested_must_part)))
             elif operator in ["not_equals", "not_contains"]:
                 nested_must_part.append(nested_keyvalue_pair_query_template.substitute(nested=must_name_condition_template.substitute(name=key)))
                 if operator=="not_contains":
-                    value="*{value}*".format(value=value)
+                    value="*{value}*".format(value=value.strip())
                     nested_must_not_part.append(nested_keyvalue_pair_query_template.substitute(nested=wildcard_value_condition_template.substitute(wild_card_value=value)))
                 else:
                     nested_must_not_part.append(nested_keyvalue_pair_query_template.substitute(nested=must_value_condition_template.substitute(value=value)))
