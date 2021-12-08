@@ -71,19 +71,19 @@ def elasticsearch_query_builder(and_filter, or_filters, main_attributes=None):
     should_part_list=[]
     if main_attributes and len(main_attributes) > 0:
         for attribute in main_attributes:
-            main_dd = main_attribute_query_template.substitute(attribute=attribute["name"], value=attribute["value"])
-            if attribute["operator"] == "equals":
+            main_dd = main_attribute_query_template.substitute(attribute=attribute["name"].strip(), value=attribute["value"].strip())
+            if attribute["operator"].strip() == "equals":
                 nested_must_part.append(main_dd)
-            elif attribute["operator"]=="not_equals":
+            elif attribute["operator"].strip()=="not_equals":
                 nested_must_not_part.append(main_dd)
 
     if and_filter and len (and_filter) >0:
         for filter in and_filter:
             search_omero_app.logger.info("FILTER %s"% filter)
             try:
-                key=filter["name"]
-                value=filter["value"]
-                operator=filter["operator"]
+                key=filter["name"].strip()
+                value=filter["value"].strip()
+                operator=filter["operator"].strip()
             except:
                 return build_error_message("Each Filter needs to have, name, value and operator keywords.")
             search_omero_app.logger.info("%s %s %s"%(operator, key, value))
@@ -94,14 +94,14 @@ def elasticsearch_query_builder(and_filter, or_filters, main_attributes=None):
                 _nested_must_part.append(must_value_condition_template.substitute(value=value))
                 nested_must_part.append(nested_keyvalue_pair_query_template.substitute(nested=",".join(_nested_must_part)))
             if operator=="contains":
-                value="*{value}*".format(value=value.strip())
+                value="*{value}*".format(value=value)
                 _nested_must_part.append(must_name_condition_template.substitute(name=key))
                 _nested_must_part.append(wildcard_value_condition_template.substitute(wild_card_value=value))
                 nested_must_part.append(nested_keyvalue_pair_query_template.substitute(nested=",".join(_nested_must_part)))
             elif operator in ["not_equals", "not_contains"]:
                 nested_must_part.append(nested_keyvalue_pair_query_template.substitute(nested=must_name_condition_template.substitute(name=key)))
                 if operator=="not_contains":
-                    value="*{value}*".format(value=value.strip())
+                    value="*{value}*".format(value=value)
                     nested_must_not_part.append(nested_keyvalue_pair_query_template.substitute(nested=wildcard_value_condition_template.substitute(wild_card_value=value)))
                 else:
                     nested_must_not_part.append(nested_keyvalue_pair_query_template.substitute(nested=must_value_condition_template.substitute(value=value)))
@@ -117,9 +117,9 @@ def elasticsearch_query_builder(and_filter, or_filters, main_attributes=None):
             shoud_not_value=[]
             should_names=[]
             try:
-                key=or_filter["name"]
-                value = or_filter["value"]
-                operator=or_filter["operator"]
+                key=or_filter["name"].strip()
+                value = or_filter["value"].strip()
+                operator=or_filter["operator"].strip()
             except:
                 return build_error_message("Each Filter needs to have, name, value and operator keywords.")
 
