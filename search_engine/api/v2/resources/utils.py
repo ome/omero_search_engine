@@ -68,14 +68,26 @@ def elasticsearch_query_builder(and_filter, or_filters, main_attributes=None):
     global nested_keyvalue_pair_query_template, must_term_template, must_not_term_template,should_term
     nested_must_part=[]
     nested_must_not_part = []
-    should_part_list=[]
+    should_part_list = []
+    minimum_should_match=0
     if main_attributes and len(main_attributes) > 0:
-        for attribute in main_attributes:
-            main_dd = main_attribute_query_template.substitute(attribute=attribute["name"].strip(), value=attribute["value"].strip())
-            if attribute["operator"].strip() == "equals":
-                nested_must_part.append(main_dd)
-            elif attribute["operator"].strip()=="not_equals":
-                nested_must_not_part.append(main_dd)
+        if main_attributes.get("and_main_attributes"):
+            for attribute in main_attributes.get("and_main_attributes"):
+                main_dd = main_attribute_query_template.substitute(attribute=attribute["name"].strip(), value=str(attribute["value"]).strip())
+                if attribute["operator"].strip() == "equals":
+                    nested_must_part.append(main_dd)
+                elif attribute["operator"].strip()=="not_equals":
+                    nested_must_not_part.append(main_dd)
+
+        if main_attributes.get("or_main_attributes"):
+            for attribute in main_attributes.get("or_main_attributes"):
+                main_dd = main_attribute_query_template.substitute(attribute=attribute["name"].strip(), value=str(attribute["value"]).strip())
+                if attribute["operator"].strip() == "equals":
+                    should_part_list.append(main_dd)
+                elif attribute["operator"].strip()=="not_equals":
+                    should_part_list.append(main_dd)
+            if len(should_part_list)>0:
+                minimum_should_match=len(should_part_list)
 
     if and_filter and len (and_filter) >0:
         for filter in and_filter:
@@ -179,7 +191,10 @@ def elasticsearch_query_builder(and_filter, or_filters, main_attributes=None):
             all_terms = nested_must_not_part_
 
     if len(should_part_list) > 0:
-        minimum_should_match=int(len(should_part_list)/2+1)
+        if minimum_should_match==len(should_part_list):
+            minimum_should_match=1
+        else:
+            minimum_should_match=int((len(should_part_list)-minimum_should_match)/2+1)
         should_part_ = ",".join(should_part_list)
         should_part_ = should_term_template.substitute(should_term=should_part_,minimum_should_match=minimum_should_match)
 
@@ -284,8 +299,10 @@ def search_resource_annotation(table_, query, page=None,bookmark=None):
     start_time = time.time()
     query_details = query.get('query_details')
     main_attributes=query.get("main_attributes")
+    if not query_details and main_attributes and len(main_attributes)>0:
+        pass
 
-    if not query or len(query) == 0 or len(query_details)==0 or isinstance(query_details,str) :
+    elif not query or len(query) == 0 or len(query_details)==0 or isinstance(query_details,str):
         return build_error_message("{query} is not a valid query".format(query=query))
     and_filters = query_details.get("and_filters")
     or_filters = query_details.get("or_filters")
@@ -296,9 +313,7 @@ def search_resource_annotation(table_, query, page=None,bookmark=None):
     #which will be returned to the sender:
     if isinstance(query_string, dict):
         return query_string
-
     search_omero_app.logger.info("Query %s"%query_string)
-
     query = json.loads(query_string)
     res=search_index_using_seargc_after(res_index, query, page, bookmark)
     notice=""
