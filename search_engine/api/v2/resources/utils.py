@@ -206,6 +206,11 @@ def elasticsearch_query_builder(and_filter, or_filters, main_attributes=None):
     return query_template.substitute(query=all_terms)
 
 def check_filters(res_table, filters):
+    '''
+    This method checks the name and value inside the filter and fixes if nay is not correct, case sensitive error, using the general term rather than scientific terms.
+    It should be expanded in the future to add more checks and fixes.
+    '''
+    organism_converter={"human":"Homo sapiens","house mouse":"Mus musculus","mouse":"Mus musculus"}
     names=read_cash_for_table(res_table)
     if not names or len(names)==0:
         search_omero_app.logger.info("Could not check filters %s"%str(filters))
@@ -218,11 +223,29 @@ def check_filters(res_table, filters):
         for filter in filter_:
             key=filter["name"]
             value=filter["value"]
-            if key not in names:
-                search_omero_app.logger.info ("Name Error %s"% str(key))
-            values=read_name_values_from_hdf5(res_table, key)
-            if value not in values:
-                search_omero_app.logger.info ("Value Error: %s/%s"%(str(key),str(value)))
+            operator=filter["operator"]
+            if operator != "contains" and operator !="not_contains":
+                key_= [name for name in names if name.casefold() == key.casefold()]
+                if len(key_)==1:
+                    filter["name"]=key_[0]
+                    if filter["name"]=="Organism":
+                        vv= [value_ for key,value_ in organism_converter.items() if key == value.casefold()]
+                        if len(vv)==1:
+                            filter["value"]=vv[0]
+                else:
+                    if len(key_)==0:
+                        search_omero_app.logger.info("Name Error %s" % str(key))
+
+                values = read_name_values_from_hdf5(res_table, key_[0])
+                if not values or len(values) == 0:
+                    search_omero_app.logger.info("Could not check filters %s" % str(filters))
+                    return
+                value_ = [val for val in values if val.casefold() == value.casefold()]
+                if len(value_)==1:
+                    filter["value"]=value_[0]
+                elif len(value_)==0:
+                    search_omero_app.logger.info("Value Error: %s/%s" % (str(key), str(value)))
+
 
 def search_index_scrol(index_name, query):
     results=[]
@@ -306,8 +329,8 @@ def search_resource_annotation(table_, query, page=None,bookmark=None):
         return build_error_message("{query} is not a valid query".format(query=query))
     and_filters = query_details.get("and_filters")
     or_filters = query_details.get("or_filters")
-    #This check has been commited temporary as I am not sure if it is should be carried out in some cases, e.g. contains, not equals, etc..
-    #check_filters(table_, [and_filters, or_filters])
+    #check and fid if possible names and values inside filters conditions
+    check_filters(table_, [and_filters, or_filters])
     query_string = elasticsearch_query_builder(and_filters,  or_filters,main_attributes)
     #query_string has to be string, if it is a dict, something went wrong and the message inside the dict
     #which will be returned to the sender:
