@@ -68,7 +68,7 @@ def get_resource_key_value(resource_table):
         return ("NO data for table {table}".format(table=resource_table))
     key=request.args.get("key")
     if not key:
-        return ("No key is provided")
+        return jsonify ("No key is provided")
     resource_keys=read_name_values_from_hdf5(resource_table, key)
     return jsonify (resource_keys)
 
