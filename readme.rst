@@ -131,7 +131,7 @@ Omero Search Engine
             main_attributes_2=[{"name":"project_id","value": 101, "operator":"equals"}]
             results_3=query_the_search_ending(query_2,main_attributes_2)
             #It is possible to get the results and exculde one project, e.g. 101
-            main_attributes_3=[{"name":"project_id","value": 101, "operator":"not_equals"}]
+            main_attributes_3={"and_main_attributes":[{"name":"project_id","value": 101, "operator":"not_equals"}]}
             results_4=query_the_search_ending(query_2,main_attributes_3)
 
 
