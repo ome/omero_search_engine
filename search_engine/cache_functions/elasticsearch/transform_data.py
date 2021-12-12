@@ -146,7 +146,7 @@ def prepare_data (data, doc_type):
             for rcd in data_record:
                 if rcd in ["mapvalue_name", "mapvalue_value"]:
                     continue
-                row_to_insert[rcd] = row[rcd]
+                row_to_insert[rcd] = row.get(rcd)
             row_to_insert["key_values"] = []
             data_to_be_inserted[row["id"]] = row_to_insert
         key_value=row_to_insert["key_values"]
@@ -166,7 +166,7 @@ def handle_file(file_name, es_index, cols, is_image,from_json):
             data_to_be_inserted=prepare_data(df,es_index)
         else:
             data_to_be_inserted=prepare_images_data(df,es_index)
-        print (data_to_be_inserted)
+        #print (data_to_be_inserted)
         search_omero_app.logger.info (len(data_to_be_inserted))
         with open(file_name+".json", 'w') as outfile:
             json.dump(data_to_be_inserted, outfile)
@@ -216,7 +216,10 @@ def insert_resourse_data(folder, resourse, from_json):
                 "well_id", "wellsample_id"]
     else:
         is_image=False
-        cols=["id", "owner_id", "group_id", "name", "mapvalue_name", "mapvalue_value","mapvalue_index"]
+        if resourse=="well":
+            cols=["id", "owner_id", "group_id", "mapvalue_name", "mapvalue_value","mapvalue_index"]
+        else:
+            cols = ["id", "owner_id", "group_id", "name", "mapvalue_name", "mapvalue_value", "mapvalue_index"]
     f_con=0
     if os.path.isfile(folder):
         files_list=[folder]

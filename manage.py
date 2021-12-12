@@ -6,7 +6,7 @@ from flask_script import Manager
 manager = Manager(search_omero_app)
 #create_app()
 
-from search_engine.cache_functions.hdf_cache_funs import update_cash, cash_values,  delete_cashed_key, check_cashed_query
+from search_engine.cache_functions.hdf_cache_funs import update_cash, cash_values,  delete_cashed_key, cash_project_names, cash_project_names
 
 
 @manager.command
@@ -23,6 +23,10 @@ def update_cash_files():
     cash metadata names for each resource (e.g. image, project) and save them in hdf5 file format
     '''
     update_cash()
+
+@manager.command
+def cash_names():
+    cash_project_names("project")
 
 
 @manager.command

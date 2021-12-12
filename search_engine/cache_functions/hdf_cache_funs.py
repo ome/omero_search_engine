@@ -9,6 +9,39 @@ from search_engine import search_omero_app
 
 cached_metadata="cached_metadata_h5py.h5"
 
+def cash_project_names(resourse):
+    cash_folder = search_omero_app.config["CASH_FOLDER"]
+    cash_file_name = os.path.join(cash_folder, 'names.h5')
+    sql="select name from {resourse}".format(resourse=resourse)
+    results = search_omero_app.config["database_connector"].execute_query(sql)
+    results = [res['name'] for res in results]
+    f = h5py.File(cash_file_name, 'w')
+    try:
+        g = f.create_group('names')
+        d = g.create_dataset(resourse, data=json.dumps(results))
+        f.close()
+    except Exception as e:
+        search_omero_app.logger.info("Error while writing the file  ...." + str(e))
+        f.close()
+        sys.exit(0)
+
+def get_resource_names(resource_table):
+    cash_folder = search_omero_app.config["CASH_FOLDER"]
+    cash_file_name = os.path.join(cash_folder, "names.h5")
+    if not os.path.exists(cash_file_name):
+        return []
+
+    f = h5py.File(cash_file_name, "r")
+    try:
+        names = json.loads(
+            f["names/{resource_table}".format(resource_table=resource_table)][()])
+        f.close()
+        return names
+    except Exception as e:
+        search_omero_app.logger.info("Error: " + str(e))
+        f.close()
+        return []
+
 def get_file_name(table,name, operator=None):
     if not operator:
         file_name="{table}_{name}.h5".format(table=table, name=name)

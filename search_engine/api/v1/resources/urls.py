@@ -2,7 +2,7 @@ from . import resources
 from flask import request, jsonify
 import json
 from search_engine.api.v1.resources.utils import search_resource_annotation, get_annotation_keys, get_resource_annotation_table
-from search_engine.cache_functions.hdf_cache_funs import read_name_values_from_hdf5
+from search_engine.cache_functions.hdf_cache_funs import read_name_values_from_hdf5,get_resource_names
 
 
 @resources.route('/',methods=['GET'])
@@ -72,3 +72,15 @@ def get_resource_key_value(resource_table):
     resource_keys=read_name_values_from_hdf5(resource_table, key)
     return jsonify (resource_keys)
 
+
+@resources.route('/<resource_table>/getresourcenames/',methods=['GET'])
+def get_resource_names_(resource_table):
+    '''
+    get the values for a key for a specific resource
+    '''
+    if not (get_resource_annotation_table(resource_table)):
+        return ("NO data for table {table}".format(table=resource_table))
+
+
+    names=get_resource_names(resource_table)
+    return jsonify (names)

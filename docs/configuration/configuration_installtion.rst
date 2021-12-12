@@ -1,6 +1,5 @@
 System configuration
 ====================
-
 The application should have the access attributes (e.g, URL, username, password, etc.) for the PostgreSQL database server and Elasticsearch.
 
     * The configuration is saved in a yml file (.app_config.yml)
