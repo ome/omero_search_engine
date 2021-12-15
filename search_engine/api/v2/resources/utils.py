@@ -19,7 +19,7 @@ resource_elasticsearchindex={"project":"project_keyvalue_pair_metadata",
                              "screen":"screen_keyvalue_pair_metadata",
                              "plate":"plate_keyvalue_pair_metadata",
                              "well":"well_keyvalue_pair_metadata",
-                             "image":"image_keyvalue_pair_metadata"
+                             "image":"image_keyvalue_pair_metadata_new"
                              }
 
 
@@ -81,6 +81,7 @@ def elasticsearch_query_builder(and_filter, or_filters, main_attributes=None):
 
         if main_attributes.get("or_main_attributes"):
             for attribute in main_attributes.get("or_main_attributes"):
+
                 main_dd = main_attribute_query_template.substitute(attribute=attribute["name"].strip(), value=str(attribute["value"]).strip())
                 if attribute["operator"].strip() == "equals":
                     should_part_list.append(main_dd)
@@ -210,7 +211,7 @@ def check_filters(res_table, filters):
     This method checks the name and value inside the filter and fixes if nay is not correct, case sensitive error, using the general term rather than scientific terms.
     It should be expanded in the future to add more checks and fixes.
     '''
-    organism_converter={"human":"Homo sapiens","house mouse":"Mus musculus","mouse":"Mus musculus"}
+    organism_converter={"human":"Homo sapiens","house mouse":"Mus musculus","mouse":"Mus musculus","chicken":"Gallus gallus"}
     names=read_cash_for_table(res_table)
     if not names or len(names)==0:
         search_omero_app.logger.info("Could not check filters %s"%str(filters))
@@ -235,6 +236,7 @@ def check_filters(res_table, filters):
                 else:
                     if len(key_)==0:
                         search_omero_app.logger.info("Name Error %s" % str(key))
+                        return
 
                 values = read_name_values_from_hdf5(res_table, key_[0])
                 if not values or len(values) == 0:

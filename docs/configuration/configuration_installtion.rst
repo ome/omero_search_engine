@@ -7,7 +7,7 @@ The application should have the access attributes (e.g, URL, username, password,
     * The configuration file template ({path/to/project}/configurations/app_config.yml) is distributed with the code and automatically copied to the user home folder when it runs for the first time.
     * The user should edit this file and provide the required attributes.
 
-There is a need to create the ELasticsearch inches and insert the data to them to be able to use the application.
+There is a need to create the ELasticsearch indices and insert the data to them to be able to use the application.
 
 * This process is done right now using some methods inside manage.py
     * The data is extracted from the IDR/Omero database using some SQL queries ({path/to/project}/omero_search_engine/search_engine/cache_functions/elasticsearch/sql_to_csv.py)
@@ -18,4 +18,4 @@ There is a need to create the ELasticsearch inches and insert the data to them t
     * add_resourse_data_to_es_index: Insert the data to the ELasticsearch index; the data can be in a single file (CSV format) or multiple files.
 
 * The names and values have been cashed from the database (key-value pairs) in hd5f files.
-    * These cashed data is available to the user through URLs
+    * These cashed data is available to the user through URLs as it is described in the user manual.
