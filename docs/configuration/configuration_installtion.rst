@@ -19,3 +19,23 @@ There is a need to create the ELasticsearch indices and insert the data to them 
 
 * The names and values have been cashed from the database (key-value pairs) in hd5f files.
     * These cashed data is available to the user through URLs as it is described in the user manual.
+
+Application installation using docker:
+======================================
+Ubuntu and Centos7 images are provided
+* The user should pull the image from:
+
+    * Ubuntu: [imageurl]
+    * Centos: [imageurl]
+
+* The user should first pull the image and then run using a command docker run and then the image name.
+* The image runs on port 5569 so mapping this port is required to expose the port to the host machine
+* Also, another folder (i.e. /etc/searchengine) should be mapped to the host machine. It will be used to save the configuration file so the user can configure his instance
+    * in addition, it will be used to save the logs files and other cached data.
+
+* Example of running the docker run command which maps the etc/searchengine to the user home folder
+    * docker run --rm -p 5569:5569 -v $HOME/:/etc/searchengine/  searchengine
+* The user can call any method inside manage.py by adding the method name by end of the run command. e.g:
+    *  docker run --rm -p 5569:5569 -v $HOME/:/etc/searchengine/  searchengine  show_saved_inde
+
+* A detailed installation instructions will be provided shortly.
