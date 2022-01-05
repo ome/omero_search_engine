@@ -1,9 +1,10 @@
 #!/bin/bash
 echo "$@"
 
-#check args and run the docker accoringly
-#if no arguments or argument == run_app, then it will start the gunicorn
-#otherwise it will run manage.py with the provided arguemts
+#Check inequality of a variable with a string value
+
+#if [ -z  "$@" ]; then
+#echo ("IT iS NULL")
 
 if [ -z  "$@" ] || [ "$@" = "run_app" ]; then
   echo "Windows operating system"

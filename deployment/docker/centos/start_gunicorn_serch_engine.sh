@@ -12,10 +12,13 @@ echo "staring the app"
 RUNDIR=$(dirname $SOCKFILE)
 echo "$RUNDIR"
 test -d $RUNDIR || mkdir -p $RUNDIR
+LOGS=/etc/searchengine/logs
+LOGSDIR=$(dirname $LOGS)
+test -d $LOGSDIR || mkdir -p $LOGSDIR
 user=$USER
 echo "Start Gunicorn ...."
 #exec ls -l  ~/.pyenv/versions/searchengine/bin/ 
 echo "$HOME"
 echo pwd
 cd $APPPATH
-exec gunicorn "search_engine:create_app('production')" -b 0.0.0.0:5569 --timeout 0 --name "$NAME"   --bind=unix:$SOCKFILE  --log-file=/etc/searchengine/logs/engine_gunilog.log --access-logfile=/etc/searchengine/logs/engine_access.log -error-logfile=/etc/searchengine//engine_logs/error.log  --workers 2
+exec gunicorn "search_engine:create_app('production')" -b 0.0.0.0:5577 --timeout 0 --name "$NAME"   --bind=unix:$SOCKFILE  --log-file=$LOGSDIR/logs/engine_gunilog.log --access-logfile=$LOGSDIR/logs/engine_access.log -error-logfile=$LOGSDIR/logs/engine_logs/engine_error.log  --workers 2
