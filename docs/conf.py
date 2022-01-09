@@ -25,7 +25,7 @@ sys.path.append(os.path.abspath(os.path.join(path, '..')))
 
 
 project = 'Omero Search Engine'
-copyright = '2021, Ome group'
+copyright = '2022 Ome group'
 author = 'Ome team'
 
 
