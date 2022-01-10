@@ -2,9 +2,9 @@ User Guide
 ===========
 A search engine is a tool that is used to search the metadata (key/value pairs). ELasticsearch search engine (https://www.elastic.co/) is utilized to perform the search
 Special indices are created to facilitate querying the data and searching the values. It supports almost all SQL like search operators.
-It is fast, scalable and future proof as it is possible to deploy more than Elastic search node to perform the search efficiency
+It is fast, scalable and future proof as it is possible to deploy more than one Elastic search node to perform the search efficiency
 
-* Get all the available resources (e.g. image) and their keys (names) using the following URL:
+* Get all the available resources (image, project, plate, etc.) and their keys (names) using the following URL:
 
     * /api/v1/resources/all/getannotationkeys
 

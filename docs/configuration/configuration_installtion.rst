@@ -27,14 +27,16 @@ The application should have the access attributes (e.g, URL, username, password,
 There is a need to create the ELasticsearch indices and insert the data to them to be able to use the application.
 
 * This process is done right now using some methods inside manage.py
-    * The data is extracted from the IDR/Omero database using some SQL queries ({path/to/project}/omero_search_engine/search_engine/cache_functions/elasticsearch/sql_to_csv.py)
+    * The data is extracted from the IDR/Omero database using some SQL queries and saved to csv files ({path/to/project}/omero_search_engine/search_engine/cache_functions/elasticsearch/sql_to_csv.py)
     * The image index data is generated in a big file, so it is recommended to split it into several files to facilitate processing the data and inserting it into the index. In Linux os, users can use the split command to divide the file, for example:
         * split -l 2600000 images.csv
     * create_index: Create the Elasticsearch indices, it can be used to create a single index or all the indices; the default is creating all the indices.
     * the indices are saved in this script ({path/to/project}/omero_search_engine/search_engine/cache_functions/elasticsearch/elasticsearch_templates.py)
     * add_resourse_data_to_es_index: Insert the data to the ELasticsearch index; the data can be in a single file (CSV format) or multiple files.
 
-* The names and values have been cashed from the database (key-value pairs) in hd5f files.
+* It has some utility functions inside the manage.py script to build hd5 cash files.
+    * These files contain the available key and value pair inside the database.
+    * The user builds them using a direct connection with the Postgres database server.
     * These cashed data is available to the user through URLs as it is described in the user manual.
 
 Application installation using docker:
@@ -47,13 +49,13 @@ Ubuntu and Centos7 images are provided
 
 * The user should first pull the image and then run using a command docker run and then the image name.
 * The image runs on port 5569 so mapping this port is required to expose the port to the host machine
-* Also, another folder (i.e. /etc/searchengine) should be mapped to the host machine.
+* Also, folders (i.e. /etc/searchengine) and user home folder ($HOME) should be mapped to folder inside the the host machine.
     * It will be used to save the configuration file so the user can configure his instance
     * in addition, it will be used to save the logs files and other cached data.
 
 * Example of running the docker run command for Centos image: which maps the etc/searchengine to the user home folder to save the log files, in addition, to mapping the application configuration file
     * docker run --rm -p 5569:5569 v /home/kmohamed001/.app_config.yml:/opt/app-root/src/.app_config.yml -v $HOME/:/etc/searchengine/  searchengine
 * The user can call any method inside manage.py by adding the method name by end of the run command. e.g:
-    *  docker run --rm -p 5569:5569 v /home/kmohamed001/.app_config.yml:/opt/app-root/src/.app_config.yml -v $HOME/:/etc/searchengine/  searchengine  show_saved_inde
+    *  docker run --rm -p 5569:5569 v /home/kmohamed001/.app_config.yml:/opt/app-root/src/.app_config.yml -v $HOME/:/etc/searchengine/  searchengine  show_saved_indices
 
 * A detailed installation instructions will be provided shortly.

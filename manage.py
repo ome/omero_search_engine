@@ -39,7 +39,7 @@ def delete_cashed_key_value():
 
 
 @manager.command
-def show_saved_index():
+def show_saved_indices():
     from search_engine.cache_functions.elasticsearch.transform_data import  get_all_indexes
     all_indexes=get_all_indexes()
     for index in all_indexes:
@@ -58,7 +58,7 @@ def delete_es_index(resourse='all'):
 @manager.option('-f', '--from_json', help='Folder contains the data files')
 #D:\data\New_idr_database\image_data\image_33\test
 def add_resourse_data_to_es_index(resourse=None, data_folder=None,from_json=False):
-    '''
+    ''' =
      Insert data inside elastic search index by getting the data from csv files
     '''
     if not resourse or not data_folder or not os.path.exists(data_folder):
