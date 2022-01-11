@@ -1,0 +1,45 @@
+services:
+  searchengine:
+    container_name: searchengine
+    hostname: searchengine
+    image: searchengine
+    volumes:
+      - /path/to/host/folder/.app_config.yml:/opt/app-root/src/.app_config.yml
+      - /path/to/host/folder/:/etc/searchengine/
+    ports:
+      - 5577:5577
+    restart: unless-stopped
+
+  searchclient:
+    container_name: searchclient
+    hostname: searchclient
+    image: searchengineclient
+    ports:
+     - 5567:5567
+    volumes:
+      - /path/to/host/folder/.omero_search_client.yml:/opt/app-root/src/.omero_search_client.yml
+      - /path/to/host/folder/:/etc/searchengineclient/
+    restart: unless-stopped
+
+  elasticsearch:
+      container_name: elasticsearch
+      hostname: elasticsearch
+      image : docker.elastic.co/elasticsearch/elasticsearch:7.16.2
+      ports:
+        - 9200:9200
+        - 9300:9300
+
+      environment:
+        - discovery.type=single-node
+        - path.data=/var/lib/elasticsearch/data
+        - path.logs=/var/lib/elasticsearch/logs
+        - network.host=0.0.0.0
+        - cluster.name= docker-cluster
+        - http.host=0.0.0.0
+        - http.port=9200
+      volumes:
+        - /path/to/elasticsearchdata/data:/var/lib/elasticsearch
+      restart: unless-stopped
+networks:
+  default:
+    name: searchengine-net
