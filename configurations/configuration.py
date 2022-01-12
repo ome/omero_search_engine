@@ -18,6 +18,10 @@ def set_database_connection_variables(config):
     :param database: databse name
     :return:
     '''
+
+
+
+
     if hasattr(config, 'DATABASE_PORT'):
         address = config.DATABASE_SERVER_URI + ':%s' % app_config.DATABASE_PORT
     else:
@@ -31,15 +35,22 @@ def set_database_connection_variables(config):
 
 class app_config (object):
     # the configuration can be loadd from yml file later
-    SECRET_KEY= "sdljhfd123ssdxckfgsdvbfl342fvsdfafgdf"
     home_folder = os.path.expanduser('~')
+
     print (home_folder)
     INSTANCE_CONFIG = os.path.join(home_folder, '.app_config.yml')
+    DEPLOYED_CONFIG=r"/etc/searchengine/.app_config.yml"
     if not os.path.isfile(INSTANCE_CONFIG):
-        LOCAL_CONFIG_FILE = os.path.join(os.path.abspath(os.path.dirname(__file__)),
-                                         'app_config.yml')
-        copyfile(LOCAL_CONFIG_FILE, INSTANCE_CONFIG)
-        print (LOCAL_CONFIG_FILE, INSTANCE_CONFIG)
+        # Check if the configuration file exists in the docker deployed folder
+        # if not, it will assume it is either development environment or deploying using other methods
+
+        if os.path.isfile(DEPLOYED_CONFIG):
+            INSTANCE_CONFIG=DEPLOYED_CONFIG
+        else:
+            LOCAL_CONFIG_FILE = os.path.join(os.path.abspath(os.path.dirname(__file__)),
+                                             'app_config.yml')
+            copyfile(LOCAL_CONFIG_FILE, INSTANCE_CONFIG)
+            print (LOCAL_CONFIG_FILE, INSTANCE_CONFIG)
 
 class development_app_config(app_config):
     DEBUG = False

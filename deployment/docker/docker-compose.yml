@@ -4,7 +4,6 @@ services:
     hostname: searchengine
     image: searchengine
     volumes:
-      - /path/to/host/folder/.app_config.yml:/opt/app-root/src/.app_config.yml
       - /path/to/host/folder/:/etc/searchengine/
     ports:
       - 5577:5577

@@ -1,11 +1,10 @@
 #!/bin/bash
 echo "$@"
 
+#test if the configuration file exists, if not it will copy it from the app configuration folder
+test -f /etc/searchengine/.app_config.yml || cp /searchengine/configurations/app_config.yml /etc/searchengine/.app_config.yml
+
 #Check inequality of a variable with a string value
-
-#if [ -z  "$@" ]; then
-#echo ("IT iS NULL")
-
 if [ -z  "$@" ] || [ "$@" = "run_app" ]; then
   echo "Windows operating system"
   bash start_gunicorn_serch_engine.sh
