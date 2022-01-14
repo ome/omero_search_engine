@@ -12,7 +12,7 @@ def index():
 def search_resource_page(resource_table):
     '''
     used to get the next results page
-    '''
+    '''  
     if not (get_resource_annotation_table):
         return jsonify (build_error_message("No data for table {table}".format(table=resource_table)))
     data = request.data

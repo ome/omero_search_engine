@@ -1,6 +1,11 @@
 # Search ngine + Search Engine Client + Elasticsearch
 
-- hosts: "{{ idr_environment | default('idr') }}-management-hosts"
+#- hosts: "{{ idr_environment | default('idr') }}-management-hosts"
+
+vars_files:
+    file: searchengine_vars.yml
+
+ - hosts: {{ host }}
 
   tasks:
 
@@ -61,7 +66,6 @@
         tag: latest
         source: pull
 
-
   - name: Run docker elasticsearch
     become: yes
     docker_container:
@@ -88,14 +92,13 @@
       volumes:
       - /data/searchengine/elasticsearch:/var/lib/elasticsearch/data
 
-
   - name: configure database for docker searchengine
     become: yes
     docker_container:
       image: "{{ searchengine_docker_image }}"
       name: searchengine
       cleanup: True
-      command: set_database_configuration -u {{ database_server_url }} , -d {{ database_name }}, -n {{ database_username }}, -p {{ database_user_password }}
+      command: set_database_configuration -u {{ database_server_url }} , -d {{ database_name }}, r {{ database_port }}, -n {{ database_username }}, -p {{ database_user_password }}
       networks:
       - name: searchengine-net
       published_ports:
@@ -110,7 +113,7 @@
       image: "{{ searchengine_docker_image }}"
       name: searchengine
       cleanup: True
-      command: set_elasticsearch_configuration -r searchengineelasticsearch
+      command: set_elasticsearch_configuration -r searchengineelasticsearch:9201
       networks:
       - name: searchengine-net
       published_ports:
@@ -183,4 +186,3 @@ set_cache_folder
        volumes:
       - /data/searchengine/searchengineclient:/etc/searchengineclient/
 
-  

@@ -13,7 +13,12 @@ non_image_template={
       "type": "long"
     },
     "name": {
-      "type": "text"
+      "type": "text",
+            "fields": {
+                "keyvalue": {
+                    "type": "keyword"
+                }
+            }
     },
         "owner": {
             "type": "long"

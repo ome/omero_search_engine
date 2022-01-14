@@ -11,7 +11,7 @@ mm=main_dir.replace("search_engine/api/v1/resources","")
 sys.path.append(mm)
 
 from search_engine import search_omero_app
-from search_engine.cache_functions.hdf_cache_funs import read_cash_for_table, read_name_values_from_hdf5
+from search_engine.cache_functions.hdf_cache_funs import read_cached_for_table, read_name_values_from_hdf5
 from string import Template
 
 
@@ -19,7 +19,7 @@ resource_elasticsearchindex={"project":"project_keyvalue_pair_metadata",
                              "screen":"screen_keyvalue_pair_metadata",
                              "plate":"plate_keyvalue_pair_metadata",
                              "well":"well_keyvalue_pair_metadata",
-                             "image":"image_keyvalue_pair_metadata_new"
+                             "image":"image_keyvalue_pair_metadata"
                              }
 
 
@@ -212,7 +212,7 @@ def check_filters(res_table, filters):
     It should be expanded in the future to add more checks and fixes.
     '''
     organism_converter={"human":"Homo sapiens","house mouse":"Mus musculus","mouse":"Mus musculus","chicken":"Gallus gallus"}
-    names=read_cash_for_table(res_table)
+    names=read_cached_for_table(res_table)
     if not names or len(names)==0:
         search_omero_app.logger.info("Could not check filters %s"%str(filters))
         return

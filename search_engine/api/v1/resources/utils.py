@@ -9,7 +9,7 @@ sys.path.append(mm)
 
 from search_engine import search_omero_app, make_celery
 from app_data.data_attrs import annotation_resource_link
-from search_engine.cache_functions.hdf_cache_funs import read_cash_for_table, cashe_query_results, check_cashed_query,read_name_values_from_hdf5
+from search_engine.cache_functions.hdf_cache_funs import read_cached_for_table, cachede_query_results, check_cacheded_query,read_name_values_from_hdf5
 annotation_mapvalue="annotation_mapvalue"
 
 celery = make_celery(search_omero_app)
@@ -38,19 +38,19 @@ def get_resource_annotation_table(resource_table):
         return None
 
 def test_names(table, meta_data):
-    table_names_cash_data=read_cash_for_table(table)
+    table_names_cached_data=read_cached_for_table(table)
     for name, value in meta_data.items():
-        if name not in table_names_cash_data:
-            suggested_names=test_names(name,table_names_cash_data)
+        if name not in table_names_cached_data:
+            suggested_names=test_names(name,table_names_cached_data)
             raise Exception(
-                "The provided name: {name} is not found in the annotation for {table}s".format(name=name, table=table_names_cash_data))
-    return table_names_cash_data
+                "The provided name: {name} is not found in the annotation for {table}s".format(name=name, table=table_names_cached_data))
+    return table_names_cached_data
 
-def build_sql_statment(table, filters, cashed_values, operator="="):
+def build_sql_statment(table, filters, cacheded_values, operator="="):
     '''
       Build sql statment using the table name and filters inside the meta_data_dict
     '''
-    cashed_results=[]
+    cacheded_results=[]
     sqls={}
     if table=='study':
         table='screen'
@@ -70,25 +70,25 @@ def build_sql_statment(table, filters, cashed_values, operator="="):
             search_omero_app.logger.info("value {value}".format(value=value))
             #print ("Start Date: ", datetime.now())
             #print ("Start Date: ", datetime.now())
-            ##########should be used to read all cashed values on one go
+            ##########should be used to read all cacheded values on one go
             #if operator=="!=":
             #    _ndnode = "{name}/not/{value}".format(name=name, value=value)
             #else:
             #    _ndnode = "{name}/{value}".format(name=name, value=value)
 
-            #val=cashed_values.get(_ndnode)
+            #val=cacheded_values.get(_ndnode)
 
 
             ###########
             if operator!="=":
-                val=check_cashed_query (table, name, value,operator="not")
+                val=check_cacheded_query (table, name, value,operator="not")
             else:
-                val = check_cashed_query(table, name, value)
+                val = check_cacheded_query(table, name, value)
             #check if  the item is saved inside the cached file
             if val and len(val)>0:
                 val_=val
-                cashed_results.append(val_)
-                search_omero_app.logger.info ("Cashed Value for '{name}'/'{value}' is {len}".format(name=name, value=value,len=len(val)))
+                cacheded_results.append(val_)
+                search_omero_app.logger.info ("cacheded Value for '{name}'/'{value}' is {len}".format(name=name, value=value,len=len(val)))
                 continue
 
             if "'" in name:
@@ -101,8 +101,8 @@ def build_sql_statment(table, filters, cashed_values, operator="="):
                     value=value)
 
             sqls["{name}/{value}".format(name=name_, value=value.replace("/","__"))]=sql
-    search_omero_app.logger.info ("Query: "+str(len(sqls))+", cashed: "+str(len(cashed_results)))
-    return sqls, cashed_results
+    search_omero_app.logger.info ("Query: "+str(len(sqls))+", cacheded: "+str(len(cacheded_results)))
+    return sqls, cacheded_results
 
 
 def search_studies(query):
@@ -111,7 +111,7 @@ def search_studies(query):
     operators = query.get('operators')
     if not operators:
         operators='or'
-    table_names_cash_data=test_names('screen',meta_data)
+    table_names_cached_data=test_names('screen',meta_data)
 
 
 def run_sql_statment(sql_statment):
@@ -133,8 +133,8 @@ def run_sql_statments(sql_statments):
 
 def get_tables(names):
     table_to_search={}
-    cashed_tables_names=read_cash_for_table(tables=tables)
-    for table, existing_names in cashed_tables_names.items():
+    cacheded_tables_names=read_cached_for_table(tables=tables)
+    for table, existing_names in cacheded_tables_names.items():
         for name in names:
             if name in existing_names:
                 if table not in table_to_search:
@@ -153,7 +153,7 @@ def run_filter(sql_statments, included_):
     included_[sql_statments[0]]=returned_results
 
 def check_filters(res_table, filters):
-    names=read_cash_for_table(res_table)
+    names=read_cached_for_table(res_table)
     search_omero_app.logger.info (str(filters))
     for filter_ in filters:
         for filter in filter_:
@@ -170,7 +170,7 @@ def add_query_results(table, sqls_dict, sql, results, operator=None):
             if operator:
                 key=key.replace("/","/{operator}/".format(operator=operator))
 
-            cashe_query_results(table, key, results,operator)
+            cachede_query_results(table, key, results,operator)
 
 def get_dict_intersection(dict1, dict2):
     shared_keys = dict1.keys() & dict2.keys()
@@ -198,7 +198,7 @@ def search_resource_annotation(table_, query, get_addition_results=False):
     and_filters=query_details.get("and_filters")
     or_filters=query_details.get("or_filters")
     not_filter=query_details.get("not_filters")
-    have_been_cashed ={}
+    have_been_cacheded ={}
     check_filters(table_,[and_filters, or_filters, not_filter])
     #it support using all keyword to search all the database
     #it has been tested for simple examples, it needs more work for verfication
@@ -228,19 +228,19 @@ def search_resource_annotation(table_, query, get_addition_results=False):
     # a list contains all the sql statments for or condition.
     or_sql_statments = []
     #dict to stor the cached results
-    cashed_results={}
+    cacheded_results={}
     #dicts contain the results from quering the database
     sqls_or={}
     sqls_not={}
     sqls_and = {}
     try:
         for table in tables:
-            cashed_values={}
+            cacheded_values={}
             search_omero_app.logger.info("Checking the {table} resource ...".format(table=table))
             if not_filter and len (not_filter)>0:
-                sqls_not, cashed_results_=build_sql_statment(table, not_filter, cashed_values, operator="!=")
-                if len(cashed_results_)>0:
-                    cashed_results["not"]=cashed_results_
+                sqls_not, cacheded_results_=build_sql_statment(table, not_filter, cacheded_values, operator="!=")
+                if len(cacheded_results_)>0:
+                    cacheded_results["not"]=cacheded_results_
 
                 if sqls_not and len(sqls_not)>0:
                      sql_statments=sql_statments+list(sqls_not.values())
@@ -249,20 +249,20 @@ def search_resource_annotation(table_, query, get_addition_results=False):
                 #    for name, table in tables_to_search.items():
                 #        sqls_or = build_sql_statment(table, names)
                 #else:
-                sqls_or, cashed_results_ = build_sql_statment(table, or_filters,cashed_values)
+                sqls_or, cacheded_results_ = build_sql_statment(table, or_filters,cacheded_values)
 
                 if sqls_or and len (sqls_or)>0:
                     #or_sql_statments=sql_statments+list(sqls_or.values())
                     or_sql_statments = list(sqls_or.values())
-                if len(cashed_results_)>0:
-                    cashed_results["or"]=cashed_results_
+                if len(cacheded_results_)>0:
+                    cacheded_results["or"]=cacheded_results_
 
             if and_filters and len(and_filters)>0:
-                sqls_and, cashed_results_ = build_sql_statment(table, and_filters, cashed_values)
+                sqls_and, cacheded_results_ = build_sql_statment(table, and_filters, cacheded_values)
                 if sqls_and and len(sqls_and)>0:
                     sql_statments=sql_statments+list(sqls_and.values())
-                if len(cashed_results_)>0:
-                    cashed_results['and']=cashed_results_
+                if len(cacheded_results_)>0:
+                    cacheded_results['and']=cacheded_results_
             #When not using celey (by setting "ASYNCHRONOUS_SEARCH" to False inside the app configuration file
             #Then it will use paralle search, this should use carfully as it will raise erro in case of two process trying to updatethe hdf5 file at the same time.
             #Anyway we should have a mchanism to lock the file for writing when another process updating it.
@@ -291,17 +291,17 @@ def search_resource_annotation(table_, query, get_addition_results=False):
             counter_=0
             or_results={}
             to_be_ignored=[]
-            cash_or_results= {}
+            cached_or_results= {}
             if len(or_sql_statments)>0:
                 for sql__ in or_sql_statments:
                     if sql__ in or_return_dict:
-                        cash_or_results={** cash_or_results,**or_return_dict[sql__]}
+                        cached_or_results={** cached_or_results,**or_return_dict[sql__]}
                         to_be_ignored.append(sql__)
-            search_omero_app.logger.info ("1. Or Cash "+str(len(cash_or_results)))
+            search_omero_app.logger.info ("1. Or cached "+str(len(cached_or_results)))
 
-            if "or" in cashed_results:
-                for v in cashed_results["or"]:
-                    cash_or_results = {**cash_or_results, **v}
+            if "or" in cacheded_results:
+                for v in cacheded_results["or"]:
+                    cached_or_results = {**cached_or_results, **v}
 
             for k, v in or_return_dict.items():
                 add_query_results(table, sqls_or, k, v)
@@ -323,7 +323,7 @@ def search_resource_annotation(table_, query, get_addition_results=False):
                 else:
                     returned_results=get_dict_intersection(returned_results,v)
                 counter_+=1
-            for k, val_ in cashed_results.items():
+            for k, val_ in cacheded_results.items():
                 #escape the or condition as it will be used later
                 if k=="or":
                     continue
@@ -338,13 +338,13 @@ def search_resource_annotation(table_, query, get_addition_results=False):
 
                     search_omero_app.logger.info ("Cache: "+str(len(returned_results)))
                     counter_ += 1
-            if len(cash_or_results)>0:
+            if len(cached_or_results)>0:
                 if counter_==0:
-                    returned_results=cash_or_results
+                    returned_results=cached_or_results
                 else:
-                    returned_results = get_dict_intersection(returned_results, cash_or_results)
+                    returned_results = get_dict_intersection(returned_results, cached_or_results)
                 counter_ += 1
-                        #sss= list(set(sss) & set(cash_or_results))
+                        #sss= list(set(sss) & set(cached_or_results))
             max_size=search_omero_app.config["MAX_RETUNED_ITEMS"]
             coo=0
             notice="None"
@@ -485,12 +485,12 @@ def get_annotation_keys(table):
     if not linked_table:
         return("No annotation linked table is avilable for table %s" % table)
     if isinstance(linked_table,str):
-        resource_keys = read_cash_for_table(table)
+        resource_keys = read_cached_for_table(table)
         return resource_keys
     elif isinstance(linked_table, dict):
         returned_keys={}
         for table_, linkedtable in linked_table.items():
-            resource_keys = read_cash_for_table(table_)
+            resource_keys = read_cached_for_table(table_)
             returned_keys[table_]=resource_keys
         return returned_keys
 
