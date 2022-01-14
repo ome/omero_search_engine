@@ -3,39 +3,41 @@ import json
 from search_engine import search_omero_app
 from flask_script import Manager
 
+from configurations.configuration import update_config_file
+
 manager = Manager(search_omero_app)
 #create_app()
 
-from search_engine.cache_functions.hdf_cache_funs import update_cash, cash_values,  delete_cashed_key, cash_project_names, cash_project_names
+from search_engine.cache_functions.hdf_cache_funs import update_cached, cached_values,  delete_cacheded_key, cached_project_names, cached_project_names
 
 
 @manager.command
-def set_resource_cash_name_value():
+def set_resource_cached_name_value():
     ''''
     cah names and values for each resource (e.g image, project)
     '''
-    cash_values()
+    cached_values()
 
 
 @manager.command
-def update_cash_files():
+def update_cached_files():
     '''
-    cash metadata names for each resource (e.g. image, project) and save them in hdf5 file format
+    cached metadata names for each resource (e.g. image, project) and save them in hdf5 file format
     '''
-    update_cash()
+    update_cached()
 
 @manager.command
-def cash_names():
-    cash_project_names("project")
+def cached_names():
+    cached_project_names("project")
 
 
 @manager.command
-def delete_cashed_key_value():
+def delete_cacheded_key_value():
     resource_table="image"
     key="Cell Line"#"Gene Symbol"
     value=None#"Normal tissue, NOS"#"KIF11"
 
-    delete_cashed_key(resource_table, key, value)
+    delete_cacheded_key(resource_table, key, value)
 
 
 @manager.command
@@ -75,6 +77,53 @@ def create_index(resourse="all"):
     '''
     from search_engine.cache_functions.elasticsearch.transform_data import create_omero_indexes
     create_omero_indexes(resourse)
+
+##set configurations
+@manager.command
+@manager.option('-u', '--url', help='database server url')
+@manager.option('-d', '--database', help='database name')
+@manager.option('-n', '--name', help='database usernname')
+@manager.option('-p', '--password', help='database username password')
+def set_database_configuration(url=None, database=None,name=None, password=None):
+    database_attrs={}
+    if url:
+        database_attrs["DATABASE_SERVER_URI"]=url
+    if database:
+        database_attrs["DATABAS_NAME"]=database
+    if name:
+        database_attrs["DATABASE_USER"]=name
+    if password:
+        database_attrs["DATABASE_PASSWORD"]=password
+    if len(database_attrs)>0:
+        update_config_file(database_attrs)
+    else:
+        search_omero_app.logger.info("At least one database attributed (i.e. url, database name, username, username password) should be provided")
+
+
+
+@manager.command
+@manager.option('-e', '--elasticsearch_url', help='elasticsearch url')
+def set_elasticsearch_configuration(elasticsearch_url=None):
+    if elasticsearch_url:
+        update_config_file({"ELASTICSEARCH_URL":elasticsearch_url})
+    else:
+        search_omero_app.logger.info("No attribute is provided")
+
+@manager.command
+@manager.option('-c', '--cache_folder', help='cache folder path')
+def set_cache_folder (cache_folder=None):
+    if cache_folder:
+        update_config_file({"CACHE_FOLDER":cache_folder})
+    else:
+        search_omero_app.logger.info("No attribute is provided")
+
+@manager.command
+@manager.option('-s', '--page_size', help='cache folder path')
+def set_max_page(page_size=None):
+    if page_size and page_size.isdigit():
+        update_config_file({"PAGE_SIZE":int(page_size)})
+    else:
+        search_omero_app.logger.info("No valid attribute is provided")
 
 
 

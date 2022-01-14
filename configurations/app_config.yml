@@ -2,7 +2,7 @@ DATABASE_SERVER_URI : "127.0.0.1"
 DATABASE_USER : "database_user"
 DATABASE_PASSWORD : "password"
 DATABAS_NAME : "idr"
-CASH_FOLDER : "path/to/folder/app_data"
+CACHE_FOLDER : "path/to/folder/app_data"
 CELERY_BROKER_URL : "redis://localhost:6379"
 CELERY_RESULT_BACKEND : "redis://localhost:6379"
 ASYNCHRONOUS_SEARCH : True

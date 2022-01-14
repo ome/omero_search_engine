@@ -18,10 +18,6 @@ def set_database_connection_variables(config):
     :param database: databse name
     :return:
     '''
-
-
-
-
     if hasattr(config, 'DATABASE_PORT'):
         address = config.DATABASE_SERVER_URI + ':%s' % app_config.DATABASE_PORT
     else:
@@ -32,12 +28,26 @@ def set_database_connection_variables(config):
                                             config.DATABASE_PASSWORD, \
                                             address, config.DATABAS_NAME)
 
+def update_config_file(updated_configuration):
+    is_changed=False
+    with open(app_config.INSTANCE_CONFIG) as f:
+        configuration = yaml.load(f)
+
+    for key, value in updated_configuration.items():
+        if key in configuration:
+            if configuration[key]!=value:
+                configuration[key]=value
+                is_changed=True
+                print ("%s is Update, new value is %s "%(key, value))
+    if is_changed:
+        with open(app_config.INSTANCE_CONFIG, 'w') as f:
+             yaml.dump(configuration, f)
+
 
 class app_config (object):
     # the configuration can be loadd from yml file later
     home_folder = os.path.expanduser('~')
 
-    print (home_folder)
     INSTANCE_CONFIG = os.path.join(home_folder, '.app_config.yml')
     DEPLOYED_CONFIG=r"/etc/searchengine/.app_config.yml"
     if not os.path.isfile(INSTANCE_CONFIG):
