@@ -1,0 +1,201 @@
+# Search ngine + Search Engine Client + Elasticsearch
+
+#- hosts: "{{ idr_environment | default('idr') }}-management-hosts"
+
+    
+#hosts: localhost
+#connection: local 
+
+#- hosts: all
+#  remote_user: root  
+#  vars_files:
+#    - /vars/external_vars.yml
+#- hosts: all
+#  vars_files:
+#    file: searchengine_vars.yml
+
+- name: Deploying search engine
+  connection: local  
+  hosts: local
+  vars_files:
+    searchengine_vars.yml
+  
+  tasks:
+  - name: Create app top level directory
+    become: yes
+    file:
+      path: /data/searchengine
+      recurse: yes
+      state: directory
+      owner: root
+      group: root
+
+  - name: Create searchengine logs directory
+    become: yes
+    file:
+      path: /data/searchengine/logs
+      state: directory
+      
+  - name: Create searchengine cached directory
+    become: yes
+    file:
+      path: /data/searchengine/cacheddata
+      state: directory
+
+  - name: Create client  directory
+    become: yes
+    file:
+      path: /data/searchengine/client
+      recurse: yes
+      state: directory
+      owner: root
+      group: root
+
+  - name: Create searchengineclient logs directory
+    become: yes
+    file:
+      path: /data/searchengine/client/logs
+      state: directory
+
+  - name: Create elasticsearch directory
+    become: yes
+    file:
+      path: /data/searchengine/elasticsearch
+      state: directory
+      # User id in elasticsearch Docker image
+      owner: 1000
+      group: 1000
+
+  - name: Create docker network
+    become: yes
+    docker_network:
+      name: searchengine-net
+      state: present
+
+  - name: Pull search engine docker image
+    docker_image:
+        name: "{{ search_engineelasticsearch_docker_image }}"
+        tag: latest
+        source: pull
+
+  - name: Run docker elasticsearch
+    become: yes
+    docker_container:
+      image: "{{ search_engineelasticsearch_docker_image }}"
+      name: searchengineelasticsearch
+      cleanup: True
+      env:
+         discovery.type=single-node
+         path.data=/var/lib/elasticsearch/data
+         path.logs=/var/lib/elasticsearch/logs
+         network.host=0.0.0.0
+         cluster.name=docker-cluster
+         http.host=0.0.0.0
+         http.port=9200
+         discovery.type= single-node
+         ES_JAVA_OPTS= "-Xmx4096m"
+      networks:
+      - name: searchengine-net
+      published_ports:
+      - "9201:9200"
+      #- "9301:9300"
+      state: started
+      restart_policy: always
+      volumes:
+      - /data/searchengine/elasticsearch:/var/lib/elasticsearch/data
+
+  - name: configure database for docker searchengine
+    become: yes
+    docker_container:
+      image: "{{ searchengine_docker_image }}"
+      name: searchengine
+      cleanup: True
+      command: set_database_configuration -u {{ database_server_url }} , -d {{ database_name }}, r {{ database_port }}, -n {{ database_username }}, -p {{ database_user_password }}
+      networks:
+      - name: searchengine-net
+      published_ports:
+      - "5577:5577"
+      state: started
+      volumes:
+      - /data/searchengine/:/data/searchengine/
+
+  - name: configure elasticsearch  for docker searchengine
+    become: yes
+    docker_container:
+      image: "{{ searchengine_docker_image }}"
+      name: searchengine
+      cleanup: True
+      command: set_elasticsearch_configuration -r searchengineelasticsearch:9201
+      networks:
+      - name: searchengine-net
+      published_ports:
+      - "5577:5577"
+      state: started
+      volumes:
+      - /data/searchengine/:/data/searchengine/
+
+  - name: configure elasticsearch  for docker searchengine
+    become: yes
+    docker_container:
+      image: "{{ searchengine_docker_image }}"
+      name: searchengine
+      cleanup: True
+      command: set_cache_folder -c {{ searchenginecache_folder }}
+      networks:
+      - name: searchengine-net
+      published_ports:
+      - "5577:5577"
+      state: started
+      volumes:
+      - /data/searchengine/:/data/searchengine/
+
+
+  - name: create elasticsearch all indcies for docker searchengine
+    become: yes
+    docker_container:
+      image: "{{ searchengine_docker_image }}"
+      name: searchengine
+      cleanup: True
+      command: create_index
+      networks:
+      - name: searchengine-net
+      published_ports:
+      - "5577:5577"
+      state: started
+      volumes:
+      - /data/searchengine/:/data/searchengine/
+
+#set_cache_folder
+  - name: Run docker searchengine
+    become: yes
+    docker_container:
+      image: "{{ searchengine_docker_image }}"
+      name: searchengine
+      cleanup: True
+      networks:
+      - name: searchengine-net
+      published_ports:
+      - "5577:5577"
+      #restart: "{{ searchengine_conf_status | changed }}"
+      state: started
+      restart_policy: always
+      volumes:
+      - /data/searchengine/:/data/searchengine/
+
+  - name: Run docker searchengineclient
+    become: yes
+    docker_container:
+      image: "{{ searchengineclient_docker_image }}"
+      name: searchengineclient
+      cleanup: True
+      networks:
+      - name: searchengine-net
+      published_ports:
+      - "5567:5567"
+      #restart: "{{ searchengine_conf_status | changed }}"
+      state: started
+      restart_policy: always
+      volumes:
+        - /data/searchengine/searchengineclient:/etc/searchengineclient/
+
+

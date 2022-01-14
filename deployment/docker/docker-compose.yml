@@ -16,7 +16,6 @@ services:
     ports:
      - 5567:5567
     volumes:
-      - /path/to/host/folder/.omero_search_client.yml:/opt/app-root/src/.omero_search_client.yml
       - /path/to/host/folder/:/etc/searchengineclient/
     restart: unless-stopped
 
