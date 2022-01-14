@@ -54,8 +54,8 @@ def create_app(config_name="development"):
     #celery.conf.update(search_omero_app.config)
     search_omero_app.app_context()
     search_omero_app.app_context().push()
-    es_connector = Elasticsearch(app_config.ELASTICSEARCH__URL,
-                                 timeout=30, max_retries=10, retry_on_timeout=True)
+    es_connector = Elasticsearch(app_config.ELASTICSEARCH_URL,
+                                 timeout=30, max_retries=20, retry_on_timeout=True)
 
     search_omero_app.config["database_connector"]=database_connector
     search_omero_app.config["es_connector"] = es_connector
