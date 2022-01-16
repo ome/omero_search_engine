@@ -6,9 +6,10 @@ test -f /etc/searchengine/.app_config.yml || cp /searchengine/configurations/app
 
 #Check inequality of a variable with a string value
 if [ -z  "$@" ] || [ "$@" = "run_app" ]; then
-  echo "Windows operating system"
+  echo "Starting the app"
   bash start_gunicorn_serch_engine.sh
 else
+  echo "$@"
   python3.9 manage.py "$@"
 fi
 

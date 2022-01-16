@@ -6,9 +6,10 @@ echo "$@"
 #otherwise it will run manage.py with the provided arguemts
 
 if [ -z  "$@" ] || [ "$@" = "run_app" ]; then
-  echo "Windows operating system"
+  echo "Starting the app"
   bash start_gunicorn_serch_engine.sh
 else
+  echo "$@"
   python3.9 manage.py "$@"
 fi
 

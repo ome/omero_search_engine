@@ -2,13 +2,14 @@
 
 #- hosts: "{{ idr_environment | default('idr') }}-management-hosts"
 
-vars_files:
-    file: searchengine_vars.yml
 
- - hosts: {{ host }}
+- name: Deploying search engine
+  connection: local
+  hosts: local
+  vars_files:
+    searchengine_vars.yml
 
   tasks:
-
   - name: Create app top level directory
     become: yes
     file:
@@ -24,7 +25,7 @@ vars_files:
       path: /data/searchengine/logs
       state: directory
 
-   - name: Create searchengine cached directory
+  - name: Create searchengine cached directory
     become: yes
     file:
       path: /data/searchengine/cacheddata
@@ -77,11 +78,11 @@ vars_files:
          path.data=/var/lib/elasticsearch/data
          path.logs=/var/lib/elasticsearch/logs
          network.host=0.0.0.0
-         cluster.name= docker-cluster
-          http.host=0.0.0.0
-          http.port=9200
-          discovery.type: single-node
-          ES_JAVA_OPTS: "-Xmx4096m"
+         cluster.name=docker-cluster
+         http.host=0.0.0.0
+         http.port=9200
+         discovery.type= single-node
+         ES_JAVA_OPTS= "-Xmx4096m"
       networks:
       - name: searchengine-net
       published_ports:
@@ -122,7 +123,7 @@ vars_files:
       volumes:
       - /data/searchengine/:/data/searchengine/
 
- - name: configure elasticsearch  for docker searchengine
+  - name: configure elasticsearch  for docker searchengine
     become: yes
     docker_container:
       image: "{{ searchengine_docker_image }}"
@@ -138,7 +139,7 @@ vars_files:
       - /data/searchengine/:/data/searchengine/
 
 
- - name: create elasticsearch all indcies for docker searchengine
+  - name: create elasticsearch all indcies for docker searchengine
     become: yes
     docker_container:
       image: "{{ searchengine_docker_image }}"
@@ -153,7 +154,7 @@ vars_files:
       volumes:
       - /data/searchengine/:/data/searchengine/
 
-set_cache_folder
+#set_cache_folder
   - name: Run docker searchengine
     become: yes
     docker_container:
@@ -183,6 +184,7 @@ set_cache_folder
       #restart: "{{ searchengine_conf_status | changed }}"
       state: started
       restart_policy: always
-       volumes:
-      - /data/searchengine/searchengineclient:/etc/searchengineclient/
+      volumes:
+        - /data/searchengine/searchengineclient:/etc/searchengineclient/
+
 

@@ -81,10 +81,11 @@ def create_index(resourse="all"):
 ##set configurations
 @manager.command
 @manager.option('-u', '--url', help='database server url')
+@manager.option('-s', '--server_port_number', help='database port number')
 @manager.option('-d', '--database', help='database name')
 @manager.option('-n', '--name', help='database usernname')
 @manager.option('-p', '--password', help='database username password')
-def set_database_configuration(url=None, database=None,name=None, password=None):
+def set_database_configuration(url=None, server_port_number=None, database=None,name=None, password=None):
     database_attrs={}
     if url:
         database_attrs["DATABASE_SERVER_URI"]=url
@@ -94,6 +95,9 @@ def set_database_configuration(url=None, database=None,name=None, password=None)
         database_attrs["DATABASE_USER"]=name
     if password:
         database_attrs["DATABASE_PASSWORD"]=password
+    if server_port_number and server_port_number.isdigit():
+        database_attrs["DATABASE_PORT"] = server_port_number
+
     if len(database_attrs)>0:
         update_config_file(database_attrs)
     else:
