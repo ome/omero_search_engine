@@ -20,37 +20,43 @@
   vars_files:
     searchengine_vars.yml
 
-  vars:
-    #ansible_python_interpreter: /usr/bin/python3
-    ansible_python_interpreter: /home/kmohamed001/.pyenv/versions/search_engine/bin/python
   pre_tasks:
     - raw: sudo yum update -y
   tasks:
   - name: Create app top level directory
     become: yes
     file:
-      path: /data/searchengine
+      path: "{{ apps_folder }}/searchengine"
       recurse: yes
       state: directory
       owner: root
       group: root
 
+  - name: Create searchengine folder directory
+    become: yes
+    file:
+      path: "{{ apps_folder }}/searchengine/searchengine"
+      recurse: yes
+      state: directory
+      owner: root
+      group: root
+      
   - name: Create searchengine logs directory
     become: yes
     file:
-      path: /data/searchengine/logs
+      path: "{{ apps_folder }}/searchengine/searchengine/logs"
       state: directory
 
   - name: Create searchengine cached directory
     become: yes
     file:
-      path: /data/searchengine/cacheddata
+      path: "{{ apps_folder }}/searchengine/searchengine/cacheddata"
       state: directory
 
   - name: Create client  directory
     become: yes
     file:
-      path: /data/searchengine/client
+      path: "{{ apps_folder }}/searchengine/client"
       recurse: yes
       state: directory
       owner: root
@@ -59,21 +65,22 @@
   - name: Create client logs directory
     become: yes
     file:
-      path: /data/searchengine/client/logs
+      path: "{{ apps_folder }}/searchengine/client/logs"
       state: directory
 
   - name: Create elasticsearch directory
     become: yes
     file:
-      path: /data/searchengine/elasticsearch
+      path: "{{ apps_folder }}/searchengine/elasticsearch"
       state: directory
       # User id in elasticsearch Docker image
       owner: 1000
       group: root
+      
   - name: Create elasticsearch logs directory
     become: yes
     file:
-      path: /data/searchengine/elasticsearch/logs
+      path: "{{ apps_folder }}/searchengine/elasticsearch/logs"
       state: directory
       # User id in elasticsearch Docker image
       owner: 1000
@@ -82,7 +89,7 @@
   - name: Create elasticsearch data directory
     become: yes
     file:
-      path: /data/searchengine/elasticsearch/data
+      path: "{{ apps_folder }}/searchengine/elasticsearch{{ apps_folder }}"
       state: directory
       # User id in elasticsearch Docker image
       owner: 1000
@@ -125,9 +132,9 @@
       state: started
       restart_policy: always
       volumes:
-      - /data/searchengine/elasticsearch/data:/var/lib/elasticsearch
-      - /data/searchengine/elasticsearch/logs:/var/log/elasticsearch
-      -
+      - "{{ apps_folder }}/searchengine/elasticsearch{{ apps_folder }}:/var/lib/elasticsearch"
+      - "{{ apps_folder }}/searchengine/elasticsearch/logs:/var/log/elasticsearch"
+      - 
   - name: configure elasticsearch  for docker searchengine
     become: yes
     docker_container:
@@ -135,15 +142,15 @@
       name: searchengine
       cleanup: True
       command: "set_elasticsearch_configuration -e searchengineelasticsearch"
-      networks:
-      - name: searchengine-net
-      published_ports:
-      - "5577:5577"
+      #networks:
+      #- name: searchengine-net
+      #published_ports:
+      #- "5577:5577"
       state: started
       volumes:
-      - /data/searchengine/:/etc/searchengine/
+      - "{{ apps_folder }}/searchengine/searchengine/:/etc/searchengine/"
 
-
+ 
   - name: configure database for docker searchengine
     become: yes
     docker_container:
@@ -157,8 +164,8 @@
       #- "5577:5577"
       state: started
       volumes:
-      - /data/searchengine/:/etc/searchengine/
-
+      - "{{ apps_folder }}/searchengine/searchengine/:/etc/searchengine/"
+ 
   - name: configure cache folder  for docker searchengine
     become: yes
     docker_container:
@@ -172,8 +179,8 @@
       #- "5577:5577"
       state: started
       volumes:
-      - /data/searchengine/:/etc/searchengine/
-
+      - "{{ apps_folder }}/searchengine/searchengine/:/etc/searchengine/"
+      
   - name: create elasticsearch all indcies for docker searchengine
     become: yes
     docker_container:
@@ -183,17 +190,31 @@
       command: create_index
       networks:
       - name: searchengine-net
-      published_ports:
-      - "5577:5577"
+      #published_ports:
+      #- "5577:5577"
       state: started
       volumes:
-      - /data/searchengine/:/etc/searchengine/
+      - "{{ apps_folder }}/searchengine/searchengine/:/etc/searchengine/"
 
-#set_cache_folder
+  - name: configure search engine url for search client
+    become: yes
+    docker_container:
+      image: "{{ searchengineclient_docker_image }}"
+      name: searchengineclient
+      cleanup: True
+      command: "set_searchengine_url -u http://searchengine:5577/"# http://127.0.0.1:5556/"
+      #networks:
+      #- name: searchengine-net
+      #published_ports:
+      #- "5567:5567"
+      state: started
+      volumes:
+      - "{{ apps_folder }}/searchengine/client:/etc/searchengineclient/"    
+      
   - name: Run docker searchengine
     become: yes
     docker_container:
-      image: "{{ searchengine_docker_image }}"
+      image: "{{ searchengine_docker_image}}"
       name: searchengine
       cleanup: True
       networks:
@@ -204,7 +225,8 @@
       state: started
       restart_policy: always
       volumes:
-      - /data/searchengine/:/etc/searchengine/
+        - "{{ apps_folder }}/searchengine/searchengine/:/etc/searchengine/"
+
 
   - name: Run docker searchengineclient
     become: yes
@@ -216,12 +238,8 @@
       - name: searchengine-net
       published_ports:
       - "5567:5567"
-      #restart: "{{ searchengine_conf_status | changed }}"
+      #restart: "{{ searchengineclient_conf_status | changed }}"
       state: started
       restart_policy: always
       volumes:
-        - /data/searchengine/client:/etc/searchengineclient/
-
-
-
-
+        - "{{ apps_folder }}/searchengine/client:/etc/searchengineclient/"

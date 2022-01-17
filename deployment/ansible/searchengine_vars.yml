@@ -1,10 +1,12 @@
 host: localhost
+apps_folder: /data
 database_server_url: 127.0.0.1
 database_port: 5432
-database_name: IDR
+database_name: idr
 database_username: postgres
 database_user_password: pass1234
-searchenginecache_folder: /etc/searchengine/app_data/
+searchenginecache_folder: /data/searchengine/searchengine/cacheddata/
 search_engineelasticsearch_docker_image: docker.elastic.co/elasticsearch/elasticsearch:7.16.2
 searchengine_docker_image: searchengine
 searchengineclient_docker_image: searchengineclient
+ansible_python_interpreter: /home/kmohamed001/.pyenv/versions/search_engine/bin/python
