@@ -18,12 +18,13 @@ ADD start_gunicorn_serch_engine.sh /searchengine
 ADD run_app.sh /searchengine
 RUN cd /searchengine
 RUN mkdir /etc/searchengine
+RUN mkdir /etc/searchengine/chachedata
 RUN mkdir /etc/searchengine/logs
 WORKDIR /searchengine
 RUN pip3.9 install -r  requirments.txt
 RUN pip3.9 install gunicorn
 EXPOSE 5577
-ENTRYPOINT ["bash", 	"run_app.sh"]
+ENTRYPOINT ["bash", "run_app.sh"]
 
 
  

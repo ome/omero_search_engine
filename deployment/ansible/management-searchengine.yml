@@ -172,7 +172,7 @@
       image: "{{ searchengine_docker_image }}"
       name: searchengine
       cleanup: True
-      command: "set_cache_folder -c {{ searchenginecache_folder }}"
+      command: "set_cache_folder -c /etc/searchengine/cachedata}}"
       #networks:
       #- name: searchengine-net
       #published_ports:
@@ -226,6 +226,7 @@
       restart_policy: always
       volumes:
         - "{{ apps_folder }}/searchengine/searchengine/:/etc/searchengine/"
+        - "{{ apps_folder }}/searchengine/searchengine/cachedata:/etc/searchengine/cachedata"
 
 
   - name: Run docker searchengineclient

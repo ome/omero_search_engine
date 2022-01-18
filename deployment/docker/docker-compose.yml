@@ -5,6 +5,7 @@ services:
     image: searchengine
     volumes:
       - /path/to/host/folder/:/etc/searchengine/
+      - - /path/to/host/folder/cachedata:/etc/searchengine/cachedata
     ports:
       - 5577:5577
     restart: unless-stopped
