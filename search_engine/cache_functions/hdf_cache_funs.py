@@ -83,7 +83,7 @@ def update_cached():
     f.close()
 
 def write_key_h5py(resource_table, keys):
-    cached_folder = search_omero_app.config["cached_FOLDER"]
+    cached_folder = search_omero_app.config["CACHE_FOLDER"]
     cached_file_name = os.path.join(cached_folder, 'annotation_names.h5')
     f = h5py.File(cached_file_name, 'a')
     del_dataset = False
@@ -110,7 +110,7 @@ def write_key_h5py(resource_table, keys):
 
 
 def write_key_values_h5py(resource_table, meta_values):
-    cached_folder = search_omero_app.config["cached_FOLDER"]
+    cached_folder = search_omero_app.config["CACHE_FOLDER"]
     cached_file_name = os.path.join(cached_folder, 'metadata_h5py.h5')
     f= h5py.File(cached_file_name, 'a')
     del_dataset=False
@@ -150,6 +150,8 @@ def cached_values():
     cached the tables (e.g. image, project, ..) names and its related values to hd5 file
     '''
     for resource_table, linkedtable in annotation_resource_link.items():
+        if resource_table!="image":
+            continue
 
         search_omero_app.logger.info ("check table: %s ......."%resource_table)
         resource_keys =get_keys(resource_table)
