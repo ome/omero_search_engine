@@ -12,11 +12,14 @@ from search_engine.cache_functions.hdf_cache_funs import update_cached, cached_v
 
 
 @manager.command
-def set_resource_cached_name_value():
+
+@manager.option('-t', '--table_resourse', help='resourse name to cache, if it is not provided all resources will be cached')
+
+def set_resource_cached_name_value(table_resourse=None):
     ''''
     cah names and values for each resource (e.g image, project)
     '''
-    cached_values()
+    cached_values(table_resourse)
 
 
 @manager.command

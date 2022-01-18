@@ -145,11 +145,15 @@ def get_keys(res_table):
     return  results
 
 
-def cached_values():
+def cached_values(resource_table_=None):
     '''
     cached the tables (e.g. image, project, ..) names and its related values to hd5 file
     '''
+
     for resource_table, linkedtable in annotation_resource_link.items():
+        if resource_table_:
+            if resource_table_!=resource_table:
+                continue
 
         search_omero_app.logger.info ("check table: %s ......."%resource_table)
         resource_keys =get_keys(resource_table)
