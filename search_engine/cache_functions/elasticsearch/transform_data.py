@@ -82,6 +82,22 @@ def delete_es_index(es_index):
     search_omero_app.logger.info('\nresponse:%s' % str(response))
     return True
 
+
+def delte_data_from_index(resourse):
+    if resource_elasticsearchindex.get(resourse):
+        es_index=resource_elasticsearchindex[resourse]
+        print ("All data inside Index for resourse %s will be deleted, continue y/n?"%resourse)
+        choice = input().lower()
+        if choice!="y" and choice!="yes":
+            return False
+        es = search_omero_app.config.get("es_connector")
+        es.delete_by_query(index=es_index, body={"query": {"match_all": {}}})
+    else:
+        search_omero_app.logger.info('\nNo index is found for resourse:%s' %str(resourse))
+        return False
+
+
+
 def delete_index(resourse):
     if resource_elasticsearchindex.get(resourse):
         es_index=resource_elasticsearchindex[resourse]
@@ -242,6 +258,80 @@ def insert_resourse_data(folder, resourse, from_json):
         except:
             print ("Error .... writing Done file ...")
         f_con+=1
+
+
+
+
+def get_insert_data_to_index(sql_st,resourse):
+    from search_engine.cache_functions.elasticsearch.transform_data import insert_resourse_data_from_df
+    offset=0
+    limit=3000000
+    from datetime import datetime
+    start=datetime.now()
+    total_recotds=0
+    while True:
+        st=datetime.now()
+        search_omero_app.logger.info("%s is inserted" % offset)
+        mod_st="%s offset %s limit %s"%(sql_st, offset,limit)
+        results=search_omero_app.config["database_connector"].execute_query(mod_st )
+        dict_keys = []
+        total_recotds+=len(results)
+        if len(results)>0:
+            for res in results[0]:
+                dict_keys.append (res)
+        else:
+            break
+        to_files=[]
+        for res in results:
+            row={}
+            to_files.append(row)
+            for key in dict_keys:
+                row[key]=res[key]
+        df = pd.DataFrame(to_files)
+        insert_resourse_data_from_df(df, resourse)
+        offset+=limit
+        print (offset, limit, len(results))
+
+        search_omero_app.logger.info( " Start time for one round (%s record) %s, %s"%(len(results),st, datetime.now()))
+        if len(results)<limit:
+            break
+    search_omero_app.logger.info ("All records= %s, start time: %s, End time:  %s"%(total_recotds, start, datetime.now()))
+
+def insert_resourse_data_from_df(df, resourse, ):
+    if resourse=="image":
+        is_image=True
+    else:
+        is_image=False
+    es_index = resource_elasticsearchindex.get(resourse)
+    search_omero_app.logger.info("Prepare the data...")
+    if not is_image:
+        data_to_be_inserted = prepare_data(df, es_index)
+    else:
+        data_to_be_inserted = prepare_images_data(df, es_index)
+    # print (data_to_be_inserted)
+    search_omero_app.logger.info(len(data_to_be_inserted))
+
+
+    actions = []
+    bulk_count = 0
+    co=0
+    for k, record in data_to_be_inserted.items():
+        co += 1
+        bulk_count += 1
+        if co % 10000 == 0:
+            search_omero_app.logger.info("Adding:  %s out of %s" % (co, len(data_to_be_inserted)))
+
+        actions.append(
+            {
+                "_index": es_index,
+                "_source": record  # ,
+            }
+        )
+    es = search_omero_app.config.get("es_connector")
+    helpers.bulk(es, actions)
+
+
+
 
 
 def insert_project_data(folder, project_file):

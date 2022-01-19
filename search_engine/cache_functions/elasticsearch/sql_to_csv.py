@@ -26,7 +26,7 @@ images_sql_to_csv='''
 
 plate_sql='''
 select plate.id, plate.owner_id, plate.group_id,  plate.name as name, annotation_mapvalue.name as mapvalue_name, 
-annotation_mapvalue.value as mapvalue_value,  annotation_mapvalue.index as mapvalue_index, from plate
+annotation_mapvalue.value as mapvalue_value,  annotation_mapvalue.index as mapvalue_index from plate
 inner join plateannotationlink on plate.id =plateannotationlink.parent inner join annotation_mapvalue on annotation_mapvalue.annotation_id=plateannotationlink.child
 GROUP BY plate.id,  annotation_mapvalue.index, annotation_mapvalue.name, annotation_mapvalue.value'''
 plate_sql_to_csv='''
@@ -35,7 +35,7 @@ plate_sql_to_csv='''
 
 project_sql='''
 select project.id, project.owner_id, project.group_id,  project.name as name, annotation_mapvalue.name as mapvalue_name, 
-annotation_mapvalue.value as mapvalue_value,  annotation_mapvalue.index as mapvalue_index,  from project
+annotation_mapvalue.value as mapvalue_value,  annotation_mapvalue.index as mapvalue_index  from project
 inner join projectannotationlink on project.id =projectannotationlink.parent inner join annotation_mapvalue on annotation_mapvalue.annotation_id=projectannotationlink.child
 GROUP BY project.id,  annotation_mapvalue.index, annotation_mapvalue.name, annotation_mapvalue.value'''
 project_sql_to_csv='''
@@ -53,10 +53,10 @@ screen_sql_to_csv='''
 
 
 well_sql='''
-\copy (select well.id, well.owner_id, well.group_id, annotation_mapvalue.name as mapvalue_name, 
+select well.id, well.owner_id, well.group_id, annotation_mapvalue.name as mapvalue_name, 
 annotation_mapvalue.value as mapvalue_value, annotation_mapvalue.index as mapvalue_index  from well
 inner join wellannotationlink on well.id =wellannotationlink.parent inner join annotation_mapvalue on annotation_mapvalue.annotation_id=wellannotationlink.child
-GROUP BY well.id,  annotation_mapvalue.index, annotation_mapvalue.name, annotation_mapvalue.value) TO 'wells_sorted_ids.csv'  WITH CSV HEADER
+GROUP BY well.id,  annotation_mapvalue.index, annotation_mapvalue.name, annotation_mapvalue.value
 '''
 
 well_sql_to_csv='''
@@ -114,3 +114,7 @@ def create_csv_for_images(folder):
 
 def create_csv_for_non_images(resource, csv_file):
     pass
+
+sqls_resources={"image":image_sql, "project":project_sql, "well": well_sql, "plate":plate_sql, "screen":screen_sql}
+
+

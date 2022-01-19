@@ -58,6 +58,12 @@ def delete_es_index(resourse='all'):
     delete_index(resourse)
 
 @manager.command
+@manager.option('-r', '--resourse', help='resourse name, deleting all data from the its related index')
+def delete_all_data_from_es_index(resourse='None'):
+    from search_engine.cache_functions.elasticsearch.transform_data import  delte_data_from_index
+    delte_data_from_index(resourse)
+
+@manager.command
 @manager.option('-r', '--resourse', help='resourse name, e.g. image')
 @manager.option('-d', '--data_folder', help='Folder contains the data files')
 @manager.option('-f', '--from_json', help='Folder contains the data files')
@@ -80,6 +86,27 @@ def create_index(resourse="all"):
     '''
     from search_engine.cache_functions.elasticsearch.transform_data import create_omero_indexes
     create_omero_indexes(resourse)
+
+def sql_results_to_panda():
+    pass
+
+@manager.command
+@manager.option('-r', '--resourse', help='resourse name, creating all the indcese for all the resources is the default')
+def get_index_data_from_database(resourse="all"):
+    '''
+    Create Elasticsearch index for each resource
+    '''
+    if not resourse:
+        return
+
+    import pandas as pd
+    from datetime import datetime
+    from search_engine.cache_functions.elasticsearch.sql_to_csv import sqls_resources
+    sql_st=sqls_resources.get(resourse)
+    if not sql_st:
+        return
+    from search_engine.cache_functions.elasticsearch.transform_data import   get_insert_data_to_index
+    get_insert_data_to_index(sql_st, resourse)
 
 ##set configurations
 @manager.command
