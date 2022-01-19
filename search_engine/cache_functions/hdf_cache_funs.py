@@ -10,7 +10,7 @@ from search_engine import search_omero_app
 cached_metadata="cached_metadata_h5py.h5"
 
 def cached_project_names(resourse):
-    cached_folder = search_omero_app.config["cached_FOLDER"]
+    cached_folder = search_omero_app.config["CACHE_FOLDER"]
     cached_file_name = os.path.join(cached_folder, 'names.h5')
     sql="select name from {resourse}".format(resourse=resourse)
     results = search_omero_app.config["database_connector"].execute_query(sql)
@@ -24,9 +24,9 @@ def cached_project_names(resourse):
         search_omero_app.logger.info("Error while writing the file  ...." + str(e))
         f.close()
         sys.exit(0)
-
+#
 def get_resource_names(resource_table):
-    cached_folder = search_omero_app.config["cached_FOLDER"]
+    cached_folder = search_omero_app.config["CACHE_FOLDER"]
     cached_file_name = os.path.join(cached_folder, "names.h5")
     if not os.path.exists(cached_file_name):
         return []
@@ -66,7 +66,7 @@ def read_cached_for_table (res_table):
         return metadata
 
 def update_cached():
-    cached_folder = search_omero_app.config["cached_FOLDER"]
+    cached_folder = search_omero_app.config["CACHE_FOLDER"]
     cached_file_name = os.path.join(cached_folder, 'annotation_names.h5')
     f= h5py.File(cached_file_name, 'w')
     g = f.create_group('keys')
@@ -217,7 +217,7 @@ def read_name_values_from_hdf5(resource_table, name):
 
 
 def delete_cacheded_key(resource_table, key, value=None):
-    cached_folder = search_omero_app.config["cached_FOLDER"]
+    cached_folder = search_omero_app.config["CACHE_FOLDER"]
     cached_file_name = os.path.join(cached_folder, ".h5")
     f = h5py.File(cached_file_name, "a")
     main_node = "{table}".format(table=resource_table)
@@ -245,7 +245,7 @@ def check_cacheded_query(resource_table, name, value, operator=None):
     if it is cached it will return the values
     otherwise will return None
     '''
-    cached_folder = search_omero_app.config["cached_FOLDER"]
+    cached_folder = search_omero_app.config["CACHE_FOLDER"]
     if not operator:
         file_name=get_file_name(resource_table, name)
     else:
@@ -281,7 +281,7 @@ def cachede_query_results(resource_table, key_, results, operator):
     and if operator is not it will be:
     resouce_key_value_not
     '''
-    cached_folder = search_omero_app.config["cached_FOLDER"]
+    cached_folder = search_omero_app.config["CACHE_FOLDER"]
     name_values=key_.split("/")
     file_name = get_file_name(resource_table, name_values[0],operator)
     cached_file_name = os.path.join(cached_folder,file_name)

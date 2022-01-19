@@ -172,7 +172,7 @@
       image: "{{ searchengine_docker_image }}"
       name: searchengine
       cleanup: True
-      command: "set_cache_folder -c /etc/searchengine/cachedata}}"
+      command: "set_cache_folder -c /etc/searchengine/cachedata"
       #networks:
       #- name: searchengine-net
       #published_ports:
