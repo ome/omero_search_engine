@@ -99,6 +99,8 @@
     become: yes
     docker_network:
       name: searchengine-net
+      ipam_config:
+        - subnet=10.11.0.0/16
       #networks_cli_compatible: yes
       #state: present
 

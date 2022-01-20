@@ -99,13 +99,19 @@ def get_index_data_from_database(resourse="all"):
     if not resourse:
         return
 
-    import pandas as pd
-    from datetime import datetime
     from search_engine.cache_functions.elasticsearch.sql_to_csv import sqls_resources
-    sql_st=sqls_resources.get(resourse)
-    if not sql_st:
-        return
     from search_engine.cache_functions.elasticsearch.transform_data import   get_insert_data_to_index
+
+    if resourse!="all":
+        sql_st=sqls_resources.get(resourse)
+        if not sql_st:
+            return
+        get_insert_data_to_index(sql_st, resourse)
+    else:
+        for res, sql_st in sqls_resources.items():
+            get_insert_data_to_index(sql_st, res)
+
+
     get_insert_data_to_index(sql_st, resourse)
 
 ##set configurations

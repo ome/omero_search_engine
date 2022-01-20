@@ -1,6 +1,6 @@
 host: localhost
 apps_folder: /data
-database_server_url: 127.0.0.1
+database_server_url: 192.168.10.27
 database_port: 5432
 database_name: idr
 database_username: postgres
@@ -10,3 +10,5 @@ search_engineelasticsearch_docker_image: docker.elastic.co/elasticsearch/elastic
 searchengine_docker_image: searchengine
 searchengineclient_docker_image: searchengineclient
 ansible_python_interpreter: /home/kmohamed001/.pyenv/versions/search_engine/bin/python
+searchengine_cache: searchengine_cache
+searchengine_index: searchengine_index

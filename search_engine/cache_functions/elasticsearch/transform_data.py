@@ -265,13 +265,13 @@ def insert_resourse_data(folder, resourse, from_json):
 def get_insert_data_to_index(sql_st,resourse):
     from search_engine.cache_functions.elasticsearch.transform_data import insert_resourse_data_from_df
     offset=0
-    limit=3000000
+    limit=2500000
     from datetime import datetime
     start=datetime.now()
     total_recotds=0
     while True:
         st=datetime.now()
-        search_omero_app.logger.info("%s is inserted" % offset)
+        search_omero_app.logger.info("%s is inserted, getting more data from database" % offset)
         mod_st="%s offset %s limit %s"%(sql_st, offset,limit)
         results=search_omero_app.config["database_connector"].execute_query(mod_st )
         dict_keys = []
@@ -287,7 +287,7 @@ def get_insert_data_to_index(sql_st,resourse):
             to_files.append(row)
             for key in dict_keys:
                 row[key]=res[key]
-        df = pd.DataFrame(to_files)
+        df = pd.DataFrame(to_files).replace({np.nan: None})
         insert_resourse_data_from_df(df, resourse)
         offset+=limit
         print (offset, limit, len(results))

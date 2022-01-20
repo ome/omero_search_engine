@@ -6,8 +6,12 @@ RUN apt-get install -y build-essential
 RUN apt-get clean
 ADD  omero_search_engine  /searchengine
 ADD start_gunicorn_serch_engine.sh /searchengine
+ADD run_app.sh /searchengine
 RUN cd /searchengine
 WORKDIR /searchengine
+RUN mkdir /etc/searchengine
+RUN mkdir /etc/searchengine/logs
+RUN mkdir /etc/searchengine/chachedata
 RUN ls -l /searchengine
 RUN /usr/local/bin/python -m pip install --upgrade pip
 RUN pip install --upgrade pip setuptools wheel
@@ -15,5 +19,4 @@ RUN pip  install -r  requirments.txt
 RUN pip install gunicorn
 EXPOSE 5569
 RUN echo $HOME
-#ENTRYPOINT  ["python","manage.py","runserver","-p","5559","-h","0.0.0.0"]
 ENTRYPOINT ["bash", "run_app.sh"]
