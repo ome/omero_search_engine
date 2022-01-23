@@ -261,9 +261,42 @@ def insert_resourse_data(folder, resourse, from_json):
 
 
 
+def get_insert_data_to_index(sql_st, resourse):
+    from datetime import datetime
+    #from search_engine.cache_functions.elasticsearch.transform_data import insert_resourse_data_from_df
+    sql_="select max (id) from %s"%resourse
+    res2 = search_omero_app.config["database_connector"].execute_query(sql_)
+    max_id=res2[0]["max"]
+    page_size=100000
+    start_time=datetime.now()
+    print  (page_size)
+    #134618.41
+    cur_max_id=page_size
+    no_=0
+    total=0
+    #timee=7:30
+    print (max_id)
+    while True:
+        no_+=1
+        search_omero_app.logger.info("Run no: %s"%no_)
+        whereclause= " where %s.id < %s and %s.id >= %s" % (resourse, cur_max_id, resourse, (cur_max_id - page_size))
+        mod_sql=sql_st.substitute(whereclause=whereclause)
+        st=datetime.now()
+        results=search_omero_app.config["database_connector"].execute_query (mod_sql)
+        search_omero_app.logger.info("Processing the results...")
+        process_results(results, resourse)
+        total+=len(results)
+        search_omero_app.logger.info ("Run no: %s, return: %s, total: %s"%(no_, len(results),total))
+        search_omero_app.logger.info("elpased time:%s"%str(datetime.now()-st))
+        if cur_max_id>max_id:
+            break
+        cur_max_id+=page_size
+    search_omero_app.logger.info (cur_max_id)
+    search_omero_app.logger.info ("Total time=%s"%str(datetime.now()-start_time))
 
-def get_insert_data_to_index(sql_st,resourse):
-    from search_engine.cache_functions.elasticsearch.transform_data import insert_resourse_data_from_df
+
+'''
+def get_insert_data_to_index_non_image(sql_st,resourse):
     offset=0
     limit=2500000
     from datetime import datetime
@@ -274,21 +307,10 @@ def get_insert_data_to_index(sql_st,resourse):
         search_omero_app.logger.info("%s is inserted, getting more data from database" % offset)
         mod_st="%s offset %s limit %s"%(sql_st, offset,limit)
         results=search_omero_app.config["database_connector"].execute_query(mod_st )
-        dict_keys = []
-        total_recotds+=len(results)
-        if len(results)>0:
-            for res in results[0]:
-                dict_keys.append (res)
-        else:
+        total_recotds += len(results)
+        if len(results) ==0:
             break
-        to_files=[]
-        for res in results:
-            row={}
-            to_files.append(row)
-            for key in dict_keys:
-                row[key]=res[key]
-        df = pd.DataFrame(to_files).replace({np.nan: None})
-        insert_resourse_data_from_df(df, resourse)
+        process_results(results, resourse)
         offset+=limit
         print (offset, limit, len(results))
 
@@ -296,6 +318,12 @@ def get_insert_data_to_index(sql_st,resourse):
         if len(results)<limit:
             break
     search_omero_app.logger.info ("All records= %s, start time: %s, End time:  %s"%(total_recotds, start, datetime.now()))
+'''
+def process_results(results,resourse):
+    dict_keys = []
+    df = pd.DataFrame(results).replace({np.nan: None})
+    insert_resourse_data_from_df(df, resourse)
+
 
 def insert_resourse_data_from_df(df, resourse, ):
     if resourse=="image":

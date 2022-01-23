@@ -112,7 +112,7 @@ def get_index_data_from_database(resourse="all"):
             get_insert_data_to_index(sql_st, res)
 
 
-    get_insert_data_to_index(sql_st, resourse)
+    #get_insert_data_to_index(sql_st, resourse)
 
 ##set configurations
 @manager.command
