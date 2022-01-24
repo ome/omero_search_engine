@@ -26,7 +26,9 @@ The application should have the access attributes (e.g, URL, username, password,
 
 There is a need to create the ELasticsearch indices and insert the data to them to be able to use the application.
 
-* This process is done right now using some methods inside manage.py
+* There is another method inside manage.py (get_index_data_from_database) to allow indexing automatically from the app.
+
+* Another method to index the data by
     * The data is extracted from the IDR/Omero database using some SQL queries and saved to csv files ({path/to/project}/omero_search_engine/search_engine/cache_functions/elasticsearch/sql_to_csv.py)
     * The image index data is generated in a big file, so it is recommended to split it into several files to facilitate processing the data and inserting it into the index. In Linux os, users can use the split command to divide the file, for example:
         * split -l 2600000 images.csv
@@ -58,4 +60,21 @@ Ubuntu and Centos7 images are provided
 * The user can call any method inside manage.py by adding the method name by end of the run command. e.g:
     *  docker run --rm -p 5569:5569 v /home/kmohamed001/.app_config.yml:/opt/app-root/src/.app_config.yml -v $HOME/:/etc/searchengine/  searchengine  show_saved_indices
 
-* A detailed installation instructions will be provided shortly.
+Application installation using Ansible:
+=======================================
+
+There is an ansible playbook (management-searchengine.yml) that has been written to deploy the apps:
+* It will config and run searchengine, Elasticsearch and searchengine client
+* It will configure and create the required folders
+* It will configure the three apps and run them
+* There is a variables file (searchengine_vars.yml) that the user needs to edit before running the playbook
+    * The variable names are self-explained
+* After deploying the apps using the playbook, it is needed to run another two playbooks:
+    * Caching playbook (run_searchengine_cache_service.yml)
+    * indexing playbook (run_searchengine_index_service.yml)
+    * If the Postgresql database server is located at the same machine which hosts the searchengine, it is needed to:
+        * Edit pg_hba.conf file (one of the postgresql configuration files) and add two client ips (i.e. 10.11.0.10 and 10.11.0.09)
+        * Reload the configuration; so the PostgreSQL accepts the connection from indexing and caching services.
+    * As the caching and indexing processes take long times (about 10 hours), there are another two playbooks that enable the user to check if they have finished or not:
+        * check_indexing_service.yml
+        * check_caching_service.yml

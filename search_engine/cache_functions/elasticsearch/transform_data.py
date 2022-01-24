@@ -82,29 +82,26 @@ def delete_es_index(es_index):
     search_omero_app.logger.info('\nresponse:%s' % str(response))
     return True
 
-
 def delte_data_from_index(resourse):
     if resource_elasticsearchindex.get(resourse):
         es_index=resource_elasticsearchindex[resourse]
-        print ("All data inside Index for resourse %s will be deleted, continue y/n?"%resourse)
+        #print ("All data inside Index for resourse %s will be deleted, continue y/n?"%resourse)
         choice = input().lower()
-        if choice!="y" and choice!="yes":
-            return False
+        #if choice!="y" and choice!="yes":
+        #    return False
         es = search_omero_app.config.get("es_connector")
         es.delete_by_query(index=es_index, body={"query": {"match_all": {}}})
     else:
         search_omero_app.logger.info('\nNo index is found for resourse:%s' %str(resourse))
         return False
 
-
-
 def delete_index(resourse):
     if resource_elasticsearchindex.get(resourse):
         es_index=resource_elasticsearchindex[resourse]
-        print ("Index for resourse %s will be deleted, continue y/n?"%resourse)
-        choice = input().lower()
-        if choice!="y" and choice!="yes":
-            return False
+        #print ("Index for resourse %s will be deleted, continue y/n?"%resourse)
+        #choice = input().lower()
+        #if choice!="y" and choice!="yes":
+        #    return False
 
         print("Are you sure ")
         return delete_es_index(es_index)

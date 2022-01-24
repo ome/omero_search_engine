@@ -94,11 +94,8 @@ def sql_results_to_panda():
 @manager.option('-r', '--resourse', help='resourse name, creating all the indcese for all the resources is the default')
 def get_index_data_from_database(resourse="all"):
     '''
-    Create Elasticsearch index for each resource
+    insert data in Elasticsearch index for each resource
     '''
-    if not resourse:
-        return
-
     from search_engine.cache_functions.elasticsearch.sql_to_csv import sqls_resources
     from search_engine.cache_functions.elasticsearch.transform_data import   get_insert_data_to_index
 
