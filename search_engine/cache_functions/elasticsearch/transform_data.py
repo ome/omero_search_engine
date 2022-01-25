@@ -269,7 +269,9 @@ def get_insert_data_to_index(sql_st, resourse):
     from datetime import datetime
     #from search_engine.cache_functions.elasticsearch.transform_data import insert_resourse_data_from_df
     #delete the data from the index before trying to insert the data again
-    delte_data_from_index(resourse)
+    delete_index(resourse)
+    create_omero_indexes(resourse)
+    #delte_data_from_index(resourse)
     sql_="select max (id) from %s"%resourse
     res2 = search_omero_app.config["database_connector"].execute_query(sql_)
     max_id=res2[0]["max"]
