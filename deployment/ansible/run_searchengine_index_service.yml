@@ -14,9 +14,9 @@
       command: "get_index_data_from_database" 
       networks:
       - name: searchengine-net
-        ipv4_address: 10.11.0.10
-      #published_ports:
-      #- "5571:5577"
+        ipv4_address: 10.11.0.11
+      published_ports:
+      - "5571:5577"
       state: started
       volumes:
       - "{{ apps_folder }}/searchengine/searchengine/:/etc/searchengine/"      

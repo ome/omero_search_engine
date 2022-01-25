@@ -69,11 +69,13 @@ There is an ansible playbook (management-searchengine.yml) that has been written
 * It will configure the three apps and run them
 * There is a variables file (searchengine_vars.yml) that the user needs to edit before running the playbook
     * The variable names are self-explained
+* To verify the deployment:
+    * for searchengine
 * After deploying the apps using the playbook, it is needed to run another two playbooks:
     * Caching playbook (run_searchengine_cache_service.yml)
     * indexing playbook (run_searchengine_index_service.yml)
     * If the Postgresql database server is located at the same machine which hosts the searchengine, it is needed to:
-        * Edit pg_hba.conf file (one of the postgresql configuration files) and add two client ips (i.e. 10.11.0.10 and 10.11.0.09)
+        * Edit pg_hba.conf file (one of the postgresql configuration files) and add two client ips (i.e. 10.11.0.10 and 10.11.0.11)
         * Reload the configuration; so the PostgreSQL accepts the connection from indexing and caching services.
     * As the caching and indexing processes take long times (about 10 hours), there are another two playbooks that enable the user to check if they have finished or not:
         * check_indexing_service.yml

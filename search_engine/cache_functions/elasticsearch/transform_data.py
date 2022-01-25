@@ -83,28 +83,35 @@ def delete_es_index(es_index):
     return True
 
 def delte_data_from_index(resourse):
-    if resource_elasticsearchindex.get(resourse):
+    if resource_elasticsearchindex.get(resourse) and resourse!="all":
         es_index=resource_elasticsearchindex[resourse]
         #print ("All data inside Index for resourse %s will be deleted, continue y/n?"%resourse)
-        choice = input().lower()
+        #choice = input().lower()
         #if choice!="y" and choice!="yes":
         #    return False
         es = search_omero_app.config.get("es_connector")
         es.delete_by_query(index=es_index, body={"query": {"match_all": {}}})
+    elif resourse=="all":
+        es = search_omero_app.config.get("es_connector")
+        for resourse_, es_index in resource_elasticsearchindex.items():
+            es.delete_by_query(index=es_index, body={"query": {"match_all": {}}})
     else:
         search_omero_app.logger.info('\nNo index is found for resourse:%s' %str(resourse))
         return False
 
 def delete_index(resourse):
-    if resource_elasticsearchindex.get(resourse):
+    if resource_elasticsearchindex.get(resourse) and resourse!="all":
         es_index=resource_elasticsearchindex[resourse]
         #print ("Index for resourse %s will be deleted, continue y/n?"%resourse)
         #choice = input().lower()
         #if choice!="y" and choice!="yes":
         #    return False
-
-        print("Are you sure ")
+        #print("Are you sure ")
         return delete_es_index(es_index)
+    elif resourse=="all":
+        for resourse_, es_index in resource_elasticsearchindex.items():
+            delete_es_index(es_index)
+        return True
     else:
         search_omero_app.logger.info('\nNo index is found for resourse:%s' %str(resourse))
         return False
@@ -261,6 +268,8 @@ def insert_resourse_data(folder, resourse, from_json):
 def get_insert_data_to_index(sql_st, resourse):
     from datetime import datetime
     #from search_engine.cache_functions.elasticsearch.transform_data import insert_resourse_data_from_df
+    #delete the data from the index before trying to insert the data again
+    delte_data_from_index(resourse)
     sql_="select max (id) from %s"%resourse
     res2 = search_omero_app.config["database_connector"].execute_query(sql_)
     max_id=res2[0]["max"]
