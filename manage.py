@@ -6,7 +6,6 @@ from flask_script import Manager
 from configurations.configuration import update_config_file
 
 manager = Manager(search_omero_app)
-#create_app()
 
 from search_engine.cache_functions.hdf_cache_funs import update_cached, cached_values,  delete_cacheded_key, cached_project_names, cached_project_names
 
@@ -95,6 +94,7 @@ def sql_results_to_panda():
 def get_index_data_from_database(resourse="all"):
     '''
     insert data in Elasticsearch index for each resource
+    It gets the data from postgres database server
     '''
     from search_engine.cache_functions.elasticsearch.sql_to_csv import sqls_resources
     from search_engine.cache_functions.elasticsearch.transform_data import   get_insert_data_to_index
@@ -108,8 +108,6 @@ def get_index_data_from_database(resourse="all"):
         for res, sql_st in sqls_resources.items():
             get_insert_data_to_index(sql_st, res)
 
-
-    #get_insert_data_to_index(sql_st, resourse)
 
 ##set configurations
 @manager.command

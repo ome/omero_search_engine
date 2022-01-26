@@ -180,7 +180,6 @@ def cached_values(resource_table_=None):
             if len(res_to_save)>0:
                 meta_values[org_key]=res_to_save
 
-
         to_be_deleted=[]
         for key_, value in meta_values.items():
             to_be_deleted=[]
@@ -193,6 +192,8 @@ def cached_values(resource_table_=None):
         if meta_values.values() and len(meta_values.values()) > 0:
             write_key_h5py(resource_table, list(meta_values.keys()))
             write_key_values_h5py(resource_table, meta_values)
+    cached_project_names("project")
+
 
 
 def read_name_values_from_hdf5(resource_table, name):
