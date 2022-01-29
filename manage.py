@@ -37,7 +37,7 @@ def cached_names():
 def delete_cacheded_key_value():
     resource_table="image"
     key="Cell Line"#"Gene Symbol"
-    value=None#"Normal tissue, NOS"#"KIF11"
+    value=None
 
     delete_cacheded_key(resource_table, key, value)
 

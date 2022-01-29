@@ -82,6 +82,18 @@ def update_cached():
             sys.exit(0)
     f.close()
 
+def delet_current_cash_files():
+    cached_folder = search_omero_app.config["CACHE_FOLDER"]
+    cached_file_name_1 = os.path.join(cached_folder, 'annotation_names.h5')
+    if os.path.exists(cached_file_name_1):
+        os.remove(cached_file_name_1)
+    cached_file_name_2 = os.path.join(cached_folder, 'metadata_h5py.h5')
+    if os.path.exists(cached_file_name_2):
+        os.remove(cached_file_name_2)
+    cached_file_name_3 = os.path.join(cached_folder, 'names.h5')
+    if os.path.exists(cached_file_name_3):
+        os.remove(cached_file_name_3)
+
 def write_key_h5py(resource_table, keys):
     cached_folder = search_omero_app.config["CACHE_FOLDER"]
     cached_file_name = os.path.join(cached_folder, 'annotation_names.h5')
@@ -98,6 +110,7 @@ def write_key_h5py(resource_table, keys):
         try:
             search_omero_app.logger.info ("{resource_table}".format(resource_table=resource_table))
             del f["keys"]["{resource_table}".format(resource_table=resource_table)]
+
         except  Exception as e:
             search_omero_app.logger.info ("Error delete dataset .."+str(e))
 
@@ -149,7 +162,8 @@ def cached_values(resource_table_=None):
     '''
     cached the tables (e.g. image, project, ..) names and its related values to hd5 file
     '''
-
+    if not resource_table_:
+        delet_current_cash_files()
     for resource_table, linkedtable in annotation_resource_link.items():
         if resource_table_:
             if resource_table_!=resource_table:
@@ -180,7 +194,6 @@ def cached_values(resource_table_=None):
             if len(res_to_save)>0:
                 meta_values[org_key]=res_to_save
 
-        to_be_deleted=[]
         for key_, value in meta_values.items():
             to_be_deleted=[]
             for me_va in value:
@@ -192,7 +205,9 @@ def cached_values(resource_table_=None):
         if meta_values.values() and len(meta_values.values()) > 0:
             write_key_h5py(resource_table, list(meta_values.keys()))
             write_key_values_h5py(resource_table, meta_values)
-    cached_project_names("project")
+
+    if not resource_table_:
+        cached_project_names("project")
 
 
 

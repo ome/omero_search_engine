@@ -19,7 +19,7 @@ resource_elasticsearchindex={"project":"project_keyvalue_pair_metadata",
                              "screen":"screen_keyvalue_pair_metadata",
                              "plate":"plate_keyvalue_pair_metadata",
                              "well":"well_keyvalue_pair_metadata",
-                             "image":"image_keyvalue_pair_metadata"
+                             "image":"image_keyvalue_pair_metadata_new"
                              }
 
 
@@ -42,7 +42,7 @@ should ==>OR
 '''
 #main atgtribute such as project_id, dataset_id, owner_id, group_id, owner_id, etc...
 #It supports not two operators, equals and not_equals
-main_attribute_query_template=Template('''{"bool":{"must":{"match":{"$attribute":"$value"}}}}''')
+main_attribute_query_template=Template('''{"bool":{"must":{"match":{"$attribute.keyvalue":"$value"}}}}''')
 
 must_name_condition_template= Template('''{"match": {"key_values.name.keyword":"$name"}}''')
 must_value_condition_template=Template('''{"match": {"key_values.value.keyvalue":"$value"}}''')
