@@ -37,8 +37,9 @@ class DatabaseConnector(object):
     def execute_query(self, query, return_results=True):
         results = {}
         try:
-            conn = psycopg2.connect(self.DATABASE_URI);
+            conn = psycopg2.connect(self.DATABASE_URI)# options='-c statement_timeout=300000') #default units ms
             cursor = conn.cursor(cursor_factory=RealDictCursor)
+            cursor.execute("SET statement_timeout = '500 s'")
             cursor.execute(query)
             if return_results:
                 results = cursor.fetchall()

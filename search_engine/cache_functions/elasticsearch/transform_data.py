@@ -268,7 +268,7 @@ def get_insert_data_to_index(sql_st, resourse):
     sql_="select max (id) from %s"%resourse
     res2 = search_omero_app.config["database_connector"].execute_query(sql_)
     max_id=res2[0]["max"]
-    page_size=100000
+    page_size=10000
     start_time=datetime.now()
     print  (page_size)
     cur_max_id=page_size
