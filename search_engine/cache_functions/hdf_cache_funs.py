@@ -9,16 +9,16 @@ from search_engine import search_omero_app
 
 cached_metadata="cached_metadata_h5py.h5"
 
-def cached_project_names(resourse):
+def cached_project_names(resource):
     cached_folder = search_omero_app.config["CACHE_FOLDER"]
     cached_file_name = os.path.join(cached_folder, 'names.h5')
-    sql="select name from {resourse}".format(resourse=resourse)
+    sql="select name from {resource}".format(resource=resource)
     results = search_omero_app.config["database_connector"].execute_query(sql)
     results = [res['name'] for res in results]
     f = h5py.File(cached_file_name, 'w')
     try:
         g = f.create_group('names')
-        d = g.create_dataset(resourse, data=json.dumps(results))
+        d = g.create_dataset(resource, data=json.dumps(results))
         f.close()
     except Exception as e:
         search_omero_app.logger.info("Error while writing the file  ...." + str(e))

@@ -146,5 +146,5 @@ Omero Search Engine
         * non-image template (non_image_template) for other indices (project, dataset, well, plate, screen). It is derived from some Omero tables depending on the resource,  for example for the project, it combines project, projectannotationlink and annotation_mapvalue.
         * both of the two templates are in \omero_search_engine\search_engine\cache_functions\elasticsearch\elasticsearch_templates.py
     * The data now is moved using SQL queries which generate the CSV files; the queries are in omero_search_engine\search_engine\cache_functions\elasticsearch\sql_to_csv.py
-    * There is a method inside manage.py script (add_resourse_data_to_es_index) which reads the CSV files and inserts the data to the Elasticsearch index.
+    * There is a method inside manage.py script (add_resource_data_to_es_index) which reads the CSV files and inserts the data to the Elasticsearch index.
     * I am investigating automatic updates of the elastic search data in case of the data inside the PostgreSQL database has been changed.

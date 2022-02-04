@@ -50,7 +50,7 @@
   - name: Create searchengine cached directory
     become: yes
     file:
-      path: "{{ apps_folder }}/searchengine/searchengine/cacheddata"
+      path: "{{ apps_folder }}/searchengine/searchengine/cachedata"
       state: directory
 
   - name: Create client  directory

@@ -45,13 +45,16 @@ should ==>OR
 main_attribute_query_template=Template('''{"bool":{"must":{"match":{"$attribute.keyvalue":"$value"}}}}''')
 
 must_name_condition_template= Template('''{"match": {"key_values.name.keyword":"$name"}}''')
-must_value_condition_template=Template('''{"match": {"key_values.value.keyvalue":"$value"}}''')
+case_insensitive_must_value_condition_template=Template('''{"match": {"key_values.value":"$value"}}''')
+case_sensitive_must_value_condition_template=Template('''{"match": {"key_values.value.keyvalue":"$value"}}''')
 nested_keyvalue_pair_query_template=Template('''{"nested": {"path": "key_values", "query":{"bool": {"must":[$nested ] }}}}''')
 nested_query_template_must_not=Template('''{"nested": {"path": "key_values", "query":{"bool": {"must_not":[$must_not_value ] }}}}''')
 must_term_template=Template('''"must" : [$must_term]''') #==>>equal term
 must_not_term_template=Template('''"must_not": [$must_not_term]''') #===>not equal
 wildcard_value_condition_template=Template('''{"wildcard": {"key_values.value.keyvalue":"$wild_card_value"}}''') #Used for contains and not contains
-range_value_condition_template=Template('''{"range":{"key_values.value.keyvalue":{"$operator":"$value"} }}''')
+case_insensitive_wildcard_value_condition_template=Template('''{"wildcard": {"key_values.value":"$wild_card_value"}}''') #Used for contains and not contains
+case_sensitive_range_value_condition_template=Template('''{"range":{"key_values.value.keyvalue":{"$operator":"$value"} }}''')
+case_insensitive_range_value_condition_template=Template('''{"range":{"key_values.value":{"$operator":"$value"} }}''')
 should_term_template=Template('''"should": [$should_term],"minimum_should_match" : $minimum_should_match ,"boost" : 1.0''')  #==>or
 query_template=Template( '''{"query": {"bool": {$query}}}''')
 
@@ -64,7 +67,7 @@ def build_error_message(error):
     return {"notice": {"Error":error}}
 
 
-def elasticsearch_query_builder(and_filter, or_filters, main_attributes=None):
+def elasticsearch_query_builder(and_filter, or_filters, case_sensitive,main_attributes=None):
     global nested_keyvalue_pair_query_template, must_term_template, must_not_term_template,should_term
     nested_must_part=[]
     nested_must_not_part = []
@@ -104,7 +107,11 @@ def elasticsearch_query_builder(and_filter, or_filters, main_attributes=None):
             _nested_must_part=[]
             if operator=="equals":
                 _nested_must_part.append(must_name_condition_template.substitute(name=key))
-                _nested_must_part.append(must_value_condition_template.substitute(value=value))
+                if case_sensitive:
+                    _nested_must_part.append(case_sensitive_must_value_condition_template.substitute(value=value))
+                else:
+                    _nested_must_part.append(case_insensitive_must_value_condition_template.substitute(value=value))
+
                 nested_must_part.append(nested_keyvalue_pair_query_template.substitute(nested=",".join(_nested_must_part)))
             if operator=="contains":
                 value="*{value}*".format(value=value)
@@ -117,10 +124,20 @@ def elasticsearch_query_builder(and_filter, or_filters, main_attributes=None):
                     value="*{value}*".format(value=value)
                     nested_must_not_part.append(nested_keyvalue_pair_query_template.substitute(nested=wildcard_value_condition_template.substitute(wild_card_value=value)))
                 else:
-                    nested_must_not_part.append(nested_keyvalue_pair_query_template.substitute(nested=must_value_condition_template.substitute(value=value)))
+                    if case_sensitive:
+                        nested_must_not_part.append(nested_keyvalue_pair_query_template.substitute(nested=case_sensitive_must_value_condition_template.substitute(value=value)))
+                    else:
+                        nested_must_not_part.append(nested_keyvalue_pair_query_template.substitute(
+                            nested=case_insensitive_must_value_condition_template.substitute(value=value)))
+
             elif operator in ["lt","lte", "gt","gte"]:
                 nested_must_part.append(nested_keyvalue_pair_query_template.substitute(nested=must_name_condition_template.substitute(name=key)))
-                nested_must_part.append(nested_keyvalue_pair_query_template.substitute(nested=range_value_condition_template.substitute(operator=operator, value=value)))
+                if case_sensitive:
+                    nested_must_part.append(nested_keyvalue_pair_query_template.substitute(nested=case_sensitive_range_value_condition_template.substitute(operator=operator, value=value)))
+                else:
+                    nested_must_part.append(nested_keyvalue_pair_query_template.substitute(
+                        nested=case_insensitive_range_value_condition_template.substitute(operator=operator,
+                                                                                        value=value)))
        #must_not_term
     if or_filters and len(or_filters) > 0:
         added_keys=[]
@@ -140,7 +157,10 @@ def elasticsearch_query_builder(and_filter, or_filters, main_attributes=None):
                 added_keys.append(key)
             should_names.append(must_name_condition_template.substitute(name=key))
             if operator=="equals":
-                should_values.append(must_value_condition_template.substitute(value=value))
+                if case_sensitive:
+                    should_values.append(case_sensitive_must_value_condition_template.substitute(value=value))
+                else:
+                    should_values.append(case_insensitive_must_value_condition_template.substitute(value=value))
             elif operator == "contains":
                 value = "*{value}*".format(value=value)
                 should_values.append(wildcard_value_condition_template.substitute(wild_card_value=value))
@@ -149,9 +169,17 @@ def elasticsearch_query_builder(and_filter, or_filters, main_attributes=None):
                     value = "*{value}*".format(value=value)
                     shoud_not_value.append(wildcard_value_condition_template.substitute(wild_card_value=value))
                 else:
-                    shoud_not_value.append(must_value_condition_template.substitute(value=value))
+                    if case_sensitive:
+                        shoud_not_value.append(case_sensitive_must_value_condition_template.substitute(value=value))
+                    else:
+                        shoud_not_value.append(case_insensitive_must_value_condition_template.substitute(value=value))
             elif operator in ["lt", "lte", "gt", "gte"]:
-                should_values.append(range_value_condition_template.substitute(operator=operator,value= value))
+                if case_sensitive:\
+                    should_values.append(case_sensitive_range_value_condition_template.substitute(operator=operator,value= value))
+            else:
+                should_values.append(
+                    case_insensitive_range_value_condition_template.substitute(operator=operator, value=value))
+
                 #must_value_condition
 
             ss=",".join(should_names)
@@ -331,9 +359,11 @@ def search_resource_annotation(table_, query, page=None,bookmark=None):
         return build_error_message("{query} is not a valid query".format(query=query))
     and_filters = query_details.get("and_filters")
     or_filters = query_details.get("or_filters")
+    case_sensitive=query_details.get("case_sensitive")
+    print (case_sensitive, "case is::")
     #check and fid if possible names and values inside filters conditions
     check_filters(table_, [and_filters, or_filters])
-    query_string = elasticsearch_query_builder(and_filters,  or_filters,main_attributes)
+    query_string = elasticsearch_query_builder(and_filters,  or_filters,case_sensitive,main_attributes)
     #query_string has to be string, if it is a dict, something went wrong and the message inside the dict
     #which will be returned to the sender:
     if isinstance(query_string, dict):

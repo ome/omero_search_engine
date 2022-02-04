@@ -12,13 +12,13 @@ from search_engine.cache_functions.hdf_cache_funs import update_cached, cached_v
 
 @manager.command
 
-@manager.option('-t', '--table_resourse', help='resourse name to cache, if it is not provided all resources will be cached')
+@manager.option('-t', '--table_resource', help='resource name to cache, if it is not provided all resources will be cached')
 
-def set_resource_cached_name_value(table_resourse=None):
+def set_resource_cached_name_value(table_resource=None):
     ''''
     cah names and values for each resource (e.g image, project)
     '''
-    cached_values(table_resourse)
+    cached_values(table_resource)
 
 
 @manager.command
@@ -51,47 +51,47 @@ def show_saved_indices():
     return (all_indexes)
 
 @manager.command
-@manager.option('-r', '--resourse', help='resourse name, deleting all the indcese for all the resources is the default')
-def delete_es_index(resourse='all'):
+@manager.option('-r', '--resource', help='resource name, deleting all the indcese for all the resources is the default')
+def delete_es_index(resource='all'):
     from search_engine.cache_functions.elasticsearch.transform_data import  delete_index
-    delete_index(resourse)
+    delete_index(resource)
 
 @manager.command
-@manager.option('-r', '--resourse', help='resourse name, deleting all data from the its related index')
-def delete_all_data_from_es_index(resourse='None'):
+@manager.option('-r', '--resource', help='resource name, deleting all data from the its related index')
+def delete_all_data_from_es_index(resource='None'):
     from search_engine.cache_functions.elasticsearch.transform_data import  delte_data_from_index
-    delte_data_from_index(resourse)
+    delte_data_from_index(resource)
 
 @manager.command
-@manager.option('-r', '--resourse', help='resourse name, e.g. image')
+@manager.option('-r', '--resource', help='resource name, e.g. image')
 @manager.option('-d', '--data_folder', help='Folder contains the data files')
 @manager.option('-f', '--from_json', help='Folder contains the data files')
 #D:\data\New_idr_database\image_data\image_33\test
-def add_resourse_data_to_es_index(resourse=None, data_folder=None,from_json=False):
+def add_resource_data_to_es_index(resource=None, data_folder=None,from_json=False):
     ''' =
      Insert data inside elastic search index by getting the data from csv files
     '''
-    if not resourse or not data_folder or not os.path.exists(data_folder):
-        search_omero_app.logger.info("Please check the input parameters, resourse: {resourse}, data_folder: {data_folder}".format(resourse=resourse, data_folder=data_folder))
+    if not resource or not data_folder or not os.path.exists(data_folder):
+        search_omero_app.logger.info("Please check the input parameters, resource: {resource}, data_folder: {data_folder}".format(resource=resource, data_folder=data_folder))
         return
-    from search_engine.cache_functions.elasticsearch.transform_data import insert_resourse_data
-    insert_resourse_data(data_folder, resourse, from_json)
+    from search_engine.cache_functions.elasticsearch.transform_data import insert_resource_data
+    insert_resource_data(data_folder, resource, from_json)
 
 @manager.command
-@manager.option('-r', '--resourse', help='resourse name, creating all the indcese for all the resources is the default')
-def create_index(resourse="all"):
+@manager.option('-r', '--resource', help='resource name, creating all the indcese for all the resources is the default')
+def create_index(resource="all"):
     '''
     Create Elasticsearch index for each resource
     '''
     from search_engine.cache_functions.elasticsearch.transform_data import create_omero_indexes
-    create_omero_indexes(resourse)
+    create_omero_indexes(resource)
 
 def sql_results_to_panda():
     pass
 
 @manager.command
-@manager.option('-r', '--resourse', help='resourse name, creating all the indcese for all the resources is the default')
-def get_index_data_from_database(resourse="all"):
+@manager.option('-r', '--resource', help='resource name, creating all the indcese for all the resources is the default')
+def get_index_data_from_database(resource="all"):
     '''
     insert data in Elasticsearch index for each resource
     It gets the data from postgres database server
@@ -99,11 +99,11 @@ def get_index_data_from_database(resourse="all"):
     from search_engine.cache_functions.elasticsearch.sql_to_csv import sqls_resources
     from search_engine.cache_functions.elasticsearch.transform_data import   get_insert_data_to_index
 
-    if resourse!="all":
-        sql_st=sqls_resources.get(resourse)
+    if resource!="all":
+        sql_st=sqls_resources.get(resource)
         if not sql_st:
             return
-        get_insert_data_to_index(sql_st, resourse)
+        get_insert_data_to_index(sql_st, resource)
     else:
         for res, sql_st in sqls_resources.items():
             get_insert_data_to_index(sql_st, res)

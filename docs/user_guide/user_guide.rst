@@ -12,7 +12,7 @@ It is fast, scalable and future proof as it is possible to deploy more than one 
 
 * If the user wants to know the available values for a keyword in a particular resource, he can use this URL:
 
-    * /api/v1/resources/{resourse}/getannotationvalueskey/?key={keyword}
+    * /api/v1/resources/{resource}/getannotationvalueskey/?key={keyword}
 
 * for example, the following URL will return all the available values for the Organism keyword for the image.
     * /api/v1/resources/image/getannotationvalueskey/?key=Organism

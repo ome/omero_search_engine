@@ -27,19 +27,19 @@ def create_index(es_index, template):
 
     return True
 
-def  create_omero_indexes(resourse):
-    if resourse!="all" and not resource_elasticsearchindex.get(resourse):
-        search_omero_app.logger.info("No index template found for resourse: %s"%resourse)
+def  create_omero_indexes(resource):
+    if resource!="all" and not resource_elasticsearchindex.get(resource):
+        search_omero_app.logger.info("No index template found for resource: %s"%resource)
 
-    for resourse_, es_index in resource_elasticsearchindex.items():
-        if  resourse != 'all' and resourse_ != resourse:
-            print (resourse_, resourse)
+    for resource_, es_index in resource_elasticsearchindex.items():
+        if  resource != 'all' and resource_ != resource:
+            print (resource_, resource)
             continue
-        if resourse_== 'image':
+        if resource_== 'image':
             template=image_template
         else:
             template=non_image_template
-        search_omero_app.logger.info(f"Creating index {es_index} for {resourse_}".format(es_index=es_index, resourse=resourse_))
+        search_omero_app.logger.info(f"Creating index {es_index} for {resource_}".format(es_index=es_index, resource=resource_))
         create_index(es_index, template)
 
 def get_all_indexes():
@@ -75,38 +75,38 @@ def delete_es_index(es_index):
     search_omero_app.logger.info('\nresponse:%s' % str(response))
     return True
 
-def delte_data_from_index(resourse):
-    if resource_elasticsearchindex.get(resourse) and resourse!="all":
-        es_index=resource_elasticsearchindex[resourse]
-        #print ("All data inside Index for resourse %s will be deleted, continue y/n?"%resourse)
+def delte_data_from_index(resource):
+    if resource_elasticsearchindex.get(resource) and resource!="all":
+        es_index=resource_elasticsearchindex[resource]
+        #print ("All data inside Index for resource %s will be deleted, continue y/n?"%resource)
         #choice = input().lower()
         #if choice!="y" and choice!="yes":
         #    return False
         es = search_omero_app.config.get("es_connector")
         es.delete_by_query(index=es_index, body={"query": {"match_all": {}}})
-    elif resourse=="all":
+    elif resource=="all":
         es = search_omero_app.config.get("es_connector")
-        for resourse_, es_index in resource_elasticsearchindex.items():
+        for resource_, es_index in resource_elasticsearchindex.items():
             es.delete_by_query(index=es_index, body={"query": {"match_all": {}}})
     else:
-        search_omero_app.logger.info('\nNo index is found for resourse:%s' %str(resourse))
+        search_omero_app.logger.info('\nNo index is found for resource:%s' %str(resource))
         return False
 
-def delete_index(resourse):
-    if resource_elasticsearchindex.get(resourse) and resourse!="all":
-        es_index=resource_elasticsearchindex[resourse]
-        #print ("Index for resourse %s will be deleted, continue y/n?"%resourse)
+def delete_index(resource):
+    if resource_elasticsearchindex.get(resource) and resource!="all":
+        es_index=resource_elasticsearchindex[resource]
+        #print ("Index for resource %s will be deleted, continue y/n?"%resource)
         #choice = input().lower()
         #if choice!="y" and choice!="yes":
         #    return False
         #print("Are you sure ")
         return delete_es_index(es_index)
-    elif resourse=="all":
-        for resourse_, es_index in resource_elasticsearchindex.items():
+    elif resource=="all":
+        for resource_, es_index in resource_elasticsearchindex.items():
             delete_es_index(es_index)
         return True
     else:
-        search_omero_app.logger.info('\nNo index is found for resourse:%s' %str(resourse))
+        search_omero_app.logger.info('\nNo index is found for resource:%s' %str(resource))
         return False
 
 def prepare_images_data (data, doc_type):
@@ -213,21 +213,21 @@ def get_file_list(path_name):
 
     return f
 
-def insert_resourse_data(folder, resourse, from_json):
-    search_omero_app.logger.info("Adding data to {} using {}".format(resourse, folder))
-    if not resource_elasticsearchindex.get(resourse):
-        search_omero_app.logger.info("No index found for resourse: %s"%resourse)
+def insert_resource_data(folder, resource, from_json):
+    search_omero_app.logger.info("Adding data to {} using {}".format(resource, folder))
+    if not resource_elasticsearchindex.get(resource):
+        search_omero_app.logger.info("No index found for resource: %s"%resource)
         return
 
-    es_index=resource_elasticsearchindex.get(resourse)
-    if resourse=="image":
+    es_index=resource_elasticsearchindex.get(resource)
+    if resource=="image":
         is_image=True
         cols = ["id", "owner_id", "experiment", "group_id", "name", "mapvalue_name", "mapvalue_value", "mapvalue_index", "project_name",
                 "project_id", "dataset_name", "dataset_id", "screen_id", "screen_name", "plate_id", "plate_name",
                 "well_id", "wellsample_id"]
     else:
         is_image=False
-        if resourse=="well":
+        if resource=="well":
             cols=["id", "owner_id", "group_id", "mapvalue_name", "mapvalue_value","mapvalue_index"]
         else:
             cols = ["id", "owner_id", "group_id", "name", "mapvalue_name", "mapvalue_value", "mapvalue_index"]
@@ -254,7 +254,7 @@ def insert_resourse_data(folder, resourse, from_json):
             print ("Error .... writing Done file ...")
         f_con+=1
 
-def get_insert_data_to_index(sql_st, resourse):
+def get_insert_data_to_index(sql_st, resource):
     '''
     - Query the postgressql database server and get metadata (key-value pair)
      -Process the resulted data
@@ -263,9 +263,9 @@ def get_insert_data_to_index(sql_st, resourse):
     from datetime import datetime
     #delete the data from the index before trying to insert the data again
     #It will delete the index and create it again
-    delete_index(resourse)
-    create_omero_indexes(resourse)
-    sql_="select max (id) from %s"%resourse
+    delete_index(resource)
+    create_omero_indexes(resource)
+    sql_="select max (id) from %s"%resource
     res2 = search_omero_app.config["database_connector"].execute_query(sql_)
     max_id=res2[0]["max"]
     page_size=10000
@@ -277,12 +277,12 @@ def get_insert_data_to_index(sql_st, resourse):
     while True:
         no_+=1
         search_omero_app.logger.info("Run no: %s"%no_)
-        whereclause= " where %s.id < %s and %s.id >= %s" % (resourse, cur_max_id, resourse, (cur_max_id - page_size))
+        whereclause= " where %s.id < %s and %s.id >= %s" % (resource, cur_max_id, resource, (cur_max_id - page_size))
         mod_sql=sql_st.substitute(whereclause=whereclause)
         st=datetime.now()
         results=search_omero_app.config["database_connector"].execute_query (mod_sql)
         search_omero_app.logger.info("Processing the results...")
-        process_results(results, resourse)
+        process_results(results, resource)
         total+=len(results)
         search_omero_app.logger.info ("Run no: %s, return: %s, total: %s"%(no_, len(results),total))
         search_omero_app.logger.info("elpased time:%s"%str(datetime.now()-st))
@@ -292,17 +292,17 @@ def get_insert_data_to_index(sql_st, resourse):
     search_omero_app.logger.info (cur_max_id)
     search_omero_app.logger.info ("Total time=%s"%str(datetime.now()-start_time))
 
-def process_results(results,resourse):
+def process_results(results,resource):
     df = pd.DataFrame(results).replace({np.nan: None})
-    insert_resourse_data_from_df(df, resourse)
+    insert_resource_data_from_df(df, resource)
 
 
-def insert_resourse_data_from_df(df, resourse, ):
-    if resourse=="image":
+def insert_resource_data_from_df(df, resource, ):
+    if resource=="image":
         is_image=True
     else:
         is_image=False
-    es_index = resource_elasticsearchindex.get(resourse)
+    es_index = resource_elasticsearchindex.get(resource)
     search_omero_app.logger.info("Prepare the data...")
     if not is_image:
         data_to_be_inserted = prepare_data(df, es_index)

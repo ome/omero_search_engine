@@ -34,7 +34,7 @@ There is a need to create the ELasticsearch indices and insert the data to them 
         * split -l 2600000 images.csv
     * create_index: Create the Elasticsearch indices, it can be used to create a single index or all the indices; the default is creating all the indices.
     * the indices are saved in this script ({path/to/project}/omero_search_engine/search_engine/cache_functions/elasticsearch/elasticsearch_templates.py)
-    * add_resourse_data_to_es_index: Insert the data to the ELasticsearch index; the data can be in a single file (CSV format) or multiple files.
+    * add_resource_data_to_es_index: Insert the data to the ELasticsearch index; the data can be in a single file (CSV format) or multiple files.
 
 * It has some utility functions inside the manage.py script to build hd5 cash files.
     * These files contain the available key and value pair inside the database.
