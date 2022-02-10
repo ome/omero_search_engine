@@ -20,8 +20,8 @@
   vars_files:
     searchengine_vars.yml
 
-  pre_tasks:
-    - raw: sudo yum update -y
+  #pre_tasks:
+  #  - raw: sudo yum update -y
   tasks:
   - name: Create app top level directory
     become: yes
@@ -101,14 +101,6 @@
       name: searchengine-net
       ipam_config:
         - subnet=10.11.0.0/16
-      #networks_cli_compatible: yes
-      #state: present
-
-  #- name: Pull search engine docker image
-  #  docker_image:
-  #      name: "{{ search_engineicsearch_docker_image }}"
-  #      tag: latest
-  #      source: pull
 
   - name: Run docker elasticsearch
     become: yes
@@ -145,10 +137,6 @@
       cleanup: True
       auto_remove: yes
       command: "set_elasticsearch_configuration -e searchengineelasticsearch"
-      #networks:
-      #- name: searchengine-net
-      #published_ports:
-      #- "5577:5577"
       state: started
       volumes:
       - "{{ apps_folder }}/searchengine/searchengine/:/etc/searchengine/"
@@ -162,15 +150,11 @@
       cleanup: True
       auto_remove: yes
       command: "set_database_configuration -u {{ database_server_url }}  -d {{ database_name }} -s {{ database_port }} -n {{ database_username }} -p {{ database_user_password }}"
-      #networks:
-      #- name: searchengine-net
-      #published_ports:
-      #- "5577:5577"
       state: started
       volumes:
       - "{{ apps_folder }}/searchengine/searchengine/:/etc/searchengine/"
  
-  - name: configure cache folder  for docker searchengine
+  - name: configure cache folder for docker searchengine
     become: yes
     docker_container:
       image: "{{ searchengine_docker_image }}"
@@ -178,14 +162,34 @@
       cleanup: True
       auto_remove: yes
       command: "set_cache_folder -c /etc/searchengine/cachedata"
-      #networks:
-      #- name: searchengine-net
-      #published_ports:
-      #- "5577:5577"
       state: started
       volumes:
       - "{{ apps_folder }}/searchengine/searchengine/:/etc/searchengine/"
-      
+
+  - name: configure number of cache rows for docker searchengine
+      become: yes
+      docker_container:
+        image: "{{ searchengine_docker_image }}"
+        name: searchengine_cache
+        cleanup: True
+        auto_remove: yes
+        command: "set_cache_rows_number -n {{ cache_rows }}"
+        state: started
+        volumes:
+        - "{{ apps_folder }}/searchengine/searchengine/:/etc/searchengine/"
+
+  - name: configure secret key for docker searchengine
+      become: yes
+      docker_container:
+        image: "{{ searchengine_docker_image }}"
+        name: searchengine_cache
+        cleanup: True
+        auto_remove: yes
+        command: "set_searchengine_secret_key -s {{ searchengine_secret_key }}"
+        state: started
+        volumes:
+          - "{{ apps_folder }}/searchengine/searchengine/:/etc/searchengine/"
+
   - name: create elasticsearch all indcies for docker searchengine
     become: yes
     docker_container:
@@ -196,8 +200,6 @@
       command: create_index
       networks:
       - name: searchengine-net
-      #published_ports:
-      #- "5577:5577"
       state: started
       volumes:
       - "{{ apps_folder }}/searchengine/searchengine/:/etc/searchengine/"
@@ -209,15 +211,23 @@
       name: searchengineclient_search_uri
       cleanup: True
       auto_remove: yes
-      command: "set_searchengine_url -u http://searchengine:5577/"# http://127.0.0.1:5556/"
-      #networks:
-      #- name: searchengine-net
-      #published_ports:
-      #- "5567:5567"
+      command: "set_searchengine_url -u http://searchengine:5577/"
       state: started
       volumes:
-      - "{{ apps_folder }}/searchengine/client:/etc/searchengineclient/"    
-      
+      - "{{ apps_folder }}/searchengine/client:/etc/searchengineclient/"
+
+  - name: configure secret key for search client
+      become: yes
+      docker_container:
+        image: "{{ searchengineclient_docker_image }}"
+        name: searchengineclient_search_uri
+        cleanup: True
+        auto_remove: yes
+        command: "set_client_secret_key -s {{ searchengineclient_secret_key }}"
+        state: started
+        volumes:
+          - "{{ apps_folder }}/searchengine/client:/etc/searchengineclient/"
+
   - name: Run docker searchengine
     become: yes
     docker_container:

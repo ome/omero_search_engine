@@ -152,6 +152,26 @@ def set_cache_folder (cache_folder=None):
     else:
         search_omero_app.logger.info("No attribute is provided")
 
+
+
+@manager.command
+@manager.option('-n', '--number_cache_rows', help='cache folder path')
+def set_cache_rows_number (number_cache_rows=None):
+    if number_cache_rows and number_cache_rows.isdigit():
+        update_config_file({"CACHE_ROWS":int(number_cache_rows)})
+    else:
+        search_omero_app.logger.info("No of chached rows  has to be an integer")
+
+
+@manager.command
+@manager.option('-s', '--secret_key', help='cache folder path')
+def set_searchengine_secret_key (secret_key=None):
+    if secret_key:
+        update_config_file({"SECRET_KEY":secret_key})
+    else:
+        search_omero_app.logger.info("No value is provided")
+
+
 @manager.command
 @manager.option('-s', '--page_size', help='cache folder path')
 def set_max_page(page_size=None):

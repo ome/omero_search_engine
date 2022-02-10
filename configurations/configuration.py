@@ -28,17 +28,27 @@ def set_database_connection_variables(config):
                                             config.DATABASE_PASSWORD, \
                                             address, config.DATABAS_NAME)
 
+
 def update_config_file(updated_configuration):
     is_changed=False
     with open(app_config.INSTANCE_CONFIG) as f:
         configuration = yaml.load(f)
-
+    found=[]
     for key, value in updated_configuration.items():
         if key in configuration:
             if configuration[key]!=value:
                 configuration[key]=value
                 is_changed=True
-                print ("%s is Update, new value is %s "%(key, value))
+                print ("%s is Updated, new value is %s "%(key, value))
+            else:
+                found.append(key)
+    if len(found)!=len(updated_configuration):
+        for key, value in updated_configuration.items():
+            if key not in found:
+                configuration[key] = value
+                print("%s value is added with value %s " % (key, value))
+                is_changed = True
+
     if is_changed:
         with open(app_config.INSTANCE_CONFIG, 'w') as f:
              yaml.dump(configuration, f)

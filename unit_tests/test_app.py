@@ -60,13 +60,13 @@ class BasicTestCase(unittest.TestCase):
         '''
         from search_engine.api.v2.resources.utils import elasticsearch_query_builder
 
-        self.assertTrue(self.validate_json_syntax(elasticsearch_query_builder(valid_and_filters, valid_or_filters)))
+        self.assertTrue(self.validate_json_syntax(elasticsearch_query_builder(valid_and_filters, valid_or_filters, False)))
 
     def test_is_not_valid_json_query(self):
         '''
         test output of query builderis valid json
         '''
-        no_valid_message=elasticsearch_query_builder(not_valid_and_filters,not_valid_or_filters)
+        no_valid_message=elasticsearch_query_builder(not_valid_and_filters,not_valid_or_filters, False)
         self.assertTrue( "notice" in no_valid_message.keys())
 
     def test_submit_query(self):
@@ -75,8 +75,7 @@ class BasicTestCase(unittest.TestCase):
        '''
        table="image"
        res=search_resource_annotation(table, query)
-       print (res)
-       assert (len(res.get("results").get("results"))==26)
+       assert (len(res.get("results").get("results"))>0)
 
     def test_add_delete_es_index(self):
         '''
