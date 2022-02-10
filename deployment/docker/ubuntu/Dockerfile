@@ -15,7 +15,7 @@ RUN mkdir /etc/searchengine/chachedata
 RUN ls -l /searchengine
 RUN /usr/local/bin/python -m pip install --upgrade pip
 RUN pip install --upgrade pip setuptools wheel
-RUN pip  install -r  requirments.txt
+RUN pip  install -r  requirements.txt
 RUN pip install gunicorn
 EXPOSE 5569
 RUN echo $HOME
