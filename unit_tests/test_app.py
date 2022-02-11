@@ -41,7 +41,7 @@ class BasicTestCase(unittest.TestCase):
         '''
         res = search_omero_app.config["database_connector"].execute_query(sql)
         self.assertIsNotNone(res)
-        self.assertIsInstance(res[0]["count"], int)
+        self.assertEqual(res[0]["current_database"], "idr")
 
     def validate_json_syntax(self, json_template):
         try:
@@ -73,9 +73,11 @@ class BasicTestCase(unittest.TestCase):
        ''''
        test subnit query and get results
        '''
-       table="image"
+       table="image1"
+       create_index(table,image_template)
        res=search_resource_annotation(table, query)
-       assert (len(res.get("results").get("results"))>0)
+       assert (len(res.get("results"))>=0)
+       delete_es_index(table)
 
     def test_add_delete_es_index(self):
         '''

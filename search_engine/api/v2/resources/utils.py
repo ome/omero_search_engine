@@ -19,7 +19,9 @@ resource_elasticsearchindex={"project":"project_keyvalue_pair_metadata",
                              "screen":"screen_keyvalue_pair_metadata",
                              "plate":"plate_keyvalue_pair_metadata",
                              "well":"well_keyvalue_pair_metadata",
-                             "image":"image_keyvalue_pair_metadata_new"
+                             "image":"image_keyvalue_pair_metadata_new",
+                             #the following index is used for testing purpose only
+                             "image1":"image_keyvalue_pair_metadata_1"
                              }
 
 
