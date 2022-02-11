@@ -41,6 +41,6 @@ jobs:
         #Configure database url
         python manage.py set_database_configuration -u postgres
         #configure elasticsearch
-        python manage.py set_elasticsearch_configuration -e elasticsearch:9200
+        python manage.py set_elasticsearch_configuration -e elasticsearch
         #run tests
         python -m unittest discover -s unit_tests
