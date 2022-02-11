@@ -69,26 +69,27 @@ class BasicTestCase(unittest.TestCase):
         no_valid_message=elasticsearch_query_builder(not_valid_and_filters,not_valid_or_filters, False)
         self.assertTrue( "notice" in no_valid_message.keys())
 
-    def test_submit_query(self):
+    def est_add_submit_query_delete_es_index(self):
        ''''
        test subnit query and get results
        '''
        table="image1"
-       create_index(table,image_template)
+       es_index="image_keyvalue_pair_metadata_1"
+       self.assertTrue (create_index(es_index, image_template))
        res=search_resource_annotation(table, query)
        assert (len(res.get("results"))>=0)
-       delete_es_index(table)
+       self.assertTrue (delete_es_index(es_index))
 
-    def test_add_delete_es_index(self):
-        '''
-        test create index in elastic search
-        :return:
-        '''
-        from datetime import datetime
-        es_index_name="test_image_%s"%str(datetime.now().second)
+    #def test_add_delete_es_index(self):
+    #    '''
+    #    test create index in elastic search
+    #    :return:
+    #    '''
+    #    from datetime import datetime
+    #    es_index_name="test_image_%s"%str(datetime.now().second)
 
-        self.assertTrue (create_index(es_index_name, image_template))
-        self.assertTrue (delete_es_index(es_index_name))
+    #   self.assertTrue (create_index(es_index_name, image_template))
+    #   self.assertTrue (delete_es_index(es_index_name))
 
     def test_log_in_log_out(self):
         '''

@@ -52,9 +52,10 @@ def show_saved_indices():
 
 @manager.command
 @manager.option('-r', '--resource', help='resource name, deleting all the indcese for all the resources is the default')
-def delete_es_index(resource='all'):
+@manager.option('-e', '--es_index', help='elastic index name, if it is provided, it will delete and return')
+def delete_es_index(resource='all', es_index=None):
     from search_engine.cache_functions.elasticsearch.transform_data import  delete_index
-    delete_index(resource)
+    delete_index(resource, es_index)
 
 @manager.command
 @manager.option('-r', '--resource', help='resource name, deleting all data from the its related index')

@@ -92,7 +92,9 @@ def delte_data_from_index(resource):
         search_omero_app.logger.info('\nNo index is found for resource:%s' %str(resource))
         return False
 
-def delete_index(resource):
+def delete_index(resource, es_index=None):
+    if es_index:
+        return delete_es_index(es_index)
     if resource_elasticsearchindex.get(resource) and resource!="all":
         es_index=resource_elasticsearchindex[resource]
         #print ("Index for resource %s will be deleted, continue y/n?"%resource)
