@@ -39,7 +39,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt;
         #Configure database url
-        python manage.py set_database_configuration -u localhost -s  ${{ job.services.postgres.ports[5432] }} -n postgress
+        python manage.py set_database_configuration -u localhost -s  ${{ job.services.postgres.ports[5432] }} -n postgress -p passwprd
         #configure elasticsearch
         python manage.py set_elasticsearch_configuration -e localhost:${{ job.services.elasticsearch.ports[9200] }}
         #run tests
