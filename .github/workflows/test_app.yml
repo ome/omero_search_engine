@@ -38,12 +38,9 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt;
-    - name configure database url
-      run: |
+        #Configure database url
         python manage.py set_database_configuration -u postgres
-    - name configure elasticsearch
-      run: |
+        #configure elasticsearch
         python manage.py set_elasticsearch_configuration -e elasticsearch:9200
-    - name: Test with unittestcd
-      run: |
+        #run tests
         python -m unittest discover -s unit_tests
