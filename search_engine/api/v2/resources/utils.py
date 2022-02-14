@@ -45,6 +45,8 @@ should ==>OR
 #main atgtribute such as project_id, dataset_id, owner_id, group_id, owner_id, etc...
 #It supports not two operators, equals and not_equals
 main_attribute_query_template=Template('''{"bool":{"must":{"match":{"$attribute.keyvalue":"$value"}}}}''')
+#Search main attribute which has long data type ends with "_id" in the image index (template)
+main_attribute_query_template_id=Template('''{"bool":{"must":{"match":{"$attribute":"$value"}}}}''')
 
 must_name_condition_template= Template('''{"match": {"key_values.name.keyword":"$name"}}''')
 case_insensitive_must_value_condition_template=Template('''{"match": {"key_values.value":"$value"}}''')
@@ -78,7 +80,12 @@ def elasticsearch_query_builder(and_filter, or_filters, case_sensitive,main_attr
     if main_attributes and len(main_attributes) > 0:
         if main_attributes.get("and_main_attributes"):
             for attribute in main_attributes.get("and_main_attributes"):
-                main_dd = main_attribute_query_template.substitute(attribute=attribute["name"].strip(), value=str(attribute["value"]).strip())
+                if attribute["name"].endswith("_id"):
+                    main_dd = main_attribute_query_template_id.substitute(attribute=attribute["name"].strip(),
+                                                                      value=str(attribute["value"]).strip())
+
+                else:
+                    main_dd = main_attribute_query_template.substitute(attribute=attribute["name"].strip(), value=str(attribute["value"]).strip())
                 if attribute["operator"].strip() == "equals":
                     nested_must_part.append(main_dd)
                 elif attribute["operator"].strip()=="not_equals":
@@ -86,8 +93,15 @@ def elasticsearch_query_builder(and_filter, or_filters, case_sensitive,main_attr
 
         if main_attributes.get("or_main_attributes"):
             for attribute in main_attributes.get("or_main_attributes"):
+                #search using id, e.g. project id
+                if attribute["name"].endswith("_id"):
+                    main_dd = main_attribute_query_template_id.substitute(attribute=attribute["name"].strip(),
+                                                                      value=str(attribute["value"]).strip())
 
-                main_dd = main_attribute_query_template.substitute(attribute=attribute["name"].strip(), value=str(attribute["value"]).strip())
+                else:
+                    main_dd = main_attribute_query_template.substitute(attribute=attribute["name"].strip(), value=str(attribute["value"]).strip())
+
+
                 if attribute["operator"].strip() == "equals":
                     should_part_list.append(main_dd)
                 elif attribute["operator"].strip()=="not_equals":
