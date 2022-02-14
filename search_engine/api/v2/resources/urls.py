@@ -27,8 +27,8 @@ def search_resource_page(resource_table):
         query = data["query"]
         page=data.get("page")
         bookmark=data.get("bookmark")
-        from search_engine import search_omero_app
-        resource_list = search_resource_annotation(resource_table, query, page=page,bookmark=bookmark)
+        raw_elasticsearch_query=data.get("raw_elasticsearch_query")
+        resource_list = search_resource_annotation(resource_table, query, raw_elasticsearch_query=raw_elasticsearch_query,page=page,bookmark=bookmark)
     else:
 
         return jsonify(build_error_message("Error: No query field is provided. please specify an id."))
