@@ -46,6 +46,12 @@ jobs:
         #run tests
         python -m unittest discover -s unit_tests
     #Build the image first
-    - name: Build the Docker image
-      #tag will be determine later using different step 
-      run: docker build  omero_search_engine/deployment/docker/centos --tag searchengine:0.0.1
+    - name: Build and push
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        file: ./deployment/docker/centos/Dockerfile
+        push: false
+        #tag will be changed later to and it shoul have its 
+        tags: khaledk2/searchengine:0.0.1
+
