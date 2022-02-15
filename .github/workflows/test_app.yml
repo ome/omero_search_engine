@@ -47,5 +47,5 @@ jobs:
         python -m unittest discover -s unit_tests
     #Build the image first
     - name: Build the Docker image
-      #tag will be determine later using different step
+      #tag will be determine later using different step 
       run: docker build ./deployment/docker/centos --file Dockerfile --tag searchengine:0.0.1
