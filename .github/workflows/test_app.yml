@@ -48,4 +48,4 @@ jobs:
     #Build the image first
     - name: Build the Docker image
       #tag will be determine later using different step 
-      run: docker build ./deployment/docker/centos --file Dockerfile --tag searchengine:0.0.1
+      run: docker build  omero_search_engine/deployment/docker/centos --tag searchengine:0.0.1
