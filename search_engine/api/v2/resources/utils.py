@@ -365,7 +365,7 @@ def search_resource_annotation(table_, query, raw_elasticsearch_query=None, page
     if not res_index:
         return build_error_message("{table_} is not a valid resurce".format(table_=table_))
     query_details = query.get('query_details')
-    
+
     start_time = time.time()
     if not raw_elasticsearch_query:
         query_details = query.get('query_details')
@@ -395,7 +395,6 @@ def search_resource_annotation(table_, query, raw_elasticsearch_query=None, page
     notice=""
     end_time = time.time()
     query_time = ("%.2f" % (end_time - start_time))
-    print (raw_query_to_send_back)
     return {"results": res, "query_details": query_details, "resource": table_,
             "server_query_time": query_time, "raw_elasticsearch_query":raw_query_to_send_back,"notice": notice}
 
