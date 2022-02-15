@@ -1,4 +1,6 @@
 #docker build . -t searchengine
+# docker build . -f omero_search_engine/deployment/docker/centos/Dockerfile -t searchengine
+
 FROM centos/python-36-centos7
 USER root
 RUN yum -y install epel-release
@@ -11,12 +13,10 @@ RUN wget https://www.python.org/ftp/python/3.9.0/Python-3.9.0.tgz
 RUN tar xvf Python-3.9.0.tgz
 RUN cd Python-3.9.0 && ./configure --enable-optimizations &&  make altinstall
 RUN yum clean all && rm -rf /var/cache/yum
-
 RUN mkdir /searchengine
-ADD omero_search_engine  /searchengine
-ADD omero_search_engine/deployment/docker/centos/start_gunicorn_serch_engine.sh /searchengine
-ADD omero_search_engine/deployment/docker/centos/run_app.sh /searchengine
-#ADD omero_search_engine/deployment/docker/centos/run_app.sh /searchengine
+ADD  deployment/docker/centos/start_gunicorn_serch_engine.sh /searchengine
+ADD  deployment/docker/centos/run_app.sh /searchengine
+ADD .  /searchengine
 RUN cd /searchengine
 RUN mkdir /etc/searchengine
 RUN mkdir /etc/searchengine/chachedata
