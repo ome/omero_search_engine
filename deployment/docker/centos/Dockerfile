@@ -15,7 +15,8 @@ RUN yum clean all && rm -rf /var/cache/yum
 RUN mkdir /searchengine
 ADD omero_search_engine  /searchengine
 ADD omero_search_engine/deployment/docker/centos/start_gunicorn_serch_engine.sh /searchengine
-ADD omero_search_engine/deployment/docker/centos/ run_app.sh /searchengine
+ADD omero_search_engine/deployment/docker/centos/run_app.sh /searchengine
+#ADD omero_search_engine/deployment/docker/centos/run_app.sh /searchengine
 RUN cd /searchengine
 RUN mkdir /etc/searchengine
 RUN mkdir /etc/searchengine/chachedata
