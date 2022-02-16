@@ -62,13 +62,23 @@ jobs:
         registry: ghcr.io
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
+    - name: getimage tag
+      id: get_tags
+      run: |
+        if [[ $GITHUB_REF == 'refs/tags/'* ]]; then
+          TAGS='["openmicroscopy/searchengine:latest","openmicroscopy/searchengineclient:'${GITHUB_REF/refs\/tags\//}'"]'
+        else
+          TAGS='["openmicroscopy/searchengine:latest"]'
+        fi
+        echo '::set-output name=tags::'$TAGS
     - name: Build and push
       uses: docker/build-push-action@v2
       with:
         context: .
         file: ./deployment/docker/centos/Dockerfile
         push: false
-        #tag will be changed later to and it shoul have its 
-        tags: openmicroscopy/searchengine:0.0.1
+        #tag will be changed later to get from
+        #tags: openmicroscopy/searchengine:0.1.0
+        tags: ${{ fromJson(steps.get_tags.outputs.tags) }}
 
 
