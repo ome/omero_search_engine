@@ -1,5 +1,5 @@
 #docker build . -t searchengine
-# docker build . -f omero_search_engine/deployment/docker/centos/Dockerfile -t searchengine
+# docker build . -f deployment/docker/centos/Dockerfile -t searchengine
 
 FROM centos/python-36-centos7
 USER root
