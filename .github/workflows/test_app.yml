@@ -63,7 +63,7 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
     - name: getimage tag
-      id: get_tags
+      id: gettags
       run: |
         if [[ $GITHUB_REF == 'refs/tags/'* ]]; then
           TAGS='["openmicroscopy/searchengine:latest","openmicroscopy/searchengineclient:'${GITHUB_REF/refs\/tags\//}'"]'
@@ -79,6 +79,6 @@ jobs:
         push: false
         #tag will be changed later to get from
         #tags: openmicroscopy/searchengine:0.1.0
-        tags: ${{ fromJson(steps.get_tags.outputs.tags) }}
+        tags: ${{ join(fromJson(steps.gettags.outputs.tags)) }}
 
 
