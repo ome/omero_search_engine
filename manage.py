@@ -48,7 +48,7 @@ def show_saved_indices():
     all_indexes=get_all_indexes()
     for index in all_indexes:
         print ("Index: ==>>>",index)
-    return (all_indexes)
+    #return (all_indexes)
 
 @manager.command
 @manager.option('-r', '--resource', help='resource name, deleting all the indcese for all the resources is the default')

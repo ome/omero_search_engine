@@ -19,7 +19,7 @@ resource_elasticsearchindex={"project":"project_keyvalue_pair_metadata",
                              "screen":"screen_keyvalue_pair_metadata",
                              "plate":"plate_keyvalue_pair_metadata",
                              "well":"well_keyvalue_pair_metadata",
-                             "image":"image_keyvalue_pair_metadata_new",
+                             "image":"image_keyvalue_pair_metadata",
                              #the following index is used for testing purpose only
                              "image1":"image_keyvalue_pair_metadata_1"
                              }
@@ -49,20 +49,18 @@ main_attribute_query_template=Template('''{"bool":{"must":{"match":{"$attribute.
 main_attribute_query_template_id=Template('''{"bool":{"must":{"match":{"$attribute":"$value"}}}}''')
 
 must_name_condition_template= Template('''{"match": {"key_values.name.keyword":"$name"}}''')
-case_insensitive_must_value_condition_template=Template('''{"match": {"key_values.value":"$value"}}''')
+case_insensitive_must_value_condition_template=Template('''{"match": {"key_values.value.keyvaluenormalize":"$value"}}''')
 case_sensitive_must_value_condition_template=Template('''{"match": {"key_values.value.keyvalue":"$value"}}''')
 nested_keyvalue_pair_query_template=Template('''{"nested": {"path": "key_values", "query":{"bool": {"must":[$nested ] }}}}''')
 nested_query_template_must_not=Template('''{"nested": {"path": "key_values", "query":{"bool": {"must_not":[$must_not_value ] }}}}''')
 must_term_template=Template('''"must" : [$must_term]''') #==>>equal term
 must_not_term_template=Template('''"must_not": [$must_not_term]''') #===>not equal
 wildcard_value_condition_template=Template('''{"wildcard": {"key_values.value.keyvalue":"$wild_card_value"}}''') #Used for contains and not contains
-case_insensitive_wildcard_value_condition_template=Template('''{"wildcard": {"key_values.value":"$wild_card_value"}}''') #Used for contains and not contains
+case_insensitive_wildcard_value_condition_template=Template('''{"wildcard": {"key_values.value.keyvaluenormalize":"$wild_card_value"}}''') #Used for contains and not contains
 case_sensitive_range_value_condition_template=Template('''{"range":{"key_values.value.keyvalue":{"$operator":"$value"} }}''')
-case_insensitive_range_value_condition_template=Template('''{"range":{"key_values.value":{"$operator":"$value"} }}''')
+case_insensitive_range_value_condition_template=Template('''{"range":{"key_values.value.keyvaluenormalize":{"$operator":"$value"} }}''')
 should_term_template=Template('''"should": [$should_term],"minimum_should_match" : $minimum_should_match ,"boost" : 1.0''')  #==>or
 query_template=Template( '''{"query": {"bool": {$query}}}''')
-
-
 
 def build_error_message(error):
     '''

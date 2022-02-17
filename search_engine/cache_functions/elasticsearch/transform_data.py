@@ -61,18 +61,24 @@ def rename_index(old_index, new_index):
 
 def delete_es_index(es_index):
     es = search_omero_app.config.get("es_connector")
-    response = es.indices.delete(index=es_index)
-    if 'acknowledged' in response:
-        if response['acknowledged'] == True:
-            search_omero_app.logger.info(response)
+    saved_incies=get_all_indexes()
+    if es_index in saved_incies.keys():
+        response = es.indices.delete(index=es_index)
+        if 'acknowledged' in response:
+            if response['acknowledged'] == True:
+                search_omero_app.logger.info(response)
 
-    # catch API error response
-    elif 'error' in response:
-        search_omero_app.logger.info("ERROR:" + response['error']['root_cause'])
-        search_omero_app.logger.info("TYPE:" + response['error']['type'])
+        # catch API error response
+        elif 'error' in response:
+            search_omero_app.logger.info("ERROR:" + response['error']['root_cause'])
+            search_omero_app.logger.info("TYPE:" + response['error']['type'])
+            return False
+
+        # print out the response:
+        search_omero_app.logger.info('\nresponse:%s' % str(response))
+    else:
+        search_omero_app.logger.info('\nIndex %s is not found' % str(es_index))
         return False
-    # print out the response:
-    search_omero_app.logger.info('\nresponse:%s' % str(response))
     return True
 
 def delte_data_from_index(resource):

@@ -4,6 +4,17 @@ It is derived from some Omero tables depending on the resource.
 For example for the project, it combines project, projectannotationlink and annotation_mapvalue.
 '''
 non_image_template={
+    "settings": {
+        "analysis": {
+            "normalizer": {
+                "valuesnormalizer": {
+                    "type": "custom",
+                    "filter": ["lowercase"]
+                }
+            }
+        }
+    },
+
   "mappings": {
     "properties": {
       "doc_type": {
@@ -44,6 +55,10 @@ non_image_template={
             "value": {
               "type": "text",
                 "fields": {
+                    "keyvaluenormalize": {
+                        "type": "keyword",
+                        "normalizer": "valuesnormalizer"
+                    },
                  "keyvalue": {
                     "type": "keyword"
               }
@@ -63,6 +78,16 @@ image_template is derived from  Omero tables into a single Elasticsearch index (
 project, dataset, well, plate and screen to generate a single index.
 '''
 image_template={
+    "settings": {
+        "analysis": {
+            "normalizer": {
+                "valuesnormalizer": {
+                    "type": "custom",
+                    "filter": ["lowercase"]
+                }
+            }
+        }
+    },
   "mappings": {
     "properties": {
       "doc_type": {
@@ -156,6 +181,10 @@ image_template={
             "value": {
               "type": "text",
                 "fields": {
+                    "keyvaluenormalize": {
+                        "type": "keyword",
+                        "normalizer": "valuesnormalizer"
+                    },
                  "keyvalue": {
                     "type": "keyword"
               }
