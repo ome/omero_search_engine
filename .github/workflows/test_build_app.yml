@@ -69,9 +69,9 @@ jobs:
       id: gettags
       run: |
         if [[ $GITHUB_REF == 'refs/tags/'* ]]; then
-          TAGS='["openmicroscopy/omero-searchengine:latest","omero-openmicroscopy/searchengine:'${GITHUB_REF/refs\/tags\//}'"]'
+          TAGS='["openmicroscopy/omero-searchengine:latest","openmicroscopy/omero-searchengine:'${GITHUB_REF/refs\/tags\//}'"]'
         else
-          TAGS='["omero-openmicroscopy/omero-searchengine:latest"]'
+          TAGS='["openmicroscopy/omero-searchengine:latest"]'
         fi
         echo '::set-output name=tags::'$TAGS
     - name: Build and push
