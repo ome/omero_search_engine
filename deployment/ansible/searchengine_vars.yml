@@ -8,8 +8,8 @@ database_user_password: pass1234
 cache_rows: 10000
 #searchenginecache_folder: /data/searchengine/searchengine/cacheddata/
 search_engineelasticsearch_docker_image: docker.elastic.co/elasticsearch/elasticsearch:7.16.2
-searchengine_docker_image: khaledk2/searchengine:0.1
-searchengineclient_docker_image: khaledk2/searchengineclient:0.1
+searchengine_docker_image: openmicroscopy/omero-searchengine:latest
+searchengineclient_docker_image: openmicroscopy/omero-searchengineclient:latest
 ansible_python_interpreter: path/to/bin/python
 searchengine_cache: searchengine_cache
 searchengine_index: searchengine_index

@@ -62,6 +62,15 @@
       owner: root
       group: root
 
+  - name: Create client data directory
+      become: yes
+      file:
+        path: "{{ apps_folder }}/searchengine/client/app_data"
+        recurse: yes
+        state: directory
+        owner: root
+        group: root
+
   - name: Create client logs directory
     become: yes
     file:
@@ -116,7 +125,6 @@
          cluster.name: docker-cluster
          http.host: 0.0.0.0
          #http.port: 9200
-         discovery.type: single-node
          ES_JAVA_OPTS: "-Xmx4096m"
       networks:
       - name: searchengine-net
@@ -215,6 +223,18 @@
       state: started
       volumes:
       - "{{ apps_folder }}/searchengine/client:/etc/searchengineclient/"
+
+  - name: configure app data folder for search client
+    become: yes
+    docker_container:
+      image: "{{ searchengineclient_docker_image }}"
+      name: searchengineclient_search_uri
+      cleanup: True
+      auto_remove: yes
+      command: "set_app_data_folder -d /etc/searchengineclient/app_data"
+      state: started
+      volumes:
+        - "{{ apps_folder }}/searchengine/client:/etc/searchengineclient/"
 
   - name: configure secret key for search client
     become: yes
