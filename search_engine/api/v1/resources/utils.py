@@ -68,18 +68,6 @@ def build_sql_statment(table, filters, cacheded_values, operator="="):
         for name, value in filter.items():
             search_omero_app.logger.info("name {name}".format(name=name))
             search_omero_app.logger.info("value {value}".format(value=value))
-            #print ("Start Date: ", datetime.now())
-            #print ("Start Date: ", datetime.now())
-            ##########should be used to read all cacheded values on one go
-            #if operator=="!=":
-            #    _ndnode = "{name}/not/{value}".format(name=name, value=value)
-            #else:
-            #    _ndnode = "{name}/{value}".format(name=name, value=value)
-
-            #val=cacheded_values.get(_ndnode)
-
-
-            ###########
             if operator!="=":
                 val=check_cacheded_query (table, name, value,operator="not")
             else:

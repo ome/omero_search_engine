@@ -15,9 +15,15 @@ def cached_project_names(resource):
     sql="select name from {resource}".format(resource=resource)
     results = search_omero_app.config["database_connector"].execute_query(sql)
     results = [res['name'] for res in results]
-    f = h5py.File(cached_file_name, 'w')
+    f = h5py.File(cached_file_name, 'a')
     try:
-        g = f.create_group('names')
+        if "names" not in f.keys():
+            g = f.create_group('names')
+        else:
+            g=f["names"]
+
+        if "names/{resource}".format(resource=resource) in f.keys():
+            del f["names/{resource}".format(resource=resource)]
         d = g.create_dataset(resource, data=json.dumps(results))
         f.close()
     except Exception as e:
@@ -208,6 +214,7 @@ def cached_values(resource_table_=None):
 
     if not resource_table_:
         cached_project_names("project")
+        cached_project_names("screen")
 
 
 
