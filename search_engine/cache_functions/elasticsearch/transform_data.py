@@ -279,11 +279,14 @@ def get_insert_data_to_index(sql_st, resource):
     page_size=search_omero_app.config["CACHE_ROWS"]
     start_time=datetime.now()
     cur_max_id=page_size
+    total_number_of_pages=int(max_id/page_size)+1
     no_=0
     total=0
+    from datetime import timedelta
+    average_time=timedelta(microseconds=0)
     while True:
         no_+=1
-        search_omero_app.logger.info("Run no: %s"%no_)
+        search_omero_app.logger.info("Run no: %s/%s"%(no_, total_number_of_pages))
         whereclause= " where %s.id < %s and %s.id >= %s" % (resource, cur_max_id, resource, (cur_max_id - page_size))
         mod_sql=sql_st.substitute(whereclause=whereclause)
         st=datetime.now()
@@ -291,8 +294,13 @@ def get_insert_data_to_index(sql_st, resource):
         search_omero_app.logger.info("Processing the results...")
         process_results(results, resource)
         total+=len(results)
-        search_omero_app.logger.info ("Run no: %s, return: %s, total: %s"%(no_, len(results),total))
-        search_omero_app.logger.info("elpased time:%s"%str(datetime.now()-st))
+        tim=datetime.now()-st
+        if no_==1:
+            average_time =tim
+        else:
+            average_time=(average_time+tim)/2
+        search_omero_app.logger.info ("Percentage of completion  : %s, expected remaining time: %s, return: %s, total: %s"%((no_/total_number_of_pages)*100,(total_number_of_pages-no_)*average_time, len(results),total))
+        search_omero_app.logger.info("elpased time:%s"%str(tim))
         if cur_max_id>max_id:
             break
         cur_max_id+=page_size
