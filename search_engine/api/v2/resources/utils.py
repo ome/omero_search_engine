@@ -72,9 +72,11 @@ def elasticsearch_query_builder(and_filter, or_filters, case_sensitive,main_attr
     global nested_keyvalue_pair_query_template, must_term_template, must_not_term_template,should_term
     nested_must_part=[]
     nested_must_not_part = []
-    should_part_list = []
+    all_should_part_list = []
     minimum_should_match=0
     if main_attributes and len(main_attributes) > 0:
+        should_part_list=[]
+        all_should_part_list.append(should_part_list)
         if main_attributes.get("and_main_attributes"):
             for attribute in main_attributes.get("and_main_attributes"):
                 if attribute["name"].endswith("_id"):
@@ -110,7 +112,8 @@ def elasticsearch_query_builder(and_filter, or_filters, case_sensitive,main_attr
                 key=filter["name"].strip()
                 value=filter["value"].strip()
                 operator=filter["operator"].strip()
-            except:
+            except Exception as e:
+                search_omero_app.logger.info(str(e))
                 return build_error_message("Each Filter needs to have, name, value and operator keywords.")
             search_omero_app.logger.info("%s %s %s"%(operator, key, value))
             search_omero_app.logger.info("%s %s %s"%(operator, key, value))
@@ -159,58 +162,57 @@ def elasticsearch_query_builder(and_filter, or_filters, case_sensitive,main_attr
        #must_not_term
     if or_filters and len(or_filters) > 0:
         added_keys=[]
+        for or_filters_ in or_filters:
+            should_part_list_or=[]
+            all_should_part_list.append(should_part_list_or)
+            for or_filter in or_filters_:
+                should_values=[]
+                shoud_not_value=[]
+                should_names=[]
+                try:
+                    key=or_filter["name"].strip()
+                    value = or_filter["value"].strip()
+                    operator=or_filter["operator"].strip()
+                except Exception as e:
+                    return build_error_message("Each Filter needs to have, name, value and operator keywords.")
 
-        for or_filter in or_filters:
-            should_values=[]
-            shoud_not_value=[]
-            should_names=[]
-            try:
-                key=or_filter["name"].strip()
-                value = or_filter["value"].strip()
-                operator=or_filter["operator"].strip()
-            except:
-                return build_error_message("Each Filter needs to have, name, value and operator keywords.")
-
-            if key not in added_keys:
-                added_keys.append(key)
-            should_names.append(must_name_condition_template.substitute(name=key))
-            if operator=="equals":
-                if case_sensitive:
-                    should_values.append(case_sensitive_must_value_condition_template.substitute(value=value))
-                else:
-                    should_values.append(case_insensitive_must_value_condition_template.substitute(value=value))
-            elif operator == "contains":
-                value = "*{value}*".format(value=value)
-                should_values.append(wildcard_value_condition_template.substitute(wild_card_value=value))
-            elif operator in ["not_equals", "not_contains"]:
-                if operator == "not_contains":
-                    value = "*{value}*".format(value=value)
-                    shoud_not_value.append(wildcard_value_condition_template.substitute(wild_card_value=value))
-                else:
+                if key not in added_keys:
+                    added_keys.append(key)
+                should_names.append(must_name_condition_template.substitute(name=key))
+                if operator=="equals":
                     if case_sensitive:
-                        shoud_not_value.append(case_sensitive_must_value_condition_template.substitute(value=value))
+                        should_values.append(case_sensitive_must_value_condition_template.substitute(value=value))
                     else:
-                        shoud_not_value.append(case_insensitive_must_value_condition_template.substitute(value=value))
-            elif operator in ["lt", "lte", "gt", "gte"]:
-                if case_sensitive:\
-                    should_values.append(case_sensitive_range_value_condition_template.substitute(operator=operator,value= value))
-            else:
-                should_values.append(
-                    case_insensitive_range_value_condition_template.substitute(operator=operator, value=value))
-
-                #must_value_condition
-
-            ss=",".join(should_names)
-            ff= nested_keyvalue_pair_query_template.substitute(nested= ss)
-            should_part_list.append(ff)
-            ss = ",".join(should_values)
-            ff = nested_keyvalue_pair_query_template.substitute(nested=ss)
-            should_part_list.append(ff)
-            if len(shoud_not_value)>0:
-                ss = ",".join(shoud_not_value)
-                ff = nested_query_template_must_not.substitute(must_not_value=ss)
-                should_part_list.append(ff)
-
+                        should_values.append(case_insensitive_must_value_condition_template.substitute(value=value))
+                elif operator == "contains":
+                    value = "*{value}*".format(value=value)
+                    should_values.append(wildcard_value_condition_template.substitute(wild_card_value=value))
+                elif operator in ["not_equals", "not_contains"]:
+                    if operator == "not_contains":
+                        value = "*{value}*".format(value=value)
+                        shoud_not_value.append(wildcard_value_condition_template.substitute(wild_card_value=value))
+                    else:
+                        if case_sensitive:
+                            shoud_not_value.append(case_sensitive_must_value_condition_template.substitute(value=value))
+                        else:
+                            shoud_not_value.append(case_insensitive_must_value_condition_template.substitute(value=value))
+                elif operator in ["lt", "lte", "gt", "gte"]:
+                    if case_sensitive:\
+                        should_values.append(case_sensitive_range_value_condition_template.substitute(operator=operator,value= value))
+                else:
+                    should_values.append(
+                        case_insensitive_range_value_condition_template.substitute(operator=operator, value=value))
+                        #must_value_condition
+                ss=",".join(should_names)
+                ff= nested_keyvalue_pair_query_template.substitute(nested= ss)
+                should_part_list_or.append(ff)
+                ss = ",".join(should_values)
+                ff = nested_keyvalue_pair_query_template.substitute(nested=ss)
+                should_part_list_or.append(ff)
+                if len(shoud_not_value)>0:
+                    ss = ",".join(shoud_not_value)
+                    ff = nested_query_template_must_not.substitute(must_not_value=ss)
+                    should_part_list_or.append(ff)
     all_terms=""
 
     if len(nested_must_part)>0:
@@ -232,20 +234,51 @@ def elasticsearch_query_builder(and_filter, or_filters, case_sensitive,main_attr
         else:
             all_terms = nested_must_not_part_
 
-    if len(should_part_list) > 0:
-        if minimum_should_match==len(should_part_list):
-            minimum_should_match=1
-        else:
-            minimum_should_match=int((len(should_part_list)-minimum_should_match)/2+1)
-        should_part_ = ",".join(should_part_list)
-        should_part_ = should_term_template.substitute(should_term=should_part_,minimum_should_match=minimum_should_match)
+    for should_part_list in all_should_part_list:
 
-        if all_terms:
-            all_terms+=","+should_part_
-        else:
-            all_terms=should_part_
+        if len(should_part_list) > 0:
+
+            if minimum_should_match==len(should_part_list):
+                minimum_should_match=1
+            else:
+                minimum_should_match=int((len(should_part_list)-minimum_should_match)/2+1)
+            should_part_ = ",".join(should_part_list)
+            should_part_ = should_term_template.substitute(should_term=should_part_,minimum_should_match=minimum_should_match)
+
+            if all_terms:
+                all_terms+=","+should_part_
+            else:
+                all_terms=should_part_
 
     return query_template.substitute(query=all_terms)
+
+
+def check_single_filter(res_table, filter, names, organism_converter):
+    key = filter["name"]
+    value = filter["value"]
+    operator = filter["operator"]
+    if operator != "contains" and operator != "not_contains":
+        key_ = [name for name in names if name.casefold() == key.casefold()]
+        if len(key_) == 1:
+            filter["name"] = key_[0]
+            if filter["name"] == "Organism":
+                vv = [value_ for key, value_ in organism_converter.items() if key == value.casefold()]
+                if len(vv) == 1:
+                    filter["value"] = vv[0]
+        else:
+            if len(key_) == 0:
+                search_omero_app.logger.info("Name Error %s" % str(key))
+                return
+
+        values = read_name_values_from_hdf5(res_table, key_[0])
+        if not values or len(values) == 0:
+            search_omero_app.logger.info("Could not check filters %s" % str(filters))
+            return
+        value_ = [val for val in values if val.casefold() == value.casefold()]
+        if len(value_) == 1:
+            filter["value"] = value_[0]
+        elif len(value_) == 0:
+            search_omero_app.logger.info("Value Error: %s/%s" % (str(key), str(value)))
 
 def check_filters(res_table, filters):
     '''
@@ -259,35 +292,13 @@ def check_filters(res_table, filters):
         return
 
     search_omero_app.logger.info (str(filters))
-    for filter_ in filters:
-        if not filter_:
-            continue
-        for filter in filter_:
-            key=filter["name"]
-            value=filter["value"]
-            operator=filter["operator"]
-            if operator != "contains" and operator !="not_contains":
-                key_= [name for name in names if name.casefold() == key.casefold()]
-                if len(key_)==1:
-                    filter["name"]=key_[0]
-                    if filter["name"]=="Organism":
-                        vv= [value_ for key,value_ in organism_converter.items() if key == value.casefold()]
-                        if len(vv)==1:
-                            filter["value"]=vv[0]
-                else:
-                    if len(key_)==0:
-                        search_omero_app.logger.info("Name Error %s" % str(key))
-                        return
-
-                values = read_name_values_from_hdf5(res_table, key_[0])
-                if not values or len(values) == 0:
-                    search_omero_app.logger.info("Could not check filters %s" % str(filters))
-                    return
-                value_ = [val for val in values if val.casefold() == value.casefold()]
-                if len(value_)==1:
-                    filter["value"]=value_[0]
-                elif len(value_)==0:
-                    search_omero_app.logger.info("Value Error: %s/%s" % (str(key), str(value)))
+    if filters[0]:
+        for filter in filters[0]:
+            check_single_filter(res_table,filter, names, organism_converter)
+    if filters[1]:
+        for filters_ in filters[1]:
+            for filter in filters_:
+                check_single_filter(res_table,filter, names,organism_converter)
 
 
 def search_index_scrol(index_name, query):
