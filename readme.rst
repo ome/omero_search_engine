@@ -140,11 +140,26 @@ Omero Search Engine
     * It is used to build the query
     * It will display the results when they are ready
 
+
 * The app uses Elasticsearch
     * There is a method inside manage.py (create_index) to create a separate index for image, project, dataset, screen, plate and well using two templates:
         * image template (image_template) for image index. It is derived from some Omero tables into a single Elasticsearch index (image, annoation_mapvalue, imageannotationlink, project, dataset, well, plate and screen to generate a single index.
         * non-image template (non_image_template) for other indices (project, dataset, well, plate, screen). It is derived from some Omero tables depending on the resource,  for example for the project, it combines project, projectannotationlink and annotation_mapvalue.
         * both of the two templates are in \omero_search_engine\search_engine\cache_functions\elasticsearch\elasticsearch_templates.py
-    * The data now is moved using SQL queries which generate the CSV files; the queries are in omero_search_engine\search_engine\cache_functions\elasticsearch\sql_to_csv.py
+
+        * The data can be moved using SQL queries which generate the CSV files; the queries are in omero_search_engine\search_engine\cache_functions\elasticsearch\sql_to_csv.py
+        * There is a method inside manage.py script (add_resource_data_to_es_index) that reads the CSV files and inserts the data to the Elasticsearch index.
+        * I am investigating automatic updates of the elastic search data in case of the data inside the PostgreSQL database has been changed.
+
+    * The data can be transferred directly from the Omero database to the Elasticsearch using a method inside manage.py (get_index_data_from_database):
+        * It creates the elastic search indices for each resource
+        * it queries the Omero database, after receiving the data it process and push them to the Elasticsearch indices.
+        * This process takes a relatively long time, it depends on the hosting machine specs. The user can adjust how many rows can be processed at one call to the Omero database:
+             * set the no of rows using a method inside the manage.py (set_cache_rows_number), the following will set the number to be 1000
+                path/to/python manage.py set_cache_rows_number -s 10000
+
+    * The data can be also moved using SQL queries which generate the CSV files; the queries are in omero_search_engine\search_engine\cache_functions\elasticsearch\sql_to_csv.py
     * There is a method inside manage.py script (add_resource_data_to_es_index) which reads the CSV files and inserts the data to the Elasticsearch index.
     * I am investigating automatic updates of the elastic search data in case of the data inside the PostgreSQL database has been changed.
+
+For the configuration and installation instructions, please read the following document doc/configuration/configuration_installtion.rs
