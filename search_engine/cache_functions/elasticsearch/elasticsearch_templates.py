@@ -47,6 +47,10 @@ non_image_template={
             "name": {
                 "type":"text",
                   "fields":{
+                      "keynamenormalize": {
+                          "type": "keyword",
+                          "normalizer": "valuesnormalizer"
+                      },
                       "keyword":{
                         "type":"keyword"
                      }
@@ -173,6 +177,10 @@ image_template={
             "name": {
                 "type":"text",
                   "fields":{
+                    "keynamenormalize": {
+                        "type": "keyword",
+                        "normalizer": "valuesnormalizer"
+                    },
                       "keyword":{
                         "type":"keyword"
                  }
