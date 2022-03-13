@@ -2,7 +2,7 @@ from . import resources
 from flask import request, jsonify
 import json
 from search_engine.api.v2.resources.utils import search_resource_annotation, build_error_message
-from resourse_analyser import  search_value_for_resource
+from resourse_analyser import  search_value_for_resource, get_values_for_a_key
 from search_engine.api.v1.resources.utils import get_resource_annotation_table
 
 @resources.route('/',methods=['GET'])
@@ -71,8 +71,17 @@ def search_resource(resource_table):
     return jsonify(resource_list)
 
 @resources.route('/<resource_table>/searchvalues/',methods=['GET'])
-def search_values(resource_table):
+def get_values_using_value(resource_table):
     value=request.args.get("value")
     if not value:
         return jsonify(build_error_message("Error: {error}".format(error="No value is provided ")))
     return json.dumps(search_value_for_resource(resource_table, value))
+
+
+@resources.route('/<resource_table>/searchvaluesusingkey/',methods=['GET'])
+def search_values_for_a_key(resource_table):
+    key=request.args.get("key")
+    if not key:
+        return jsonify(build_error_message("Error: {error}".format(error="No key is provided ")))
+    return json.dumps(get_values_for_a_key(resource_table, key))
+
