@@ -355,7 +355,6 @@ def search_index_using_search_after(e_index, query, page, bookmark_):
         search_omero_app.logger.info(bookmark_)
         query["search_after"] = bookmark_
         res = es.search(index=e_index, body=query)
-        print (res)
         for el in res['hits']['hits']:
             returned_results.append(el["_source"])
         if len(res['hits']['hits']) == 0:
