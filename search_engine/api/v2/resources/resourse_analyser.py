@@ -69,7 +69,7 @@ def search_value_for_resource(table_, value):
                 key_no = buc.get("doc_count")
                 singe_row["Attribute"]=key
                 singe_row["Value"] =value
-                singe_row["Total number of images"] =key_no
+                singe_row["Total number of %s"%table_] =key_no
     return returnted_results
 
 
@@ -92,7 +92,7 @@ def get_values_for_a_key(table_, key):
             returnted_results.append(singe_row)
             singe_row["Attribute"] = key
             singe_row["Value"] = value
-            singe_row["Total number of images"] = value_no
+            singe_row["Total number of %s"%table_] = value_no
     return returnted_results
 
 def get_keys_for_value(table, key):
