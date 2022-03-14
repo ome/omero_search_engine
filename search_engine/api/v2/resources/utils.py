@@ -5,7 +5,6 @@ from elasticsearch import Elasticsearch, helpers
 
 from datetime import datetime
 import time
-from multiprocessing import Pool, Manager
 main_dir = os.path.abspath(os.path.dirname(__file__))
 mm=main_dir.replace("search_engine/api/v1/resources","")
 sys.path.append(mm)
@@ -322,53 +321,57 @@ def search_index_scrol(index_name, query):
     search_omero_app.logger.info ("Total =%s"% counter)
     return results
 
-
-def search_index_using_seargc_after(e_index, query, page, bookmark_):
+def search_index_using_search_after(e_index, query, page, bookmark_):
     returned_results = []
     if not page:
-        page=1
-    page_size=search_omero_app.config.get("PAGE_SIZE")
-    es=search_omero_app.config.get("es_connector")
-    start__= datetime.now()
-    res = es.count(index=e_index, body= query)
+        page = 1
+    page_size = search_omero_app.config.get("PAGE_SIZE")
+    es = search_omero_app.config.get("es_connector")
+    start__ = datetime.now()
+    res = es.count(index=e_index, body=query)
     size = res['count']
-    search_omero_app.logger.info ("Total: %s"% size)
-    query['size']=page_size
+    search_omero_app.logger.info("Total: %s" % size)
+    query['size'] = page_size
     if size % page_size == 0:
-        add_to_page=0
+        add_to_page = 0
     else:
-        add_to_page=1
-    no_of_pages= (int) (size/page_size) +add_to_page
-    search_omero_app.logger.info("No of pages: %s"%no_of_pages)
-    query["sort"]= [
+        add_to_page = 1
+    no_of_pages = (int)(size / page_size) + add_to_page
+    search_omero_app.logger.info("No of pages: %s" % no_of_pages)
+    query["sort"] = [
         {"id": "asc"}
     ]
     if not bookmark_:
-        result = es.search(index=e_index, body= query)
-        if len(result['hits']['hits'])==0:
-            search_omero_app.logger.info ("No result is found")
+        result = es.search(index=e_index, body=query)
+        if len(result['hits']['hits']) == 0:
+            search_omero_app.logger.info("No result is found")
             return returned_results
         bookmark = [result['hits']['hits'][-1]['sort'][0]]
-        search_omero_app.logger.info ("bookmark: %s"%bookmark)
+        search_omero_app.logger.info("bookmark: %s" % bookmark)
         for hit in result['hits']['hits']:
-            #print (hit)
+            # print (hit)
             returned_results.append(hit["_source"])
     else:
-        search_omero_app.logger.info (bookmark_)
-        query["search_after"]= bookmark_
+        search_omero_app.logger.info(bookmark_)
+        query["search_after"] = bookmark_
         res = es.search(index=e_index, body=query)
+        print (res)
         for el in res['hits']['hits']:
             returned_results.append(el["_source"])
+        if len(res['hits']['hits']) == 0:
+            search_omero_app.logger.info("No result is found")
+            return returned_results
         bookmark = [res['hits']['hits'][-1]['sort'][0]]
-        page+=1
-    return {"results" : returned_results, "total_pages":no_of_pages,"bookmark":bookmark, "size":size,"page":page}
-
+        page += 1
+    return {"results": returned_results, "total_pages": no_of_pages, "bookmark": bookmark, "size": size, "page": page}
+    
 def search_resource_annotation(table_, query, raw_elasticsearch_query=None, page=None,bookmark=None):
     '''
     @table_: the resource table, e.g. image. project, etc.
     @query: the a dict contains the three filters (or, and and  not) items
     @raw_elasticsearch_query: is a raw query which send directly to elasticsearch
     '''
+
     res_index=resource_elasticsearchindex.get(table_)
     if not res_index:
         return build_error_message("{table_} is not a valid resurce".format(table_=table_))
@@ -399,12 +402,13 @@ def search_resource_annotation(table_, query, raw_elasticsearch_query=None, page
     else:
         query=raw_elasticsearch_query
         raw_query_to_send_back=copy.copy(raw_elasticsearch_query)
-    res=search_index_using_seargc_after(res_index, query, page, bookmark)
+    res=search_index_using_search_after(res_index, query, page, bookmark)
     notice=""
     end_time = time.time()
     query_time = ("%.2f" % (end_time - start_time))
     return {"results": res, "query_details": query_details, "resource": table_,
             "server_query_time": query_time, "raw_elasticsearch_query":raw_query_to_send_back,"notice": notice}
+
 
 
 
