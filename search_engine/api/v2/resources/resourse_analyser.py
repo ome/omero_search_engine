@@ -4,6 +4,12 @@ from datetime import datetime
 import time
 from utils import resource_elasticsearchindex
 
+key_number_search_template=Template('''{"size":0,"aggs":{"value_search":{"nested":{"path":"key_values"},
+         "aggs":{"value_filter":{"filter":{"terms":{"key_values.name.keyword":["$key"]}},
+               "aggs":{"required_values":{"cardinality":{"field":"key_values.value.keyvalue","precision_threshold":100
+                     }}}}}}}}
+                     ''')
+
 search_bey_value_only= Template('''
                     {"query":{"bool":{"must":[{"nested":{"path":"key_values","query":{"bool":{"must":[{"wildcard":
                                                         {"key_values.value.keyvaluenormalize":"*eLa*"}}]}}}}]}}}
@@ -59,7 +65,7 @@ def search_value_for_resource(table_, value):
     end_time = time.time()
     query_time = ("%.2f" % (end_time - start_time))
     notice = ""
-    print("TIME ...", query_time)
+    #print("TIME ...", query_time)
     total_number=0
     returnted_results=[]
     if res.get("aggregations"):
@@ -77,18 +83,29 @@ def search_value_for_resource(table_, value):
                 total_number+=key_no
     return {"returnted_results":returnted_results, "total_number":total_number}
 
+def get_number_of_buckets(key, res_index):
+    query=key_number_search_template.substitute(key=key)
+    res = search_index_for_value(res_index, query)
+    number_of_buckets = res.get("aggregations").get("value_search").get("value_filter").get("required_values").get(
+        "value")
+    number_of_images = res.get("aggregations").get("value_search").get("value_filter").get("doc_count")
+    #print (number_of_buckets, number_of_images)
+    return number_of_buckets, number_of_images
+
+
 
 def get_values_for_a_key(table_, key):
     '''
     search the index to get he avialble values for a key and get values number for the key
     '''
     total_number=0
+    res_index = resource_elasticsearchindex.get(table_)
+    number_of_buckets, number_of_images=get_number_of_buckets(key, res_index)
     query=key_search_template.substitute(key=key)
     start_time = time.time()
-    res_index = resource_elasticsearchindex.get(table_)
     res = search_index_for_value(res_index, query)
     query_time = ("%.2f" % (time.time() - start_time))
-    print("TIME ...", query_time)
+    #print("TIME ...", query_time)
     returnted_results=[]
     if res.get("aggregations"):
         for bucket in res.get("aggregations").get("name_search").get("value_filter").get("required_values").get("buckets"):
@@ -100,7 +117,10 @@ def get_values_for_a_key(table_, key):
             singe_row["Attribute"] = key
             singe_row["Value"] = value
             singe_row["Number of %ss"%table_] = value_no
-    return {"returnted_results":returnted_results, "total_number":total_number}
+    return {"returnted_results":returnted_results, "total_number":total_number, "total_number_of_images":number_of_images,"total_number_of_buckets": number_of_buckets}
+
+
 
 def get_keys_for_value(table, key):
     pass
+
