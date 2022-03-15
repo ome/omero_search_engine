@@ -8,7 +8,10 @@ search_bey_value_only= Template('''
                     {"query":{"bool":{"must":[{"nested":{"path":"key_values","query":{"bool":{"must":[{"wildcard":
                                                         {"key_values.value.keyvaluenormalize":"*eLa*"}}]}}}}]}}}
                          ''')
-
+'''
+The number of returned value is limited to 9999
+I will add paging to these statment to pull all the results
+'''
 value_number_search_template = Template('''
             {"size": 0,"aggs": {"name_search": {"nested": {"path": "key_values"},"aggs": {"value_filter": {"filter": {
                 "terms": {"key_values.value.keyvaluenormalize": ["$value"]}},"aggs": {"required_name": {"cardinality": {
@@ -25,11 +28,11 @@ value_search_contain_template = Template('''{"size": 0,"aggs": {"name_search": {
               },"aggs": {"required_name": {"terms": {"field": "key_values.name.keyword","size": 9999}}}}}}}}
     ''')
 
-
 key_search_template=Template('''{"size": 0,"aggs": {"name_search": {"nested": {"path": "key_values"},"aggs": {"value_filter": {
           "filter": {"terms": {"key_values.name.keyword": ["$key"]}},"aggs": {"required_values": {
               "terms": {"field": "key_values.value.keyvalue","size": 9999}}}}}}}}
               ''')
+
 
 def format_the_results(results):
     pass
@@ -39,6 +42,7 @@ def search_index_for_value(e_index, query):
     Perform search the elastcisearch using value and return all the key values whihch this value has been used, it will include thenumber of records
     It relatively slow but I think it may be my the elasticsearcg hsting  machine
     '''
+
     es = search_omero_app.config.get("es_connector")
     res = es.search(index=e_index, body=query)
     return res
@@ -56,7 +60,7 @@ def search_value_for_resource(table_, value):
     query_time = ("%.2f" % (end_time - start_time))
     notice = ""
     print("TIME ...", query_time)
-    print (res.keys())
+    total_number=0
     returnted_results=[]
     if res.get("aggregations"):
         for bucket in res.get("aggregations").get("name_search").get("value_filter").get("buckets"):
@@ -69,14 +73,16 @@ def search_value_for_resource(table_, value):
                 key_no = buc.get("doc_count")
                 singe_row["Attribute"]=key
                 singe_row["Value"] =value
-                singe_row["Total number of %s"%table_] =key_no
-    return returnted_results
+                singe_row["Number of %ss"%table_] =key_no
+                total_number+=key_no
+    return {"returnted_results":returnted_results, "total_number":total_number}
 
 
 def get_values_for_a_key(table_, key):
     '''
     search the index to get he avialble values for a key and get values number for the key
     '''
+    total_number=0
     query=key_search_template.substitute(key=key)
     start_time = time.time()
     res_index = resource_elasticsearchindex.get(table_)
@@ -88,12 +94,13 @@ def get_values_for_a_key(table_, key):
         for bucket in res.get("aggregations").get("name_search").get("value_filter").get("required_values").get("buckets"):
             value = bucket.get("key")
             value_no = bucket.get("doc_count")
+            total_number+=value_no
             singe_row = {}
             returnted_results.append(singe_row)
             singe_row["Attribute"] = key
             singe_row["Value"] = value
-            singe_row["Total number of %s"%table_] = value_no
-    return returnted_results
+            singe_row["Number of %ss"%table_] = value_no
+    return {"returnted_results":returnted_results, "total_number":total_number}
 
 def get_keys_for_value(table, key):
     pass
