@@ -79,7 +79,7 @@ jobs:
       with:
         context: .
         file: ./deployment/docker/centos/Dockerfile
-        push: false
+        push: true
         tags: ${{ join(fromJson(steps.gettags.outputs.tags)) }}
 
 
