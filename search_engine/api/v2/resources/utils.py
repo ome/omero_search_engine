@@ -23,7 +23,7 @@ resource_elasticsearchindex={"project":"project_keyvalue_pair_metadata",
                              "image1":"image_keyvalue_pair_metadata_1"
                              }
 
-
+#curl -XPUT -H 'Content-Type: application/json' -d '{"index": {"max_result_window": 20000 }}' 'http://127.0.0.1:9200/image_keyvalue_pair_metadata/_settings'
 
 range_dict={
 "gte":  ">=",#"Greater-than or equal to",
@@ -279,7 +279,7 @@ def check_single_filter(res_table, filter, names, organism_converter):
         elif len(value_) == 0:
             search_omero_app.logger.info("Value Error: %s/%s" % (str(key), str(value)))
 
-def check_filters(res_table, filters):
+def check_filters(res_table, filters, case_sensitive):
     '''
     This method checks the name and value inside the filter and fixes if nay is not correct, case sensitive error, using the general term rather than scientific terms.
     It should be expanded in the future to add more checks and fixes.
@@ -293,11 +293,13 @@ def check_filters(res_table, filters):
     search_omero_app.logger.info (str(filters))
     if filters[0]:
         for filter in filters[0]:
-            check_single_filter(res_table,filter, names, organism_converter)
+            if not case_sensitive:
+                check_single_filter(res_table,filter, names, organism_converter)
     if filters[1]:
         for filters_ in filters[1]:
             for filter in filters_:
-                check_single_filter(res_table,filter, names,organism_converter)
+                if not case_sensitive:
+                    check_single_filter(res_table,filter, names,organism_converter)
 
 
 def search_index_scrol(index_name, query):
@@ -389,7 +391,7 @@ def search_resource_annotation(table_, query, raw_elasticsearch_query=None, page
         or_filters = query_details.get("or_filters")
         case_sensitive=query_details.get("case_sensitive")
         #check and fid if possible names and values inside filters conditions
-        check_filters(table_, [and_filters, or_filters])
+        check_filters(table_, [and_filters, or_filters], case_sensitive)
         query_string = elasticsearch_query_builder(and_filters,  or_filters,case_sensitive,main_attributes)
         #query_string has to be string, if it is a dict, something went wrong and the message inside the dict
         #which will be returned to the sender:
