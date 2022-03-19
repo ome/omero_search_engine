@@ -33,7 +33,6 @@ value_search_contain_template = Template('''{"size": 0,"aggs": {"name_search": {
           "aggs": {"value_filter": {"terms": {"field":"key_values.value.keyvaluenormalize","include": ".*$value.*"
               },"aggs": {"required_name": {"terms": {"field": "key_values.name.keyword","size": 9999}}}}}}}}
     ''')
-
 key_search_template=Template('''{"size": 0,"aggs": {"name_search": {"nested": {"path": "key_values"},"aggs": {"value_filter": {
           "filter": {"terms": {"key_values.name.keyword": ["$key"]}},"aggs": {"required_values": {
               "terms": {"field": "key_values.value.keyvalue","size": 9999}}}}}}}}
@@ -54,7 +53,7 @@ def search_index_for_value(e_index, query):
     return res
 
 
-def search_value_for_resource(table_, value):
+def search_value_for_resource_(table_, value):
     '''
     send the request to elasticsearch and format the results
     '''
@@ -105,7 +104,7 @@ def get_values_for_a_key(table_, key):
     start_time = time.time()
     res = search_index_for_value(res_index, query)
     query_time = ("%.2f" % (time.time() - start_time))
-    #print("TIME ...", query_time)
+    print("TIME ...", query_time)
     returnted_results=[]
     if res.get("aggregations"):
         for bucket in res.get("aggregations").get("name_search").get("value_filter").get("required_values").get("buckets"):
@@ -117,10 +116,71 @@ def get_values_for_a_key(table_, key):
             singe_row["Attribute"] = key
             singe_row["Value"] = value
             singe_row["Number of %ss"%table_] = value_no
-    return {"returnted_results":returnted_results, "total_number":total_number, "total_number_of_images":number_of_images,"total_number_of_buckets": number_of_buckets}
+    return {"returnted_results":returnted_results, "total_number":total_number, "total_number_of_%s"%(table_):number_of_images,"total_number_of_buckets": number_of_buckets}
+
+def prepare_search_results(results):
+    returned_results=[]
+    total=0
+    print (len(results.get("hits").get("hits")))
+    for hit in results["hits"]["hits"]:
+        #print (total,"/",len(results["hits"]["hits"]))
+        row={}
+
+        returned_results.append(row)
+        res=hit["_source"]
+        print(res.keys())
+        row["Attribute"] = res["Attribute"]
+        row["Value"] = res["Value"]
+        resource=res.get("resource")
+        row["Number of %ss" % resource] = res.get("items_in_the_bucket")
+        total_number=res["total_items_in_saved_buckets"]
+        number_of_buckets=res["total_buckets"]
+    return {"returnted_results": returned_results, "total_number": total_number,
+            "total_number_of_%s" % (resource): total, "total_number_of_buckets": number_of_buckets, "total_items":res["total_items"]}
+
+def query_cashed_bucket(name ,resource, es_index="key_value_buckets_info"):
+    query=key_values_buckets_template.substitute(name=name, resource=resource)
+    res=search_index_for_value(es_index, query)
+    returned_results= prepare_search_results(res)
+    return returned_results
+
+def query_cashed_bucket_value(value, es_index="key_value_buckets_info"):
+    query=value_all_buckets_template.substitute(value=value)
+    res=search_index_for_value(es_index, query)
+    return prepare_search_results(res)
+
+def search_value_for_resource(table_, value, es_index="key_value_buckets_info"):
+    '''
+    send the request to elasticsearch and format the results
+    '''
+    query=value_all_buckets_template.substitute(value=value)
+    res = search_index_for_value(es_index, query)
+    return prepare_search_results(res)
 
 
 
 def get_keys_for_value(table, key):
     pass
 
+'''
+Search using key and resourse'''
+key_values_buckets_template= Template ('''{"query":{"bool":{"must":[{"bool":{
+                  "must":{"match":{"Attribute.keyname":"$name"}}}},{
+                 "bool": {"must": {"match": {"resource.keyresource": "$resource"}}}}]}},  
+                 "size": 9999} ''')
+
+#"fields": ["Attribute","Value","items_in_the_bucket","total_items_in_saved_buckets","total_buckets","total_items"],"_source": false,
+ss=Template ('''{"query":{"bool":{"must":[{"bool":{
+                "must":{"match":{"Attribute.keyname":"$name"}}}},{"bool": {
+                     "must": {"match": {"resource.keyresource": "$resource"}}}}]}} ,"size": 9999}''')
+'''
+Search using value and resourse'''
+key_values_search_buckets_template= Template ('''{"query":{"bool":{"must":[{"bool":{
+                  "must":{"match":{"Value.keyvalue":"$value"}}}},{
+                 "bool": {"must": {"match": {"resource.keyresource": "$resource"}}}}]}},"size": 9999} ''')
+
+'''
+Search using value or part of value and return all the posible mathes '''
+
+value_all_buckets_template=Template('''{"query":{"bool":{"must":[{"bool":{
+                  "must":{"wildcard":{"Value.keyvaluenormalize":"*$value*"}}}}]}},"size": 9999}''')

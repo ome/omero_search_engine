@@ -206,3 +206,76 @@ image_template={
     }
   }
 }
+
+'''
+Template rebresents a bucket in a resource, i.e. key and value and the total number of values (number of images)
+'''
+
+key_value_buckets_info_template={
+    "settings": {
+        "analysis": {
+            "normalizer": {
+                "valuesnormalizer": {
+                    "type": "custom",
+                    "filter": ["lowercase"]
+                }
+            }
+        }
+    },
+"mappings": {
+    "properties": {
+      "doc_type": {
+        "type": "keyword"
+    },
+
+    "resource": {
+      "type": "text",
+        "fields": {
+              "keyresource": {
+                  "type": "keyword"
+                      },
+               "keyresourcenormalize": {
+                        "type": "keyword",
+                        "normalizer": "valuesnormalizer"
+                    }
+            }
+    },
+    "Attribute": {
+      "type": "text",
+        "fields": {
+              "keyname": {
+                  "type": "keyword"
+                      },
+               "keyrnamenormalize": {
+                        "type": "keyword",
+                        "normalizer": "valuesnormalizer"
+                    }
+            }
+    },
+    "Value": {
+      "type": "text",
+        "fields": {
+              "keyvalue": {
+                  "type": "keyword"
+                      },
+              "keyvaluenormalize": {
+                        "type": "keyword",
+                        "normalizer": "valuesnormalizer"
+                    }
+            }
+    },
+    "items_in_the_bucket": {
+        "type": "long"
+    },
+    "total_buckets": {
+        "type": "long"
+    },
+    "total_items": {
+        "type": "long"
+    },
+"total_items_in_saved_buckets": {
+        "type": "long"
+    }
+    }
+}
+}

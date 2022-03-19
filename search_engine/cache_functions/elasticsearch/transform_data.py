@@ -3,8 +3,12 @@ from elasticsearch import  helpers
 import  pandas as pd
 import numpy as np
 import os
+from urllib.parse import quote
 from search_engine.api.v2.resources.utils import resource_elasticsearchindex
-from search_engine.cache_functions.elasticsearch.elasticsearch_templates import image_template, non_image_template
+from search_engine.api.v2.resources.resourse_analyser  import  get_values_for_a_key, query_cashed_bucket
+from search_engine.cache_functions.elasticsearch.elasticsearch_templates import image_template, non_image_template, key_value_buckets_info_template
+from app_data.data_attrs import annotation_resource_link
+
 
 import json
 
@@ -41,6 +45,7 @@ def  create_omero_indexes(resource):
             template=non_image_template
         search_omero_app.logger.info(f"Creating index {es_index} for {resource_}".format(es_index=es_index, resource=resource_))
         create_index(es_index, template)
+
 
 def get_all_indexes():
     es=search_omero_app.config.get("es_connector")
@@ -295,10 +300,7 @@ def get_insert_data_to_index(sql_st, resource):
         process_results(results, resource)
         total+=len(results)
         tim=datetime.now()-st
-        if no_==1:
-            average_time =tim
-        else:
-            average_time=(average_time+tim)/2
+        average_time =(datetime.now()-start_time)/no_
         search_omero_app.logger.info ("Percentage of completion  : %s, expected remaining time: %s, return: %s, total: %s"%((no_/total_number_of_pages)*100,(total_number_of_pages-no_)*average_time, len(results),total))
         search_omero_app.logger.info("elpased time:%s"%str(tim))
         if cur_max_id>max_id:
@@ -372,6 +374,85 @@ def insert_plate_data(folder, plate_file):
     handle_file(file_name, es_index, cols)
 
 
+def save_key_value_buckets(resource_table_=None, re_create_index=False):
+    '''
+      Query the database and get all posible keys and values for the resource e.g. image,
+      then query the elastic search to get value buckets for each buklet
+      '''
+    es_index="key_value_buckets_info"
+    if re_create_index:
+        search_omero_app.logger.info (delete_es_index( es_index))
+        search_omero_app.logger.info (create_index(es_index, key_value_buckets_info_template))
+
+    wrong_keys={}
+
+    for resource_table, linkedtable in annotation_resource_link.items():
+         if resource_table_:
+            if resource_table_ != resource_table:
+                continue
+
+         search_omero_app.logger.info("check table: %s ......." % resource_table)
+         resource_keys = get_keys(resource_table)
+         search_omero_app.logger.info("Resourse: {resource} has {no} attributes".format(resource=resource_table, no=len(resource_keys)))
+         co1=0
+         for key in resource_keys:
+             co1 += 1
+             try:
+                search_omero_app.logger.info( "Processing %s/%s"%(co1, len(resource_keys)))
+                search_omero_app.logger.info("Checking {key}".format(key=key))
+                data_to_be_pushed=get_buckets(key, resource_table,es_index)
+                actions = []
+                print ("Number: ",len(data_to_be_pushed))
+                for record in data_to_be_pushed:
+                    actions.append(
+                        {
+                            "_index": es_index,
+                            "_source": record
+                        }
+                    )
+                es = search_omero_app.config.get("es_connector")
+                print (helpers.bulk(es, actions))
+             except Exception as e:
+                print (e)
+                if resource_table in wrong_keys:
+                    wrong_keys[resource_table]=wrong_keys[resource_table].append(key)
+                else:
+                    wrong_keys[resource_table] = [key]
+
+    print (wrong_keys)
+    # the following attribute cause an error because \G as it is considered as an escap char
+    # {'image': ['Cell Type\\Genetic Subtype (Neve et al., Cancer Cell 2006)'], 'well': ['Cell Type\\Genetic Subtype (Neve et al., Cancer Cell 2006)']}
 
 
-path_name=r"D:\data\New_idr_database\images_data"
+def get_keys(res_table):
+    sql = "select  distinct (name) from annotation_mapvalue inner join {res_table}annotationlink on {res_table}annotationlink.child=annotation_mapvalue.annotation_id".format(
+        res_table=res_table)
+    results= search_omero_app.config["database_connector"].execute_query(sql)
+    results=[res['name'] for res in results]
+    return  results
+
+def get_buckets(key, resourcse,es_index):
+    res=get_values_for_a_key(resourcse,key )
+    data_to_be_pushed=prepare_bucket_index_data(res, resourcse, es_index)
+    return data_to_be_pushed
+
+def prepare_bucket_index_data(results, res_table,es_index):
+    data_header=["resource", "name", "value", "items_in_the_bucket", "total_buckets", "total_items"]
+    data_to_be_inserted=[]
+    for result in results.get("returnted_results"):
+        row={}
+        data_to_be_inserted.append(row)
+        row["resource"]=res_table
+        row["Attribute"] = result["Attribute"]
+        row["doc_type"]=es_index
+        row["Value"] =result["Value"]
+        row["items_in_the_bucket"]=result["Number of %ss"%res_table]
+        row["total_buckets"]=results["total_number_of_buckets"]
+        row["total_items_in_saved_buckets"]=results["total_number"]
+        row["total_items"]=results["total_number_of_%s"%res_table]
+    return data_to_be_inserted
+
+
+def determine_cashed_bucket (attribute, resource,  es_indrx):
+    res=query_cashed_bucket(attribute,resource, es_indrx)
+    print (res)

@@ -181,6 +181,22 @@ def set_max_page(page_size=None):
     else:
         search_omero_app.logger.info("No valid attribute is provided")
 
+@manager.command
+@manager.option('-r', '--resource', help='resource name, creating all the indcese for all the resources is the default')
+@manager.option('-c', '--create_index', help='creating the elastic search index if set to True')
+
+def cache_key_value_index(resource=None,create_index=None):
+    '''
+    Cache the value bucket for each value for each resource
+    '''
+    from search_engine.cache_functions.elasticsearch.transform_data import  save_key_value_buckets
+    save_key_value_buckets(resource, create_index)
+
+
+@manager.command
+def get_the_cahs():
+    from search_engine.cache_functions.elasticsearch.transform_data import determine_cashed_bucket
+    determine_cashed_bucket("Gene Name","image","key_value_buckets_info")
 
 
 if __name__ == '__main__':
