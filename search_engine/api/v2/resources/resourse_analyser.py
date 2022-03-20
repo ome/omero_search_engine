@@ -35,7 +35,7 @@ value_search_contain_template = Template('''{"size": 0,"aggs": {"name_search": {
     ''')
 key_search_template=Template('''{"size": 0,"aggs": {"name_search": {"nested": {"path": "key_values"},"aggs": {"value_filter": {
           "filter": {"terms": {"key_values.name.keyword": ["$key"]}},"aggs": {"required_values": {
-              "terms": {"field": "key_values.value.keyvalue","size": 9999}}}}}}}}
+              "terms": {"field": "key_values.value.keyvaluenormalize","size": 9999}}}}}}}}
               ''')
 
 
