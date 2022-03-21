@@ -1,5 +1,5 @@
 tables=["projects","iamges","datasets","plates"]
-annotation_resource_link={'image': 'imageannotationlink', 'project': 'projectannotationlink', 'dataset': 'datasetannotationlink',
+annotation_resource_link={'image': 'imageannotationlink', 'project': 'projectannotationlink',
                        'plate':'plateannotationlink','screen':'screenannotationlink','well':'wellannotationlink'}
 #screen ==> study
 distinct_study_name='''
