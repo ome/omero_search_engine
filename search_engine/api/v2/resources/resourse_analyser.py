@@ -121,6 +121,10 @@ def get_values_for_a_key(table_, key):
 def prepare_search_results(results):
     returned_results=[]
     total=0
+    total_number=0
+    total_items=0
+    number_of_buckets=0
+    resource=None
     print (len(results.get("hits").get("hits")))
     for hit in results["hits"]["hits"]:
         #print (total,"/",len(results["hits"]["hits"]))
@@ -135,8 +139,9 @@ def prepare_search_results(results):
         row["Number of %ss" % resource] = res.get("items_in_the_bucket")
         total_number=res["total_items_in_saved_buckets"]
         number_of_buckets=res["total_buckets"]
+        total_items=res["total_items"]
     return {"returnted_results": returned_results, "total_number": total_number,
-            "total_number_of_%s" % (resource): total, "total_number_of_buckets": number_of_buckets, "total_items":res["total_items"]}
+            "total_number_of_%s" % (resource): total, "total_number_of_buckets": number_of_buckets, "total_items":total_items}
 
 def query_cashed_bucket(name ,resource, es_index="key_value_buckets_info"):
     query=key_values_buckets_template.substitute(name=name, resource=resource)
