@@ -125,14 +125,13 @@ def prepare_search_results(results):
     total_items=0
     number_of_buckets=0
     resource=None
-    print (len(results.get("hits").get("hits")))
+    #print (len(results.get("hits").get("hits")))
     for hit in results["hits"]["hits"]:
         #print (total,"/",len(results["hits"]["hits"]))
         row={}
-
         returned_results.append(row)
         res=hit["_source"]
-        print(res.keys())
+        #print(res.keys())
         row["Attribute"] = res["Attribute"]
         row["Value"] = res["Value"]
         resource=res.get("resource")
@@ -158,11 +157,12 @@ def search_value_for_resource(table_, value, es_index="key_value_buckets_info"):
     '''
     send the request to elasticsearch and format the results
     '''
-    query=value_all_buckets_template.substitute(value=value)
+    if value:
+        value=value.strip().lower()
+    #query=value_all_buckets_template.substitute(value=value)
+    query=resource_key_values_buckets_template.substitute(value=value, resource='image')
     res = search_index_for_value(es_index, query)
     return prepare_search_results(res)
-
-
 
 def get_keys_for_value(table, key):
     pass
@@ -176,7 +176,7 @@ key_values_buckets_template= Template ('''{"query":{"bool":{"must":[{"bool":{
 
 #"fields": ["Attribute","Value","items_in_the_bucket","total_items_in_saved_buckets","total_buckets","total_items"],"_source": false,
 ss=Template ('''{"query":{"bool":{"must":[{"bool":{
-                "must":{"match":{"Attribute.keyname":"$name"}}}},{"bool": {
+                      "must":{"match":{"Attribute.keyname":"$name"}}}},{"bool": {
                      "must": {"match": {"resource.keyresource": "$resource"}}}}]}} ,"size": 9999}''')
 '''
 Search using value and resourse'''
@@ -189,3 +189,9 @@ Search using value or part of value and return all the posible mathes '''
 
 value_all_buckets_template=Template('''{"query":{"bool":{"must":[{"bool":{
                   "must":{"wildcard":{"Value.keyvaluenormalize":"*$value*"}}}}]}},"size": 9999}''')
+
+
+resource_key_values_buckets_template= Template ('''{"query":{"bool":{"must":[{"bool":{
+                  "must":{"wildcard":{"Value.keyvaluenormalize":"*$value*"}}}},{
+                 "bool": {"must": {"match": {"resource.keyresource": "$resource"}}}}]}},  
+                 "size": 9999} ''')
