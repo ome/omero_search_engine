@@ -79,16 +79,17 @@ def elasticsearch_query_builder(and_filter, or_filters, case_sensitive,main_attr
         #should_part_list=[]
         #all_should_part_list.append(should_part_list)
         if main_attributes.get("and_main_attributes"):
-            for attribute in main_attributes.get("and_main_attributes"):
-                if attribute["name"].endswith("_id"):
-                    main_dd = main_attribute_query_template_id.substitute(attribute=attribute["name"].strip(),
-                                                                     value=str(attribute["value"]).strip())
-                else:
-                    main_dd = main_attribute_query_template.substitute(attribute=attribute["name"].strip(), value=str(attribute["value"]).strip())
-                if attribute["operator"].strip() == "equals":
-                    nested_must_part.append(main_dd)
-                elif attribute["operator"].strip()=="not_equals":
-                    nested_must_not_part.append(main_dd)
+            for clause in main_attributes.get("and_main_attributes"):
+                for attribute in clause:
+                    if attribute["name"].endswith("_id"):
+                        main_dd = main_attribute_query_template_id.substitute(attribute=attribute["name"].strip(),
+                                                                         value=str(attribute["value"]).strip())
+                    else:
+                        main_dd = main_attribute_query_template.substitute(attribute=attribute["name"].strip(), value=str(attribute["value"]).strip())
+                    if attribute["operator"].strip() == "equals":
+                        nested_must_part.append(main_dd)
+                    elif attribute["operator"].strip()=="not_equals":
+                        nested_must_not_part.append(main_dd)
 
         if main_attributes.get("or_main_attributes"):
             for attributes in main_attributes.get("or_main_attributes"):
@@ -234,15 +235,13 @@ def elasticsearch_query_builder(and_filter, or_filters, case_sensitive,main_attr
     for should_part_list_ in all_should_part_list:
         if isinstance(should_part_list_, dict):
             should_part_list=should_part_list_.get("main")
-            minimum_should_match = 0
+            minimum_should_match = 1
         else:
             should_part_list=should_part_list_
             minimum_should_match=0
 
-
         if len(should_part_list) > 0:
-
-            if minimum_should_match>0:
+            if minimum_should_match==0:
                 if minimum_should_match==len(should_part_list):
                     minimum_should_match=1
                 else:
@@ -273,7 +272,6 @@ def elasticsearch_query_builder(and_filter, or_filters, case_sensitive,main_attr
             all_terms = all_terms + "," + nested_must_not_part_
         else:
             all_terms = nested_must_not_part_
-
 
 
     return query_template.substitute(query=all_terms)
