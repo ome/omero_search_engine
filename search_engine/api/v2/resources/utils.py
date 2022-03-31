@@ -58,7 +58,9 @@ case_sensitive_wildcard_value_condition_template=Template('''{"wildcard": {"key_
 case_insensitive_wildcard_value_condition_template=Template('''{"wildcard": {"key_values.value.keyvaluenormalize":"$wild_card_value"}}''') #Used for contains and not contains
 case_sensitive_range_value_condition_template=Template('''{"range":{"key_values.value.keyvalue":{"$operator":"$value"} }}''')
 case_insensitive_range_value_condition_template=Template('''{"range":{"key_values.value.keyvaluenormalize":{"$operator":"$value"} }}''')
-should_term_template=Template('''"should": [$should_term],"minimum_should_match" : $minimum_should_match ,"boost" : 1.0''')  #==>or
+should_term_template=Template('''{"bool":{ "should": [$should_term],"minimum_should_match" : $minimum_should_match ,"boost" : 1.0 }}''')  #==>or
+
+
 query_template=Template( '''{"query": {"bool": {$query}}}''')
 
 def build_error_message(error):
@@ -74,8 +76,8 @@ def elasticsearch_query_builder(and_filter, or_filters, case_sensitive,main_attr
     all_should_part_list = []
     minimum_should_match=0
     if main_attributes and len(main_attributes) > 0:
-        should_part_list=[]
-        all_should_part_list.append(should_part_list)
+        #should_part_list=[]
+        #all_should_part_list.append(should_part_list)
         if main_attributes.get("and_main_attributes"):
             for attribute in main_attributes.get("and_main_attributes"):
                 if attribute["name"].endswith("_id"):
@@ -89,20 +91,27 @@ def elasticsearch_query_builder(and_filter, or_filters, case_sensitive,main_attr
                     nested_must_not_part.append(main_dd)
 
         if main_attributes.get("or_main_attributes"):
-            for attribute in main_attributes.get("or_main_attributes"):
+            for attributes in main_attributes.get("or_main_attributes"):
+                sh=[]
+                ssj={"main":sh}
+                all_should_part_list.append(ssj)
+                for attribute in  attributes:
                 #search using id, e.g. project id
-                if attribute["name"].endswith("_id"):
-                    main_dd = main_attribute_query_template_id.substitute(attribute=attribute["name"].strip(),
-                                                                      value=str(attribute["value"]).strip())
-                else:
-                    main_dd = main_attribute_query_template.substitute(attribute=attribute["name"].strip(), value=str(attribute["value"]).strip())
+                    if attribute["name"].endswith("_id"):
+                        main_dd = main_attribute_query_template_id.substitute(attribute=attribute["name"].strip(),
+                                                                          value=str(attribute["value"]).strip())
+                    else:
+                        main_dd = main_attribute_query_template.substitute(attribute=attribute["name"].strip(), value=str(attribute["value"]).strip())
 
-                if attribute["operator"].strip() == "equals":
-                    should_part_list.append(main_dd)
-                elif attribute["operator"].strip()=="not_equals":
-                    should_part_list.append(main_dd)
-            if len(should_part_list)>0:
-                minimum_should_match=len(should_part_list)
+                    if attribute["operator"].strip() == "equals":
+                        sh.append(main_dd)
+                    elif attribute["operator"].strip()=="not_equals":
+                        sh.append(main_dd)
+                if len(sh) > 0:
+                    minimum_should_match = len(sh)
+
+            #if len(should_part_list)>0:
+            #    minimum_should_match=len(should_part_list)
 
     if and_filter and len (and_filter) >0:
         for filter in and_filter:
@@ -185,11 +194,19 @@ def elasticsearch_query_builder(and_filter, or_filters, case_sensitive,main_attr
                         should_values.append(case_insensitive_must_value_condition_template.substitute(value=value))
                 elif operator == "contains":
                     value = "*{value}*".format(value=value)
-                    should_values.append(wildcard_value_condition_template.substitute(wild_card_value=value))
+                    if case_sensitive:
+                        should_values.append(case_sensitive_wildcard_value_condition_template.substitute(wild_card_value=value))
+                    else:
+                        should_values.append(
+                            case_insensitive_wildcard_value_condition_template.substitute(wild_card_value=value))
                 elif operator in ["not_equals", "not_contains"]:
                     if operator == "not_contains":
                         value = "*{value}*".format(value=value)
-                        shoud_not_value.append(wildcard_value_condition_template.substitute(wild_card_value=value))
+                        if case_sensitive:
+                            shoud_not_value.append(case_sensitive_wildcard_value_condition_template.substitute(wild_card_value=value))
+                        else:
+                            shoud_not_value.append(
+                                case_insensitive_wildcard_value_condition_template.substitute(wild_card_value=value))
                     else:
                         if case_sensitive:
                             shoud_not_value.append(case_sensitive_must_value_condition_template.substitute(value=value))
@@ -214,6 +231,30 @@ def elasticsearch_query_builder(and_filter, or_filters, case_sensitive,main_attr
                     should_part_list_or.append(ff)
     all_terms=""
 
+    for should_part_list_ in all_should_part_list:
+        if isinstance(should_part_list_, dict):
+            should_part_list=should_part_list_.get("main")
+            minimum_should_match = 0
+        else:
+            should_part_list=should_part_list_
+            minimum_should_match=0
+
+
+        if len(should_part_list) > 0:
+
+            if minimum_should_match>0:
+                if minimum_should_match==len(should_part_list):
+                    minimum_should_match=1
+                else:
+                    minimum_should_match=int((len(should_part_list)-minimum_should_match)/2+1)
+
+                if minimum_should_match<0:
+                    minimum_should_match=1
+
+            should_part_ = ",".join(should_part_list)
+            should_part_ = should_term_template.substitute(should_term=should_part_,minimum_should_match=minimum_should_match)
+            nested_must_part.append(should_part_)
+
     if len(nested_must_part)>0:
         nested_must_part_ =",".join(nested_must_part)
         nested_must_part_ = must_term_template.substitute (must_term=nested_must_part_)#+"%s"%main_dd)
@@ -233,21 +274,7 @@ def elasticsearch_query_builder(and_filter, or_filters, case_sensitive,main_attr
         else:
             all_terms = nested_must_not_part_
 
-    for should_part_list in all_should_part_list:
 
-        if len(should_part_list) > 0:
-
-            if minimum_should_match==len(should_part_list):
-                minimum_should_match=1
-            else:
-                minimum_should_match=int((len(should_part_list)-minimum_should_match)/2+1)
-            should_part_ = ",".join(should_part_list)
-            should_part_ = should_term_template.substitute(should_term=should_part_,minimum_should_match=minimum_should_match)
-
-            if all_terms:
-                all_terms+=","+should_part_
-            else:
-                all_terms=should_part_
 
     return query_template.substitute(query=all_terms)
 
@@ -409,7 +436,4 @@ def search_resource_annotation(table_, query, raw_elasticsearch_query=None, page
     query_time = ("%.2f" % (end_time - start_time))
     return {"results": res, "query_details": query_details, "resource": table_,
             "server_query_time": query_time, "raw_elasticsearch_query":raw_query_to_send_back,"notice": notice}
-
-
-
 
