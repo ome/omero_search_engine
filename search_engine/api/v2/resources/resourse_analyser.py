@@ -143,10 +143,20 @@ def prepare_search_results(results):
             "total_number_of_%s" % (resource): total, "total_number_of_buckets": number_of_buckets, "total_items":total_items}
 
 def query_cashed_bucket(name ,resource, es_index="key_value_buckets_info"):
-    query=key_values_buckets_template.substitute(name=name, resource=resource)
-    res=search_index_for_value(es_index, query)
-    returned_results= prepare_search_results(res)
-    return returned_results
+    if resource !="all":
+        query=key_values_buckets_template.substitute(name=name, resource=resource)
+        res=search_index_for_value(es_index, query)
+        returned_results= prepare_search_results(res)
+        return returned_results
+    else:
+
+        returned_results={}
+        for table in resource_elasticsearchindex:
+            query = key_values_buckets_template.substitute(name=name, resource=table)
+            res = search_index_for_value(es_index, query)
+            returned_results[table]= prepare_search_results(res)
+        return returned_results
+
 
 def query_cashed_bucket_value(value, es_index="key_value_buckets_info"):
     query=value_all_buckets_template.substitute(value=value)
@@ -160,9 +170,17 @@ def search_value_for_resource(table_, value, es_index="key_value_buckets_info"):
     if value:
         value=value.strip().lower()
     #query=value_all_buckets_template.substitute(value=value)
-    query=resource_key_values_buckets_template.substitute(value=value, resource='image')
-    res = search_index_for_value(es_index, query)
-    return prepare_search_results(res)
+    if table_!="all":
+        query=resource_key_values_buckets_template.substitute(value=value, resource='image')
+        res = search_index_for_value(es_index, query)
+        return prepare_search_results(res)
+    else:
+        returned_results = {}
+        for table in resource_elasticsearchindex:
+            query = resource_key_values_buckets_template.substitute(value=value, resource=table)
+            res = search_index_for_value(es_index, query)
+            returned_results[table] = prepare_search_results(res)
+        return returned_results
 
 def get_keys_for_value(table, key):
     pass
