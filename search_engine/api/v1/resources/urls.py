@@ -5,12 +5,12 @@ from search_engine.api.v1.resources.utils import search_resource_annotation, get
 from search_engine.cache_functions.hdf_cache_funs import read_name_values_from_hdf5,get_resource_names
 
 
-@resources.route('/',methods=['GET'])
+@resources.route('/',methods=['GET','POST'])
 def index():
     return "Omero search engine (API V1)'\'"
 
 
-@resources.route('/<resource_table>/searchannotation/',methods=['GET'])
+@resources.route('/<resource_table>/searchannotation/',methods=['GET','POST'])
 def search_resource(resource_table):
     '''
        ApI end point to search the annotation (key/value pair) for a resource (resource table, e.g. image, project, study, ..)
@@ -49,7 +49,7 @@ def search_resource(resource_table):
         return "Error: No query field is provided. please specify an id."
     return jsonify(resource_list)
 
-@resources.route('/<resource_table>/getannotationkeys/',methods=['GET'])
+@resources.route('/<resource_table>/getannotationkeys/',methods=['GET','POST'])
 def get_resource_keys(resource_table):
     '''
     return the keys for a resource
@@ -59,7 +59,7 @@ def get_resource_keys(resource_table):
     resource_keys=get_annotation_keys(resource_table)
     return jsonify (resource_keys)
 
-@resources.route('/<resource_table>/getannotationvalueskey/',methods=['GET'])
+@resources.route('/<resource_table>/getannotationvalueskey/',methods=['GET','POST'])
 def get_resource_key_value(resource_table):
     '''
     get the values for a key for a specific resource
@@ -73,7 +73,7 @@ def get_resource_key_value(resource_table):
     return jsonify (resource_keys)
 
 
-@resources.route('/<resource_table>/getresourcenames/',methods=['GET'])
+@resources.route('/<resource_table>/getresourcenames/',methods=['GET','POST'])
 def get_resource_names_(resource_table):
     '''
     get the values for a key for a specific resource

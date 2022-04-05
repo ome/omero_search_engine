@@ -5,11 +5,11 @@ from search_engine.api.v2.resources.utils import search_resource_annotation, bui
 from resourse_analyser import  search_value_for_resource, get_values_for_a_key,query_cashed_bucket, query_cashed_bucket_value
 from search_engine.api.v1.resources.utils import get_resource_annotation_table
 
-@resources.route('/',methods=['GET'])
+@resources.route('/',methods=['GET','POST'])
 def index():
     return "Omero search engine (API V2)  '\'"
 
-@resources.route('/<resource_table>/searchannotation_page/',methods=['GET'])
+@resources.route('/<resource_table>/searchannotation_page/',methods=['GET','POST'])
 def search_resource_page(resource_table):
     '''
     used to get the next results page
@@ -36,7 +36,7 @@ def search_resource_page(resource_table):
     return jsonify(resource_list)
 
 
-@resources.route('/<resource_table>/searchannotation/',methods=['GET'])
+@resources.route('/<resource_table>/searchannotation/',methods=['GET','POST'])
 def search_resource(resource_table):
     '''
        API end point to search the annotation (key/value pair) for a resource (resource table, e.g. image, project, study, ..)
@@ -63,6 +63,8 @@ def search_resource(resource_table):
 
     if 'query' in data:
         query = data['query']
+        print (query)
+        print (">>>>=========================")
         #check if the app configuration will use ASYNCHRONOUS SEARCH or not.
         resource_list = search_resource_annotation(resource_table, query)
     else:
@@ -70,7 +72,7 @@ def search_resource(resource_table):
 
     return jsonify(resource_list)
 
-@resources.route('/<resource_table>/searchvalues/',methods=['GET'])
+@resources.route('/<resource_table>/searchvalues/',methods=['GET','POST'])
 def get_values_using_value(resource_table):
     value=request.args.get("value")
     if not value:
@@ -79,7 +81,7 @@ def get_values_using_value(resource_table):
     #return json.dumps(query_cashed_bucket
 
 
-@resources.route('/<resource_table>/searchvaluesusingkey/',methods=['GET'])
+@resources.route('/<resource_table>/searchvaluesusingkey/',methods=['GET','POST'])
 def search_values_for_a_key(resource_table):
     key=request.args.get("key")
     if not key:
