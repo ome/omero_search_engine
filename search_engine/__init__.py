@@ -11,6 +11,7 @@ from logging.handlers import RotatingFileHandler
 
 from configurations.configuration import  app_config as config_
 
+
 search_omero_app = Flask(__name__)
 
 app_config =load_configuration_variables_from_file(config_)
@@ -85,3 +86,10 @@ search_omero_app.register_blueprint(resources_routers_blueprint_v2, url_prefix='
 from search_engine.searchresults import searchresults as search_results_routers_blueprint
 search_omero_app.register_blueprint(search_results_routers_blueprint, url_prefix='/searchresults')
 
+#add it to account for CORS
+@search_omero_app.after_request
+def after_request(response):
+    header = response.headers
+    header['Access-Control-Allow-Origin'] = '*'
+    header["Access-Control-Allow-Headers"]= "*"
+    return response
