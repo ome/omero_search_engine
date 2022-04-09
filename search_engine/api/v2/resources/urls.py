@@ -63,8 +63,6 @@ def search_resource(resource_table):
 
     if 'query' in data:
         query = data['query']
-        print (query)
-        print (">>>>=========================")
         #check if the app configuration will use ASYNCHRONOUS SEARCH or not.
         resource_list = search_resource_annotation(resource_table, query)
     else:

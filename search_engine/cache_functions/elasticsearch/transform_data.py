@@ -5,7 +5,7 @@ import numpy as np
 import os
 from urllib.parse import quote
 from search_engine.api.v2.resources.utils import resource_elasticsearchindex
-from search_engine.api.v2.resources.resourse_analyser  import  get_values_for_a_key, query_cashed_bucket
+from search_engine.api.v2.resources.resourse_analyser  import  query_cashed_bucket, get_all_values_for_a_key
 from search_engine.cache_functions.elasticsearch.elasticsearch_templates import image_template, non_image_template, key_value_buckets_info_template
 from app_data.data_attrs import annotation_resource_link
 
@@ -37,7 +37,6 @@ def  create_omero_indexes(resource):
 
     for resource_, es_index in resource_elasticsearchindex.items():
         if  resource != 'all' and resource_ != resource:
-            print (resource_, resource)
             continue
         if resource_== 'image':
             template=image_template
@@ -264,7 +263,7 @@ def insert_resource_data(folder, resource, from_json):
             with open(file_name + ".done", 'w') as outfile:
                 json.dump(f_con, outfile)
         except:
-            print ("Error .... writing Done file ...")
+            search_omero_app.logger.info ("Error .... writing Done file ...")
         f_con+=1
 
 def get_insert_data_to_index(sql_st, resource):
@@ -374,12 +373,14 @@ def insert_plate_data(folder, plate_file):
     handle_file(file_name, es_index, cols)
 
 
-def save_key_value_buckets(resource_table_=None, re_create_index=False):
+def save_key_value_buckets(resource_table_=None, re_create_index=True):
     '''
       Query the database and get all posible keys and values for the resource e.g. image,
       then query the elastic search to get value buckets for each buklet
       '''
-    es_index="key_value_buckets_info"
+    es_index="key_value_buckets_information"
+
+
     if re_create_index:
         search_omero_app.logger.info (delete_es_index( es_index))
         search_omero_app.logger.info (create_index(es_index, key_value_buckets_info_template))
@@ -390,6 +391,8 @@ def save_key_value_buckets(resource_table_=None, re_create_index=False):
          if resource_table_:
             if resource_table_ != resource_table:
                 continue
+         if resource_table in ["screen", "weel", "project"]:
+             continue
 
          search_omero_app.logger.info("check table: %s ......." % resource_table)
          resource_keys = get_keys(resource_table)
@@ -400,9 +403,10 @@ def save_key_value_buckets(resource_table_=None, re_create_index=False):
              try:
                 search_omero_app.logger.info( "Processing %s/%s"%(co1, len(resource_keys)))
                 search_omero_app.logger.info("Checking {key}".format(key=key))
-                data_to_be_pushed=get_buckets(key, resource_table,es_index)
+                data_to_be_pushed = get_buckets(key, resource_table, es_index)
+
                 actions = []
-                print ("Number: ",len(data_to_be_pushed))
+                search_omero_app.logger.info ("data_to_be_pushed: %s"%len(data_to_be_pushed))
                 for record in data_to_be_pushed:
                     actions.append(
                         {
@@ -411,15 +415,15 @@ def save_key_value_buckets(resource_table_=None, re_create_index=False):
                         }
                     )
                 es = search_omero_app.config.get("es_connector")
-                print (helpers.bulk(es, actions))
+                search_omero_app.logger.info (helpers.bulk(es, actions))
              except Exception as e:
-                print (e)
+                search_omero_app.logger.info (e)
                 if resource_table in wrong_keys:
                     wrong_keys[resource_table]=wrong_keys[resource_table].append(key)
                 else:
                     wrong_keys[resource_table] = [key]
 
-    print (wrong_keys)
+    #print (wrong_keys)
     # the following attribute cause an error because \G as it is considered as an escap char
     # {'image': ['Cell Type\\Genetic Subtype (Neve et al., Cancer Cell 2006)'], 'well': ['Cell Type\\Genetic Subtype (Neve et al., Cancer Cell 2006)']}
 
@@ -431,10 +435,15 @@ def get_keys(res_table):
     results=[res['name'] for res in results]
     return  results
 
-def get_buckets(key, resourcse,es_index):
-    res=get_values_for_a_key(resourcse,key )
+
+def get_buckets(key, resourcse, es_index):
+    res=get_all_values_for_a_key(resourcse, key)#"image","siRNA Pool Identifier" )
+    search_omero_app.logger.info ("number of bucket: %s" %res.get("total_number_of_buckets"))
     data_to_be_pushed=prepare_bucket_index_data(res, resourcse, es_index)
     return data_to_be_pushed
+
+
+
 
 def prepare_bucket_index_data(results, res_table,es_index):
     data_header=["resource", "name", "value", "items_in_the_bucket", "total_buckets", "total_items"]
@@ -455,4 +464,4 @@ def prepare_bucket_index_data(results, res_table,es_index):
 
 def determine_cashed_bucket (attribute, resource,  es_indrx):
     res=query_cashed_bucket(attribute,resource, es_indrx)
-    print (res)
+    search_omero_app.logger.info (res)
