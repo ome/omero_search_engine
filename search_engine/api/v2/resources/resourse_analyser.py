@@ -254,20 +254,13 @@ def query_cashed_bucket(name ,resource, es_index="key_value_buckets_information"
         returned_results= prepare_search_results_buckets(res)
         return returned_results
     else:
-        returned_results = {}
-        for table in resource_elasticsearchindex:
-            query = key_values_buckets_template.substitute(name=name, resource=table)
-            res = search_index_for_value(es_index, query)
-            returned_results[table] = prepare_search_results(res)
-        return returned_results
-        '''
         returned_results={}
         for table in resource_elasticsearchindex:
             query = key_values_buckets_template.substitute(name=name, resource=table)
             res = search_index_for_values_get_all_buckets(es_index, query)
             returned_results[table]= prepare_search_results_buckets(res)
         return returned_results
-        '''
+        
 
 def query_cashed_bucket_value(value, es_index="key_value_buckets_information"):
     query=value_all_buckets_template.substitute(value=value)
