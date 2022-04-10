@@ -373,7 +373,7 @@ def insert_plate_data(folder, plate_file):
     handle_file(file_name, es_index, cols)
 
 
-def save_key_value_buckets(resource_table_=None, re_create_index=True):
+def save_key_value_buckets(resource_table_=None, re_create_index=False):
     '''
       Query the database and get all posible keys and values for the resource e.g. image,
       then query the elastic search to get value buckets for each buklet
@@ -391,8 +391,7 @@ def save_key_value_buckets(resource_table_=None, re_create_index=True):
          if resource_table_:
             if resource_table_ != resource_table:
                 continue
-         if resource_table in ["screen", "weel", "project"]:
-             continue
+
 
          search_omero_app.logger.info("check table: %s ......." % resource_table)
          resource_keys = get_keys(resource_table)
