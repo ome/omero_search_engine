@@ -210,6 +210,31 @@ image_template={
 '''
 Template rebresents a bucket in a resource, i.e. key and value and the total number of values (number of images)
 '''
+key_values_resource_cache_template={
+   "mappings":{
+      "properties":{
+         "doc_type":{
+            "type":"keyword"
+         }
+      },
+      "resource":{
+         "type":"text",
+         "fields":{
+            "keyresource":{
+               "type":"keyword"
+            }
+         }
+      },
+      "name":{
+         "type":"text",
+         "fields":{
+            "keyname":{
+               "type":"keyword"
+            }
+         }
+      }
+   }
+}
 
 key_value_buckets_info_template={
     "settings": {
@@ -227,7 +252,9 @@ key_value_buckets_info_template={
       "doc_type": {
         "type": "keyword"
     },
-
+        "id": {
+            "type": "keyword",
+        },
     "resource": {
       "type": "text",
         "fields": {
@@ -277,5 +304,34 @@ key_value_buckets_info_template={
         "type": "long"
     }
     }
+}
+}
+
+'''
+Template contains list of attributes for each resource'''
+
+key_values_resource_cache_template={
+   "mappings":{
+      "properties":{
+         "doc_type":{
+            "type":"keyword"
+      },
+       "resource": {
+           "type": "text",
+           "fields": {
+               "keyresource": {
+                   "type": "keyword"
+               }
+           }
+       },
+      "name":{
+         "type":"text",
+         "fields":{
+            "keyname":{
+               "type":"keyword"
+            }
+         }
+      }
+   }
 }
 }

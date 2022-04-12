@@ -5,20 +5,18 @@ import time
 import json
 from utils import resource_elasticsearchindex
 
+
 key_number_search_template=Template('''{"size":0,"aggs":{"value_search":{"nested":{"path":"key_values"},
          "aggs":{"value_filter":{"filter":{"terms":{"key_values.name.keyword":["$key"]}},
                "aggs":{"required_values":{"cardinality":{"field":"key_values.value.keyvalue","precision_threshold":4000
                      }}}}}}}}
                      ''')
 
-search_bey_value_only= Template('''
+search_by_value_only= Template('''
                     {"query":{"bool":{"must":[{"nested":{"path":"key_values","query":{"bool":{"must":[{"wildcard":
                                                         {"key_values.value.keyvaluenormalize":"*eLa*"}}]}}}}]}}}
                          ''')
-'''
-The number of returned value is limited to 9999
-I will add paging to these statment to pull all the results
-'''
+
 value_number_search_template = Template('''
             {"size": 0,"aggs": {"name_search": {"nested": {"path": "key_values"},"aggs": {"value_filter": {"filter": {
                 "terms": {"key_values.value.keyvaluenormalize": ["$value"]}},"aggs": {"required_name": {"cardinality": {
@@ -34,11 +32,11 @@ value_search_contain_template = Template('''{"size": 0,"aggs": {"name_search": {
           "aggs": {"value_filter": {"terms": {"field":"key_values.value.keyvaluenormalize","include": ".*$value.*"
               },"aggs": {"required_name": {"terms": {"field": "key_values.name.keyword","size": 9999}}}}}}}}
     ''')
+
 key_search_template=Template('''{"size": 0,"aggs": {"name_search": {"nested": {"path": "key_values"},"aggs": {"value_filter": {
           "filter": {"terms": {"key_values.name.keyword": ["$key"]}},"aggs": {"required_values": {
               "terms": {"field": "key_values.value.keyvaluenormalize","size": 9999}}}}}}}}
               ''')
-
 
 values_for_key_template=Template('''{"size":0,
    "aggs":{"name_search":{"nested":{ "path":"key_values"},"aggs":{"value_filter":{"filter":{
@@ -47,8 +45,6 @@ values_for_key_template=Template('''{"size":0,
                             "size":10000 }}}}}}}}
                             ''')
 
-def format_the_results(results):
-    pass
 
 def search_index_for_value(e_index, query):
     '''
@@ -68,30 +64,26 @@ def search_index_for_values_get_all_buckets(e_index, query):
     page_size=9999
     bookmark=0
     query=json.loads(query)
-
     returened_results=[]
     es = search_omero_app.config.get("es_connector")
     res = es.count(index=e_index, body=query)
     size=res['count']
-    #print ("====>>>",size)
     query['size'] = page_size
     query["sort"]= [
         {
-            "_id": "asc"
+            "id": "asc"
         }
     ]
-    #print (query)
     co=0
     while co < size:
         if co!=0:
             query["search_after"] = bookmark
-        #print (bookmark)
         query['size'] = page_size
         res = es.search(index=e_index, body=query)
         returened_results.append(res)
         co+=page_size
         if len(res['hits']['hits']) == 0:
-            search_omero_app.logger.info("No result is found")
+            search_omero_app.logger.info("No result is found in the final loop: %s for size %s"%(co, size))
             return returened_results
         bookmark = [res['hits']['hits'][-1]['sort'][0]]
 
@@ -207,11 +199,9 @@ def prepare_search_results(results):
     resource=None
     #print (len(results.get("hits").get("hits")))
     for hit in results["hits"]["hits"]:
-        #print (total,"/",len(results["hits"]["hits"]))
         row={}
         returned_results.append(row)
         res=hit["_source"]
-        #print(res.keys())
         row["Attribute"] = res["Attribute"]
         row["Value"] = res["Value"]
         resource=res.get("resource")
@@ -229,10 +219,8 @@ def prepare_search_results_buckets(results_):
     total_items=0
     number_of_buckets=0
     resource=None
-    #print (len(results.get("hits").get("hits")))
     for results in results_:
         for hit in results["hits"]["hits"]:
-            #print (total,"/",len(results["hits"]["hits"]))
             row={}
             returned_results.append(row)
             res=hit["_source"]
@@ -247,20 +235,20 @@ def prepare_search_results_buckets(results_):
             "total_number_of_%s" % (resource): total, "total_number_of_buckets": number_of_buckets, "total_items":total_items}
 
 def query_cashed_bucket(name ,resource, es_index="key_value_buckets_information"):
-    #toz fikoum
+    #returns possible matches for a specific resource
     if resource !="all":
         query=key_values_buckets_template.substitute(name=name, resource=resource)
         res=search_index_for_values_get_all_buckets(es_index, query)
         returned_results= prepare_search_results_buckets(res)
         return returned_results
     else:
+        #search all resources for all possible matches
         returned_results={}
         for table in resource_elasticsearchindex:
             query = key_values_buckets_template.substitute(name=name, resource=table)
             res = search_index_for_values_get_all_buckets(es_index, query)
             returned_results[table]= prepare_search_results_buckets(res)
         return returned_results
-        
 
 def query_cashed_bucket_value(value, es_index="key_value_buckets_information"):
     query=value_all_buckets_template.substitute(value=value)
@@ -288,14 +276,12 @@ def search_value_for_resource(table_, value, es_index="key_value_buckets_informa
             returned_results[table] = prepare_search_results(res)
         return returned_results
 
-def get_keys_for_value(table, key):
-    pass
-
 '''
-Search using key and resourse'''
+Search using key and resourse
+'''
 key_values_buckets_template= Template ('''{"query":{"bool":{"must":[{"bool":{
                   "must":{"match":{"Attribute.keyname":"$name"}}}},{
-                 "bool": {"must": {"match": {"resource.keyresource": "$resource"}}}}]}}} ''')
+                  "bool": {"must": {"match": {"resource.keyresource": "$resource"}}}}]}}} ''')
 
 #"fields": ["Attribute","Value","items_in_the_bucket","total_items_in_saved_buckets","total_buckets","total_items"],"_source": false,
 ss=Template ('''{"query":{"bool":{"must":[{"bool":{
@@ -318,3 +304,62 @@ resource_key_values_buckets_template= Template ('''{"query":{"bool":{"must":[{"b
                   "must":{"wildcard":{"Value.keyvaluenormalize":"*$value*"}}}},{
                  "bool": {"must": {"match": {"resource.keyresource": "$resource"}}}}]}},  
                  "size": 9999} ''')
+
+
+key_values_buckets_template_2= Template ('''{"query":{"bool":{"must":[{"bool":{"must":{"match":{
+                        "resource.keyresource":"$resource"}}}}]}}} ''')
+
+def get_resource_attributes(resource, es_index="key_values_resource_cach"):
+    '''
+    return the avilable attributes for one or all resources
+    '''
+    returned_results = {}
+    es = search_omero_app.config.get("es_connector")
+    if resource !="all":
+         query=key_values_buckets_template_2.substitute(resource=resource)
+         res = es.search(index=es_index, body=query)
+         if len(res['hits']['hits']) > 0:
+             returned_results[resource]=res['hits']['hits'][0]['_source']['name']
+    else:
+         for table in resource_elasticsearchindex:
+             query=key_values_buckets_template_2.substitute(resource=table)
+             res = es.search(index=es_index, body=query)
+             if len(res['hits']['hits'])>0:
+                 returned_results[table] = res['hits']['hits'][0]['_source']['name']
+
+    return returned_results
+
+
+attribute_search_values_template=Template ('''{"query":{"bool":{"must":[            
+            {"bool":{"must":{"match":{"resource.keyresource":"$resource"}}}},
+             {"bool": {"must": {"match": {"Attribute.keyname":"$name"}}}}]}},"size":9999}
+''')
+
+def get_resource_attribute_search_values(resource, name, value="",es_index="key_value_buckets_information"):
+    '''
+        Search values for a resourse attribute, can be used for autocomplete, to work like any attribute
+        '''
+    returned_results = []
+    query=attribute_search_values_template.substitute(resource=resource, name=name)#, value=value)
+    results=search_index_for_value (es_index, query, value=value)
+    if len(results['hits']['hits']) > 0:
+        for res in results['hits']['hits']:
+            row={}
+            returned_results.append(row)
+            row["value"]=res["_source"]["Value"]
+            row["Number of %ss" % resource] = res["_source"]["items_in_the_bucket"]
+    return returned_results
+
+
+def get_resource_attribute_values(resource, name, es_index="key_value_buckets_information"):
+    '''
+    return values for a resourse attribute
+    '''
+    returned_results=[]
+    query = key_values_buckets_template.substitute(name=name, resource=resource)
+    results_ = search_index_for_values_get_all_buckets(es_index, query)
+    for results in results_:
+        for hit in results["hits"]["hits"]:
+            res=hit["_source"]
+            returned_results.append(res["Value"])
+    return returned_results

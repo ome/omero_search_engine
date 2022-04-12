@@ -3,10 +3,11 @@ from elasticsearch import  helpers
 import  pandas as pd
 import numpy as np
 import os
+import uuid
 from urllib.parse import quote
 from search_engine.api.v2.resources.utils import resource_elasticsearchindex
 from search_engine.api.v2.resources.resourse_analyser  import  query_cashed_bucket, get_all_values_for_a_key
-from search_engine.cache_functions.elasticsearch.elasticsearch_templates import image_template, non_image_template, key_value_buckets_info_template
+from search_engine.cache_functions.elasticsearch.elasticsearch_templates import image_template, non_image_template, key_value_buckets_info_template,key_values_resource_cache_template
 from app_data.data_attrs import annotation_resource_link
 
 
@@ -379,22 +380,23 @@ def save_key_value_buckets(resource_table_=None, re_create_index=False):
       then query the elastic search to get value buckets for each buklet
       '''
     es_index="key_value_buckets_information"
-
+    es_index_2="key_values_resource_cach"
 
     if re_create_index:
         search_omero_app.logger.info (delete_es_index( es_index))
         search_omero_app.logger.info (create_index(es_index, key_value_buckets_info_template))
+        search_omero_app.logger.info(delete_es_index(es_index_2))
+        search_omero_app.logger.info(create_index(es_index_2, key_values_resource_cache_template))
 
     wrong_keys={}
-
     for resource_table, linkedtable in annotation_resource_link.items():
          if resource_table_:
             if resource_table_ != resource_table:
                 continue
 
-
          search_omero_app.logger.info("check table: %s ......." % resource_table)
          resource_keys = get_keys(resource_table)
+         push_keys_cache_index(resource_keys, resource_table, es_index_2)
          search_omero_app.logger.info("Resourse: {resource} has {no} attributes".format(resource=resource_table, no=len(resource_keys)))
          co1=0
          for key in resource_keys:
@@ -434,15 +436,29 @@ def get_keys(res_table):
     results=[res['name'] for res in results]
     return  results
 
+def push_keys_cache_index(results, resource, es_index):
+    row={}
+    row["name"]=results
+    row["doc_type"]=es_index
+    row["resource"]=resource
+
+    search_omero_app.logger.info("data_to_be_pushed: %s" % len(row))
+    actions = []
+    actions.append(
+        {
+            "_index": es_index,
+            "_source": row
+        }
+    )
+    print (actions)
+    es = search_omero_app.config.get("es_connector")
+    search_omero_app.logger.info(helpers.bulk(es, actions))
 
 def get_buckets(key, resourcse, es_index):
-    res=get_all_values_for_a_key(resourcse, key)#"image","siRNA Pool Identifier" )
+    res=get_all_values_for_a_key(resourcse, key)
     search_omero_app.logger.info ("number of bucket: %s" %res.get("total_number_of_buckets"))
     data_to_be_pushed=prepare_bucket_index_data(res, resourcse, es_index)
     return data_to_be_pushed
-
-
-
 
 def prepare_bucket_index_data(results, res_table,es_index):
     data_header=["resource", "name", "value", "items_in_the_bucket", "total_buckets", "total_items"]
@@ -450,6 +466,7 @@ def prepare_bucket_index_data(results, res_table,es_index):
     for result in results.get("returnted_results"):
         row={}
         data_to_be_inserted.append(row)
+        row["id"]=uuid.uuid4()
         row["resource"]=res_table
         row["Attribute"] = result["Attribute"]
         row["doc_type"]=es_index
@@ -459,7 +476,6 @@ def prepare_bucket_index_data(results, res_table,es_index):
         row["total_items_in_saved_buckets"]=results["total_number"]
         row["total_items"]=results["total_number_of_%s"%res_table]
     return data_to_be_inserted
-
 
 def determine_cashed_bucket (attribute, resource,  es_indrx):
     res=query_cashed_bucket(attribute,resource, es_indrx)
