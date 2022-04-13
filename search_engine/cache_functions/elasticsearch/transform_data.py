@@ -396,7 +396,15 @@ def save_key_value_buckets(resource_table_=None, re_create_index=False):
 
          search_omero_app.logger.info("check table: %s ......." % resource_table)
          resource_keys = get_keys(resource_table)
-         push_keys_cache_index(resource_keys, resource_table, es_index_2)
+         name_results=None
+         if resource_table in ["project", "screen"]:
+             sql = "select name from {resource}".format(resource=resource_table)
+             name_results = search_omero_app.config["database_connector"].execute_query(sql)
+             name_results = [res['name'] for res in name_results]
+
+         push_keys_cache_index(resource_keys, resource_table, es_index_2, name_results)
+
+
          search_omero_app.logger.info("Resourse: {resource} has {no} attributes".format(resource=resource_table, no=len(resource_keys)))
          co1=0
          for key in resource_keys:
@@ -436,11 +444,13 @@ def get_keys(res_table):
     results=[res['name'] for res in results]
     return  results
 
-def push_keys_cache_index(results, resource, es_index):
+def push_keys_cache_index(results, resource, es_index, resourcename=None):
     row={}
     row["name"]=results
     row["doc_type"]=es_index
     row["resource"]=resource
+    if resourcename:
+        row["resourcename"]=resourcename
 
     search_omero_app.logger.info("data_to_be_pushed: %s" % len(row))
     actions = []
@@ -450,7 +460,6 @@ def push_keys_cache_index(results, resource, es_index):
             "_source": row
         }
     )
-    print (actions)
     es = search_omero_app.config.get("es_connector")
     search_omero_app.logger.info(helpers.bulk(es, actions))
 

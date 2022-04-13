@@ -2,7 +2,7 @@ from . import resources
 from flask import request, jsonify
 import json
 from search_engine.api.v2.resources.utils import search_resource_annotation, build_error_message
-from resourse_analyser import  search_value_for_resource, get_values_for_a_key,query_cashed_bucket, query_cashed_bucket_value, get_resource_attributes, get_resource_attribute_values
+from search_engine.api.v2.resources.resourse_analyser import  search_value_for_resource,query_cashed_bucket, get_resource_attributes, get_resource_attribute_values, get_resource_names, get_values_for_a_key, query_cashed_bucket_value
 from search_engine.api.v1.resources.utils import get_resource_annotation_table
 
 @resources.route('/',methods=['GET','POST'])
@@ -106,3 +106,16 @@ def get_resource_key_value(resource_table):
     if not key:
         return jsonify (build_error_message("No key is provided"))
     return jsonify(get_resource_attribute_values(resource_table, key))
+
+
+@resources.route('/<resource_table>/getresourcenames/',methods=['GET','POST'])
+def get_resource_names_(resource_table):
+    '''
+    get the values for a key for a specific resource
+    '''
+    if not (get_resource_annotation_table(resource_table)):
+        return ("NO data for table {table}".format(table=resource_table))
+
+    names=get_resource_names(resource_table)
+    return jsonify (names)
+

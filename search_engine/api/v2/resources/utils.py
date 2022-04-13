@@ -1,12 +1,12 @@
 import copy
 import os, sys
 import json
-from elasticsearch import Elasticsearch, helpers
+from elasticsearch import  helpers
 
 from datetime import datetime
 import time
 main_dir = os.path.abspath(os.path.dirname(__file__))
-mm=main_dir.replace("search_engine/api/v1/resources","")
+mm=main_dir.replace("search_engine/api/v2/resources","")
 sys.path.append(mm)
 
 from search_engine import search_omero_app

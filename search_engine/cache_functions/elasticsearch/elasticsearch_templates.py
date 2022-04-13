@@ -331,6 +331,14 @@ key_values_resource_cache_template={
                "type":"keyword"
             }
          }
+      },
+      "resourcename":{
+         "type":"text",
+         "fields":{
+            "keyresourcename":{
+               "type":"keyword"
+            }
+         }
       }
    }
 }

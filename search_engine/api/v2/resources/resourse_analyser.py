@@ -3,7 +3,7 @@ from search_engine import search_omero_app
 from datetime import datetime
 import time
 import json
-from utils import resource_elasticsearchindex
+from search_engine.api.v2.resources.utils import resource_elasticsearchindex
 
 
 key_number_search_template=Template('''{"size":0,"aggs":{"value_search":{"nested":{"path":"key_values"},
@@ -362,4 +362,16 @@ def get_resource_attribute_values(resource, name, es_index="key_value_buckets_in
         for hit in results["hits"]["hits"]:
             res=hit["_source"]
             returned_results.append(res["Value"])
+    return returned_results
+
+def get_resource_names(resource, es_index="key_values_resource_cach"):
+    '''
+    return resources names attributes (work for projects and screens but can be extened)
+    '''
+    returned_results=[]
+    es = search_omero_app.config.get("es_connector")
+    query = key_values_buckets_template_2.substitute(resource=resource)
+    results_ = es.search(index=es_index, body=query)
+    if len(results_['hits']['hits']) > 0:
+        returned_results = results_['hits']['hits'][0]['_source']['resourcename']
     return returned_results
