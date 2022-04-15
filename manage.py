@@ -184,19 +184,16 @@ def set_max_page(page_size=None):
 @manager.command
 @manager.option('-r', '--resource', help='resource name, creating all the indcese for all the resources is the default')
 @manager.option('-c', '--create_index', help='creating the elastic search index if set to True')
+@manager.option('-o', '--only_values', help='creating cached values only ')
 
-def cache_key_value_index(resource=None,create_index=None):
+def cache_key_value_index(resource=None,create_index=None, only_values=None):
     '''
     Cache the value bucket for each value for each resource
     '''
     from search_engine.cache_functions.elasticsearch.transform_data import  save_key_value_buckets
-    save_key_value_buckets(resource, create_index)
+    save_key_value_buckets(resource, create_index, only_values)
 
 
-@manager.command
-def get_the_cahs():
-    from search_engine.cache_functions.elasticsearch.transform_data import determine_cashed_bucket
-    determine_cashed_bucket("Gene Name","image","key_value_buckets_info")
 
 
 if __name__ == '__main__':

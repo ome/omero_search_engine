@@ -374,7 +374,7 @@ def insert_plate_data(folder, plate_file):
     handle_file(file_name, es_index, cols)
 
 
-def save_key_value_buckets(resource_table_=None, re_create_index=False):
+def save_key_value_buckets(resource_table_=None, re_create_index=False, only_values=False):
     '''
       Query the database and get all posible keys and values for the resource e.g. image,
       then query the elastic search to get value buckets for each buklet
@@ -383,8 +383,9 @@ def save_key_value_buckets(resource_table_=None, re_create_index=False):
     es_index_2="key_values_resource_cach"
 
     if re_create_index:
-        search_omero_app.logger.info (delete_es_index( es_index))
-        search_omero_app.logger.info (create_index(es_index, key_value_buckets_info_template))
+        if not only_values:
+            search_omero_app.logger.info (delete_es_index( es_index))
+            search_omero_app.logger.info (create_index(es_index, key_value_buckets_info_template))
         search_omero_app.logger.info(delete_es_index(es_index_2))
         search_omero_app.logger.info(create_index(es_index_2, key_values_resource_cache_template))
 
@@ -403,6 +404,8 @@ def save_key_value_buckets(resource_table_=None, re_create_index=False):
              name_results = [res['name'] for res in name_results]
 
          push_keys_cache_index(resource_keys, resource_table, es_index_2, name_results)
+         if only_values:
+             continue
 
 
          search_omero_app.logger.info("Resourse: {resource} has {no} attributes".format(resource=resource_table, no=len(resource_keys)))

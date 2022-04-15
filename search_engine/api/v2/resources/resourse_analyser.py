@@ -258,15 +258,30 @@ def query_cashed_bucket_value(value, es_index="key_value_buckets_information"):
 def search_value_for_resource(table_, value, es_index="key_value_buckets_information"):
     '''
     send the request to elasticsearch and format the results
+    It support wildcard operations only
     '''
     if value:
         value=value.strip().lower()
+
+
     #query=value_all_buckets_template.substitute(value=value)
+    #check the the value, if contains ", it will remove it
+    if '"' in value:
+        value=value.replace ('"', '')
+        print ("It is here")
+    #check thevalue if contains \ it wil replaced it with \\
+    if '\\' in value:
+        value=value.replace('\\','\\\\')
+    print ("Value is: ", value)
+    # the if the value does not contain *, it will make it generic wildcard by adding * at the start and at the end
     if table_!="all":
+        value = "*{value}*".format(value=value)
         query=resource_key_values_buckets_template.substitute(value=value, resource='image')
         res = search_index_for_value(es_index, query)
         return prepare_search_results(res)
     else:
+        if '*' not in value:
+            pass#value = "*{value}*".format(value=value)
         returned_results = {}
         for table in resource_elasticsearchindex:
             #res = es.count(index=e_index, body=query)
@@ -301,7 +316,7 @@ value_all_buckets_template=Template('''{"query":{"bool":{"must":[{"bool":{
 
 
 resource_key_values_buckets_template= Template ('''{"query":{"bool":{"must":[{"bool":{
-                  "must":{"wildcard":{"Value.keyvaluenormalize":"*$value*"}}}},{
+                  "must":{"wildcard":{"Value.keyvaluenormalize":"$value"}}}},{
                  "bool": {"must": {"match": {"resource.keyresource": "$resource"}}}}]}},  
                  "size": 9999} ''')
 
