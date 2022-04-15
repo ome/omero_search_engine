@@ -280,7 +280,7 @@ def search_value_for_resource(table_, value, es_index="key_value_buckets_informa
         res = search_index_for_value(es_index, query)
         return prepare_search_results(res)
     else:
-        if '*' not in value:
+        if '*' not in value and not '?' in value:
             value = "*{value}*".format(value=value)
         returned_results = {}
         for table in resource_elasticsearchindex:
