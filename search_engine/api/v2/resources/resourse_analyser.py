@@ -3,7 +3,7 @@ from search_engine import search_omero_app
 from datetime import datetime
 import time
 import json
-from search_engine.api.v2.resources.utils import resource_elasticsearchindex
+from search_engine.api.v2.resources.utils import resource_elasticsearchindex, build_error_message
 
 
 key_number_search_template=Template('''{"size":0,"aggs":{"value_search":{"nested":{"path":"key_values"},
@@ -266,22 +266,28 @@ def search_value_for_resource(table_, value, es_index="key_value_buckets_informa
 
     #query=value_all_buckets_template.substitute(value=value)
     #check the the value, if contains ", it will remove it
-    if '"' in value:
-        value=value.replace ('"', '')
-        print ("It is here")
+
+
     #check thevalue if contains \ it wil replaced it with \\
-    if '\\' in value:
-        value=value.replace('\\','\\\\')
-    print ("Value is: ", value)
+
     # the if the value does not contain *, it will make it generic wildcard by adding * at the start and at the end
     if table_!="all":
+        if '"' in value:
+            value = value.replace('"', '')
+        elif '\\' in value:
+            value = value.replace('\\', '\\\\')
         value = "*{value}*".format(value=value)
         query=resource_key_values_buckets_template.substitute(value=value, resource='image')
         res = search_index_for_value(es_index, query)
         return prepare_search_results(res)
     else:
-        if '*' not in value and not '?' in value:
-            value = "*{value}*".format(value=value)
+        if '"' in value:
+            return build_error_message('" is not allowed in the query term')
+        elif '\\' in value:
+            return build_error_message('\\ is not allowed in the query term')
+
+        #if '*' not in value and not '?' in value:
+        #    value = "*{value}*".format(value=value)
         returned_results = {}
         for table in resource_elasticsearchindex:
             #res = es.count(index=e_index, body=query)
@@ -376,6 +382,9 @@ def get_resource_attribute_values(resource, name, es_index="key_value_buckets_in
     for results in results_:
         for hit in results["hits"]["hits"]:
             res=hit["_source"]
+            #row={}
+            #row["Value"] = res["Value"]
+            #row["Number of %ss" % resource] = res.get("items_in_the_bucket")
             returned_results.append(res["Value"])
     return returned_results
 

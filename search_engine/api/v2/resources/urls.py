@@ -75,6 +75,8 @@ def get_values_using_value(resource_table):
     value=request.args.get("value")
     if not value:
         return jsonify(build_error_message("Error: {error}".format(error="No value is provided ")))
+    #print (value, resource_table)
+
     return jsonify(search_value_for_resource(resource_table, value))
     #return json.dumps(query_cashed_bucket
 
@@ -86,6 +88,7 @@ def search_values_for_a_key(resource_table):
         return jsonify(build_error_message("No key is provided "))
     #return json.dumps(get_values_for_a_key(resource_table, key))
     #return json.dumps(get_values_for_a_key(resource_table, key))
+
     return jsonify(query_cashed_bucket (key, resource_table))
 
 @resources.route('/<resource_table>/getannotationkeys/',methods=['GET','POST'])
