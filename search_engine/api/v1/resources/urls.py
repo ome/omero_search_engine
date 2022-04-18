@@ -7,7 +7,7 @@ from search_engine.api.v1.resources.utils import get_resource_annotation_table
 
 @resources.route('/',methods=['GET','POST'])
 def index():
-    return "Omero search engine (API V2)  '\'"
+    return "Omero search engine (API V1)  '\'"
 
 @resources.route('/<resource_table>/searchannotation_page/',methods=['GET','POST'])
 def search_resource_page(resource_table):

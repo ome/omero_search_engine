@@ -24,7 +24,7 @@ class BasicTestCase(unittest.TestCase):
         '''test url'''
         tester = search_omero_app.test_client(self)
 
-        response = tester.get('/api/v1/resources/image/getannotationvalueskey/?key=Organism', content_type='html/text')
+        response = tester.get('/api/v1/resources/', content_type='html/text')
         self.assertEqual(response.status_code, 200)
 
     def test_not_found(self):

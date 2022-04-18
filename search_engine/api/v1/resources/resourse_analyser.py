@@ -379,15 +379,19 @@ def get_resource_attribute_values(resource, name, es_index="key_value_buckets_in
     return values for a resourse attribute
     '''
     returned_results=[]
-    query = key_values_buckets_template.substitute(name=name, resource=resource)
-    results_ = search_index_for_values_get_all_buckets(es_index, query)
-    for results in results_:
-        for hit in results["hits"]["hits"]:
-            res=hit["_source"]
-            #row={}
-            #row["Value"] = res["Value"]
-            #row["Number of %ss" % resource] = res.get("items_in_the_bucket")
-            returned_results.append(res["Value"])
+    try:
+        query = key_values_buckets_template.substitute(name=name, resource=resource)
+        results_ = search_index_for_values_get_all_buckets(es_index, query)
+        for results in results_:
+            for hit in results["hits"]["hits"]:
+                res=hit["_source"]
+                #row={}
+                #row["Value"] = res["Value"]
+                #row["Number of %ss" % resource] = res.get("items_in_the_bucket")
+                returned_results.append(res["Value"])
+    except Exception as e:
+        search_omero_app.logger.info("Errro: %s"%str(e))
+        
     return returned_results
 
 def get_resource_names(resource, es_index="key_values_resource_cach"):
