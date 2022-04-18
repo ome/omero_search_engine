@@ -5,6 +5,7 @@ import time
 import json
 from search_engine.api.v2.resources.utils import resource_elasticsearchindex, build_error_message
 
+not_allowed_chars=['"', '\\']
 
 key_number_search_template=Template('''{"size":0,"aggs":{"value_search":{"nested":{"path":"key_values"},
          "aggs":{"value_filter":{"filter":{"terms":{"key_values.name.keyword":["$key"]}},
@@ -281,13 +282,12 @@ def search_value_for_resource(table_, value, es_index="key_value_buckets_informa
         res = search_index_for_value(es_index, query)
         return prepare_search_results(res)
     else:
-        if '"' in value:
-            return build_error_message('" is not allowed in the query term')
-        elif '\\' in value:
-            return build_error_message('\\ is not allowed in the query term')
-
-        #if '*' not in value and not '?' in value:
-        #    value = "*{value}*".format(value=value)
+        for crh in not_allowed_chars:
+            if crh in value:
+                return build_error_message( ' , '.join(not_allowed_chars)+' are not allowed in the query term')
+        # If the user does not specify anything, it will add * at the start and at the end to retrun all the values which contains the search term
+        if '*' not in value and not '?' in value:
+            value = "*{value}*".format(value=value)
         returned_results = {}
         for table in resource_elasticsearchindex:
             #res = es.count(index=e_index, body=query)
