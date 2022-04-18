@@ -1,10 +1,8 @@
 from flask import Flask
 import os
 import logging
-from celery import Celery
 from elasticsearch import Elasticsearch
 
-from celery.schedules import crontab
 from search_engine.database.database_connector import DatabaseConnector
 from configurations.configuration import configLooader,load_configuration_variables_from_file,set_database_connection_variables
 from logging.handlers import RotatingFileHandler
@@ -16,32 +14,6 @@ search_omero_app = Flask(__name__)
 
 app_config =load_configuration_variables_from_file(config_)
 
-#create celery app
-def make_celery(app, config=config_):
-    global celery
-    celery = Celery(
-        app.import_name,
-        backend=config.CELERY_RESULT_BACKEND,
-        broker=config.CELERY_BROKER_URL
-    )
-    app.config['CELERYBEAT_SCHEDULE'] = {
-        # Executes every minute
-        'periodic_task-every-minute': {
-            'task': 'check_search_results',
-            'schedule': crontab(minute="*")
-        }
-    }
-    celery.conf.update(app.config)
-
-    class ContextTask(celery.Task):
-        def __call__(self, *args, **kwargs):
-            with app.app_context():
-                return self.run(*args, **kwargs)
-
-    celery.Task = ContextTask
-    return celery
-
-
 def create_app(config_name="development"):
     app_config=configLooader.get(config_name)
     load_configuration_variables_from_file(app_config)
@@ -51,8 +23,6 @@ def create_app(config_name="development"):
     search_omero_app.config.from_object(app_config)
     search_omero_app.app_context()
     search_omero_app.app_context().push()
-
-    #celery.conf.update(search_omero_app.config)
     search_omero_app.app_context()
     search_omero_app.app_context().push()
     es_connector = Elasticsearch(app_config.ELASTICSEARCH_URL,
@@ -77,11 +47,9 @@ def create_app(config_name="development"):
 
 create_app()
 
+
 from search_engine.api.v1.resources import resources as resources_routers_blueprint_v1
 search_omero_app.register_blueprint(resources_routers_blueprint_v1, url_prefix='/api/v1/resources')
-
-from search_engine.api.v2.resources import resources as resources_routers_blueprint_v2
-search_omero_app.register_blueprint(resources_routers_blueprint_v2, url_prefix='/api/v2/resources')
 
 from search_engine.searchresults import searchresults as search_results_routers_blueprint
 search_omero_app.register_blueprint(search_results_routers_blueprint, url_prefix='/searchresults')

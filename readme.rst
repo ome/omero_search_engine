@@ -49,7 +49,7 @@ Omero Search Engine
          # url to get the next page for a query, bookmark is needed
          image_page_ext = "/resources/image/searchannotation_page/"
             # search engine url
-            base_url = "http://127.0.0.1:5556/api/v2/"
+            base_url = "http://127.0.0.1:5556/api/v1/"
 
             import sys
 

@@ -1,29 +1,17 @@
-
+import copy
 import os, sys
+import json
+from elasticsearch import  helpers
+
 from datetime import datetime
 import time
-from multiprocessing import Pool, Manager
 main_dir = os.path.abspath(os.path.dirname(__file__))
-mm=main_dir.replace("search_engine/api/v1/resources","")
+mm=main_dir.replace("search_engine/api/v2/resources","")
 sys.path.append(mm)
 
-from search_engine import search_omero_app, make_celery
+from search_engine import search_omero_app
+from string import Template
 from app_data.data_attrs import annotation_resource_link
-from search_engine.cache_functions.hdf_cache_funs import read_cached_for_table, cachede_query_results, check_cacheded_query,read_name_values_from_hdf5
-annotation_mapvalue="annotation_mapvalue"
-
-celery = make_celery(search_omero_app)
-tables=["project","image","dataset","plate"]
-
-sql_="select  il.parent  from imageannotationlink as il inner join annotation_mapvalue as map_1 on map_1.annotation_id=il.child  where (map_1.name='Organism' and  map_1.value= 'Homo sapiens') and  il.parent in (select il2.parent from  imageannotationlink as il2 inner join annotation_mapvalue as map_2 on map_2.annotation_id=il2.child where (map_2.name='Cell Line' and  map_2.value= 'HeLa'))"
-
-def get_names(sent_names, db_names):
-    suggested_names={}
-    for sent_name in sent_names:
-        for db_name in db_names:
-            if sent_name.lower() in db_name.lower():
-                suggested_names[sent_name]=db_name
-    return suggested_names
 
 def get_resource_annotation_table(resource_table):
     '''
@@ -37,448 +25,427 @@ def get_resource_annotation_table(resource_table):
     else:
         return None
 
-def test_names(table, meta_data):
-    table_names_cached_data=read_cached_for_table(table)
-    for name, value in meta_data.items():
-        if name not in table_names_cached_data:
-            suggested_names=test_names(name,table_names_cached_data)
-            raise Exception(
-                "The provided name: {name} is not found in the annotation for {table}s".format(name=name, table=table_names_cached_data))
-    return table_names_cached_data
 
-def build_sql_statment(table, filters, cacheded_values, operator="="):
+resource_elasticsearchindex={"project":"project_keyvalue_pair_metadata",
+                             "screen":"screen_keyvalue_pair_metadata",
+                             "plate":"plate_keyvalue_pair_metadata",
+                             "well":"well_keyvalue_pair_metadata",
+                             "image":"image_keyvalue_pair_metadata",
+                             #the following index is used for testing purpose only
+                             "image1":"image_keyvalue_pair_metadata_1"
+                             }
+
+#curl -XPUT -H 'Content-Type: application/json' -d '{"index": {"max_result_window": 20000 }}' 'http://127.0.0.1:9200/image_keyvalue_pair_metadata/_settings'
+
+range_dict={
+"gte":  ">=",#"Greater-than or equal to",
+"lte" : "<=",#Less-than or equal to",
+"gt" : ">",#,"Greater-than",
+"lt" : "<"# "Less-than"
+}
+
+'''
+The following are the templates which are used at run time to build the query.
+Each of them represent Elastic search query template part.
+
+Must ==> AND
+must_not ==>  NOT
+should ==>OR
+
+'''
+#main atgtribute such as project_id, dataset_id, owner_id, group_id, owner_id, etc...
+#It supports not two operators, equals and not_equals
+main_attribute_query_template=Template('''{"bool":{"must":{"match":{"$attribute.keyvalue":"$value"}}}}''')
+#Search main attribute which has long data type ends with "_id" in the image index (template)
+main_attribute_query_template_id=Template('''{"bool":{"must":{"match":{"$attribute":"$value"}}}}''')
+
+must_name_condition_template= Template('''{"match": {"key_values.name.keyword":"$name"}}''')
+case_insensitive_must_value_condition_template=Template('''{"match": {"key_values.value.keyvaluenormalize":"$value"}}''')
+case_sensitive_must_value_condition_template=Template('''{"match": {"key_values.value.keyvalue":"$value"}}''')
+nested_keyvalue_pair_query_template=Template('''{"nested": {"path": "key_values", "query":{"bool": {"must":[$nested ] }}}}''')
+nested_query_template_must_not=Template('''{"nested": {"path": "key_values", "query":{"bool": {"must_not":[$must_not_value ] }}}}''')
+must_term_template=Template('''"must" : [$must_term]''') #==>>equal term
+must_not_term_template=Template('''"must_not": [$must_not_term]''') #===>not equal
+case_sensitive_wildcard_value_condition_template=Template('''{"wildcard": {"key_values.value.keyvalue":"$wild_card_value"}}''') #Used for contains and not contains
+case_insensitive_wildcard_value_condition_template=Template('''{"wildcard": {"key_values.value.keyvaluenormalize":"$wild_card_value"}}''') #Used for contains and not contains
+case_sensitive_range_value_condition_template=Template('''{"range":{"key_values.value.keyvalue":{"$operator":"$value"} }}''')
+case_insensitive_range_value_condition_template=Template('''{"range":{"key_values.value.keyvaluenormalize":{"$operator":"$value"} }}''')
+should_term_template=Template('''{"bool":{ "should": [$should_term],"minimum_should_match" : $minimum_should_match ,"boost" : 1.0 }}''')  #==>or
+
+
+query_template=Template( '''{"query": {"bool": {$query}}}''')
+
+def build_error_message(error):
     '''
-      Build sql statment using the table name and filters inside the meta_data_dict
+    Build an error respond
     '''
-    cacheded_results=[]
-    sqls={}
-    if table=='study':
-        table='screen'
-    linked_table=get_resource_annotation_table(table)
-    if not linked_table:
-        raise Exception ("No annotation linked table is avilable for table %s"%table)
+    return {"notice": {"Error":error}}
 
-    # base sql which is used to build the returned sql statment
-    search_omero_app.logger.info("Build sql statments ")
-    sql_ = "select parent as id , {table}.name as name from {linked_table} inner join annotation_mapvalue on {linked_table}.child=annotation_mapvalue.annotation_id inner join {table} on {table}.id={linked_table}.parent where".format(
-        linked_table=linked_table, table=table)
+def elasticsearch_query_builder(and_filter, or_filters, case_sensitive,main_attributes=None):
+    global nested_keyvalue_pair_query_template, must_term_template, must_not_term_template,should_term
+    nested_must_part=[]
+    nested_must_not_part = []
+    all_should_part_list = []
+    minimum_should_match=0
+    if main_attributes and len(main_attributes) > 0:
+        #should_part_list=[]
+        #all_should_part_list.append(should_part_list)
+        if main_attributes.get("and_main_attributes"):
+            for clause in main_attributes.get("and_main_attributes"):
+                for attribute in clause:
+                    if attribute["name"].endswith("_id"):
+                        main_dd = main_attribute_query_template_id.substitute(attribute=attribute["name"].strip(),
+                                                                         value=str(attribute["value"]).strip())
+                    else:
+                        main_dd = main_attribute_query_template.substitute(attribute=attribute["name"].strip(), value=str(attribute["value"]).strip())
+                    if attribute["operator"].strip() == "equals":
+                        nested_must_part.append(main_dd)
+                    elif attribute["operator"].strip()=="not_equals":
+                        nested_must_not_part.append(main_dd)
 
-    for filter in filters:
-        search_omero_app.logger.info ("Filter {ff}".format(ff=filter))
-        for name, value in filter.items():
-            search_omero_app.logger.info("name {name}".format(name=name))
-            search_omero_app.logger.info("value {value}".format(value=value))
-            if operator!="=":
-                val=check_cacheded_query (table, name, value,operator="not")
-            else:
-                val = check_cacheded_query(table, name, value)
-            #check if  the item is saved inside the cached file
-            if val and len(val)>0:
-                val_=val
-                cacheded_results.append(val_)
-                search_omero_app.logger.info ("cacheded Value for '{name}'/'{value}' is {len}".format(name=name, value=value,len=len(val)))
-                continue
+        if main_attributes.get("or_main_attributes"):
+            for attributes in main_attributes.get("or_main_attributes"):
+                sh=[]
+                ssj={"main":sh}
+                all_should_part_list.append(ssj)
+                for attribute in  attributes:
+                #search using id, e.g. project id
+                    if attribute["name"].endswith("_id"):
+                        main_dd = main_attribute_query_template_id.substitute(attribute=attribute["name"].strip(),
+                                                                          value=str(attribute["value"]).strip())
+                    else:
+                        main_dd = main_attribute_query_template.substitute(attribute=attribute["name"].strip(), value=str(attribute["value"]).strip())
 
-            if "'" in name:
-                name_ = name.replace("'", "''")
-            else:
-                name_ = name
+                    if attribute["operator"].strip() == "equals":
+                        sh.append(main_dd)
+                    elif attribute["operator"].strip()=="not_equals":
+                        sh.append(main_dd)
+                if len(sh) > 0:
+                    minimum_should_match = len(sh)
 
-            sql = sql_ + " annotation_mapvalue.name='{name}' and annotation_mapvalue.value {filter} '{value}' ".format(
-                    filter=operator, name=name_,
-                    value=value)
+            #if len(should_part_list)>0:
+            #    minimum_should_match=len(should_part_list)
 
-            sqls["{name}/{value}".format(name=name_, value=value.replace("/","__"))]=sql
-    search_omero_app.logger.info ("Query: "+str(len(sqls))+", cacheded: "+str(len(cacheded_results)))
-    return sqls, cacheded_results
+    if and_filter and len (and_filter) >0:
+        for filter in and_filter:
+            search_omero_app.logger.info("FILTER %s"% filter)
+            try:
+                key=filter["name"].strip()
+                value=filter["value"].strip()
+                operator=filter["operator"].strip()
+            except Exception as e:
+                search_omero_app.logger.info(str(e))
+                return build_error_message("Each Filter needs to have, name, value and operator keywords.")
+            search_omero_app.logger.info("%s %s %s"%(operator, key, value))
+            search_omero_app.logger.info("%s %s %s"%(operator, key, value))
+            _nested_must_part=[]
+            if operator=="equals":
+                _nested_must_part.append(must_name_condition_template.substitute(name=key))
+                if case_sensitive:
+                    _nested_must_part.append(case_sensitive_must_value_condition_template.substitute(value=value))
+                else:
+                    _nested_must_part.append(case_insensitive_must_value_condition_template.substitute(value=value))
+
+                nested_must_part.append(nested_keyvalue_pair_query_template.substitute(nested=",".join(_nested_must_part)))
+            if operator=="contains":
+                value="*{value}*".format(value=value)
+                _nested_must_part.append(must_name_condition_template.substitute(name=key))
+                if case_sensitive:
+                    _nested_must_part.append(case_sensitive_wildcard_value_condition_template.substitute(wild_card_value=value))
+                else:
+                    _nested_must_part.append(case_insensitive_wildcard_value_condition_template.substitute(wild_card_value=value))
+                nested_must_part.append(nested_keyvalue_pair_query_template.substitute(nested=",".join(_nested_must_part)))
+            elif operator in ["not_equals", "not_contains"]:
+                nested_must_part.append(nested_keyvalue_pair_query_template.substitute(nested=must_name_condition_template.substitute(name=key)))
+                if operator=="not_contains":
+                    value="*{value}*".format(value=value)
+                    if case_sensitive:
+                        nested_must_not_part.append(nested_keyvalue_pair_query_template.substitute(nested=case_sensitive_wildcard_value_condition_template.substitute(wild_card_value=value)))
+                    else:
+                        nested_must_not_part.append(nested_keyvalue_pair_query_template.substitute(
+                            nested=case_insensitive_wildcard_value_condition_template.substitute(wild_card_value=value)))
+
+                else:
+                    if case_sensitive:
+                        nested_must_not_part.append(nested_keyvalue_pair_query_template.substitute(nested=case_sensitive_must_value_condition_template.substitute(value=value)))
+                    else:
+                        nested_must_not_part.append(nested_keyvalue_pair_query_template.substitute(
+                            nested=case_insensitive_must_value_condition_template.substitute(value=value)))
+
+            elif operator in ["lt","lte", "gt","gte"]:
+                nested_must_part.append(nested_keyvalue_pair_query_template.substitute(nested=must_name_condition_template.substitute(name=key)))
+                if case_sensitive:
+                    nested_must_part.append(nested_keyvalue_pair_query_template.substitute(nested=case_sensitive_range_value_condition_template.substitute(operator=operator, value=value)))
+                else:
+                    nested_must_part.append(nested_keyvalue_pair_query_template.substitute(
+                        nested=case_insensitive_range_value_condition_template.substitute(operator=operator,
+                                                                                        value=value)))
+       #must_not_term
+    if or_filters and len(or_filters) > 0:
+        added_keys=[]
+        for or_filters_ in or_filters:
+            should_part_list_or=[]
+            all_should_part_list.append(should_part_list_or)
+            for or_filter in or_filters_:
+                should_values=[]
+                shoud_not_value=[]
+                should_names=[]
+                try:
+                    key=or_filter["name"].strip()
+                    value = or_filter["value"].strip()
+                    operator=or_filter["operator"].strip()
+                except Exception as e:
+                    return build_error_message("Each Filter needs to have, name, value and operator keywords.")
+
+                if key not in added_keys:
+                    added_keys.append(key)
+                should_names.append(must_name_condition_template.substitute(name=key))
+                if operator=="equals":
+                    if case_sensitive:
+                        should_values.append(case_sensitive_must_value_condition_template.substitute(value=value))
+                    else:
+                        should_values.append(case_insensitive_must_value_condition_template.substitute(value=value))
+                elif operator == "contains":
+                    value = "*{value}*".format(value=value)
+                    if case_sensitive:
+                        should_values.append(case_sensitive_wildcard_value_condition_template.substitute(wild_card_value=value))
+                    else:
+                        should_values.append(
+                            case_insensitive_wildcard_value_condition_template.substitute(wild_card_value=value))
+                elif operator in ["not_equals", "not_contains"]:
+                    if operator == "not_contains":
+                        value = "*{value}*".format(value=value)
+                        if case_sensitive:
+                            shoud_not_value.append(case_sensitive_wildcard_value_condition_template.substitute(wild_card_value=value))
+                        else:
+                            shoud_not_value.append(
+                                case_insensitive_wildcard_value_condition_template.substitute(wild_card_value=value))
+                    else:
+                        if case_sensitive:
+                            shoud_not_value.append(case_sensitive_must_value_condition_template.substitute(value=value))
+                        else:
+                            shoud_not_value.append(case_insensitive_must_value_condition_template.substitute(value=value))
+                elif operator in ["lt", "lte", "gt", "gte"]:
+                    if case_sensitive:\
+                        should_values.append(case_sensitive_range_value_condition_template.substitute(operator=operator,value= value))
+                else:
+                    should_values.append(
+                        case_insensitive_range_value_condition_template.substitute(operator=operator, value=value))
+                        #must_value_condition
+                ss=",".join(should_names)
+                ff= nested_keyvalue_pair_query_template.substitute(nested= ss)
+                should_part_list_or.append(ff)
+                ss = ",".join(should_values)
+                ff = nested_keyvalue_pair_query_template.substitute(nested=ss)
+                should_part_list_or.append(ff)
+                if len(shoud_not_value)>0:
+                    ss = ",".join(shoud_not_value)
+                    ff = nested_query_template_must_not.substitute(must_not_value=ss)
+                    should_part_list_or.append(ff)
+    all_terms=""
+
+    for should_part_list_ in all_should_part_list:
+        if isinstance(should_part_list_, dict):
+            should_part_list=should_part_list_.get("main")
+            minimum_should_match = 1
+        else:
+            should_part_list=should_part_list_
+            minimum_should_match=0
+
+        if len(should_part_list) > 0:
+            if minimum_should_match==0:
+                if minimum_should_match==len(should_part_list):
+                    minimum_should_match=1
+                else:
+                    minimum_should_match=int((len(should_part_list)-minimum_should_match)/2+1)
+
+                if minimum_should_match<0:
+                    minimum_should_match=1
+
+            should_part_ = ",".join(should_part_list)
+            should_part_ = should_term_template.substitute(should_term=should_part_,minimum_should_match=minimum_should_match)
+            nested_must_part.append(should_part_)
+
+    if len(nested_must_part)>0:
+        nested_must_part_ =",".join(nested_must_part)
+        nested_must_part_ = must_term_template.substitute (must_term=nested_must_part_)#+"%s"%main_dd)
+
+        if all_terms:
+            all_terms=all_terms+","+nested_must_part_
+        else:
+            all_terms =nested_must_part_
+
+    if len(nested_must_not_part) > 0:
+
+        nested_must_not_part_=",".join(nested_must_not_part)
+        nested_must_not_part_ = must_not_term_template.substitute(must_not_term=nested_must_not_part_)
+
+        if all_terms:
+            all_terms = all_terms + "," + nested_must_not_part_
+        else:
+            all_terms = nested_must_not_part_
 
 
-def search_studies(query):
-    {'Study Title':'Comparative RNAi screening identifies a conserved core metazoan actinome by phenotype'}
-    meta_data = query.get('meta_data')
-    operators = query.get('operators')
-    if not operators:
-        operators='or'
-    table_names_cached_data=test_names('screen',meta_data)
+    return query_template.substitute(query=all_terms)
 
 
-def run_sql_statment(sql_statment):
-    res = search_omero_app.config["database_connector"].execute_query(sql_statment)
-    return res
+def check_single_filter(res_table, filter, names, organism_converter):
+    key = filter["name"]
+    value = filter["value"]
+    operator = filter["operator"]
+    if operator != "contains" and operator != "not_contains":
+        key_ = [name for name in names if name.casefold() == key.casefold()]
+        if len(key_) == 1:
+            filter["name"] = key_[0]
+            if filter["name"] == "Organism":
+                vv = [value_ for key, value_ in organism_converter.items() if key == value.casefold()]
+                if len(vv) == 1:
+                    filter["value"] = vv[0]
+        else:
+            if len(key_) == 0:
+                search_omero_app.logger.info("Name Error %s" % str(key))
+                return
+        from search_engine.api.v1.resources.resourse_analyser import get_resource_attribute_values
+        values=get_resource_attribute_values(res_table, key_[0])
+        if not values or len(values) == 0:
+            search_omero_app.logger.info("Could not check filters %s" % str(filter))
+            return
+        value_ = [val for val in values if val.casefold() == value.casefold()]
+        if len(value_) == 1:
+            filter["value"] = value_[0]
+        elif len(value_) == 0:
+            search_omero_app.logger.info("Value Error: %s/%s" % (str(key), str(value)))
+
+def check_filters(res_table, filters, case_sensitive):
+    '''
+    This method checks the name and value inside the filter and fixes if nay is not correct, case sensitive error, using the general term rather than scientific terms.
+    It should be expanded in the future to add more checks and fixes.
+    '''
+    organism_converter={"human":"Homo sapiens","house mouse":"Mus musculus","mouse":"Mus musculus","chicken":"Gallus gallus"}
+    from search_engine.api.v1.resources.resourse_analyser import get_resource_attributes
+
+    names=get_resource_attributes(res_table)
+    if not names or len(names)==0:
+        search_omero_app.logger.info("Could not check filters %s"%str(filters))
+        return
+
+    search_omero_app.logger.info (str(filters))
+    if filters[0]:
+        for filter in filters[0]:
+            if not case_sensitive:
+                check_single_filter(res_table,filter, names, organism_converter)
+    if filters[1]:
+        for filters_ in filters[1]:
+            for filter in filters_:
+                if not case_sensitive:
+                    check_single_filter(res_table,filter, names,organism_converter)
 
 
-def run_sql_statments(sql_statments):
+def search_index_scrol(index_name, query):
     results=[]
-    count=0
-    search_omero_app.logger.info("Running sql statments ")
-    for sql in sql_statments:
-        search_omero_app.logger.info(str(count+1)+ "/"+ str(len(sql_statments)))
-        search_omero_app.logger.info (sql)
-        res=run_sql_statment(sql)
-        results.append(res)
-        count+=1
+    es=search_omero_app.config.get("es_connector")
+    try:
+        res = helpers.scan(
+        client=es,
+        scroll='1m',
+        query=query,
+        index=index_name)
+    except Exception as ex:
+        search_omero_app.logger.info (str(ex))
+        return results
+
+    search_omero_app.logger.info ("Results: %s"% res)
+    counter=0
+    for i in res:
+        counter+=1
+        results.append(i)
+    search_omero_app.logger.info ("Total =%s"% counter)
     return results
 
-def get_tables(names):
-    table_to_search={}
-    cacheded_tables_names=read_cached_for_table(tables=tables)
-    for table, existing_names in cacheded_tables_names.items():
-        for name in names:
-            if name in existing_names:
-                if table not in table_to_search:
-                    table_to_search[table]=[name]
-                else:
-                    table_to_search.get(table).append(name)
-    return table_to_search
-
-
-def run_filter(sql_statments, included_):
-    search_omero_app.logger.info (str(type(included_)))
-    results = run_sql_statments(sql_statments)
-    returned_results = {}
-    for res in results:
-        returned_results={str(ss['id']): {"name": ss["name"]} for ss in res}
-    included_[sql_statments[0]]=returned_results
-
-def check_filters(res_table, filters):
-    names=read_cached_for_table(res_table)
-    search_omero_app.logger.info (str(filters))
-    for filter_ in filters:
-        for filter in filter_:
-            for key, value in filter.items():
-                if key not in names:
-                    search_omero_app.logger.info ("Name Error "+ str(key))
-                values=read_name_values_from_hdf5(res_table, key)
-                if value not in values:
-                    search_omero_app.logger.info ("Value Error: "+str(value))
-
-def add_query_results(table, sqls_dict, sql, results, operator=None):
-    for key, sql_ in sqls_dict.items():
-        if sql==sql_:
-            if operator:
-                key=key.replace("/","/{operator}/".format(operator=operator))
-
-            cachede_query_results(table, key, results,operator)
-
-def get_dict_intersection(dict1, dict2):
-    shared_keys = dict1.keys() & dict2.keys()
-    shared_dict = {k: dict1[k] | dict2[k] for k in shared_keys}
-    return shared_dict
-
-@celery.task
-def search_resource_annotation(table_, query, get_addition_results=False):
+def search_index_using_search_after(e_index, query, page, bookmark_):
+    returned_results = []
+    if not page:
+        page = 1
+    page_size = search_omero_app.config.get("PAGE_SIZE")
+    es = search_omero_app.config.get("es_connector")
+    start__ = datetime.now()
+    res = es.count(index=e_index, body=query)
+    size = res['count']
+    search_omero_app.logger.info("Total: %s" % size)
+    query['size'] = page_size
+    if size % page_size == 0:
+        add_to_page = 0
+    else:
+        add_to_page = 1
+    no_of_pages = (int)(size / page_size) + add_to_page
+    search_omero_app.logger.info("No of pages: %s" % no_of_pages)
+    query["sort"] = [
+        {"id": "asc"}
+    ]
+    if not bookmark_:
+        result = es.search(index=e_index, body=query)
+        if len(result['hits']['hits']) == 0:
+            search_omero_app.logger.info("No result is found")
+            return returned_results
+        bookmark = [result['hits']['hits'][-1]['sort'][0]]
+        search_omero_app.logger.info("bookmark: %s" % bookmark)
+        for hit in result['hits']['hits']:
+            # print (hit)
+            returned_results.append(hit["_source"])
+    else:
+        search_omero_app.logger.info(bookmark_)
+        query["search_after"] = bookmark_
+        res = es.search(index=e_index, body=query)
+        for el in res['hits']['hits']:
+            returned_results.append(el["_source"])
+        if len(res['hits']['hits']) == 0:
+            search_omero_app.logger.info("No result is found")
+            return returned_results
+        bookmark = [res['hits']['hits'][-1]['sort'][0]]
+        page += 1
+    return {"results": returned_results, "total_pages": no_of_pages, "bookmark": bookmark, "size": size, "page": page}
+    
+def search_resource_annotation(table_, query, raw_elasticsearch_query=None, page=None,bookmark=None):
     '''
-    It will seacrg Omero database using three differnt of fillters. i.e. and, or and not
-    for each condition in  searach criteria, it will first search the cached results, and if find item is cached it will use it
-    otherwise it will create a sqm stament and query the database and after that it will save the results in the cache file,
-    so it will be available in case if it is included in other query
-    if the item is
-
     @table_: the resource table, e.g. image. project, etc.
     @query: the a dict contains the three filters (or, and and  not) items
+    @raw_elasticsearch_query: is a raw query which send directly to elasticsearch
     '''
-    start_time=time.time()
-    tables=[table_]
-    query_details=query.get('query_details')
 
-    if not query or len(query)==0:
-        return ""
-    and_filters=query_details.get("and_filters")
-    or_filters=query_details.get("or_filters")
-    not_filter=query_details.get("not_filters")
-    have_been_cacheded ={}
-    check_filters(table_,[and_filters, or_filters, not_filter])
-    #it support using all keyword to search all the database
-    #it has been tested for simple examples, it needs more work for verfication
-    #so I will disable it for the moment
-    if table_ == 'all':
-        raise Exception("No valid table name is provided")
-        tables_to_search = {}
-        names=[]
-        if and_filters:
-            for name in and_filters:
-                names.append(name)
-        if or_filters:
-            for name in or_filters:
-                names.append(name)
-        if not_filter:
-            for name in not_filter:
-                names.append(name)
-        if len(names)>0:
-            tables_to_search=get_tables(names)
-            tables=tables_to_search.keys()
-        else:
-            raise Exception("No valid name is provided")
+    res_index=resource_elasticsearchindex.get(table_)
+    if not res_index:
+        return build_error_message("{table_} is not a valid resurce".format(table_=table_))
+    query_details = query.get('query_details')
 
-    rest_results={}
-    #a list contains all the sql statments for and and not conditions.
-    sql_statments=[]
-    # a list contains all the sql statments for or condition.
-    or_sql_statments = []
-    #dict to stor the cached results
-    cacheded_results={}
-    #dicts contain the results from quering the database
-    sqls_or={}
-    sqls_not={}
-    sqls_and = {}
-    try:
-        for table in tables:
-            cacheded_values={}
-            search_omero_app.logger.info("Checking the {table} resource ...".format(table=table))
-            if not_filter and len (not_filter)>0:
-                sqls_not, cacheded_results_=build_sql_statment(table, not_filter, cacheded_values, operator="!=")
-                if len(cacheded_results_)>0:
-                    cacheded_results["not"]=cacheded_results_
-
-                if sqls_not and len(sqls_not)>0:
-                     sql_statments=sql_statments+list(sqls_not.values())
-            if or_filters and len(or_filters)>0:
-                #if table=="all":
-                #    for name, table in tables_to_search.items():
-                #        sqls_or = build_sql_statment(table, names)
-                #else:
-                sqls_or, cacheded_results_ = build_sql_statment(table, or_filters,cacheded_values)
-
-                if sqls_or and len (sqls_or)>0:
-                    #or_sql_statments=sql_statments+list(sqls_or.values())
-                    or_sql_statments = list(sqls_or.values())
-                if len(cacheded_results_)>0:
-                    cacheded_results["or"]=cacheded_results_
-
-            if and_filters and len(and_filters)>0:
-                sqls_and, cacheded_results_ = build_sql_statment(table, and_filters, cacheded_values)
-                if sqls_and and len(sqls_and)>0:
-                    sql_statments=sql_statments+list(sqls_and.values())
-                if len(cacheded_results_)>0:
-                    cacheded_results['and']=cacheded_results_
-            #When not using celey (by setting "ASYNCHRONOUS_SEARCH" to False inside the app configuration file
-            #Then it will use paralle search, this should use carfully as it will raise erro in case of two process trying to updatethe hdf5 file at the same time.
-            #Anyway we should have a mchanism to lock the file for writing when another process updating it.
-            no_quries=len(or_sql_statments)+len(sql_statments)
-            if not search_omero_app.config.get("ASYNCHRONOUS_SEARCH") and no_quries>0:
-                manager = Manager()
-                return_dict = manager.dict()
-                pool = Pool(processes=no_quries)
-                for sql in sql_statments:
-                    pool.apply_async(run_filter, [[sql], return_dict])
-                for sql in or_sql_statments:
-                    pool.apply_async(run_filter, [[sql], return_dict])
-                pool.close()
-                pool.join()
-            else:
-                #This used by celery
-                return_dict={}
-                or_return_dict = {}
-                for sql in sql_statments:
-                    search_omero_app.logger.info ("Going to run: "+ sql)
-                    run_filter ([sql], return_dict)
-                for sql in or_sql_statments:
-                    search_omero_app.logger.info ("Going to run "+ sql)
-                    run_filter ([sql], or_return_dict)
-            returned_results={}
-            counter_=0
-            or_results={}
-            to_be_ignored=[]
-            cached_or_results= {}
-            if len(or_sql_statments)>0:
-                for sql__ in or_sql_statments:
-                    if sql__ in or_return_dict:
-                        cached_or_results={** cached_or_results,**or_return_dict[sql__]}
-                        to_be_ignored.append(sql__)
-            search_omero_app.logger.info ("1. Or cached "+str(len(cached_or_results)))
-
-            if "or" in cacheded_results:
-                for v in cacheded_results["or"]:
-                    cached_or_results = {**cached_or_results, **v}
-
-            for k, v in or_return_dict.items():
-                add_query_results(table, sqls_or, k, v)
-
-
-            for k,v in return_dict.items():
-                #cahs the sql statments results, if there any
-                add_query_results(table, sqls_and, k, v)
-                search_omero_app.logger.info ("cache or ..........")
-                add_query_results(table, sqls_or, k, v)
-                search_omero_app.logger.info("end Cache or ..........")
-                add_query_results(table, sqls_not, k, v, operator="not")
-
-                if k in to_be_ignored:
-                    continue
-
-                if counter_==0:
-                    returned_results=v
-                else:
-                    returned_results=get_dict_intersection(returned_results,v)
-                counter_+=1
-            for k, val_ in cacheded_results.items():
-                #escape the or condition as it will be used later
-                if k=="or":
-                    continue
-
-                if k in to_be_ignored:
-                    continue
-                for v in val_:
-                    if counter_ == 0:
-                        returned_results = v
-                    else:
-                        returned_results = get_dict_intersection(returned_results, v)
-
-                    search_omero_app.logger.info ("Cache: "+str(len(returned_results)))
-                    counter_ += 1
-            if len(cached_or_results)>0:
-                if counter_==0:
-                    returned_results=cached_or_results
-                else:
-                    returned_results = get_dict_intersection(returned_results, cached_or_results)
-                counter_ += 1
-                        #sss= list(set(sss) & set(cached_or_results))
-            max_size=search_omero_app.config["MAX_RETUNED_ITEMS"]
-            coo=0
-            notice="None"
-            if len (returned_results)>max_size:
-                notice="The query results are {items} records. A maximum of {max_size} records are displayed for performance resaons".format(items=len(returned_results), max_size=max_size)
-                kk=list(returned_results.keys())
-                returned_results_={ kk[i]:returned_results[kk[i]] for i in range (max_size)}
-            else:
-                returned_results_=returned_results
-
-            end_time = time.time()
-            query_time = ("%.2f" % (end_time - start_time))
-
-            search_omero_app.logger.info("Query time: " + str(query_time))
-
-            return {"results":returned_results_, "query_details":query_details, "resource": table, "server_query_time": query_time, "notice":notice}
-
-    except Exception as ex:
-        search_omero_app.logger.info("Error: ", str(ex))
-        search_omero_app.logger.info("query_details: ",str(query_details))
-        end_time = time.time()
-        query_time = end_time - start_time
-
-        return {"Error_message": str(ex),"query_details":query_details, "resource": table, "server_query_time": query_time}
-        # the following code can be used to add more to the returned results
-        #but it will increase the query time and the app respond
-        #We can add a flag to the request for using the code in case of the user needs more results rather thna image name and id
-        if len(returned_results)>0:
-            res= get_resource_meta_data(table, returned_results, get_addition_results)
-            rest_results[table]=res
-    return rest_results
-
-
-
-def get_resource_(table, query):
-    meta_data=query.get('meta_data')
-    meta_data =query
-
-    if not meta_data or len(meta_data)==0:
-        return ""
-    filters=query.get('filters')
-
-    if not filters or len(filters)==0:
-        operators='or'
-    sql=build_sql_statment(table, meta_data, operators)
-    ids=search_omero_app.config["database_connector"].execute_query(sql)
-    if len(ids)>0:
-        return (get_resource_meta_data(table,ids))
-    return ids
-
-def get_images_dataset_project(ids):
-    sql="select project.name as project_name,project.id as project_id, dataset.name as dataset_name, dataset.id as dataset_id, datasetimagelink.child as image_id from projectdatasetlink inner join" \
-        " dataset on dataset.id=projectdatasetlink.child inner join project on project.id=projectdatasetlink.parent inner join" \
-        " datasetimagelink on datasetimagelink.parent=dataset.id where project.id is not null and dataset.id is not null and datasetimagelink.child in ({ids})".format(ids=ids)
-    results = search_omero_app.config["database_connector"].execute_query(sql)
-    return  results
-
-def get_images_plates_screens(ids):
-    sql="select wellsample.image as image_id, screenplatelink.parent as screen_id, screen.name as screen_name , plate.name as plate_name, plate.id as plate_id from plate inner join screenplatelink on screenplatelink.child=plate.id inner join  well on well.plate=plate.id inner join wellsample on wellsample.well=well.id inner join screen on screen.id=screenplatelink.parent where wellsample.image in ({ids})".format(ids=ids)
-    results= search_omero_app.config["database_connector"].execute_query(sql)
-    screens=[]
-    plates=[]
-    for res in results:
-        if res.get("screen_id") not in screens:
-            screens.append(res.get("screen_id"))
-        if res.get("plate_id") not in plates:
-            plates.append(res.get("plate_id"))
-    return results
-
-
-def get_resource_meta_data(table,ids_, get_additional_results=False):
-    org_table=table
-    if table=='study':
-        table='screen'
-    ids__=ids_#[len(ids_)-100: ]
-    ids = ','.join(str(x) for x in ids__)
-    search_omero_app.logger.info (table)
-    sql="select id as {table}_id , name as {table}_name from {table} where id in ({ids})".format(table=table, ids=ids)
-    ###needs to be optimized
-    if get_additional_results:
-         sql_="select {table}.id as {table}_id, {table}.name {table}_name, annotation_mapvalue.name as annotation_name, annotation_mapvalue.value as annotation_value from {table} inner join {table}annotationlink on {table}annotationlink.parent={table}.id inner join annotation_mapvalue on annotation_mapvalue.annotation_id={table}annotationlink.child where {table}annotationlink.parent in ({ids})".format(ids=ids,table=table)
-    else:
-         sql_ = "select {table}.id as {table}_id, {table}.name {table}_name from {table} join {table}annotationlink on {table}annotationlink.child=annotation_mapvalue.annotation_id inner join {table} on {table}.id={table}annotationlink.parent where {table}annotationlink.parent in ({ids})".format(
-        ids=ids, table=table)
-    start_=datetime.now()
-    results =search_omero_app.config["database_connector"].execute_query(sql)
-    end_ = datetime.now()
-    search_omero_app.logger.info (str(start_)+str(end_))
-    main_key = "{table}_id".format(table=table)
-    final={}
-    for res in results:
-        if res.get(main_key) in final:
-            dict_=final[res.get(main_key)]
-        else:
-            dict_={}
-            dict_[main_key] = res.get(main_key)
-            final[res.get(main_key)]=dict_
-        if res.get('annotation_name') and res.get('annotation_value'):
-            dict_[res.get('annotation_name')]=res.get('annotation_value')
-        for key, value in res.items():
-            if key in (main_key, 'annotation_value','annotation_value'):
-                continue
-            dict_[key]=value
-    return final
-
-    if org_table=='image':
-        addition_info=get_images_plates_screens(ids)
-        project_dataset_info=get_images_dataset_project(ids)
-        for info in addition_info:
-            if info.get(main_key):
-                kk=info.get(main_key)
-                dict_=final.get(kk)
-                if dict_:
-                    dict_['screen_name']=info.get('screen_name')
-                    dict_['screen_id'] = info.get('screen_id')
-                    dict_['plate_name'] = info.get('plate_name')
-                    dict_['plate_id'] = info.get('plate_id')
-        for p_infor in project_dataset_info:
-            if p_infor.get(main_key):
-                kk=p_infor.get(main_key)
-                dict_=final.get(kk)
-                if dict_:
-                    dict_['project_name'] = p_infor.get('project_name')
-                    dict_['project_id'] = p_infor.get('project_id')
-                    dict_['dataset_name'] = p_infor.get('dataset_name')
-                    dict_['dataset_id'] = p_infor.get('dataset_id')
-    elif org_table=='study':
-        for info_ in final:
+    start_time = time.time()
+    if not raw_elasticsearch_query:
+        query_details = query.get('query_details')
+        main_attributes=query.get("main_attributes")
+        if not query_details and main_attributes and len(main_attributes)>0:
             pass
 
-    return final
-
-
-def get_annotation_keys(table):
-    if table=='study':
-        table='screen'
-    linked_table = get_resource_annotation_table(table)
-    if not linked_table:
-        return("No annotation linked table is avilable for table %s" % table)
-    if isinstance(linked_table,str):
-        resource_keys = read_cached_for_table(table)
-        return resource_keys
-    elif isinstance(linked_table, dict):
-        returned_keys={}
-        for table_, linkedtable in linked_table.items():
-            resource_keys = read_cached_for_table(table_)
-            returned_keys[table_]=resource_keys
-        return returned_keys
+        elif not query or len(query) == 0 or len(query_details)==0 or isinstance(query_details,str):
+            return build_error_message("{query} is not a valid query".format(query=query))
+        and_filters = query_details.get("and_filters")
+        or_filters = query_details.get("or_filters")
+        case_sensitive=query_details.get("case_sensitive")
+        #check and fid if possible names and values inside filters conditions
+        check_filters(table_, [and_filters, or_filters], case_sensitive)
+        query_string = elasticsearch_query_builder(and_filters,  or_filters,case_sensitive,main_attributes)
+        #query_string has to be string, if it is a dict, something went wrong and the message inside the dict
+        #which will be returned to the sender:
+        if isinstance(query_string, dict):
+            return query_string
+        search_omero_app.logger.info("Query %s"%query_string)
+        query = json.loads(query_string)
+        raw_query_to_send_back= json.loads(query_string)
+    else:
+        query=raw_elasticsearch_query
+        raw_query_to_send_back=copy.copy(raw_elasticsearch_query)
+    res=search_index_using_search_after(res_index, query, page, bookmark)
+    notice=""
+    end_time = time.time()
+    query_time = ("%.2f" % (end_time - start_time))
+    return {"results": res, "query_details": query_details, "resource": table_,
+            "server_query_time": query_time, "raw_elasticsearch_query":raw_query_to_send_back,"notice": notice}
 

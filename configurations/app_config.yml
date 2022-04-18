@@ -4,8 +4,6 @@ DATABASE_PORT: 5432
 DATABASE_PASSWORD : "password"
 DATABAS_NAME : "idr"
 CACHE_FOLDER : "path/to/folder/app_data"
-CELERY_BROKER_URL : "redis://localhost:6379"
-CELERY_RESULT_BACKEND : "redis://localhost:6379"
 SECRET_KEY : "fsdasdh3424vvcsd467fgh"
 ASYNCHRONOUS_SEARCH : True
 ELASTICSEARCH_URL : "http://localhost:9200"

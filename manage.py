@@ -1,46 +1,10 @@
 import os
-import json
 from search_engine import search_omero_app
 from flask_script import Manager
 
 from configurations.configuration import update_config_file
 
 manager = Manager(search_omero_app)
-
-from search_engine.cache_functions.hdf_cache_funs import update_cached, cached_values,  delete_cacheded_key, cached_project_names, cached_project_names
-
-
-@manager.command
-
-@manager.option('-t', '--table_resource', help='resource name to cache, if it is not provided all resources will be cached')
-
-def set_resource_cached_name_value(table_resource=None):
-    ''''
-    cah names and values for each resource (e.g image, project)
-    '''
-    cached_values(table_resource)
-
-
-@manager.command
-def update_cached_files():
-    '''
-    cached metadata names for each resource (e.g. image, project) and save them in hdf5 file format
-    '''
-    update_cached()
-
-@manager.command
-def cached_names():
-    cached_project_names("project")
-
-
-@manager.command
-def delete_cacheded_key_value():
-    resource_table="image"
-    key="Cell Line"#"Gene Symbol"
-    value=None
-
-    delete_cacheded_key(resource_table, key, value)
-
 
 @manager.command
 def show_saved_indices():
@@ -185,16 +149,12 @@ def set_max_page(page_size=None):
 @manager.option('-r', '--resource', help='resource name, creating all the indcese for all the resources is the default')
 @manager.option('-c', '--create_index', help='creating the elastic search index if set to True')
 @manager.option('-o', '--only_values', help='creating cached values only ')
-
 def cache_key_value_index(resource=None,create_index=None, only_values=None):
     '''
     Cache the value bucket for each value for each resource
     '''
     from search_engine.cache_functions.elasticsearch.transform_data import  save_key_value_buckets
     save_key_value_buckets(resource, create_index, only_values)
-
-
-
 
 if __name__ == '__main__':
     manager.run()
