@@ -5,8 +5,8 @@ import numpy as np
 import os
 import uuid
 from urllib.parse import quote
-from search_engine.api.v2.resources.utils import resource_elasticsearchindex
-from search_engine.api.v2.resources.resourse_analyser  import  query_cashed_bucket, get_all_values_for_a_key
+from search_engine.api.v1.resources.utils import resource_elasticsearchindex
+from search_engine.api.v1.resources.resourse_analyser  import  query_cashed_bucket, get_all_values_for_a_key
 from search_engine.cache_functions.elasticsearch.elasticsearch_templates import image_template, non_image_template, key_value_buckets_info_template,key_values_resource_cache_template
 from app_data.data_attrs import annotation_resource_link
 

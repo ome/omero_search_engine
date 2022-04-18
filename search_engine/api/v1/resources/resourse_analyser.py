@@ -3,7 +3,9 @@ from search_engine import search_omero_app
 from datetime import datetime
 import time
 import json
-from search_engine.api.v2.resources.utils import resource_elasticsearchindex, build_error_message
+
+from search_engine.api.v1.resources.utils import resource_elasticsearchindex, build_error_message
+
 
 not_allowed_chars=['"', '\\']
 

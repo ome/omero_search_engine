@@ -1,7 +1,7 @@
 import unittest
 import json
 from search_engine.cache_functions.elasticsearch.elasticsearch_templates import image_template, non_image_template
-from search_engine.api.v2.resources.utils import elasticsearch_query_builder,search_resource_annotation
+from search_engine.api.v1.resources.utils import elasticsearch_query_builder,search_resource_annotation
 from search_engine.cache_functions.elasticsearch.transform_data import delete_es_index, create_index
 from test_data import sql, valid_and_filters, valid_or_filters, not_valid_and_filters, not_valid_or_filters, query
 
@@ -58,7 +58,7 @@ class BasicTestCase(unittest.TestCase):
         '''
         test output of query builderis valid json
         '''
-        from search_engine.api.v2.resources.utils import elasticsearch_query_builder
+        from search_engine.api.v1.resources.utils import elasticsearch_query_builder
 
         self.assertTrue(self.validate_json_syntax(elasticsearch_query_builder(valid_and_filters, valid_or_filters, False)))
 
