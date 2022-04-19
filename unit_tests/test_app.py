@@ -1,5 +1,6 @@
 import unittest
 import json
+
 from search_engine.cache_functions.elasticsearch.elasticsearch_templates import image_template, non_image_template
 from search_engine.api.v1.resources.utils import elasticsearch_query_builder,search_resource_annotation
 from search_engine.cache_functions.elasticsearch.transform_data import delete_es_index, create_index
@@ -27,6 +28,15 @@ class BasicTestCase(unittest.TestCase):
         response = tester.get('/api/v1/resources/', content_type='html/text')
         self.assertEqual(response.status_code, 200)
 
+    def test_searchannotation(self):
+        '''test url'''
+        tester = search_omero_app.test_client(self)
+
+        response = tester.get('/api/v1/resources/image/searchannotation', content_type='html/text')
+        self.assertEqual(response.status_code, 200)
+        json = response.json()
+        assert 'notice' in json
+
     def test_not_found(self):
         '''
         test not found url
@@ -34,6 +44,7 @@ class BasicTestCase(unittest.TestCase):
         tester = search_omero_app.test_client(self)
         response = tester.get('a', content_type='html/text')
         self.assertEqual(response.status_code, 404)
+
 
     def test_query_database(self):
         '''
@@ -80,6 +91,8 @@ class BasicTestCase(unittest.TestCase):
        assert (len(res.get("results"))>=0)
        self.assertTrue (delete_es_index(es_index))
 
+
+
     #def test_add_delete_es_index(self):
     #    '''
     #    test create index in elastic search
@@ -98,11 +111,6 @@ class BasicTestCase(unittest.TestCase):
         '''
         pass
 
-    def test_drop_database(self):
-        '''
-
-        '''
-        pass#d_util.drop_all_databases(db)
 
 if __name__ == '__main__':
     unittest.main()

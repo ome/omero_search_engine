@@ -5,11 +5,36 @@ from search_engine.api.v1.resources.utils import search_resource_annotation, bui
 from search_engine.api.v1.resources.resourse_analyser import  search_value_for_resource,query_cashed_bucket, get_resource_attributes, get_resource_attribute_values, get_resource_names, get_values_for_a_key, query_cashed_bucket_value
 from search_engine.api.v1.resources.utils import get_resource_annotation_table
 
-@resources.route('/',methods=['GET','POST'])
+@resources.route('/',methods=['GET'])
 def index():
-    return "Omero search engine (API V1)  '\'"
+    """
+       This is the language searchengine API
+       Call this api to test the /api/v1/resources/
+       ---
+       tags:
+         - Searchengine Language API
 
-@resources.route('/<resource_table>/searchannotation_page/',methods=['GET','POST'])
+       responses:
+         500:
+           description: Error
+         200:
+           description: The results is found
+           schema:
+             id: awesome
+             properties:
+               language:
+                 type: string
+                 description: The language name
+                 default: Lua
+               features:
+                 type: array
+                 description: Simple text
+                 items:
+                   type: string
+       """
+    return "Omero search engine (API V1)"
+
+@resources.route('/<resource_table>/searchannotation_page/',methods=['GET'])
 def search_resource_page(resource_table):
     '''
     used to get the next results page
@@ -36,13 +61,52 @@ def search_resource_page(resource_table):
     return jsonify(resource_list)
 
 
-@resources.route('/<resource_table>/searchannotation/',methods=['GET','POST'])
+@resources.route('/<resource_table>/searchannotation/',methods=['POST','GET'])
 def search_resource(resource_table):
+    """
+       This is the language searchengine API
+       Call this api to test the /api/v1/resources/
+       ---
+       tags:
+         - Searchengine Language API
+       parameters:
+          - name: resource_table
+            in: path
+            type: string
+            enum: ['image', 'project', 'screen', 'well']
+            required: true
+            default: all
+          - name: data
+            in: body
+            required: true
+            schema:
+            id : query
+            required:
+              - first
+              - last
+            properties:
+              first:
+                type: string
+                description: Unique identifier representing a First Name
+              last:
+                type: string
+                description: Unique identifier representing a Last Name
+
+       responses:
+          200:
+            description: A list of results
+            examples:
+              results: []
+
+    """
+
     '''
-       API end point to search the annotation (key/value pair) for a resource (resource table, e.g. image, project, study, ..)
-       the request data contation a dict (query) which contains the the query detatins.
-       Version 2 uses Elastic search
-       an example of a query dict i:
+               {'query': {'query_details': {'and_filters':
+             [{'resource': 'image', 'name': 'HGNC Gene Symbol', 'value': 'pdx1', 'operator': 'equals', 'query_type': 'keyvalue'}], '
+             or_filters': [], 'case_sensitive': False}, 'main_attributes': 
+             {'or_main_attributes': []}}}
+             
+    
 
        q_data={"query":{'query_details':{"and_filters":and_filters,"or_filters":or_filters}}}
        each of and_filtersand or_filters is a list of dict whihc contains the search conditions, an example of and_filters is:
@@ -58,6 +122,7 @@ def search_resource(resource_table):
         return jsonify(build_error_message("Error: {error}".format(error="No query data is provided ")))
     try:
         data = json.loads(data)
+        print (data)
     except Exception as ex:
         return jsonify(build_error_message("Error: {error}".format(error="No proper query data is provided ")))
 
@@ -70,7 +135,7 @@ def search_resource(resource_table):
 
     return jsonify(resource_list)
 
-@resources.route('/<resource_table>/searchvalues/',methods=['GET','POST'])
+@resources.route('/<resource_table>/searchvalues/',methods=['GET'])
 def get_values_using_value(resource_table):
     value=request.args.get("value")
     if not value:
@@ -81,7 +146,7 @@ def get_values_using_value(resource_table):
     #return json.dumps(query_cashed_bucket
 
 
-@resources.route('/<resource_table>/searchvaluesusingkey/',methods=['GET','POST'])
+@resources.route('/<resource_table>/searchvaluesusingkey/',methods=['GET'])
 def search_values_for_a_key(resource_table):
     key=request.args.get("key")
     if not key:
@@ -100,7 +165,7 @@ def get_resource_keys(resource_table):
     return jsonify (resource_keys)
 
 
-@resources.route('/<resource_table>/getannotationvalueskey/',methods=['GET','POST'])
+@resources.route('/<resource_table>/getannotationvalueskey/',methods=['GET'])
 def get_resource_key_value(resource_table):
     '''
     get the values for a key for a specific resource
@@ -111,7 +176,7 @@ def get_resource_key_value(resource_table):
     return jsonify(get_resource_attribute_values(resource_table, key))
 
 
-@resources.route('/<resource_table>/getresourcenames/',methods=['GET','POST'])
+@resources.route('/<resource_table>/getresourcenames/',methods=['GET'])
 def get_resource_names_(resource_table):
     '''
     get the values for a key for a specific resource
