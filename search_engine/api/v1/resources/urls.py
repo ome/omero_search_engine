@@ -122,3 +122,11 @@ def get_resource_names_(resource_table):
     names=get_resource_names(resource_table)
     return jsonify (names)
 
+
+@resources.route('/<resource_table>/submitquery/',methods=['POST', 'GET'])
+def submit_query(resource_table):
+    query =json.loads(request.data)
+    if not query:
+        return jsonify(build_error_message("No query is provided"))
+    from .query_handler import determine_search_results_
+    return jsonify(determine_search_results_(query))

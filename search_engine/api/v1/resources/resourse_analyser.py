@@ -101,21 +101,21 @@ def search_value_for_resource_(table_, value):
     query=value_search_contain_template.substitute(value= value.lower())
     res = search_index_for_value(res_index, query)
     total_number=0
-    returnted_results=[]
+    returned_results=[]
     if res.get("aggregations"):
         for bucket in res.get("aggregations").get("name_search").get("value_filter").get("buckets"):
             value=bucket.get("key")
             value_no=bucket.get("doc_count")
             for buc in bucket.get("required_name").get("buckets"):
                 singe_row = {}
-                returnted_results.append((singe_row))
+                returned_results.append((singe_row))
                 key = buc.get("key")
                 key_no = buc.get("doc_count")
                 singe_row["Attribute"]=key
                 singe_row["Value"] =value
                 singe_row["Number of %ss"%table_] =key_no
                 total_number+=key_no
-    return {"returnted_results":returnted_results, "total_number":total_number}
+    return {"data":returned_results, "total_number":total_number}
 
 def get_number_of_buckets(key, res_index):
     query=key_number_search_template.substitute(key=key)
@@ -147,7 +147,7 @@ def get_all_values_for_a_key(table_, key):
         results.append (res)
         total_ret+=len(res["aggregations"]["name_search"]["value_filter"]["required_values"]["buckets"])
         co+=1
-    returnted_results = []
+    returned_results = []
     total_number=0
     for res in results:
         if res.get("aggregations"):
@@ -157,13 +157,13 @@ def get_all_values_for_a_key(table_, key):
                 value_no = bucket.get("doc_count")
                 total_number += value_no
                 singe_row = {}
-                returnted_results.append(singe_row)
+                returned_results.append(singe_row)
                 singe_row["Attribute"] = key
                 singe_row["Value"] = value
                 singe_row["Number of %ss" % table_] = value_no
 
 
-    return {"returnted_results":returnted_results, "total_number":total_number, "total_number_of_%s"%(table_):number_of_items,"total_number_of_buckets": len(returnted_results)}
+    return {"data":returned_results, "total_number":total_number, "total_number_of_%s"%(table_):number_of_items,"total_number_of_buckets": len(returned_results)}
 
 
 
@@ -180,18 +180,18 @@ def get_values_for_a_key(table_, key):
     res = search_index_for_value(res_index, query)
     query_time = ("%.2f" % (time.time() - start_time))
     print("TIME ...", query_time)
-    returnted_results=[]
+    returned_results=[]
     if res.get("aggregations"):
         for bucket in res.get("aggregations").get("name_search").get("value_filter").get("required_values").get("buckets"):
             value = bucket.get("key")
             value_no = bucket.get("doc_count")
             total_number+=value_no
             singe_row = {}
-            returnted_results.append(singe_row)
+            returned_results.append(singe_row)
             singe_row["Attribute"] = key
             singe_row["Value"] = value
             singe_row["Number of %ss"%table_] = value_no
-    return {"returnted_results":returnted_results, "total_number":total_number, "total_number_of_%s"%(table_):number_of_images,"total_number_of_buckets": number_of_buckets}
+    return {"data":returned_results, "total_number":total_number, "total_number_of_%s"%(table_):number_of_images,"total_number_of_buckets": number_of_buckets}
 
 def prepare_search_results(results):
     returned_results=[]
@@ -212,7 +212,7 @@ def prepare_search_results(results):
         total_number=res["total_items_in_saved_buckets"]
         number_of_buckets=res["total_buckets"]
         total_items=res["total_items"]
-    return {"returnted_results": returned_results, "total_number": total_number,
+    return {"data": returned_results, "total_number": total_number,
             "total_number_of_%s" % (resource): total, "total_number_of_buckets": number_of_buckets, "total_items":total_items}
 
 def prepare_search_results_buckets(results_):
@@ -234,7 +234,7 @@ def prepare_search_results_buckets(results_):
             total_number=res["total_items_in_saved_buckets"]
             number_of_buckets=res["total_buckets"]
             total_items=res["total_items"]
-    return {"returnted_results": returned_results, "total_number": total_number,
+    return {"data": returned_results, "total_number": total_number,
             "total_number_of_%s" % (resource): total, "total_number_of_buckets": number_of_buckets, "total_items":total_items}
 
 def query_cashed_bucket(name ,resource, es_index="key_value_buckets_information"):

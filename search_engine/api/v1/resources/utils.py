@@ -411,11 +411,13 @@ def search_resource_annotation(table_, query, raw_elasticsearch_query=None, page
     @query: the a dict contains the three filters (or, and and  not) items
     @raw_elasticsearch_query: is a raw query which send directly to elasticsearch
     '''
+    print ( query)
 
     res_index=resource_elasticsearchindex.get(table_)
     if not res_index:
         return build_error_message("{table_} is not a valid resurce".format(table_=table_))
     query_details = query.get('query_details')
+
 
     start_time = time.time()
     if not raw_elasticsearch_query:
@@ -424,7 +426,8 @@ def search_resource_annotation(table_, query, raw_elasticsearch_query=None, page
         if not query_details and main_attributes and len(main_attributes)>0:
             pass
 
-        elif not query or len(query) == 0 or len(query_details)==0 or isinstance(query_details,str):
+        elif not query or len(query) == 0 or not query_details or len(query_details)==0 or isinstance(query_details,str):
+            print ("Error ")
             return build_error_message("{query} is not a valid query".format(query=query))
         and_filters = query_details.get("and_filters")
         or_filters = query_details.get("or_filters")
@@ -436,6 +439,7 @@ def search_resource_annotation(table_, query, raw_elasticsearch_query=None, page
         #which will be returned to the sender:
         if isinstance(query_string, dict):
             return query_string
+
         search_omero_app.logger.info("Query %s"%query_string)
         query = json.loads(query_string)
         raw_query_to_send_back= json.loads(query_string)
