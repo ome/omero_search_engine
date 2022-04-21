@@ -307,7 +307,6 @@ def get_insert_data_to_index(sql_st, resource):
             break
         cur_max_id+=page_size
     search_omero_app.logger.info (cur_max_id)
-    save_key_value_buckets(resource_table_=None, re_create_index=False, only_values=False)
     search_omero_app.logger.info ("Total time=%s"%str(datetime.now()-start_time))
 
 def process_results(results,resource):
