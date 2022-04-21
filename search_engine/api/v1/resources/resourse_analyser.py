@@ -303,7 +303,8 @@ def search_value_for_resource(table_, value, es_index="key_value_buckets_informa
 Search using key and resourse
 '''
 key_values_buckets_template= Template ('''{"query":{"bool":{"must":[{"bool":{
-                  "must":{"match":{"Attribute.keyname":"$name"}}}},{
+                  "must":{"match":{"Attribute.keyrnamenormalize":"$name"}}}},{
+                  
                   "bool": {"must": {"match": {"resource.keyresource": "$resource"}}}}]}}} ''')
 
 #"fields": ["Attribute","Value","items_in_the_bucket","total_items_in_saved_buckets","total_buckets","total_items"],"_source": false,

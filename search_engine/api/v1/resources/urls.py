@@ -7,34 +7,9 @@ from search_engine.api.v1.resources.utils import get_resource_annotation_table
 
 @resources.route('/',methods=['GET'])
 def index():
-    """
-       This is the language searchengine API
-       Call this api to test the /api/v1/resources/
-       ---
-       tags:
-         - Searchengine Language API
-
-       responses:
-         500:
-           description: Error
-         200:
-           description: The results is found
-           schema:
-             id: awesome
-             properties:
-               language:
-                 type: string
-                 description: The language name
-                 default: Lua
-               features:
-                 type: array
-                 description: Simple text
-                 items:
-                   type: string
-       """
     return "Omero search engine (API V1)"
 
-@resources.route('/<resource_table>/searchannotation_page/',methods=['GET'])
+@resources.route('/<resource_table>/searchannotation_page/',methods=['POST'])
 def search_resource_page(resource_table):
     '''
     used to get the next results page
@@ -56,19 +31,18 @@ def search_resource_page(resource_table):
         raw_elasticsearch_query=data.get("raw_elasticsearch_query")
         resource_list = search_resource_annotation(resource_table, query, raw_elasticsearch_query=raw_elasticsearch_query,page=page,bookmark=bookmark)
     else:
-
         return jsonify(build_error_message("Error: No query field is provided. please specify an id."))
     return jsonify(resource_list)
 
 
-@resources.route('/<resource_table>/searchannotation/',methods=['POST','GET'])
+@resources.route('/<resource_table>/searchannotation/',methods=['GET'])
 def search_resource(resource_table):
     """
        This is the language searchengine API
        Call this api to test the /api/v1/resources/
        ---
        tags:
-         - Searchengine Language API
+         - Searchengine  API
        parameters:
           - name: resource_table
             in: path
@@ -97,7 +71,6 @@ def search_resource(resource_table):
             description: A list of results
             examples:
               results: []
-
     """
 
     '''
@@ -137,27 +110,94 @@ def search_resource(resource_table):
 
 @resources.route('/<resource_table>/searchvalues/',methods=['GET'])
 def get_values_using_value(resource_table):
+    """
+                    Search using part of value to find  attributes and values which contains the search term
+                   ---
+                   tags:
+                     - Resource available attributes
+                   parameters:
+                      - name: resource_table
+                        in: path
+                        type: string
+                        enum: ['image', 'project', 'screen', 'well', 'all']
+                        required: true
+                      - name: value
+                        description: value search term
+                        in: query
+                        type: string
+                        required: true
+
+                   responses:
+                      200:
+                        description: A list of resource attributes
+                        examples:
+                          results: []
+
+                """
     value=request.args.get("value")
     if not value:
         return jsonify(build_error_message("Error: {error}".format(error="No value is provided ")))
     #print (value, resource_table)
-
     return jsonify(search_value_for_resource(resource_table, value))
     #return json.dumps(query_cashed_bucket
 
 
 @resources.route('/<resource_table>/searchvaluesusingkey/',methods=['GET'])
 def search_values_for_a_key(resource_table):
+    """
+                Get the available attributes for one resource or all resources, return the available values along with the number of iamges which have it.
+               ---
+               tags:
+                 - Resource available attributes
+               parameters:
+                  - name: resource_table
+                    in: path
+                    type: string
+                    enum: ['image', 'project', 'screen', 'well', 'all']
+                    required: true
+                  - name: key
+                    description: the resource attribute
+                    in: query
+                    type: string
+                    required: true
+
+               responses:
+                  200:
+                    description: A list of resource attributes
+                    examples:
+                      results: []
+
+            """
+
     key=request.args.get("key")
     if not key:
         return jsonify(build_error_message("No key is provided "))
-    #return json.dumps(get_values_for_a_key(resource_table, key))
-    #return json.dumps(get_values_for_a_key(resource_table, key))
+
 
     return jsonify(query_cashed_bucket (key, resource_table))
 
-@resources.route('/<resource_table>/getannotationkeys/',methods=['GET','POST'])
+@resources.route('/<resource_table>/getannotationkeys/',methods=['GET'])
 def get_resource_keys(resource_table):
+    """
+            Query the available attributes for one resource or all resources
+            and return a list which contains all the resource, value, bo of
+           ---
+           tags:
+             - Resource available attributes
+           parameters:
+              - name: resource_table
+                in: path
+                type: string
+                enum: ['image', 'project', 'screen', 'well', 'all']
+                required: true
+           responses:
+              200:
+                description: A list of resource attributes
+                examples:
+                  results: []
+
+        """
+
     '''
      return the keys for a resource or all the resources
     '''
@@ -167,6 +207,29 @@ def get_resource_keys(resource_table):
 
 @resources.route('/<resource_table>/getannotationvalueskey/',methods=['GET'])
 def get_resource_key_value(resource_table):
+    """
+          Query the available values for a resource attribute, returns only the values
+           ---
+           tags:
+             - Values for a resource attribute
+           parameters:
+              - name: resource_table
+                in: path
+                type: string
+                enum: ['image', 'project', 'screen', 'well']
+                required: true
+              - name: key
+                description: the resource attribute
+                in: query
+                type: string
+                required: true
+           responses:
+              200:
+                description: A list of resource attributes
+                examples:
+                  results: []
+
+        """
     '''
     get the values for a key for a specific resource
     '''
@@ -178,8 +241,25 @@ def get_resource_key_value(resource_table):
 
 @resources.route('/<resource_table>/getresourcenames/',methods=['GET'])
 def get_resource_names_(resource_table):
+    """
+        Query the available  names attribute for a resource
+       ---
+       tags:
+         - Resource available attributes
+       parameters:
+          - name: resource_table
+            in: path
+            type: string
+            enum: ['project', 'screen']
+            required: true
+       responses:
+          200:
+            description: A list of resource attributes
+            examples:
+              results: []
+    """
     '''
-    get the values for a key for a specific resource
+    Query the available attributes for a specific resource
     '''
     if not (get_resource_annotation_table(resource_table)):
         return ("NO data for table {table}".format(table=resource_table))
