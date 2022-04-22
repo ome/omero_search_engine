@@ -123,10 +123,11 @@ def get_resource_names_(resource_table):
     return jsonify (names)
 
 
-@resources.route('/<resource_table>/submitquery/',methods=['POST', 'GET'])
-def submit_query(resource_table):
+@resources.route('/submitquery/',methods=['POST', 'GET'])
+def submit_query():
     query =json.loads(request.data)
     if not query:
         return jsonify(build_error_message("No query is provided"))
+    return_columns = request.args.get("return_columns")
     from search_engine.api.v1.resources.query_handler import determine_search_results_
-    return jsonify(determine_search_results_(query))
+    return jsonify(determine_search_results_(query, return_columns))

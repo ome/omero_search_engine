@@ -77,15 +77,16 @@ class QueryGroup(object):
 
 
 class QueryRunner(object, ):
-    def __init__(self,and_query_group,  or_query_group, case_sensitive, mode, bookmark, raw_elasticsearch_query):
+    def __init__(self,and_query_group,  or_query_group, case_sensitive,  bookmark, raw_elasticsearch_query,columns_def, return_columns):
         self.or_query_group=or_query_group
         self.and_query_group=and_query_group
         self.case_sensitive=case_sensitive
-        self.mode=mode
         self.bookmark=bookmark
+        self.columns_def=columns_def
         self.raw_elasticsearch_query=raw_elasticsearch_query
         self.image_query={}
         self.additional_image_conds=[]
+        self.return_columns=return_columns
 
     def get_iameg_non_image_query(self):
         has_main=False
@@ -170,12 +171,14 @@ class QueryRunner(object, ):
             main_attributes[key]=ss
         query["case_sensitive"]=self.case_sensitive
         res=seracrh_query(query, resource, self.bookmark, self.raw_elasticsearch_query, main_attributes)
-        return res
-
-
+        if resource != "image":
+            return res
+        elif self.return_columns:
+            return process_search_results(res, "image", self.columns_def)
+        else:
+            return res
 
 def seracrh_query(query,resource,bookmark,raw_elasticsearch_query, main_attributes=None):
-    print (query)
     search_omero_app.logger.info(("%s, %s") % (resource, query))
     if not main_attributes:
         q_data = {"query": {'query_details': query}}
@@ -212,17 +215,115 @@ def get_ids(results, resource):
         return ids
     return None
 
-def determine_search_results_(query_):
+
+def process_search_results(results, resource, columns_def):
+    returned_results={}
+
+    if not results.get("results") or len(results["results"])==0:
+        returned_results["Error"] = "Your query returns no results"
+        return returned_results
+    cols=[]
+    values=[]
+    urls = {"image": search_omero_app.config.get("IMAGE_URL"),
+            "project":search_omero_app.config.get("PROJECT_URL"),
+            "screen": search_omero_app.config.get("SCREEN_URL")}
+    extend_url=urls.get(resource)
+    if not extend_url:
+        extend_url = search_omero_app.config.get("RESOURCE_URL")
+    names_ids={}
+    for item in results["results"]["results"]:
+        value = {}
+        values.append(value)
+        value["Id"] = item["id"]
+        names_ids[value["Id"]]=item.get("name")
+
+        value["Name"]=item.get("name")
+        value["Project name"] = item.get("project_name")
+        if item.get("screen_name"):
+            to_add=True
+            value["Study name"] = item.get("screen_name")
+        elif  item.get("project_name"):
+            to_add=True
+            value["Study name"] =  item.get("project_name")
+
+        for k in item["key_values"]:
+            if k['name'] not in cols:
+                cols.append(k['name'])
+            if value.get(k["name"]):
+                value[k["name"]]=value[k["name"]]+"; "+ k["value"]
+            else:
+                value[k["name"]]=k["value"]
+
+    columns=[]
+    for col in cols:
+        columns.append({
+            "id": col,
+            "name": col,
+            "field": col,
+            "hide": False,
+            "sortable": True,
+        })
+    main_cols=[]
+    if not columns_def:
+        columns_def = []
+        cols.sort()
+        if resource == "image":
+            cols.insert(0, "Study name")
+            main_cols.append(("Study name"))
+        cols.insert(0, "Name")
+        main_cols.append(("Name"))
+        cols.insert(0, "Id")
+        main_cols.append(("Id"))
+
+        for col in cols:
+                columns_def.append({
+                    "field": col,
+                    "hide":False,
+                    "sortable": True,
+                })
+    else:
+        for col_def in columns_def:
+            if col_def["field"] not in cols:
+                    cols.append(col_def["field"])
+    for val in values:
+        if len(val)!=len(cols):
+            for col in cols:
+                if not val.get(col):
+                    val[col]='""'
+    #print (columns_def)
+    returned_results["columns"]=columns
+    returned_results["columns_def"]=columns_def
+    returned_results["values"]=values
+    returned_results["server_query_time"]=results["server_query_time"]
+    returned_results["query_details"]=results["query_details"]
+    returned_results["bookmark"]=results["results"]["bookmark"]
+    returned_results["page"] = results["results"]["page"]
+    returned_results["size"] = results["results"]["size"]
+    returned_results["total_pages"] = results["results"]["total_pages"]
+    returned_results["extend_url"]=extend_url
+    returned_results["names_ids"]=names_ids
+    returned_results["raw_elasticsearch_query"] = results["raw_elasticsearch_query"]
+    if len(values)<=results["results"]["size"]:
+        returned_results["contains_all_results"]=True
+    else:
+        returned_results["contains_all_results"] = False
+    returned_results["Error"]=results["Error"]
+    returned_results["resource"]=results["resource"]+"s"
+    return returned_results
+
+
+
+def determine_search_results_(query_, return_columns=False):
     if query_.get("query_details"):
         case_sensitive = query_.get("query_details").get("case_sensitive")
     else:
         case_sensitive = False
-    mode = query_.get("mode")
     bookmark = query_.get("bookmark")
     raw_elasticsearch_query = query_.get("raw_elasticsearch_query")
     and_filters = query_.get("query_details").get("and_filters")
     or_filters = query_.get("query_details").get("or_filters")
     and_query_group = QueryGroup("and_filters")
+    columns_def = query_.get("columns_def")
     or_query_groups = []
     if and_filters and len(and_filters) > 0:
         for filter in and_filters:
@@ -237,5 +338,5 @@ def determine_search_results_(query_):
                 or_query_group.add_query((QueryItem(filter)))
             or_query_group.divide_filter()
             or_query_group.adjust_query_main_attributes()
-    query_runner=QueryRunner(and_query_group, or_query_groups, case_sensitive, mode, bookmark, raw_elasticsearch_query)
+    query_runner=QueryRunner(and_query_group, or_query_groups, case_sensitive, bookmark, raw_elasticsearch_query, columns_def,return_columns)
     return(query_runner.get_iameg_non_image_query())
