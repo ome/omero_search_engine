@@ -239,3 +239,14 @@ def determine_search_results_(query_):
             or_query_group.adjust_query_main_attributes()
     query_runner=QueryRunner(and_query_group, or_query_groups, case_sensitive, mode, bookmark, raw_elasticsearch_query)
     return(query_runner.get_iameg_non_image_query())
+
+def simple_search(key, value, operator,  case_sensitive, bookmark, resource):
+    if not operator:
+        operator='equals'
+    and_filters=[{"name": key, "value": value, "operator": operator }]
+    query_details={"and_filters": and_filters}
+    if bookmark:
+        bookmark=[bookmark]
+    query_details["bookmark"]=[bookmark]
+    query_details["case_sensitive"]=case_sensitive
+    return (search_resource_annotation(resource, {"query_details": query_details},bookmark=bookmark))

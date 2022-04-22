@@ -35,7 +35,7 @@ def search_resource_page(resource_table):
     return jsonify(resource_list)
 
 
-@resources.route('/<resource_table>/searchannotation/',methods=['GET'])
+@resources.route('/<resource_table>/searchannotation/',methods=['POST'])
 def search_resource(resource_table):
     """
        This is the language searchengine API
@@ -111,18 +111,18 @@ def search_resource(resource_table):
 @resources.route('/<resource_table>/searchvalues/',methods=['GET'])
 def get_values_using_value(resource_table):
     """
-                    Search using part of value to find  attributes and values which contains the search term
+                   Search using a part of or all of the value to find  attributes and values which contains the search term
                    ---
                    tags:
-                     - Resource available attributes
+                     - Search for any value
                    parameters:
                       - name: resource_table
                         in: path
                         type: string
-                        enum: ['image', 'project', 'screen', 'well', 'all']
+                        enum: ['image', 'project', 'screen', 'well', 'plate', 'all']
                         required: true
                       - name: value
-                        description: value search term
+                        description: search term
                         in: query
                         type: string
                         required: true
@@ -145,15 +145,15 @@ def get_values_using_value(resource_table):
 @resources.route('/<resource_table>/searchvaluesusingkey/',methods=['GET'])
 def search_values_for_a_key(resource_table):
     """
-                Get the available attributes for one resource or all resources, return the available values along with the number of iamges which have it.
+                Get the available values for an attribute for one or all resources.
                ---
                tags:
-                 - Resource available attributes
+                 -  Available attributes for a resourse
                parameters:
                   - name: resource_table
                     in: path
                     type: string
-                    enum: ['image', 'project', 'screen', 'well', 'all']
+                    enum: ['image', 'project', 'screen', 'well', 'plate', 'all']
                     required: true
                   - name: key
                     description: the resource attribute
@@ -163,7 +163,7 @@ def search_values_for_a_key(resource_table):
 
                responses:
                   200:
-                    description: A list of resource attributes
+                    description: A list of the available resource attribute values along with the number of items.
                     examples:
                       results: []
 
@@ -179,16 +179,15 @@ def search_values_for_a_key(resource_table):
 @resources.route('/<resource_table>/getannotationkeys/',methods=['GET'])
 def get_resource_keys(resource_table):
     """
-            Query the available attributes for one resource or all resources
-            and return a list which contains all the resource, value, bo of
+            Get the available attributes for one or all resources
            ---
            tags:
-             - Resource available attributes
+             -  Available attributes for a resource
            parameters:
               - name: resource_table
                 in: path
                 type: string
-                enum: ['image', 'project', 'screen', 'well', 'all']
+                enum: ['image', 'project', 'screen', 'well', 'plate', 'all']
                 required: true
            responses:
               200:
@@ -208,10 +207,10 @@ def get_resource_keys(resource_table):
 @resources.route('/<resource_table>/getannotationvalueskey/',methods=['GET'])
 def get_resource_key_value(resource_table):
     """
-          Query the available values for a resource attribute, returns only the values
+          Get the available values for a resource attribute.
            ---
            tags:
-             - Values for a resource attribute
+             - Available values for a resource attribute
            parameters:
               - name: resource_table
                 in: path
@@ -225,7 +224,7 @@ def get_resource_key_value(resource_table):
                 required: true
            responses:
               200:
-                description: A list of resource attributes
+                description: A list of resource attribute values only.
                 examples:
                   results: []
 
@@ -242,10 +241,10 @@ def get_resource_key_value(resource_table):
 @resources.route('/<resource_table>/getresourcenames/',methods=['GET'])
 def get_resource_names_(resource_table):
     """
-        Query the available  names attribute for a resource
+        Get the available attribute names  for a resource
        ---
        tags:
-         - Resource available attributes
+         - Available names for a resource
        parameters:
           - name: resource_table
             in: path
@@ -275,3 +274,54 @@ def submit_query(resource_table):
         return jsonify(build_error_message("No query is provided"))
     from search_engine.api.v1.resources.query_handler import determine_search_results_
     return jsonify(determine_search_results_(query))
+
+@resources.route('/<resource_table>/search/',methods=['GET'])
+def search(resource_table):
+    """
+              a searchengine endpoint to accept simple queries
+           ---
+           tags:
+             - Single query
+
+           parameters:
+              - name: resource_table
+                in: path
+                type: string
+                enum: ['image', 'project', 'screen', 'well', 'plate']
+                required: true
+              - name: key
+                description: the resource attribute
+                in: query
+                type: string
+                required: true
+              - name: value
+                description: the attribute value
+                in: query
+                type: string
+                required: true
+              - name: operator
+                description: operator, default equals
+                in: query
+                type: string
+                enum: ['equals', 'not_equals', 'contains', 'not_contains']
+              - name: case_sensitive
+                description: case sensitive query, default False
+                in: query
+                type: boolean
+           responses:
+              200:
+                description: A list of resource attributes
+                examples:
+                  results: []
+        """
+    #?value=pdx1&&key=strain
+    key = request.args.get("key")
+    value = request.args.get("value")
+    case_sensitive=request.args.get("case_sensitive")
+    operator=request.args.get("operator")
+    bookmark=request.args.get("bookmark")
+    from search_engine.api.v1.resources.query_handler import simple_search
+    results=simple_search(key, value, operator,case_sensitive,bookmark, resource_table)
+    return jsonify(results)
+
+    pass
