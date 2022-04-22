@@ -1,18 +1,27 @@
-from flask import Flask
+from flask import Flask, request
 import os
 import logging
 from elasticsearch import Elasticsearch
-from flasgger import Swagger
-
+from flasgger import Swagger, LazyString, LazyJSONEncoder
 
 from search_engine.database.database_connector import DatabaseConnector
 from configurations.configuration import configLooader,load_configuration_variables_from_file,set_database_connection_variables
 from logging.handlers import RotatingFileHandler
 
 from configurations.configuration import  app_config as config_
+template = dict(swaggerUiPrefix=LazyString(lambda : request.environ.get('HTTP_X_SCRIPT_NAME', '')))
+
 
 
 search_omero_app = Flask(__name__)
+
+search_omero_app.config['SWAGGER'] = {
+    'title': 'Omero Search Engine API',
+    'template':template
+    #'uiversion': 3
+}
+#search_omero_app.json_encoder = LazyJSONEncoder
+
 swagger = Swagger(search_omero_app)
 
 app_config =load_configuration_variables_from_file(config_)
