@@ -31,11 +31,14 @@ class BasicTestCase(unittest.TestCase):
     def test_searchannotation(self):
         '''test url'''
         tester = search_omero_app.test_client(self)
+        query = {'query_details': {}}
 
-        response = tester.get('/api/v1/resources/image/searchannotation', content_type='html/text')
+        response = tester.post('/api/v1/resources/image/searchannotation/', data=query)
         self.assertEqual(response.status_code, 200)
-        json = response.json()
-        assert 'notice' in json
+        notice = response.json["notice"]
+        self.assertIsInstance(notice, dict)
+        
+
 
     def test_not_found(self):
         '''
