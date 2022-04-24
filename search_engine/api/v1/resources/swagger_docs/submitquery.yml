@@ -19,25 +19,28 @@ parameters:
     in: query
     type: boolean
     required: false
-    examples:
-      query: {
-        "resource": "image",
-        "query_details": {
-          "and_filters": [
-            {
-              "name": "Gene Symbol",
-              "value": "pdx1",
-              "operator": "equals",
-              "resource": "image"
-            }
-          ],
-          "or_filters": [
+  - name: data
+    in: body
+    required: true
+    #examples:
+    #  query: {
+    #    "resource": "image",
+    #    "query_details": {
+    #      "and_filters": [
+    #        {
+    #          "name": "Gene Symbol",
+    #          "value": "pdx1",
+    #          "operator": "equals",
+    #          "resource": "image"
+    #        }
+    #      ],
+    #      "or_filters": [#
 
-          ],
-          "case_sensitive": false
-        },
-        "mode": "usesearchterms"
-      }
+    #      ],
+    #      "case_sensitive": false
+    #    },
+    #    "mode": "usesearchterms"
+    #  }
 
 responses:
   200:

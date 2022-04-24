@@ -11,29 +11,27 @@ This is the omerosearchengine API
  or_filters means that the results should satsify at least one condition inside the filters
 ---
 tags:
- - Buil a complex search
+ - Build a complex search
 parameters:
   - name: resource_table
     in: path
     type: string
-    enum: ['image', 'project', 'screen', 'well']
+    enum: ['image', 'project', 'screen', 'well', 'plate']
     required: true
     default: all
   - name: data
     in: body
     required: true
-    schema:
-    id : query
-    required:
-      - first
-      - last
-    properties:
-      first:
-        type: string
-        description: Unique identifier representing a First Name
-      last:
-        type: string
-        description: Unique identifier representing a Last Name
+   # required:
+   #   - and_filter
+   #   - or_filter
+   # properties:
+   #   and_filter:
+   #     type: string
+   #     description: An array or or_filters clauses
+   #   or_filter:
+   #     type: string
+   #     description:  An  array or or_filters clauses
 
 responses:
   200:

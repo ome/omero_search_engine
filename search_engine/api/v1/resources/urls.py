@@ -145,7 +145,10 @@ def submit_query():
     """
     file: swagger_docs/submitquery.yml
     """
-    query =json.loads(request.data)
+    try:
+        query =json.loads(request.data)
+    except:
+        query=None
     if not query:
         return jsonify(build_error_message("No query is provided"))
     return_columns = request.args.get("return_columns")
