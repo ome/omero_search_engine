@@ -1,0 +1,32 @@
+Get the available attributes for one or all resources.
+ ---
+tags:
+ -  Available attributes for a resource
+parameters:
+  - name: resource_table
+    in: path
+    type: string
+    enum: ['image', 'project', 'screen', 'well', 'plate', 'all']
+    required: true
+definitions:
+  resource:
+    type: object
+    properties:
+      resource:
+        type: array
+        items:
+          type: string
+
+
+  names_item:
+    type: string
+
+responses:
+  200:
+    description: A list of resource attributes
+    examples:
+      resource:
+        - Gene In Validation Screen"
+        - GO Molecular Function"
+    schema:
+      $ref: '#/definitions/resource'

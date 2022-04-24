@@ -1,0 +1,35 @@
+A searchengine endpoint to accept simple queries
+---
+tags:
+ - Single query
+
+parameters:
+  - name: resource_table
+    in: path
+    type: string
+    enum: ['image', 'project', 'screen', 'well', 'plate']
+    required: true
+  - name: key
+    description: the resource attribute
+    in: query
+    type: string
+    required: true
+  - name: value
+    description: the attribute value
+    in: query
+    type: string
+    required: true
+  - name: operator
+    description: operator, default equals
+    in: query
+    type: string
+    enum: ['equals', 'not_equals', 'contains', 'not_contains']
+  - name: case_sensitive
+    description: case sensitive query, default False
+    in: query
+    type: boolean
+responses:
+  200:
+    description: A list of resource attributes
+    examples:
+      results: []

@@ -1,0 +1,45 @@
+Search using a part of or all of the value to find  attributes and values which contains the search term
+---
+tags:
+ - Search for any value
+parameters:
+  - name: resource_table
+    in: path
+    type: string
+    enum: ['image', 'project', 'screen', 'well', 'plate', 'all']
+    required: true
+  - name: value
+    description: search term
+    in: query
+    type: string
+    required: true
+definitions:
+ data:
+    type: object
+    properties:
+      data:
+        type: array
+        items:
+          $ref: '#/definitions/result_item'
+ result_item:
+     type: object
+     properties:
+        Attribute:
+            type: string
+        'Number of images':
+            type: number
+        Value:
+            type: string
+responses:
+  200:
+    description: A list of resource attributes
+    schema:
+       $ref: '#/definitions/data'
+    examples:
+      "data": [
+        {
+          "Attribute": "GO Molecular Function",
+          "Number of images": 14,
+          "Value": "helicase activity, hydrolase activity"
+        }
+        ]

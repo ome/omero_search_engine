@@ -1,0 +1,25 @@
+Get the available name attrubutes for a resource
+---
+tags:
+ - Available names for a resource
+parameters:
+  - name: resource_table
+    in: path
+    type: string
+    enum: ['project', 'screen']
+    required: true
+definitions:
+  names:
+    type: array
+    items:
+      $ref: '#/definitions/names_item'
+  names_item:
+    type: string
+responses:
+  200:
+    description: A list of resource attributes
+    schema:
+      $ref: '#/definitions/names'
+    examples:
+              ["idr0032-yang-meristem/experimentA",
+             "idr0018-neff-histopathology/experimentA"]

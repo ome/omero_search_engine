@@ -1,0 +1,22 @@
+Get the available values for a resource attribute.
+---
+tags:
+ - Available values for a resource attribute
+parameters:
+  - name: resource_table
+    in: path
+    type: string
+    enum: ['image', 'project', 'screen', 'well']
+    required: true
+  - name: key
+    description: the resource attribute
+    in: query
+    type: string
+    required: true
+responses:
+  200:
+    description: A list of resource attribute values only.
+    schema:
+      $ref: '#/definitions/names'
+    examples:
+      results: []

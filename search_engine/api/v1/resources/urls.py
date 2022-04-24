@@ -38,56 +38,21 @@ def search_resource_page(resource_table):
 @resources.route('/<resource_table>/searchannotation/',methods=['POST'])
 def search_resource(resource_table):
     """
-       This is the language searchengine API
-       Call this api to test the /api/v1/resources/
-       ---
-       tags:
-         - Searchengine  API
-       parameters:
-          - name: resource_table
-            in: path
-            type: string
-            enum: ['image', 'project', 'screen', 'well']
-            required: true
-            default: all
-          - name: data
-            in: body
-            required: true
-            schema:
-            id : query
-            required:
-              - first
-              - last
-            properties:
-              first:
-                type: string
-                description: Unique identifier representing a First Name
-              last:
-                type: string
-                description: Unique identifier representing a Last Name
-
-       responses:
-          200:
-            description: A list of results
-            examples:
-              results: []
+     file: swagger_docs/searchannotation.yml
     """
-
     '''
-               {'query': {'query_details': {'and_filters':
-             [{'resource': 'image', 'name': 'HGNC Gene Symbol', 'value': 'pdx1', 'operator': 'equals', 'query_type': 'keyvalue'}], '
-             or_filters': [], 'case_sensitive': False}, 'main_attributes': 
-             {'or_main_attributes': []}}}
-             
-    
-
+     API end point to search the annotation (key/value pair) for a resource (resource table, e.g. image, project, study, ..)
+       the request data contation a dict (query) which contains the the query detatins.
+       this version (1)  uses Elastic search
+       an example of a query dict i:
        q_data={"query":{'query_details':{"and_filters":and_filters,"or_filters":or_filters}}}
        each of and_filtersand or_filters is a list of dict whihc contains the search conditions, an example of and_filters is:
        and_filters=[{"Organism" : "Homo sapiens", "operator": "equals"},{"Gene Symbol": "NCAPD2", "operator": "equals"},{ "Cell Cycle Phase" :"anaphase", "operator": "equals"}]
        and_filters means that the results have to saitisy the conditions
        not_filters means that the results have not to the conditions
        or_filters means that the results should satsify at least one condition inside the filters
-     '''
+    '''
+
     if not (get_resource_annotation_table):
         return jsonify({"notice":"NO data for table {table}".format(table=resource_table)})
     data = request.data
@@ -125,15 +90,11 @@ def get_values_using_value(resource_table):
 def search_values_for_a_key(resource_table):
     """
     file: swagger_docs/searchvaluesusingkey.yml
-
-
-            """
+    """
 
     key=request.args.get("key")
     if not key:
         return jsonify(build_error_message("No key is provided "))
-
-
     return jsonify(query_cashed_bucket (key, resource_table))
 
 @resources.route('/<resource_table>/getannotationkeys/',methods=['GET'])
@@ -179,13 +140,18 @@ def get_resource_names_(resource_table):
     return jsonify (names)
 
 
-@resources.route('/<resource_table>/submitquery/',methods=['POST', 'GET'])
-def submit_query(resource_table):
+@resources.route('/submitquery/',methods=['POST', 'GET'])
+def submit_query():
+    """
+    file: swagger_docs/submitquery.yml
+    """
     query =json.loads(request.data)
     if not query:
         return jsonify(build_error_message("No query is provided"))
+    return_columns = request.args.get("return_columns")
     from search_engine.api.v1.resources.query_handler import determine_search_results_
-    return jsonify(determine_search_results_(query))
+    return jsonify(determine_search_results_(query, return_columns))
+
 
 @resources.route('/<resource_table>/search/',methods=['GET'])
 def search(resource_table):
