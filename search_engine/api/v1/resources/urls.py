@@ -111,29 +111,8 @@ def search_resource(resource_table):
 @resources.route('/<resource_table>/searchvalues/',methods=['GET'])
 def get_values_using_value(resource_table):
     """
-                   Search using a part of or all of the value to find  attributes and values which contains the search term
-                   ---
-                   tags:
-                     - Search for any value
-                   parameters:
-                      - name: resource_table
-                        in: path
-                        type: string
-                        enum: ['image', 'project', 'screen', 'well', 'plate', 'all']
-                        required: true
-                      - name: value
-                        description: search term
-                        in: query
-                        type: string
-                        required: true
-
-                   responses:
-                      200:
-                        description: A list of resource attributes
-                        examples:
-                          results: []
-
-                """
+    file: swagger_docs/search_for_any_value.yml
+    """
     value=request.args.get("value")
     if not value:
         return jsonify(build_error_message("Error: {error}".format(error="No value is provided ")))
@@ -145,27 +124,8 @@ def get_values_using_value(resource_table):
 @resources.route('/<resource_table>/searchvaluesusingkey/',methods=['GET'])
 def search_values_for_a_key(resource_table):
     """
-                Get the available values for an attribute for one or all resources.
-               ---
-               tags:
-                 -  Available attributes for a resourse
-               parameters:
-                  - name: resource_table
-                    in: path
-                    type: string
-                    enum: ['image', 'project', 'screen', 'well', 'plate', 'all']
-                    required: true
-                  - name: key
-                    description: the resource attribute
-                    in: query
-                    type: string
-                    required: true
+    file: swagger_docs/searchvaluesusingkey.yml
 
-               responses:
-                  200:
-                    description: A list of the available resource attribute values along with the number of items.
-                    examples:
-                      results: []
 
             """
 
@@ -179,23 +139,8 @@ def search_values_for_a_key(resource_table):
 @resources.route('/<resource_table>/getannotationkeys/',methods=['GET'])
 def get_resource_keys(resource_table):
     """
-            Get the available attributes for one or all resources
-           ---
-           tags:
-             -  Available attributes for a resource
-           parameters:
-              - name: resource_table
-                in: path
-                type: string
-                enum: ['image', 'project', 'screen', 'well', 'plate', 'all']
-                required: true
-           responses:
-              200:
-                description: A list of resource attributes
-                examples:
-                  results: []
-
-        """
+    file: swagger_docs/getannotationkeys.yml
+    """
 
     '''
      return the keys for a resource or all the resources
@@ -207,28 +152,9 @@ def get_resource_keys(resource_table):
 @resources.route('/<resource_table>/getannotationvalueskey/',methods=['GET'])
 def get_resource_key_value(resource_table):
     """
-          Get the available values for a resource attribute.
-           ---
-           tags:
-             - Available values for a resource attribute
-           parameters:
-              - name: resource_table
-                in: path
-                type: string
-                enum: ['image', 'project', 'screen', 'well']
-                required: true
-              - name: key
-                description: the resource attribute
-                in: query
-                type: string
-                required: true
-           responses:
-              200:
-                description: A list of resource attribute values only.
-                examples:
-                  results: []
+    file= swagger_docs/getannotationvalueskey.yml
+    """
 
-        """
     '''
     get the values for a key for a specific resource
     '''
@@ -241,21 +167,7 @@ def get_resource_key_value(resource_table):
 @resources.route('/<resource_table>/getresourcenames/',methods=['GET'])
 def get_resource_names_(resource_table):
     """
-        Get the available attribute names  for a resource
-       ---
-       tags:
-         - Available names for a resource
-       parameters:
-          - name: resource_table
-            in: path
-            type: string
-            enum: ['project', 'screen']
-            required: true
-       responses:
-          200:
-            description: A list of resource attributes
-            examples:
-              results: []
+    file: swagger_docs/getresourcenames.yml
     """
     '''
     Query the available attributes for a specific resource
@@ -278,43 +190,8 @@ def submit_query(resource_table):
 @resources.route('/<resource_table>/search/',methods=['GET'])
 def search(resource_table):
     """
-              a searchengine endpoint to accept simple queries
-           ---
-           tags:
-             - Single query
-
-           parameters:
-              - name: resource_table
-                in: path
-                type: string
-                enum: ['image', 'project', 'screen', 'well', 'plate']
-                required: true
-              - name: key
-                description: the resource attribute
-                in: query
-                type: string
-                required: true
-              - name: value
-                description: the attribute value
-                in: query
-                type: string
-                required: true
-              - name: operator
-                description: operator, default equals
-                in: query
-                type: string
-                enum: ['equals', 'not_equals', 'contains', 'not_contains']
-              - name: case_sensitive
-                description: case sensitive query, default False
-                in: query
-                type: boolean
-           responses:
-              200:
-                description: A list of resource attributes
-                examples:
-                  results: []
-        """
-    #?value=pdx1&&key=strain
+    file: swagger_docs/search.yml
+    """
     key = request.args.get("key")
     value = request.args.get("value")
     case_sensitive=request.args.get("case_sensitive")
@@ -324,4 +201,3 @@ def search(resource_table):
     results=simple_search(key, value, operator,case_sensitive,bookmark, resource_table)
     return jsonify(results)
 
-    pass
