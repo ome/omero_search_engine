@@ -60,16 +60,19 @@ def search_resource(resource_table):
         return jsonify(build_error_message("Error: {error}".format(error="No query data is provided ")))
     try:
         data = json.loads(data)
-        print (data)
     except Exception as ex:
         return jsonify(build_error_message("Error: {error}".format(error="No proper query data is provided ")))
 
     if 'query' in data:
         query = data['query']
-        #check if the app configuration will use ASYNCHRONOUS SEARCH or not.
-        resource_list = search_resource_annotation(resource_table, query)
+    elif 'query_details' in data:
+        query=data
     else:
         return jsonify(build_error_message("Error: No query field is provided. please specify an id."))
+
+        #check if the app configuration will use ASYNCHRONOUS SEARCH or not.
+    resource_list = search_resource_annotation(resource_table, query)
+
 
     return jsonify(resource_list)
 
@@ -140,7 +143,7 @@ def get_resource_names_(resource_table):
     return jsonify (names)
 
 
-@resources.route('/submitquery/',methods=['POST', 'GET'])
+@resources.route('/submitquery/',methods=['POST'])
 def submit_query():
     """
     file: swagger_docs/submitquery.yml

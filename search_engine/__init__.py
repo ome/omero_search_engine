@@ -12,13 +12,15 @@ from configurations.configuration import  app_config as config_
 from urllib.parse import urlparse
 from flask import request, url_for as _url_for
 
-
 template = dict(swaggerUiPrefix=LazyString(lambda : request.environ.get('HTTP_X_SCRIPT_NAME', '')))
 
 main_folder=os.path.dirname(os.path.realpath(__file__))
 
 static_folder=os.path.join(main_folder, "searchenginestatic")
+
 search_omero_app = Flask(__name__, static_url_path="/searchenginestatic", static_folder="searchenginestatic")
+
+search_omero_app.json_encoder = LazyJSONEncoder
 
 '''
 Refernce for the following two methods is:
@@ -36,12 +38,11 @@ def url_for(*args, **kwargs):
 
 search_omero_app.config['SWAGGER'] = {
     'title': 'Omero Search Engine API',
-    'template':template
     #'uiversion': 3
 }
 #search_omero_app.json_encoder = LazyJSONEncoder
 
-swagger = Swagger(search_omero_app)
+swagger = Swagger(search_omero_app, template=template)
 
 app_config =load_configuration_variables_from_file(config_)
 
