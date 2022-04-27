@@ -384,10 +384,10 @@ def save_key_value_buckets(resource_table_=None, re_create_index=False, only_val
 
     if re_create_index:
         if not only_values:
-            search_omero_app.logger.info (delete_es_index( es_index))
-            search_omero_app.logger.info (create_index(es_index, key_value_buckets_info_template))
-        search_omero_app.logger.info(delete_es_index(es_index_2))
-        search_omero_app.logger.info(create_index(es_index_2, key_values_resource_cache_template))
+            search_omero_app.logger.info ("Try to delete if exist:  %s "%  delete_es_index( es_index))
+            search_omero_app.logger.info ("Creaing key_value_buckets_informatio: %s"% create_index(es_index, key_value_buckets_info_template))
+        search_omero_app.logger.info("Try to delete if exist: %s" %delete_es_index(es_index_2))
+        search_omero_app.logger.info("Creating key_values_resource_cach: %s" %create_index(es_index_2, key_values_resource_cache_template))
 
     wrong_keys={}
     for resource_table, linkedtable in annotation_resource_link.items():
@@ -430,7 +430,8 @@ def save_key_value_buckets(resource_table_=None, re_create_index=False, only_val
                 search_omero_app.logger.info (helpers.bulk(es, actions))
              except Exception as e:
                 search_omero_app.logger.info (e)
-                if resource_table in wrong_keys:
+                if wrong_keys.get(resource_table):
+
                     wrong_keys[resource_table]=wrong_keys[resource_table].append(key)
                 else:
                     wrong_keys[resource_table] = [key]
