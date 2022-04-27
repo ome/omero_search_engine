@@ -476,7 +476,7 @@ def get_buckets(key, resourcse, es_index):
 def prepare_bucket_index_data(results, res_table,es_index):
     data_header=["resource", "name", "value", "items_in_the_bucket", "total_buckets", "total_items"]
     data_to_be_inserted=[]
-    for result in results.get("returnted_results"):
+    for result in results.get("data"):
         row={}
         data_to_be_inserted.append(row)
         row["id"]=uuid.uuid4()
