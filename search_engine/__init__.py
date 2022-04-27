@@ -12,35 +12,24 @@ from configurations.configuration import  app_config as config_
 from urllib.parse import urlparse
 from flask import request, url_for as _url_for
 
-template = dict(swaggerUiPrefix=LazyString(lambda : request.environ.get('HTTP_X_SCRIPT_NAME', '')))
+
+template={"swaggerUiPrefix": LazyString(lambda: request.environ.get("SCRIPT_NAME", ""))}
+
 
 main_folder=os.path.dirname(os.path.realpath(__file__))
 
-static_folder=os.path.join(main_folder, "searchenginestatic")
 
-search_omero_app = Flask(__name__, static_url_path="/searchenginestatic", static_folder="searchenginestatic")
+
+search_omero_app = Flask(__name__)
 
 search_omero_app.json_encoder = LazyJSONEncoder
-
-'''
-Refernce for the following two methods is:
-https://stackoverflow.com/questions/25962224/running-a-flask-application-at-a-url-that-is-not-the-domain-root
-'''
-def url_with_host(path):
-    return '/'.join((urlparse(request.host_url).path.rstrip('/'), path.lstrip('/')))
-
-def url_for(*args, **kwargs):
-    if kwargs.get('_external') is True:
-        return _url_for(*args, **kwargs)
-    else:
-        return url_with_host(_url_for(*args, **kwargs))
 
 
 search_omero_app.config['SWAGGER'] = {
     'title': 'Omero Search Engine API',
     #'uiversion': 3
 }
-#search_omero_app.json_encoder = LazyJSONEncoder
+
 
 swagger = Swagger(search_omero_app, template=template)
 
@@ -74,9 +63,6 @@ def create_app(config_name="development"):
 
     search_omero_app.logger.setLevel(logging.INFO)
     search_omero_app.logger.info('app assistant startup')
-    search_omero_app.jinja_env.globals['url_for'] = url_for
-
-
     return search_omero_app
 
 create_app()

@@ -21,4 +21,4 @@ echo "Start Gunicorn ...."
 echo "$HOME"
 echo pwd
 cd $APPPATH
-exec gunicorn "search_engine:create_app('production')" -b 0.0.0.0:5577 --timeout 0 --name "$NAME"   --bind=unix:$SOCKFILE  --log-file=$LOGSDIR/logs/engine_gunilog.log --access-logfile=$LOGSDIR/logs/engine_access.log -error-logfile=$LOGSDIR/logs/engine_logs/engine_error.log  --workers 2
+SCRIPT_NAME=/searchengineapi exec gunicorn "search_engine:create_app('production')" -b 0.0.0.0:5577 --timeout 0 --name "$NAME"   --bind=unix:$SOCKFILE  --log-file=$LOGSDIR/logs/engine_gunilog.log --access-logfile=$LOGSDIR/logs/engine_access.log -error-logfile=$LOGSDIR/logs/engine_logs/engine_error.log  --workers 2
