@@ -17,7 +17,7 @@ definitions:
     type: string
 responses:
   200:
-    description: A list of resource attributes
+    description: A JSON contains resource attributes
     schema:
       $ref: '#/definitions/names'
     examples:

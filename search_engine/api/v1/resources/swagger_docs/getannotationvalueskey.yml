@@ -15,7 +15,7 @@ parameters:
     required: true
 responses:
   200:
-    description: A list of resource attribute values only.
+    description: A JSON contains resource attribute values only.
     schema:
       $ref: '#/definitions/names'
     examples:

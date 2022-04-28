@@ -23,7 +23,7 @@ definitions:
 
 responses:
   200:
-    description: A list of resource attributes
+    description: A JSON contains resource attributes
     examples:
       resource:
         - Gene In Validation Screen"

@@ -74,6 +74,6 @@ parameters:
 
 responses:
   200:
-    description: A list of resource attributes
+    description: A JSON contains the results
     examples:
       results: []

@@ -16,7 +16,7 @@ parameters:
 
 responses:
   200:
-    description: A list of the available resource attribute values along with the number of items.
+    description: A JSON contains the available resource attribute values along with the number of items.
     schema:
       $ref: '#/definitions/data'
     examples:
