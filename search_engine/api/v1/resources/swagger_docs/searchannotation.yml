@@ -37,7 +37,7 @@ parameters:
     type: string
     enum: ['image', 'project', 'screen', 'well', 'plate']
     required: true
-    default: all
+    default: 'image'
   - name: data
     in: body
     required: true
