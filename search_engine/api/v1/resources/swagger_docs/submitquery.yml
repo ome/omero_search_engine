@@ -1,44 +1,29 @@
 A searchengine endpoint to accept complex query
-API end point to search the annotation (key/value pair) for a resource (resource table, e.g. image, project, study, ..)
- the request data contation a dict (query) which contains the the query detatins.
- The query dict should has the following format:
- q_data={"query":{'query_details':{"and_filters":and_filters,"or_filters":or_filters}}}
- each of and_filtersand or_filters is a list of dict whihc contains the search operator, an example of and_filters is:
- and_filters=[{"Organism" : "Homo sapiens", "operator": "equals"},{"Gene Symbol": "NCAPD2", "operator": "equals"},{ "Cell Cycle Phase" :"anaphase", "operator": "equals"}]
- and_filters means that the results have to saitisy the conditions
- not_filters means that the results have not to the conditions
- or_filters means that the results should satsify at least one condition inside the filters
-
+API endpoint to search the annotation (key/value pair), the main difference between this endpoint and searchannotation is this one can be used to search different resources and return the images which satisfy the search conditions.
+The query data has a similar format to the query for searchannotation.
 Example:
-{
-   "query_details":{
-      "and_filters":[
+   {
+     "query_details": {
+       "and_filters": [
          {
-            "name":"Cell Line",
-            "value":"hela",
-            "operator":"equals",
-            "resource":"image"
+           "name": "Cell Line",
+           "value": "hela",
+           "operator": "equals",
+           "resource": "image"
          },
          {
-            "name":"Organism",
-            "value":"homo sapiens",
-            "operator":"equals",
-            "resource":"image"
-         },
-         {
-            "name":"Name (IDR number)",
-            "value":"idr0008-rohn-actinome/screenB",
-            "operator":"equals",
-            "resource":"project"
+           "name": "Name (IDR number)",
+           "value": "idr0008-rohn-actinome/screenB",
+           "operator": "equals",
+           "resource": "project"
          }
-      ],
-      "or_filters":[
+       ],
+       "or_filters": [
 
-      ],
-      "case_sensitive":false
-   },
-   "mode":"usesearchterms"
-}
+       ],
+       "case_sensitive": false
+     }
+   }
 ---
 tags:
  - Mixed Complex query

@@ -1,7 +1,7 @@
 Get the available values for an attribute for one or all resources.
  ---
 tags:
- -  Available attributes for a resourse
+ -  Available values for a resourse attribute
 parameters:
   - name: resource_table
     in: path

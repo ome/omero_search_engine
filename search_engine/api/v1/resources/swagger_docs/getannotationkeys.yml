@@ -1,5 +1,5 @@
-Get the available attributes for one or all resources.
- ---
+Get all the available attributes for resource or all resources.
+---
 tags:
  -  Available attributes for a resource
 parameters:

@@ -1,4 +1,4 @@
-Get the available name attrubutes for a resource
+Get the available name attributes for a resource. For example, it can return a list which contains all the projects' names.
 ---
 tags:
  - Available names for a resource

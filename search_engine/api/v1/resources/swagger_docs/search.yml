@@ -1,4 +1,4 @@
-A searchengine endpoint to accept simple queries
+A searchengine endpoint to accept simple queries (single query), for example, find all the images which have "Organism" = "Homo sapiens".
 ---
 tags:
  - Single query

@@ -1,4 +1,4 @@
-Search using a part of or all of the value to find  attributes and values which contains the search term
+Search for a value whose attribute is not known.
 ---
 tags:
  - Search for any value
@@ -32,7 +32,7 @@ definitions:
             type: string
 responses:
   200:
-    description: A JSON contains the resource attributes
+    description: A JSON contains the resource attributes, values and the number of items for each matching value.
     schema:
        $ref: '#/definitions/data'
     examples:
