@@ -1,6 +1,9 @@
 from search_engine import search_omero_app
 from  search_engine.api.v1.resources.urls import search_resource_annotation, get_resource_names
 import json
+from jsonschema import validate, ValidationError, SchemaError, RefResolver
+from os.path import abspath,dirname
+from pathlib import Path
 
 mapping_names={"project":{"Name (IDR number)":"name"},"screen":{"Name (IDR number)":"name"}}
 class QueryItem (object):
@@ -354,3 +357,53 @@ def simple_search(key, value, operator,  case_sensitive, bookmark, resource):
     query_details["case_sensitive"]=case_sensitive
     return (search_resource_annotation(resource, {"query_details": query_details},bookmark=bookmark))
 
+def add_local_schemas_to(resolver, schema_folder, base_uri, schema_ext='.json'):
+    ''' Add local schema instances to a resolver schema cache.
+
+    Arguments:
+        resolver (jsonschema.RefResolver): the reference resolver
+        schema_folder (str): the local folder of the schemas.
+        base_uri (str): the base URL that you actually use in your '$id' tags
+            in the schemas
+        schema_ext (str): filter files with this extension in the schema_folder
+    '''
+    from pathlib import Path
+    import json
+    import os
+    from urllib.parse import urljoin
+
+    for dir, _, files in os.walk(schema_folder):
+        for file in files:
+            if file.endswith(schema_ext):
+                schema_path = Path(dir) / Path(file)
+                rel_path = schema_path.relative_to(schema_folder)
+                with open(schema_path) as schema_file:
+                    schema_doc = json.load(schema_file)
+                key = urljoin(base_uri, str(rel_path))
+                resolver.store[key] = schema_doc
+
+def query_validator(query):
+    query_schema_file = "search_engine/api/v1/resources/schemas/query_details.json"
+    base_uri = 'file:' + abspath('') + '/'
+    with open(query_schema_file, 'r') as schema_f:
+        query_schema = json.loads(schema_f.read())
+
+    resolver = RefResolver(referrer=query_schema, base_uri=base_uri)
+    schema_folder = dirname(query_schema_file)
+    print (schema_folder,"====>>>>")
+    #schema_folder = Path('search_engine/api/v1/resources/schemas')
+    add_local_schemas_to(resolver, schema_folder, base_uri)
+
+
+    try:
+        validate(query, query_schema, resolver=resolver)
+        search_omero_app.logger.info("Data is valid")
+        return "OK"
+    except SchemaError as e:
+        search_omero_app.logger.info("there is a schema error")
+        search_omero_app.logger.info(e.message)
+        return e.message
+    except ValidationError as e:
+        search_omero_app.logger.info("there is a validation error")
+        search_omero_app.logger.info(e.message)
+        return e.message

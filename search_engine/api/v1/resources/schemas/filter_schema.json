@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema#",
+  "$id": "filter_schema.json",
+  "name": "filter_schema",
+  "description": "filter_schema",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["name","value","operator"],
+  "properties": {
+    "name": {
+      "name": "name",
+      "type": "string"
+    },
+     "value": {
+      "name":"value",
+      "type": "string"
+    },
+     "operator": {
+      "name": "operator",
+      "type": "string",
+      "enum": ["equals", "not_equals", "contains","not_contains"]
+    }
+     ,"resource": {
+      "name": "resourse",
+      "type": "string",
+      "enum": ["image", "screen", "project","study","plate"]
+    }
+    }
+  }
+

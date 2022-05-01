@@ -4,6 +4,7 @@ import json
 from search_engine.api.v1.resources.utils import search_resource_annotation, build_error_message
 from search_engine.api.v1.resources.resourse_analyser import  search_value_for_resource,query_cashed_bucket, get_resource_attributes, get_resource_attribute_values, get_resource_names, get_values_for_a_key, query_cashed_bucket_value
 from search_engine.api.v1.resources.utils import get_resource_annotation_table
+from search_engine.api.v1.resources.query_handler import determine_search_results_, query_validator
 
 @resources.route('/',methods=['GET'])
 def index():
@@ -26,13 +27,18 @@ def search_resource_page(resource_table):
 
     if 'query' in data:
         query = data["query"]
-        page=data.get("page")
-        bookmark=data.get("bookmark")
-        raw_elasticsearch_query=data.get("raw_elasticsearch_query")
-        resource_list = search_resource_annotation(resource_table, query, raw_elasticsearch_query=raw_elasticsearch_query,page=page,bookmark=bookmark)
+        validation_results=query_validator(query.get("query_details"))
+        if validation_results=="OK":
+            page=data.get("page")
+            bookmark=data.get("bookmark")
+            raw_elasticsearch_query=data.get("raw_elasticsearch_query")
+            resource_list = search_resource_annotation(resource_table, query, raw_elasticsearch_query=raw_elasticsearch_query,page=page,bookmark=bookmark)
+            return jsonify(resource_list)
+        else:
+            return jsonify(build_error_message(validation_results))
+
     else:
         return jsonify(build_error_message("Error: No query field is provided. please specify an id."))
-    return jsonify(resource_list)
 
 
 @resources.route('/<resource_table>/searchannotation/',methods=['POST'])
@@ -71,10 +77,14 @@ def search_resource(resource_table):
         return jsonify(build_error_message("Error: No query field is provided. please specify an id."))
 
         #check if the app configuration will use ASYNCHRONOUS SEARCH or not.
-    resource_list = search_resource_annotation(resource_table, query)
+    validation_results=query_validator(query.get("query_details"))
+    if validation_results=="OK":
+        resource_list = search_resource_annotation(resource_table, query)
+        return jsonify(resource_list)
+    else:
+        return jsonify(build_error_message(validation_results))
 
 
-    return jsonify(resource_list)
 
 @resources.route('/<resource_table>/searchvalues/',methods=['GET'])
 def get_values_using_value(resource_table):
@@ -155,8 +165,11 @@ def submit_query():
     if not query:
         return jsonify(build_error_message("No query is provided"))
     return_columns = request.args.get("return_columns")
-    from search_engine.api.v1.resources.query_handler import determine_search_results_
-    return jsonify(determine_search_results_(query, return_columns))
+    validation_results=query_validator(query.get("query_details"))
+    if validation_results=="OK":
+        return jsonify(determine_search_results_(query, return_columns))
+    else:
+        return jsonify(build_error_message(validation_results))
 
 
 @resources.route('/<resource_table>/search/',methods=['GET'])

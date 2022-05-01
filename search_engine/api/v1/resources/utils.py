@@ -91,17 +91,17 @@ def elasticsearch_query_builder(and_filter, or_filters, case_sensitive,main_attr
         #should_part_list=[]
         #all_should_part_list.append(should_part_list)
         if main_attributes.get("and_main_attributes"):
-            for clause in main_attributes.get("and_main_attributes"):
-                for attribute in clause:
-                    if attribute["name"].endswith("_id"):
-                        main_dd = main_attribute_query_template_id.substitute(attribute=attribute["name"].strip(),
-                                                                         value=str(attribute["value"]).strip())
-                    else:
-                        main_dd = main_attribute_query_template.substitute(attribute=attribute["name"].strip(), value=str(attribute["value"]).strip())
-                    if attribute["operator"].strip() == "equals":
-                        nested_must_part.append(main_dd)
-                    elif attribute["operator"].strip()=="not_equals":
-                        nested_must_not_part.append(main_dd)
+            for attribute in main_attributes.get("and_main_attributes"):
+                #for attribute in clause:
+                if attribute["name"].endswith("_id"):
+                    main_dd = main_attribute_query_template_id.substitute(attribute=attribute["name"].strip(),
+                                                                     value=str(attribute["value"]).strip())
+                else:
+                    main_dd = main_attribute_query_template.substitute(attribute=attribute["name"].strip(), value=str(attribute["value"]).strip())
+                if attribute["operator"].strip() == "equals":
+                    nested_must_part.append(main_dd)
+                elif attribute["operator"].strip()=="not_equals":
+                    nested_must_not_part.append(main_dd)
 
         if main_attributes.get("or_main_attributes"):
             for attributes in main_attributes.get("or_main_attributes"):

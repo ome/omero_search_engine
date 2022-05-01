@@ -1,0 +1,46 @@
+{
+   "$schema":"https://json-schema.org/draft/2020-12/schema#",
+   "$id":"query_details.json",
+   "name":"query_details",
+   "description":"query_details",
+   "type":"object",
+   "additionalProperties":true,
+   "properties":{
+      "case_sensitive":{
+         "type":"boolean"
+      },
+      "and_filters":{
+         "type":"array",
+         "items":{
+            "$ref": "filter_schema.json"
+         }
+      },
+      "or_filters":{
+         "type":"array",
+         "items":{
+            "type":"array",
+            "items":{
+               "$ref": "filter_schema.json"
+            }
+         }
+      },
+      "main_attributes":{
+         "type":"object",
+         "additionalProperties":true,
+         "properties":{
+            "and_main_attributes":{
+               "type":"array",
+               "items":{
+                  "$ref": "filter_schema.json"
+               }
+            },
+            "or_main_attributes":{
+               "type":"array",
+               "items":{
+                  "$ref": "filter_schema.json"
+               }
+            }
+         }
+      }
+   }
+}

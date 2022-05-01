@@ -13,8 +13,7 @@
            {
              "name": "Gene Symbol",
              "value": "pdx1",
-             "operator": "equals",
-             "resource": "image"
+             "operator": "equals"
            }
          ],
          "or_filters": [

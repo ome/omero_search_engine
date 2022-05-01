@@ -68,8 +68,9 @@ def search_index_for_values_get_all_buckets(e_index, query):
     bookmark=0
     query=json.loads(query)
     returened_results=[]
-    es = search_omero_app.config.get("es_connector")
-    res = es.count(index=e_index, body=query)
+    #es = search_omero_app.config.get("es_connector")
+    res= connect_elasticsearch(e_index,query, True)
+    #res = es.count(index=e_index, body=query)
     size=res['count']
     query['size'] = page_size
     query["sort"]= [
@@ -82,7 +83,7 @@ def search_index_for_values_get_all_buckets(e_index, query):
         if co!=0:
             query["search_after"] = bookmark
         query['size'] = page_size
-        res = es.search(index=e_index, body=query)
+        res = connect_elasticsearch(e_index,query)# es.search(index=e_index, body=query)
         returened_results.append(res)
         co+=page_size
         if len(res['hits']['hits']) == 0:
@@ -333,21 +334,32 @@ resource_key_values_buckets_template= Template ('''{"query":{"bool":{"must":[{"b
 key_values_buckets_template_2= Template ('''{"query":{"bool":{"must":[{"bool":{"must":{"match":{
                         "resource.keyresource":"$resource"}}}}]}}} ''')
 
+
+def connect_elasticsearch(es_index, query, count=False):
+    es = search_omero_app.config.get("es_connector")
+    #test the elasticsearch connection
+    print (es)
+    if not es.ping():
+        raise ValueError("Elasticsearch connection failed")
+    if not count:
+        return es.search(index=es_index, body=query)
+    else:
+        return es.count(index=es_index, body=query)
+
 def get_resource_attributes(resource, es_index="key_values_resource_cach"):
     '''
     return the avilable attributes for one or all resources
     '''
     returned_results = {}
-    es = search_omero_app.config.get("es_connector")
     if resource !="all":
          query=key_values_buckets_template_2.substitute(resource=resource)
-         res = es.search(index=es_index, body=query)
+         res = connect_elasticsearch(es_index, query)#es.search(index=es_index, body=query)
          if len(res['hits']['hits']) > 0:
              returned_results[resource]=res['hits']['hits'][0]['_source']['name']
     else:
          for table in resource_elasticsearchindex:
              query=key_values_buckets_template_2.substitute(resource=table)
-             res = es.search(index=es_index, body=query)
+             res = connect_elasticsearch(es_index, query)#.search(index=es_index, body=query)
              if len(res['hits']['hits'])>0:
                  returned_results[table] = res['hits']['hits'][0]['_source']['name']
 
@@ -402,7 +414,7 @@ def get_resource_names(resource, es_index="key_values_resource_cach"):
     returned_results=[]
     es = search_omero_app.config.get("es_connector")
     query = key_values_buckets_template_2.substitute(resource=resource)
-    results_ = es.search(index=es_index, body=query)
+    results_ = connect_elasticsearch(es_index,query)#.search(index=es_index, body=query)
     if len(results_['hits']['hits']) > 0:
         returned_results = results_['hits']['hits'][0]['_source']['resourcename']
     return returned_results
