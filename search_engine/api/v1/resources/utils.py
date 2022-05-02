@@ -91,34 +91,64 @@ def elasticsearch_query_builder(and_filter, or_filters, case_sensitive,main_attr
         #should_part_list=[]
         #all_should_part_list.append(should_part_list)
         if main_attributes.get("and_main_attributes"):
-            for attribute in main_attributes.get("and_main_attributes"):
-                #for attribute in clause:
-                if attribute["name"].endswith("_id"):
-                    main_dd = main_attribute_query_template_id.substitute(attribute=attribute["name"].strip(),
-                                                                     value=str(attribute["value"]).strip())
+            for clause in main_attributes.get("and_main_attributes"):
+                if isinstance(clause, list):
+                    for attribute in clause:
+                        if attribute["name"].endswith("_id"):
+                            main_dd = main_attribute_query_template_id.substitute(attribute=attribute["name"].strip(),
+                                                                             value=str(attribute["value"]).strip())
+                        else:
+                            main_dd = main_attribute_query_template.substitute(attribute=attribute["name"].strip(), value=str(attribute["value"]).strip())
+                        if attribute["operator"].strip() == "equals":
+                            nested_must_part.append(main_dd)
+                        elif attribute["operator"].strip()=="not_equals":
+                            nested_must_not_part.append(main_dd)
                 else:
-                    main_dd = main_attribute_query_template.substitute(attribute=attribute["name"].strip(), value=str(attribute["value"]).strip())
-                if attribute["operator"].strip() == "equals":
-                    nested_must_part.append(main_dd)
-                elif attribute["operator"].strip()=="not_equals":
-                    nested_must_not_part.append(main_dd)
+                    attribute=clause
+                    if attribute["name"].endswith("_id"):
+                        main_dd = main_attribute_query_template_id.substitute(attribute=attribute["name"].strip(),
+                                                                         value=str(attribute["value"]).strip())
+                    else:
+                        main_dd = main_attribute_query_template.substitute(attribute=attribute["name"].strip(), value=str(attribute["value"]).strip())
+                    if attribute["operator"].strip() == "equals":
+                        nested_must_part.append(main_dd)
+                    elif attribute["operator"].strip()=="not_equals":
+                        nested_must_not_part.append(main_dd)
+
 
         if main_attributes.get("or_main_attributes"):
             for attributes in main_attributes.get("or_main_attributes"):
                 sh=[]
                 ssj={"main":sh}
                 all_should_part_list.append(ssj)
-                for attribute in  attributes:
-                #search using id, e.g. project id
+                if isinstance(attributes, list):
+                    for attribute in  attributes:
+                    #search using id, e.g. project id
+                        if attribute["name"].endswith("_id"):
+                            main_dd = main_attribute_query_template_id.substitute(attribute=attribute["name"].strip(),
+                                                                              value=str(attribute["value"]).strip())
+                        else:
+                            main_dd = main_attribute_query_template.substitute(attribute=attribute["name"].strip(), value=str(attribute["value"]).strip())
+
+                        if attribute["operator"].strip() == "equals":
+                            sh.append(main_dd)
+                        elif attribute["operator"].strip()=="not_equals":
+                            sh.append(main_dd)
+                    if len(sh) > 0:
+                        minimum_should_match = len(sh)
+                else:
+                    attribute=attributes
+                    # search using id, e.g. project id
                     if attribute["name"].endswith("_id"):
                         main_dd = main_attribute_query_template_id.substitute(attribute=attribute["name"].strip(),
-                                                                          value=str(attribute["value"]).strip())
+                                                                              value=str(attribute["value"]).strip())
                     else:
-                        main_dd = main_attribute_query_template.substitute(attribute=attribute["name"].strip(), value=str(attribute["value"]).strip())
+                        main_dd = main_attribute_query_template.substitute(attribute=attribute["name"].strip(),
+                                                                           value=str(attribute["value"]).strip())
 
                     if attribute["operator"].strip() == "equals":
                         sh.append(main_dd)
-                    elif attribute["operator"].strip()=="not_equals":
+                    elif attribute["operator"].strip() == "not_equals":
                         sh.append(main_dd)
                 if len(sh) > 0:
                     minimum_should_match = len(sh)
@@ -411,7 +441,7 @@ def search_resource_annotation(table_, query, raw_elasticsearch_query=None, page
     @query: the a dict contains the three filters (or, and and  not) items
     @raw_elasticsearch_query: is a raw query which send directly to elasticsearch
     '''
-    print ( query)
+    #print ( query)
 
     res_index=resource_elasticsearchindex.get(table_)
     if not res_index:
