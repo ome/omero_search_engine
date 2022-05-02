@@ -1,6 +1,6 @@
-Omero Search Engine
+OMERO Search Engine
 --------------------
-* Omero search engine app  is used to search metadata (key-value pairs)
+* OMERO search engine app  is used to search metadata (key-value pairs)
 
 * The search engine query is a dict that has three parts:
 
