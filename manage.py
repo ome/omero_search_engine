@@ -31,7 +31,6 @@ def delete_all_data_from_es_index(resource='None'):
 @manager.option('-r', '--resource', help='resource name, e.g. image')
 @manager.option('-d', '--data_folder', help='Folder contains the data files')
 @manager.option('-f', '--from_json', help='Folder contains the data files')
-#D:\data\New_idr_database\image_data\image_33\test
 def add_resource_data_to_es_index(resource=None, data_folder=None,from_json=False):
     ''' =
      Insert data inside elastic search index by getting the data from csv files
