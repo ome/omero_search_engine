@@ -2,7 +2,7 @@ host: host_tags
 apps_folder: /host_data_folder
 database_server_url: database_url
 database_port: 5432
-database_name: idr
+database_name: omero
 database_username: database_use
 database_user_password: pass1234
 cache_rows: 10000

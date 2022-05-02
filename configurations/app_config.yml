@@ -2,7 +2,7 @@ DATABASE_SERVER_URI : "127.0.0.1"
 DATABASE_USER : "database_user"
 DATABASE_PORT: 5432
 DATABASE_PASSWORD : "password"
-DATABAS_NAME : "idr"
+DATABASE_NAME : "omero"
 CACHE_FOLDER : "path/to/folder/app_data"
 SECRET_KEY : "fsdasdh3424vvcsd467fgh"
 ASYNCHRONOUS_SEARCH : True

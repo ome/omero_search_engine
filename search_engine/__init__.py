@@ -39,8 +39,9 @@ def create_app(config_name="development"):
     app_config=configLooader.get(config_name)
     load_configuration_variables_from_file(app_config)
     set_database_connection_variables(app_config)
-    database_connector = DatabaseConnector(app_config.DATABAS_NAME, app_config.DATABASE_URI)
-    #print (app_config.DATABAS_NAME, app_config.DATABASE_URI)
+    database_connector = DatabaseConnector(
+        app_config.DATABASE_NAME,
+        app_config.DATABASE_URI)
     search_omero_app.config.from_object(app_config)
     search_omero_app.app_context()
     search_omero_app.app_context().push()
@@ -82,6 +83,6 @@ def after_request(response):
     header = response.headers
     header['Access-Control-Allow-Origin'] = '*'
     header["Access-Control-Allow-Headers"]= "*"
-    return response  
+    return response
 '''
 

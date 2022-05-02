@@ -37,7 +37,7 @@ class BasicTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         notice = response.json["notice"]
         self.assertIsInstance(notice, dict)
-        
+
 
 
     def test_not_found(self):
@@ -55,7 +55,7 @@ class BasicTestCase(unittest.TestCase):
         '''
         res = search_omero_app.config["database_connector"].execute_query(sql)
         self.assertIsNotNone(res)
-        self.assertEqual(res[0]["current_database"], "idr")
+        self.assertEqual(res[0]["current_database"], "omero")
 
     def validate_json_syntax(self, json_template):
         try:
