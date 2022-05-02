@@ -86,7 +86,7 @@ def set_database_configuration(url=None, server_port_number=None, database=None,
     if url:
         database_attrs["DATABASE_SERVER_URI"]=url
     if database:
-        database_attrs["DATABAS_NAME"]=database
+        database_attrs["DATABASE_NAME"]=database
     if name:
         database_attrs["DATABASE_USER"]=name
     if password:

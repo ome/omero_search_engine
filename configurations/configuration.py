@@ -26,7 +26,7 @@ def set_database_connection_variables(config):
     app_config.DATABASE_URI = 'postgresql://%s:%s@%s/%s' \
                                                   % (config.DATABASE_USER, \
                                             config.DATABASE_PASSWORD, \
-                                            address, config.DATABAS_NAME)
+                                            address, config.DATABASE_NAME)
 
 
 def update_config_file(updated_configuration):
