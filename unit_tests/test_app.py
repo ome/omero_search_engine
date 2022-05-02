@@ -37,7 +37,7 @@ class BasicTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         notice = response.json["notice"]
         self.assertIsInstance(notice, dict)
-        
+
 
 
     def test_not_found(self):
