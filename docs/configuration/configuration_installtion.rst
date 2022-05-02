@@ -9,7 +9,7 @@ The application should have the access attributes (e.g, URL, username, password,
         * DATABASE_SERVER_URI
         * DATABASE_USER
         * DATABASE_PASSWORD
-        * DATABAS_NAME
+        * DATABASE_NAME
         * CASH_FOLDER
         * ELASTICSEARCH__URL
         * PAGE_SIZE
