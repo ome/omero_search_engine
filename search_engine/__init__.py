@@ -26,7 +26,7 @@ search_omero_app.json_encoder = LazyJSONEncoder
 
 
 search_omero_app.config['SWAGGER'] = {
-    'title': 'Omero Search Engine API',
+    'title': 'OMERO Search Engine API',
     #'uiversion': 3
 }
 
