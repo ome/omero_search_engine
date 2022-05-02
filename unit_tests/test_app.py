@@ -55,7 +55,7 @@ class BasicTestCase(unittest.TestCase):
         '''
         res = search_omero_app.config["database_connector"].execute_query(sql)
         self.assertIsNotNone(res)
-        self.assertEqual(res[0]["current_database"], "idr")
+        self.assertEqual(res[0]["current_database"], "omero")
 
     def validate_json_syntax(self, json_template):
         try:
