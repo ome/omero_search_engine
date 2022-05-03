@@ -30,7 +30,7 @@ OMERO Search Engine
 
 * It is possible to query the search engine to get all the available resources (e.g. image) and their keys (names) using the following URL:
 
-    * 127.0.0.01:5556/api/v1/resources/all/getannotationkeys
+    * 127.0.0.01:5556/api/v1/resources/all/keys
 
 * The user can get the available values for a specific key for a recourse, e.g. what are the available values for Organism:
 

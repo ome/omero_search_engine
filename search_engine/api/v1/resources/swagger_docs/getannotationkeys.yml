@@ -1,7 +1,7 @@
-Get all the available attributes for resource or all resources.
+Get all the available keys (attributes) for resource or all resources.
 ---
 tags:
- -  Available attributes for a resource
+ -  Available keys (attributes) for a resource
 parameters:
   - name: resource_table
     in: path
