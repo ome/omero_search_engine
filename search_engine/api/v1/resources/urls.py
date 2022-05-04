@@ -109,8 +109,8 @@ def search_values_for_a_key(resource_table):
     if not key:
         return jsonify(build_error_message("No key is provided "))
     return jsonify(query_cashed_bucket (key, resource_table))
-
-@resources.route('/<resource_table>/getannotationkeys/',methods=['GET'])
+#getannotationkeys==> keys
+@resources.route('/<resource_table>/keys/',methods=['GET'])
 def get_resource_keys(resource_table):
     """
     file: swagger_docs/getannotationkeys.yml
@@ -137,8 +137,8 @@ def get_resource_key_value(resource_table):
         return jsonify (build_error_message("No key is provided"))
     return jsonify(get_resource_attribute_values(resource_table, key))
 
-
-@resources.route('/<resource_table>/getresourcenames/',methods=['GET'])
+#getresourcenames==>names
+@resources.route('/<resource_table>/names/',methods=['GET'])
 def get_resource_names_(resource_table):
     """
     file: swagger_docs/getresourcenames.yml
