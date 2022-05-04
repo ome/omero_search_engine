@@ -1,7 +1,7 @@
-Get the available values for a resource attribute, for example, it can return the available values for the "Cell Line" attribute for "image".
+Get the available values for a resource n key (attribute), for example, it can return the available values for the "Cell Line" attribute for "image".
 ---
 tags:
- - Available values for a resource attribute
+ - Available values for a resource key (attribute)
 parameters:
   - name: resource_table
     in: path
