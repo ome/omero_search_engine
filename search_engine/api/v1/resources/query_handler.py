@@ -201,7 +201,7 @@ def seracrh_query(query,resource,bookmark,raw_elasticsearch_query, main_attribut
         return ress
     except Exception as ex:
         search_omero_app.logger.info("Error: " + str(ex))
-        return {"Error": "Something went wrong, please try later"}
+        return {"Error": "Something went wrong, please try later. If you have this error again, please contact the system administrator."}
 
 def get_ids(results, resource):
     ids=[]
@@ -383,7 +383,7 @@ def add_local_schemas_to(resolver, schema_folder, base_uri, schema_ext='.json'):
                 resolver.store[key] = schema_doc
 
 def query_validator(query):
-    query_schema_file = "search_engine/api/v1/resources/schemas/query_details.json"
+    query_schema_file = "search_engine/api/v1/resources/schemas/query_data.json"
     base_uri = 'file:' + abspath('') + '/'
     with open(query_schema_file, 'r') as schema_f:
         query_schema = json.loads(schema_f.read())

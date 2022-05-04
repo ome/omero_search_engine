@@ -14,7 +14,7 @@ def index():
 def search_resource_page(resource_table):
     '''
     used to get the next results page
-    '''  
+    '''
     if not (get_resource_annotation_table):
         return jsonify (build_error_message("No data for table {table}".format(table=resource_table)))
     data = request.data
@@ -27,7 +27,7 @@ def search_resource_page(resource_table):
 
     if 'query' in data:
         query = data["query"]
-        validation_results=query_validator(query.get("query_details"))
+        validation_results=query_validator(query)
         if validation_results=="OK":
             page=data.get("page")
             bookmark=data.get("bookmark")
@@ -77,7 +77,7 @@ def search_resource(resource_table):
         return jsonify(build_error_message("Error: No query field is provided. please specify an id."))
 
         #check if the app configuration will use ASYNCHRONOUS SEARCH or not.
-    validation_results=query_validator(query.get("query_details"))
+    validation_results=query_validator(query)
     if validation_results=="OK":
         resource_list = search_resource_annotation(resource_table, query)
         return jsonify(resource_list)
@@ -165,7 +165,7 @@ def submit_query():
     if not query:
         return jsonify(build_error_message("No query is provided"))
     return_columns = request.args.get("return_columns")
-    validation_results=query_validator(query.get("query_details"))
+    validation_results=query_validator(query)
     if validation_results=="OK":
         return jsonify(determine_search_results_(query, return_columns))
     else:

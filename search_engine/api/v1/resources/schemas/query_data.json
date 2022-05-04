@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema#",
+  "$id": "query_data.json",
+  "name": "query_data",
+  "description": "filter_schema",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "query_details"
+  ],
+  "properties": {
+    "query_details": {
+      "type": "object",
+      "$ref": "query_details.json"
+    },
+     "bookmark": {
+         "type":"array",
+         "items": {
+            "type": "integer"
+         }
+         }
+  }
+}

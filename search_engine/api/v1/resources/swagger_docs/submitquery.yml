@@ -23,7 +23,32 @@ Example:
        ],
        "case_sensitive": false
      }
-   }
+
+
+The maximum number of returned results is 1000, so if the number of results is bigger than that, a bookmark should be added to the query to call the next page. bookmark is retuned with each page of results and should be used to call the next page.
+Example of uing bookmark:
+
+  {
+     "resource":"image",
+     "query_details":{
+        "and_filters":[
+           {
+              "name":"Cell Line",
+              "operator":"equals",
+              "query_type":"keyvalue",
+              "resource":"image",
+              "value":"hela"
+           }
+        ],
+        "case_sensitive":false,
+        "or_filters":[
+
+        ]
+     },
+     "bookmark":
+  [107448]
+
+  }
 ---
 tags:
  - Mixed Complex query
