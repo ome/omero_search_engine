@@ -35,8 +35,8 @@ class BasicTestCase(unittest.TestCase):
 
         response = tester.post('/api/v1/resources/image/searchannotation/', data=query)
         self.assertEqual(response.status_code, 200)
-        notice = response.json["notice"]
-        self.assertIsInstance(notice, dict)
+        Error = response.json["Error"]
+        self.assertIsInstance(Error, str)
 
 
 
@@ -81,7 +81,7 @@ class BasicTestCase(unittest.TestCase):
         test output of query builderis valid json
         '''
         no_valid_message=elasticsearch_query_builder(not_valid_and_filters,not_valid_or_filters, False)
-        self.assertTrue( "notice" in no_valid_message.keys())
+        self.assertTrue( "Error" in no_valid_message.keys())
 
     def est_add_submit_query_delete_es_index(self):
        ''''

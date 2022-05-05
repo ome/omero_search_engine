@@ -60,14 +60,14 @@ def search_resource(resource_table):
     '''
 
     if not (get_resource_annotation_table):
-        return jsonify({"notice":"NO data for table {table}".format(table=resource_table)})
+        return jsonify(build_error_message("NO data for table {table}".format(table=resource_table)))
     data = request.data
     if not data:
-        return jsonify(build_error_message("Error: {error}".format(error="No query data is provided ")))
+        return jsonify(build_error_message("{error}".format(error="No query data is provided ")))
     try:
         data = json.loads(data)
     except Exception as ex:
-        return jsonify(build_error_message("Error: {error}".format(error="No proper query data is provided ")))
+        return jsonify(build_error_message("{error}".format(error="No proper query data is provided.")))
 
     if 'query' in data:
         query = data['query']
