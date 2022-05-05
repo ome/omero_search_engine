@@ -3,7 +3,7 @@ from search_engine import search_omero_app
 from datetime import datetime
 import time
 import json
-
+import os
 from search_engine.api.v1.resources.utils import resource_elasticsearchindex, build_error_message
 
 
@@ -345,7 +345,16 @@ def connect_elasticsearch(es_index, query, count=False):
     else:
         return es.count(index=es_index, body=query)
 
-def get_resource_attributes(resource, es_index="key_values_resource_cach"):
+def get_restircted_search_terms():
+    search_terms = "search_engine/api/v1/resources/data/restricted_search_terms.json"
+
+    if not os.path.isfile(search_terms):
+        return {}
+    with open(search_terms) as json_file:
+        restricted_search_terms = json.load(json_file)
+    return restricted_search_terms
+
+def get_resource_attributes(resource, mode=None, es_index="key_values_resource_cach"):
     '''
     return the avilable attributes for one or all resources
     '''
@@ -361,6 +370,17 @@ def get_resource_attributes(resource, es_index="key_values_resource_cach"):
              res = connect_elasticsearch(es_index, query)#.search(index=es_index, body=query)
              if len(res['hits']['hits'])>0:
                  returned_results[table] = res['hits']['hits'][0]['_source']['name']
+    if mode=="searchterms":
+        restricted_search_terms = get_restircted_search_terms()
+        restircted_resources = {}
+        for k, val in returned_results.items():
+            if k in restricted_search_terms:
+                search_terms = list(set(restricted_search_terms[k]) & set(val))
+                if len(search_terms) > 0:
+                    restircted_resources[k] = search_terms
+        returned_results = restircted_resources
+        if "project" in returned_results:
+            returned_results["project"].append("Name (IDR number)")
 
     return returned_results
 

@@ -6,7 +6,7 @@ It is fast, scalable and future proof as it is possible to deploy more than one 
 
 * Get all the available resources (image, project, plate, etc.) and their keys (names) using the following URL:
 
-    * /api/v1/resources/all/getannotationkeys
+    * /api/v1/resources/all/keys
 
  * It will return a JSON string that contains the resources and all available keywords (names) for all the resources, i.e. image, project, plate, well, and well sample.
 

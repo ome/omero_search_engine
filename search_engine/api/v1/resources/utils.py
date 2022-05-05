@@ -79,7 +79,7 @@ def build_error_message(error):
     '''
     Build an error respond
     '''
-    return {"notice": {"Error":error}}
+    return {"Error":error}
 
 def elasticsearch_query_builder(and_filter, or_filters, case_sensitive,main_attributes=None):
     global nested_keyvalue_pair_query_template, must_term_template, must_not_term_template,should_term
@@ -442,44 +442,51 @@ def search_resource_annotation(table_, query, raw_elasticsearch_query=None, page
     @raw_elasticsearch_query: is a raw query which send directly to elasticsearch
     '''
     #print ( query)
+    try:
 
-    res_index=resource_elasticsearchindex.get(table_)
-    if not res_index:
-        return build_error_message("{table_} is not a valid resurce".format(table_=table_))
-    query_details = query.get('query_details')
-
-
-    start_time = time.time()
-    if not raw_elasticsearch_query:
+        res_index=resource_elasticsearchindex.get(table_)
+        if not res_index:
+            return build_error_message("{table_} is not a valid resurce".format(table_=table_))
         query_details = query.get('query_details')
-        main_attributes=query.get("main_attributes")
-        if not query_details and main_attributes and len(main_attributes)>0:
-            pass
 
-        elif not query or len(query) == 0 or not query_details or len(query_details)==0 or isinstance(query_details,str):
-            print ("Error ")
-            return build_error_message("{query} is not a valid query".format(query=query))
-        and_filters = query_details.get("and_filters")
-        or_filters = query_details.get("or_filters")
-        case_sensitive=query_details.get("case_sensitive")
-        #check and fid if possible names and values inside filters conditions
-        check_filters(table_, [and_filters, or_filters], case_sensitive)
-        query_string = elasticsearch_query_builder(and_filters,  or_filters,case_sensitive,main_attributes)
-        #query_string has to be string, if it is a dict, something went wrong and the message inside the dict
-        #which will be returned to the sender:
-        if isinstance(query_string, dict):
-            return query_string
 
-        search_omero_app.logger.info("Query %s"%query_string)
-        query = json.loads(query_string)
-        raw_query_to_send_back= json.loads(query_string)
-    else:
-        query=raw_elasticsearch_query
-        raw_query_to_send_back=copy.copy(raw_elasticsearch_query)
-    res=search_index_using_search_after(res_index, query, page, bookmark)
-    notice=""
-    end_time = time.time()
-    query_time = ("%.2f" % (end_time - start_time))
-    return {"results": res, "query_details": query_details, "resource": table_,
-            "server_query_time": query_time, "raw_elasticsearch_query":raw_query_to_send_back,"notice": notice}
+        start_time = time.time()
+        if not raw_elasticsearch_query:
+            query_details = query.get('query_details')
+            main_attributes=query.get("main_attributes")
+            if not query_details and main_attributes and len(main_attributes)>0:
+                pass
+
+            elif not query or len(query) == 0 or not query_details or len(query_details)==0 or isinstance(query_details,str):
+                print ("Error ")
+                return build_error_message("{query} is not a valid query".format(query=query))
+            and_filters = query_details.get("and_filters")
+            or_filters = query_details.get("or_filters")
+            case_sensitive=query_details.get("case_sensitive")
+            #check and fid if possible names and values inside filters conditions
+            check_filters(table_, [and_filters, or_filters], case_sensitive)
+            query_string = elasticsearch_query_builder(and_filters,  or_filters,case_sensitive,main_attributes)
+            #query_string has to be string, if it is a dict, something went wrong and the message inside the dict
+            #which will be returned to the sender:
+            if isinstance(query_string, dict):
+                return query_string
+
+            search_omero_app.logger.info("Query %s"%query_string)
+            query = json.loads(query_string)
+            raw_query_to_send_back= json.loads(query_string)
+        else:
+            query=raw_elasticsearch_query
+            raw_query_to_send_back=copy.copy(raw_elasticsearch_query)
+        res=search_index_using_search_after(res_index, query, page, bookmark)
+        notice=""
+        end_time = time.time()
+        query_time = ("%.2f" % (end_time - start_time))
+        return {"results": res, "query_details": query_details, "resource": table_,
+                "server_query_time": query_time, "raw_elasticsearch_query":raw_query_to_send_back,"notice": notice}
+    except Exception as e:
+        search_omero_app.logger.info("Query %s" % query_string)
+        search_omero_app.logger.info("Error: %s" %str(e))
+        return build_error_message("Someting went wrong, please check your query and try again later.")
+
+
 

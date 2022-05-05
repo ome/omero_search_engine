@@ -1,0 +1,33 @@
+{
+   "project":[
+      "Name (IDR number)",
+      "Imaging Method",
+      "Publication Title",
+      "Publication Authors",
+      "Study Type",
+      "License"
+   ],
+   "screen":[
+      "Screen Technology Type",
+      "Screen Type"
+   ],
+   "image":[
+      "Organism",
+      "Organism Part",
+      "Cell Line",
+      "Gene Name",
+      "Gene Symbol",
+      "Compound Name",
+      "PubChem CID",
+      "InChIKey",
+      "Antibody",
+      "Antibody Identifier",
+      "Protein",
+      "Pathology",
+      "Pathology Identifier",
+      "Phenotype",
+      "Phenotype Term Accession",
+      "siRNA Identifier",
+      "siRNA Pool Identifier"
+   ]
+}

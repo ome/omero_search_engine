@@ -119,7 +119,8 @@ def get_resource_keys(resource_table):
     '''
      return the keys for a resource or all the resources
     '''
-    resource_keys=get_resource_attributes(resource_table)
+    mode = request.args.get("mode")
+    resource_keys=get_resource_attributes(resource_table,mode=mode)
     return jsonify (resource_keys)
 
 
@@ -170,7 +171,6 @@ def submit_query():
         return jsonify(determine_search_results_(query, return_columns))
     else:
         return jsonify(build_error_message(validation_results))
-
 
 @resources.route('/<resource_table>/search/',methods=['GET'])
 def search(resource_table):

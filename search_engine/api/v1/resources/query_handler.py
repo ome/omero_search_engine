@@ -218,7 +218,6 @@ def get_ids(results, resource):
         return ids
     return None
 
-
 def process_search_results(results, resource, columns_def):
     returned_results={}
 
@@ -390,7 +389,6 @@ def query_validator(query):
 
     resolver = RefResolver(referrer=query_schema, base_uri=base_uri)
     schema_folder = dirname(query_schema_file)
-    print (schema_folder,"====>>>>")
     #schema_folder = Path('search_engine/api/v1/resources/schemas')
     add_local_schemas_to(resolver, schema_folder, base_uri)
 
