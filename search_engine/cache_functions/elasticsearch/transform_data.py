@@ -267,7 +267,7 @@ def insert_resource_data(folder, resource, from_json):
             search_omero_app.logger.info ("Error .... writing Done file ...")
         f_con+=1
 
-def get_insert_data_to_index(sql_st, resource):
+def get_insert_data_to_index(sql_st, resource, dry_run=False):
     '''
     - Query the postgressql database server and get metadata (key-value pair)
      -Process the resulted data
@@ -276,12 +276,17 @@ def get_insert_data_to_index(sql_st, resource):
     from datetime import datetime
     #delete the data from the index before trying to insert the data again
     #It will delete the index and create it again
-    delete_index(resource)
-    create_omero_indexes(resource)
+
+    if not dry_run:
+        delete_index(resource)
+        create_omero_indexes(resource)
+
     sql_="select max (id) from %s"%resource
     res2 = search_omero_app.config["database_connector"].execute_query(sql_)
-    max_id=res2[0]["max"]
-    page_size=search_omero_app.config["CACHE_ROWS"]
+    max_id=res2[0].get("max", 0)
+    if max_id is None:
+        max_id = 0
+    page_size=search_omero_app.config.get("CACHE_ROWS", 1000)
     start_time=datetime.now()
     cur_max_id=page_size
     total_number_of_pages=int(max_id/page_size)+1
@@ -289,6 +294,8 @@ def get_insert_data_to_index(sql_st, resource):
     total=0
     from datetime import timedelta
     average_time=timedelta(microseconds=0)
+
+    batch = 0
     while True:
         no_+=1
         search_omero_app.logger.info("Run no: %s/%s"%(no_, total_number_of_pages))
@@ -297,7 +304,8 @@ def get_insert_data_to_index(sql_st, resource):
         st=datetime.now()
         results=search_omero_app.config["database_connector"].execute_query (mod_sql)
         search_omero_app.logger.info("Processing the results...")
-        process_results(results, resource)
+        batch += 1
+        process_results(results, resource, batch, dry_run)
         total+=len(results)
         tim=datetime.now()-st
         average_time =(datetime.now()-start_time)/no_
@@ -309,10 +317,12 @@ def get_insert_data_to_index(sql_st, resource):
     search_omero_app.logger.info (cur_max_id)
     search_omero_app.logger.info ("Total time=%s"%str(datetime.now()-start_time))
 
-def process_results(results,resource):
+def process_results(results,resource,batch, dry_run):
     df = pd.DataFrame(results).replace({np.nan: None})
-    insert_resource_data_from_df(df, resource)
-
+    if dry_run:
+        print(df)
+    else:
+        insert_resource_data_from_df(df, resource)
 
 def insert_resource_data_from_df(df, resource, ):
     if resource=="image":
