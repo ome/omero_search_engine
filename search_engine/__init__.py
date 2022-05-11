@@ -48,7 +48,7 @@ def create_app(config_name="development"):
     search_omero_app.app_context()
     search_omero_app.app_context().push()
     es_connector = Elasticsearch(app_config.ELASTICSEARCH_URL,
-                                 timeout=130, max_retries=20, retry_on_timeout=True)
+                                 timeout=130, max_retries=20, retry_on_timeout=True, connections_per_node=10)
 
     search_omero_app.config["database_connector"]=database_connector
     search_omero_app.config["es_connector"] = es_connector
@@ -85,4 +85,3 @@ def after_request(response):
     header["Access-Control-Allow-Headers"]= "*"
     return response
 '''
-
