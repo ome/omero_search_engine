@@ -298,8 +298,10 @@ def get_insert_data_to_index(sql_st, resource):
     total_process=len(vals)
     # Detrmine the number of the processes inside the multiprocessing pool, i.e the number of allowed processors to run at the same time
     # It depends on the number of the processors that the hosting machine has
-    no_processors=int(multiprocessing.cpu_count()/2)
-    search_omero_app.logger.info ("Number of the aloowed parallel processes inside the pool: %s"%no_processors)
+    no_processors = search_omero_app.config.get("NO_PROCESSES")
+    if not no_processors:
+        no_processors=int(multiprocessing.cpu_count()/2)
+    search_omero_app.logger.info ("Number of the allowed parallel processes inside the pool: %s"%no_processors)
     #create the multiprocessing pool
     pool = multiprocessing.Pool(no_processors)
     manger = multiprocessing.Manager()
@@ -311,7 +313,8 @@ def get_insert_data_to_index(sql_st, resource):
     #map the data which will be consumed by the processrs inisde the pool
     res = pool.map(func, vals)
     pool.close()
-    search_omero_app.logger.info ( ', '.join(res))
+    print (res)
+    #search_omero_app.logger.info ( ', '.join(res))
     search_omero_app.logger.info (cur_max_id)
     search_omero_app.logger.info ("Total time=%s"%str(datetime.now()-start_time))
 
@@ -458,14 +461,17 @@ def save_key_value_buckets(resource_table_=None, re_create_index=False, only_val
          for key in resource_keys:
              vals.append((key, resource_table, es_index, len(resource_keys)))
          #detrmin the the number of the processes inside the process pool
-         no_processors =int(multiprocessing.cpu_count() / 2)
-         search_omero_app.logger.info("No of the porcesses: %s"%no_processors)
+         no_processors = search_omero_app.config.get("NO_PROCESSES")
+         if not no_processors:
+             no_processors =int(multiprocessing.cpu_count() / 2)
+         search_omero_app.logger.info("No of the allowed parallel processes: %s"%no_processors)
          pool = multiprocessing.Pool(no_processors)
          manger = multiprocessing.Manager()
          lock = manger.Lock()
          counter_val = manger.Value('i', 0)
          func = partial(save_key_value_buckets_process, lock, counter_val)
          res = pool.map(func, vals)
+         print (res)
          pool.close()
          print(res)
 
@@ -570,4 +576,3 @@ def prepare_bucket_index_data(results, res_table,es_index):
 def determine_cashed_bucket (attribute, resource,  es_indrx):
     res=query_cashed_bucket(attribute,resource, es_indrx)
     search_omero_app.logger.info (res)
-    
