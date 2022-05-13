@@ -23,6 +23,7 @@ Example:
        ],
        "case_sensitive": false
      }
+    }
 
 
 The maximum number of returned results is 1000, so if the number of results is bigger than that, a bookmark should be added to the query to call the next page. bookmark is retuned with each page of results and should be used to call the next page.
