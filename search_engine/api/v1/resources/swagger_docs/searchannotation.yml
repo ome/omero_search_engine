@@ -20,8 +20,7 @@
 
          ],
          "case_sensitive": false
-       },
-         "mode": "usesearchterms"
+       }
        }
 
 ---
