@@ -358,6 +358,8 @@ def get_resource_attributes(resource, mode=None, es_index="key_values_resource_c
     '''
     return the avilable attributes for one or all resources
     '''
+    if mode and mode !="searchterms":
+        return build_error_message("The mode parameter supports only 'searchterms' to return the common search terms, you may remove it to return all the keys.")
     returned_results = {}
     if resource !="all":
          query=key_values_buckets_template_2.substitute(resource=resource)

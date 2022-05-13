@@ -1,4 +1,4 @@
-Get all the available keys (attributes) for resource or all resources.
+Get all the available keys (attributes) for resource or all resources. A mode parameter can be added with "searchterms" value to return only common search terms. If it is not provided it will return all the keys.
 ---
 tags:
  -  Available keys (attributes) for a resource
@@ -8,6 +8,10 @@ parameters:
     type: string
     enum: ['image', 'project', 'screen', 'well', 'plate', 'all']
     required: true
+  - name : mode
+    in: query
+    enum: ['searchterms']
+
 definitions:
   resource:
     type: object
