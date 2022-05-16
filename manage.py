@@ -61,7 +61,7 @@ def get_index_data_from_database(resource="all"):
     It gets the data from postgres database server
     '''
     from search_engine.cache_functions.elasticsearch.sql_to_csv import sqls_resources
-    from search_engine.cache_functions.elasticsearch.transform_data import   get_insert_data_to_index, save_key_value_buckets
+    from search_engine.cache_functions.elasticsearch.transform_data import get_insert_data_to_index, save_key_value_buckets
 
     if resource!="all":
         sql_st=sqls_resources.get(resource)
@@ -127,7 +127,6 @@ def set_cache_rows_number (number_cache_rows=None):
     else:
         search_omero_app.logger.info("No of chached rows  has to be an integer")
 
-
 @manager.command
 @manager.option('-s', '--secret_key', help='cache folder path')
 def set_searchengine_secret_key (secret_key=None):
@@ -138,10 +137,18 @@ def set_searchengine_secret_key (secret_key=None):
 
 
 @manager.command
-@manager.option('-s', '--page_size', help='cache folder path')
+@manager.option('-s', '--page_size', help='Page size')
 def set_max_page(page_size=None):
     if page_size and page_size.isdigit():
         update_config_file({"PAGE_SIZE":int(page_size)})
+    else:
+        search_omero_app.logger.info("No valid attribute is provided")
+
+@manager.command
+@manager.option('-n', '--no_processes', help='no_processes')
+def set_no_processes(no_processes=None):
+    if no_processes and no_processes.isdigit():
+        update_config_file({"NO_PROCESSES":int(no_processes)})
     else:
         search_omero_app.logger.info("No valid attribute is provided")
 
