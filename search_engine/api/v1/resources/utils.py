@@ -60,6 +60,10 @@ main_attribute_query_template=Template('''{"bool":{"must":{"match":{"$attribute.
 main_attribute_query_template_id=Template('''{"bool":{"must":{"match":{"$attribute":"$value"}}}}''')
 
 must_name_condition_template= Template('''{"match": {"key_values.name.keyword":"$name"}}''')
+#support case_sensitive and case_insensitive for keys
+case_sensitive_must_name_condition_template= Template('''{"match": {"key_values.name.keyword":"$name"}}''')
+case_insensitive_must_name_condition_template= Template('''{"match": {"key_values.name.keynamenormalize":"$name"}}''')
+
 case_insensitive_must_value_condition_template=Template('''{"match": {"key_values.value.keyvaluenormalize":"$value"}}''')
 case_sensitive_must_value_condition_template=Template('''{"match": {"key_values.value.keyvalue":"$value"}}''')
 nested_keyvalue_pair_query_template=Template('''{"nested": {"path": "key_values", "query":{"bool": {"must":[$nested ] }}}}''')
@@ -170,43 +174,64 @@ def elasticsearch_query_builder(and_filter, or_filters, case_sensitive,main_attr
             search_omero_app.logger.info("%s %s %s"%(operator, key, value))
             _nested_must_part=[]
             if operator=="equals":
-                _nested_must_part.append(must_name_condition_template.substitute(name=key))
+                #_nested_must_part.append(must_name_condition_template.substitute(name=key))
                 if case_sensitive:
                     _nested_must_part.append(case_sensitive_must_value_condition_template.substitute(value=value))
+                    _nested_must_part.append(case_sensitive_must_name_condition_template.substitute(name=key))
+
                 else:
                     _nested_must_part.append(case_insensitive_must_value_condition_template.substitute(value=value))
+                    _nested_must_part.append(case_insensitive_must_name_condition_template.substitute(name=key))
 
                 nested_must_part.append(nested_keyvalue_pair_query_template.substitute(nested=",".join(_nested_must_part)))
             if operator=="contains":
                 value="*{value}*".format(value=value)
-                _nested_must_part.append(must_name_condition_template.substitute(name=key))
+                #_nested_must_part.append(must_name_condition_template.substitute(name=key))
                 if case_sensitive:
                     _nested_must_part.append(case_sensitive_wildcard_value_condition_template.substitute(wild_card_value=value))
+                    _nested_must_part.append(case_sensitive_must_name_condition_template.substitute(name=key))
+
                 else:
                     _nested_must_part.append(case_insensitive_wildcard_value_condition_template.substitute(wild_card_value=value))
+                    _nested_must_part.append(case_insensitive_must_name_condition_template.substitute(name=key))
+
                 nested_must_part.append(nested_keyvalue_pair_query_template.substitute(nested=",".join(_nested_must_part)))
             elif operator in ["not_equals", "not_contains"]:
-                nested_must_part.append(nested_keyvalue_pair_query_template.substitute(nested=must_name_condition_template.substitute(name=key)))
+                #nested_must_part.append(nested_keyvalue_pair_query_template.substitute(nested=must_name_condition_template.substitute(name=key)))
                 if operator=="not_contains":
                     value="*{value}*".format(value=value)
                     if case_sensitive:
+                        nested_must_part.append(nested_keyvalue_pair_query_template.substitute(
+                            nested=case_sensitive_must_name_condition_template.substitute(name=key)))
                         nested_must_not_part.append(nested_keyvalue_pair_query_template.substitute(nested=case_sensitive_wildcard_value_condition_template.substitute(wild_card_value=value)))
                     else:
+                        nested_must_part.append(nested_keyvalue_pair_query_template.substitute(
+                            nested=case_insensitive_must_name_condition_template.substitute(name=key)))
                         nested_must_not_part.append(nested_keyvalue_pair_query_template.substitute(
                             nested=case_insensitive_wildcard_value_condition_template.substitute(wild_card_value=value)))
 
                 else:
                     if case_sensitive:
+                        nested_must_part.append(nested_keyvalue_pair_query_template.substitute(
+                            nested=case_sensitive_must_name_condition_template.substitute(name=key)))
                         nested_must_not_part.append(nested_keyvalue_pair_query_template.substitute(nested=case_sensitive_must_value_condition_template.substitute(value=value)))
                     else:
+                        nested_must_part.append(nested_keyvalue_pair_query_template.substitute(
+                            nested=case_insensitive_must_name_condition_template.substitute(name=key)))
                         nested_must_not_part.append(nested_keyvalue_pair_query_template.substitute(
                             nested=case_insensitive_must_value_condition_template.substitute(value=value)))
 
             elif operator in ["lt","lte", "gt","gte"]:
-                nested_must_part.append(nested_keyvalue_pair_query_template.substitute(nested=must_name_condition_template.substitute(name=key)))
+                #nested_must_part.append(nested_keyvalue_pair_query_template.substitute(nested=must_name_condition_template.substitute(name=key)))
                 if case_sensitive:
+                    nested_must_part.append(nested_keyvalue_pair_query_template.substitute(
+                        nested=case_sensitive_must_name_condition_template.substitute(name=key)))
+
                     nested_must_part.append(nested_keyvalue_pair_query_template.substitute(nested=case_sensitive_range_value_condition_template.substitute(operator=operator, value=value)))
                 else:
+                    nested_must_part.append(nested_keyvalue_pair_query_template.substitute(
+                        nested=case_insensitive_must_name_condition_template.substitute(name=key)))
+
                     nested_must_part.append(nested_keyvalue_pair_query_template.substitute(
                         nested=case_insensitive_range_value_condition_template.substitute(operator=operator,
                                                                                         value=value)))
@@ -487,6 +512,3 @@ def search_resource_annotation(table_, query, raw_elasticsearch_query=None, page
         search_omero_app.logger.info("Query %s" % query_string)
         search_omero_app.logger.info("Error: %s" %str(e))
         return build_error_message("Someting went wrong, please check your query and try again later.")
-
-
-
