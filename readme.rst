@@ -17,7 +17,8 @@ OMERO Search Engine
 
 * The search engine returns the results in a JSON which has the following keys:
 
-    * 'notice': A message to report an error or a message to the sender.
+    * 'notice': report a message to the sender whihc may includes an error message.
+    " 'Error': specific error message
     * 'query_details': The submitted query.
     * 'resource': The resource, e.g. image
     * 'server_query_time': The server query times in seconds
@@ -30,11 +31,11 @@ OMERO Search Engine
 
 * It is possible to query the search engine to get all the available resources (e.g. image) and their keys (names) using the following URL:
 
-    * 127.0.0.01:5556/api/v1/resources/all/keys
+    * 127.0.0.01:5577/api/v1/resources/all/keys
 
 * The user can get the available values for a specific key for a recourse, e.g. what are the available values for Organism:
 
-    * http://127.0.0.1:5556/api/v1/resources/image/getannotationvalueskey/?key=Organism
+    * http://127.0.0.1:5577/api/v1/resources/image/getannotationvalueskey/?key=Organism
 
 * The following python script  sends a query to the search engine and gets the results
 
@@ -49,7 +50,7 @@ OMERO Search Engine
     # url to get the next page for a query, bookmark is needed
     image_page_ext = "/resources/image/searchannotation_page/"
     # search engine url
-    base_url = "http://idr-testing.openmicroscopy.org/searchengineapi/api/v1/"
+    base_url = "http://127.0.0.1:5577/searchengineapi/api/v1/"
 
     import sys
 
