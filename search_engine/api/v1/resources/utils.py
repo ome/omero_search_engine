@@ -59,7 +59,7 @@ main_attribute_query_template=Template('''{"bool":{"must":{"match":{"$attribute.
 #Search main attribute which has long data type ends with "_id" in the image index (template)
 main_attribute_query_template_id=Template('''{"bool":{"must":{"match":{"$attribute":"$value"}}}}''')
 
-must_name_condition_template= Template('''{"match": {"key_values.name.keyword":"$name"}}''')
+#must_name_condition_template= Template('''{"match": {"key_values.name.keyword":"$name"}}''')
 #support case_sensitive and case_insensitive for keys
 case_sensitive_must_name_condition_template= Template('''{"match": {"key_values.name.keyword":"$name"}}''')
 case_insensitive_must_name_condition_template= Template('''{"match": {"key_values.name.keynamenormalize":"$name"}}''')
@@ -254,7 +254,10 @@ def elasticsearch_query_builder(and_filter, or_filters, case_sensitive,main_attr
 
                 if key not in added_keys:
                     added_keys.append(key)
-                should_names.append(must_name_condition_template.substitute(name=key))
+                if case_sensitive:
+                    should_names.append(case_sensitive_must_name_condition_template.substitute(name=key))
+                else:
+                    should_names.append(case_insensitive_must_name_condition_template.substitute(name=key))
                 if operator=="equals":
                     if case_sensitive:
                         should_values.append(case_sensitive_must_value_condition_template.substitute(value=value))
