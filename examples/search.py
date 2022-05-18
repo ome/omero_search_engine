@@ -4,7 +4,6 @@ import json
 # url to send the query
 image_search = "/resources/image/search/"
 # search engine url
-#base_url = "http://idr-testing.openmicroscopy.org/searchengineapi/api/v1/"
 base_url = "http://127.0.0.1:5577/api/v1/"
 import sys
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)

@@ -7,7 +7,6 @@ image_ext = "/resources/image/searchannotation/"
 # url to get the next page for a query, bookmark is needed
 image_page_ext = "/resources/image/searchannotation_page/"
 # search engine url
-#base_url = "http://idr-testing.openmicroscopy.org/searchengineapi/api/v1/"
 base_url = "http://127.0.0.1:5577/api/v1/"
 submit_query_url = "http://127.0.0.1:5577/api/v1/resources/submitquery"
 import sys
@@ -82,6 +81,3 @@ while len(recieved_results) < total_results:
 
     logging.info("bookmark: %s, page: %s, / %s received results: %s / %s" % (
         bookmark, page ,total_pages, len(recieved_results) ,total_results))
-
-
-

@@ -6,7 +6,6 @@ image_ext = "/resources/image/searchannotation/"
 # url to get the next page for a query, bookmark is needed
 image_page_ext = "/resources/image/searchannotation_page/"
 # search engine url
-#base_url = "http://idr-testing.openmicroscopy.org/searchengineapi/api/v1/"
 base_url = "http://127.0.0.1:5577/api/v1/"
 import sys
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
@@ -66,4 +65,3 @@ try:
     ['notice', 'query_details', 'raw_elasticsearch_query', 'resource', 'results', 'server_query_time']'''
 except Exception as e:
     logging.info("Error:  %s" % e)
-
