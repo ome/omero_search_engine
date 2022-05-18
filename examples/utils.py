@@ -19,7 +19,6 @@ def query_the_search_ending(query, main_attributes):
     recieved_results_data=[]
     query_data = {"query": {'query_details': query,"main_attributes":main_attributes}}
     query_data_json = json.dumps(query_data)
-    #resp = requests.post(url="%s%s" % (base_url, image_ext), data=query_data_json)
     resp = requests.post(url="%s%s" % (base_url, image_ext), data=json.dumps(query_data))
 
     res = resp.text

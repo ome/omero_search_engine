@@ -1,6 +1,6 @@
 from utils import query_the_search_ending, logging
 
-#Find images of cells where a specific gene was targetted
+#Find images of cells where a specific gene was targeted
 #Cell line = "HeLa" and Gene Symbol = "KIF11"
 
 #and filters

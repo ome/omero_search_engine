@@ -56,7 +56,7 @@ clause for Human
 Organism='Homo sapiens' ==> {"name": "Organism", "value": "Homo sapiens", "operator": "equals","resource": "image"}
  and restict the search to female
 Sex='Female' ==> {"name": "Sex", "value": "Female", "operator": "equals","resource": "image"}
-and restrict the search to breast
+alos, restrict the search to breast Organism Part
 Organism Part='Breast' ==>{"name": "Organism Part", "value": "Breast", "operator": "equals","resource": "image"}
 and return only the images which their tissueis not normal 
 Pathology != 'Normal tissue, NOS' ==> {"name": "Pathology", "value": "Normal tissue, NOS", "operator": "not_equals","resource": "image"}
