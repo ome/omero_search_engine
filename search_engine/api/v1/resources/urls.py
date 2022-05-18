@@ -8,7 +8,7 @@ from search_engine.api.v1.resources.query_handler import determine_search_result
 
 @resources.route('/',methods=['GET'])
 def index():
-    return "Omero search engine (API V1)"
+    return "OMERO search engine (API V1)"
 
 @resources.route('/<resource_table>/searchannotation_page/',methods=['POST'])
 def search_resource_page(resource_table):
@@ -185,4 +185,3 @@ def search(resource_table):
     from search_engine.api.v1.resources.query_handler import simple_search
     results=simple_search(key, value, operator,case_sensitive,bookmark, resource_table)
     return jsonify(results)
-

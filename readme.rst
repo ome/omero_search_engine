@@ -1,6 +1,6 @@
 OMERO Search Engine
 --------------------
-* OMERO search engine app  is used to search metadata (key-value pairs)
+* OMERO search engine app is used to search metadata (key-value pairs)
 
 * The search engine query is a dict that has three parts:
 
@@ -13,7 +13,7 @@ OMERO Search Engine
 
 * The second part of the query is or_filters; it has alternatives to search the database; it answers a question like finding the images which can satisfy one or more of conditions inside this list. It is a list of dict also and have the same format as the dict inside and_filter
 
-* The third part is the main_attributes, it allows the user to search using one or more of project _id, dataset_id, owner_id, group_id, owner_id, etc. It supports two operators, equals and not_equals. Hence, it is possible to search one project instead of all the projects, also it is possible to search the results which belong to a specific user or a group.
+* The third part is the main_attributes, it allows the user to search using one or more of project _id, dataset_id, group_id, owner_id, group_id, owner_id, etc. It supports two operators, equals and not_equals. Hence, it is possible to search one project instead of all the projects, also it is possible to search the results which belong to a specific user or a group.
 
 * The search engine returns the results in a JSON which has the following keys:
 
@@ -50,7 +50,7 @@ OMERO Search Engine
     # url to get the next page for a query, bookmark is needed
     image_page_ext = "/resources/image/searchannotation_page/"
     # search engine url
-    base_url = "http://127.0.0.1:5577/searchengineapi/api/v1/"
+    base_url = "http://127.0.0.1:5577/api/v1/"
 
     import sys
 
@@ -143,7 +143,6 @@ OMERO Search Engine
     * It is used to build the query
     * It will display the results when they are ready
 
-
 * The app uses Elasticsearch
     * There is a method inside manage.py (create_index) to create a separate index for image, project, dataset, screen, plate and well using two templates:
         * image template (image_template) for image index. It is derived from some Omero tables into a single Elasticsearch index (image, annoation_mapvalue, imageannotationlink, project, dataset, well, plate and screen to generate a single index.
@@ -154,7 +153,7 @@ OMERO Search Engine
         * There is a method inside manage.py script (add_resource_data_to_es_index) that reads the CSV files and inserts the data to the Elasticsearch index.
         * I am investigating automatic updates of the elastic search data in case of the data inside the PostgreSQL database has been changed.
 
-    * The data can be transferred directly from the Omero database to the Elasticsearch using a method inside manage.py (get_index_data_from_database):
+    * The data can be transferred directly from the OMERO database to the Elasticsearch using a method inside manage.py (get_index_data_from_database):
         * It creates the elastic search indices for each resource
         * it queries the Omero database, after receiving the data it process and push them to the Elasticsearch indices.
         * This process takes a relatively long time, it depends on the hosting machine specs. The user can adjust how many rows can be processed at one call to the Omero database:
@@ -165,4 +164,4 @@ OMERO Search Engine
     * There is a method inside manage.py script (add_resource_data_to_es_index) which reads the CSV files and inserts the data to the Elasticsearch index.
     * I am investigating automatic updates of the elastic search data in case of the data inside the PostgreSQL database has been changed.
 
-For the configuration and installation instructions, please read the following document doc/configuration/configuration_installtion.rs
+For the configuration and installation instructions, please read the following document doc/configuration/configuration_installtion.rst
