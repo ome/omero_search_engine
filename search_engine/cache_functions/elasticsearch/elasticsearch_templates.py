@@ -31,7 +31,7 @@ non_image_template={
                 }
             }
     },
-        "owner": {
+        "owner_id": {
             "type": "long"
         },
 
@@ -103,7 +103,7 @@ image_template={
         "experiment": {
             "type": "long"
         },
-        "owner": {
+        "owner_id": {
             "type": "long"
         },
         "group_id": {
