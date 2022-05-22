@@ -14,33 +14,33 @@ logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 Find images of species and antibodies in a specific tissue (mostly HPA) 
 It is required to find the images that satisfy the following clauses: 
 Organism ="Homo sapiens" and Antibody ="CAB034889" and (Organism Part = "Prostate" OR Organism Part Identifier = "T-77100")
-To send the query to the searchengine, it required creating two filters group, and filters and or filters;
+To send the query to the searchengine, the user should create two filter groups, i.e. "and" filters and "or" filters;
 And filters:
-It has two clauses, 
+It has two clauses:
 Organism ="Homo sapiens", i.e. name ="Organism", value="Homo sapiens", and operator ="equals"
 this can be translated to a d dict {"name" : "Organism", "value":"Homo sapiens", "operator" :"equals"}
-each clause should have the same format so the scecond clause should be like that:
+each clause should have the same format so the second clause should be:
 {"name" : "Antibody Identifier", "value":"CAB034889", "operator" :"equals"}
 The and_filters list should contain the two clauses:
 '''
 and_filters=[{"name": "Organism", "value":"Homo sapiens", "operator" :"equals"},{"name" : "Antibody Identifier", "value":"CAB034889", "operator" :"equals"}]
 '''
-The same should be done using the same approach for or filters as or filters also is a list and has clauses has the same format as and filters clauses.'''
+The same should be done for "or" filters as they are also a list and have clauses in the same format as "and" filters.'''
 
 or_filters=[[{"name":"Organism Part", "value": "Prostate", "operator" :"equals"},{"name":"Organism Part Identifier", "value":"T-77100","operator" :"equals"}]]
 '''
-at this point, we could create a dict which should sent to the searchengine api
+at this point, we should create a dict which will call the searchengine api
 '''
 query = {"and_filters": and_filters,"or_filters": or_filters}
 query_data = {'query_details': query }
 
 '''
-The defaults search is case insestive for the values; if it is required to saearch using case sensitive, then anoter key should be added to the query data 
+The default search is case insensitive for the values; if the search needs to be case sensitive, then another key should be added to the query data 
 i.e. "case_sensitive"=True'''
 
 #send the request
 resp = requests.post(url="%s%s" % (base_url, image_ext), data=json.dumps(query_data))
-# Extract the results form th response
+# Extract the results from the response
 try:
     returned_results = json.loads(resp.text)
     '''
@@ -52,7 +52,7 @@ try:
         total_images=returned_results.get("results").get("size")
 
         logging.info("total_images: %s"%total_images)
-        #if the number of pages is bigger than 1, then the bookmark is needed to get the next page
+        #if the number of pages is bigger than 1, then the bookmark needs to get the next page
         bookmark=returned_results.get("results").get("bookmark")
         no_recieved_results = len(returned_results["results"]["results"])
 

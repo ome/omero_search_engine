@@ -45,22 +45,23 @@ def call_omero_return_results(url, data=None, method="post"):
         return bookmark, total_results
 
     except Exception as ex:
-        logging.info("Error: %s" % e)
+        print (resp.text)
+        logging.info("Error: %s" % ex)
         sys.exit()
 
 
 '''
-It is required to find unhealthy human female breast images
+If the user needs to search for unhealthy human female breast images
 
-clause for Human  
+Clause for Human:  
 Organism='Homo sapiens' ==> {"name": "Organism", "value": "Homo sapiens", "operator": "equals","resource": "image"}
- and restict the search to female
+Restrict the search to "female":
 Sex='Female' ==> {"name": "Sex", "value": "Female", "operator": "equals","resource": "image"}
-alos, restrict the search to breast Organism Part
+Restrict the search to "breast":
 Organism Part='Breast' ==>{"name": "Organism Part", "value": "Breast", "operator": "equals","resource": "image"}
-and return only the images which their tissueis not normal 
+Return only the images of "abnormal" tissues: 
 Pathology != 'Normal tissue, NOS' ==> {"name": "Pathology", "value": "Normal tissue, NOS", "operator": "not_equals","resource": "image"}
-in term of clause we have only and_filters which contains 4 clauses
+In terms of clauses we only have and_filters which contains 4 clauses
 '''
 start=datetime.datetime.now()
 and_filters=[{"name": "Organism", "value": "Homo sapiens", "operator": "equals","resource": "image"},{"name": "Organism Part", "value": "Breast", "operator": "equals","resource": "image"},

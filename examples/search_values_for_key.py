@@ -26,7 +26,7 @@ attributes=res.get("image")
 logging.info("Number of the available attributes  for images is %s"%len(attributes))
 
 '''
-The user can get the avilable values for Organism attribute and the number of images for each value
+The user can get the avilable values for the "Organism" attribute and the number of images for each value
 '''
 key="Organism"
 values_attr_url="{base_url}{image_key_values}?key={key}".format(base_url=base_url, image_key_values=image_key_values, key=key)

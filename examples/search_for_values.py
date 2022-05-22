@@ -5,13 +5,13 @@ import sys
 
 # url to send the query
 image_value_search = "/resources/image/searchvalues/"
-# search engine url
+# searchengine url
 base_url = "http://127.0.0.1:5577/api/v1/"
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 '''
-In case the user needs to search for a value whose attribute is not known 
-search to find if diabetes is a part of any attribute values
+If the user needs to search for a value whose attribute is not known e.g 
+search to find if diabetes is a part of any attribute values:
 '''
 search_url="%S/%s%value=diabetes"
 search_url="{base_url}{image_value_search}?value={value}".format(base_url=base_url, image_value_search=image_value_search, value="diabetes")

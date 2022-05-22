@@ -4,40 +4,40 @@ OMERO Search Engine
 
 * The search engine query is a dict that has three parts:
 
-* The first part is "and_filter", it is a list, each item in the list is a dict that has three keys:
+* The first part is "and_filter", it is a list. Each item in the list is a dict that has three keys:
     * name: attribute name (name in annotation_mapvalue table)
 
     * value: attribute value (value in annotation_mapvalue table)
 
     * operator: the operator, which is used to search the data, e.g. equals, no_equlas, contains, etc.
 
-* The second part of the query is or_filters; it has alternatives to search the database; it answers a question like finding the images which can satisfy one or more of conditions inside this list. It is a list of dict also and have the same format as the dict inside and_filter
+* The second part of the query is or_filters; it has alternatives to search the database; it answers a question like finding the images which can satisfy one or more of conditions inside a list. It is a list of dicts and has the same format as the dict inside the and_filter
 
-* The third part is the main_attributes, it allows the user to search using one or more of project _id, dataset_id, group_id, owner_id, group_id, owner_id, etc. It supports two operators, equals and not_equals. Hence, it is possible to search one project instead of all the projects, also it is possible to search the results which belong to a specific user or a group.
+* The third part is the main_attribute, it allows the user to search using one or more of project _id, dataset_id, group_id, owner_id, group_id, owner_id, etc. It supports two operators, equals and not_equals. Hence, it is possible to search one project instead of all the projects. Also it is possible to search the results which belong to a specific user or group.
 
 * The search engine returns the results in a JSON which has the following keys:
 
-    * 'notice': report a message to the sender whihc may includes an error message.
+    * 'notice': reports a message to the sender which may include an error message.
     " 'Error': specific error message
     * 'query_details': The submitted query.
     * 'resource': The resource, e.g. image
-    * 'server_query_time': The server query times in seconds
-    * 'results': the query results, which is a dict which has the following keys:
+    * 'server_query_time': The server query time in seconds
+    * 'results': the query results, which is a dict with the following keys:
     * 'size': Total query results.
     * 'page': page number, a page contains a maximum of 10000 records. If the results have more records, they will be transformed using more than one page.
-    * 'bookmark': bookmark to be used to call the next page if the results exceed 10,000 records.
-    * 'total_pages': Total number of the pages that contains the results.
-    * 'results': a list that contains the results. Each item inside the list is a dict. The dict keys contain, image id, name in addition to all the metadata (key/pair, i.e. "key_values") values for the image. Each item has other data such as the image owner Id and group id, project id and name, etc.
+    * 'bookmark': Used to call the next page if the results exceed 10,000 records.
+    * 'total_pages': Total number of pages that contains the results.
+    * 'results': a list that contains the results. Each item inside the list is a dict. The dict key contains image id, name, and all the metadata (key/pair, i.e. "key_values") values for the image. Each item has other data such as the image owner Id,group Id, project Id and name etc.
 
 * It is possible to query the search engine to get all the available resources (e.g. image) and their keys (names) using the following URL:
 
     * 127.0.0.01:5577/api/v1/resources/all/keys
 
-* The user can get the available values for a specific key for a recourse, e.g. what are the available values for Organism:
+* The user can get the available values for a specific key for a resourse, e.g. what are the available values for "Organism":
 
     * http://127.0.0.1:5577/api/v1/resources/image/getannotationvalueskey/?key=Organism
 
-* The following python script  sends a query to the search engine and gets the results
+* The following python script sends a query to the search engine and gets the results:
 
 .. code-block:: python
 
@@ -88,7 +88,7 @@ OMERO Search Engine
             recieved_results_data.append(res)
 
         recieved_results = len(returned_results["results"]["results"])
-        #et the bookmar to used in the next the page, if the number of pages is bigger than 1
+        #set the bookmark to be used in the next the page if the number of pages is greater than 1
         bookmark = returned_results["results"]["bookmark"]
         #get the total number of pages
         total_pages = returned_results["results"]["total_pages"]
@@ -131,7 +131,7 @@ OMERO Search Engine
     results_2 = query_the_search_ending(query_2,main_attributes)
     #The above returns 130834 within 23 projects
     #[101, 301, 351, 352, 353, 405, 502, 504, 801, 851, 852, 853, 1151, 1158, 1159, 1201, 1202, 1451, 1605, 1606, 1701, 1902, 1903]
-    #It is possible to get the results in one project, e.g. 101 by using main_attributes filters
+    #It is possible to get the results in one project, e.g. 101 by using the main_attributes filter
     main_attributes_2={ "and_main_attributes": [{
         "name":"project_id","value": 101, "operator":"equals"}]}
     results_3=query_the_search_ending(query_2,main_attributes_2)
@@ -144,24 +144,24 @@ OMERO Search Engine
     * It will display the results when they are ready
 
 * The app uses Elasticsearch
-    * There is a method inside manage.py (create_index) to create a separate index for image, project, dataset, screen, plate and well using two templates:
-        * image template (image_template) for image index. It is derived from some Omero tables into a single Elasticsearch index (image, annoation_mapvalue, imageannotationlink, project, dataset, well, plate and screen to generate a single index.
-        * non-image template (non_image_template) for other indices (project, dataset, well, plate, screen). It is derived from some Omero tables depending on the resource,  for example for the project, it combines project, projectannotationlink and annotation_mapvalue.
-        * both of the two templates are in \omero_search_engine\search_engine\cache_functions\elasticsearch\elasticsearch_templates.py
+    * There is a method inside manage.py (create_index) to create a separate index for image, project, dataset, screen, plate, and well using two templates:
+        * Image template (image_template) for image index. It is derived from some Omero tables into a single Elasticsearch index (image, annoation_mapvalue, imageannotationlink, project, dataset, well, plate, and screen to generate a single index.
+        * Non-image template (non_image_template) for other indices (project, dataset, well, plate, screen). It is derived from some Omero tables depending on the resource; for example for the project it combines project, projectannotationlink and annotation_mapvalue.
+        * Both of the templates are in \omero_search_engine\search_engine\cache_functions\elasticsearch\elasticsearch_templates.py
 
         * The data can be moved using SQL queries which generate the CSV files; the queries are in omero_search_engine\search_engine\cache_functions\elasticsearch\sql_to_csv.py
-        * There is a method inside manage.py script (add_resource_data_to_es_index) that reads the CSV files and inserts the data to the Elasticsearch index.
-        * I am investigating automatic updates of the elastic search data in case of the data inside the PostgreSQL database has been changed.
+        * There is a method inside the manage.py script (add_resource_data_to_es_index) that reads the CSV files and inserts the data to the Elasticsearch index.
+        * I am investigating automatic updates of the elasticsearch data in case the data inside the PostgreSQL database has been changed.
 
     * The data can be transferred directly from the OMERO database to the Elasticsearch using a method inside manage.py (get_index_data_from_database):
-        * It creates the elastic search indices for each resource
-        * it queries the Omero database, after receiving the data it process and push them to the Elasticsearch indices.
-        * This process takes a relatively long time, it depends on the hosting machine specs. The user can adjust how many rows can be processed at one call to the Omero database:
-             * set the no of rows using a method inside the manage.py (set_cache_rows_number), the following will set the number to be 1000
+        * It creates the elasticsearch indices for each resource
+        * It queries the Omero database after receiving the data, processes, and pushes it to the Elasticsearch indices.
+        * This process takes a relatively long time depending on the hosting machine specs. The user can adjust how many rows can be processed per call to the Omero database:
+             * Set the no. of rows using a method inside the manage.py (set_cache_rows_number), the following example will set the number to 1000:
                 path/to/python manage.py set_cache_rows_number -s 10000
 
     * The data can be also moved using SQL queries which generate the CSV files; the queries are in omero_search_engine\search_engine\cache_functions\elasticsearch\sql_to_csv.py
     * There is a method inside manage.py script (add_resource_data_to_es_index) which reads the CSV files and inserts the data to the Elasticsearch index.
-    * I am investigating automatic updates of the elastic search data in case of the data inside the PostgreSQL database has been changed.
+    * I am investigating automatic updates of the elastic search data in case the data inside the PostgreSQL database has changed.
 
 For the configuration and installation instructions, please read the following document doc/configuration/configuration_installtion.rst

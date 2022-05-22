@@ -10,7 +10,7 @@ logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 '''
 It is required to search the database for:
 "Organism"="Homo sapiens"
-As it is a simple search, single clause then search can be used to simplfy the request
+As it is a simple search, a single clause then search can be used to simplfy the request
 
 curl -X GET "http://127.0.0.1:5577/api/v1/resources/image/search/?key=Organism&value=Homo%20sapiens"
 '''
