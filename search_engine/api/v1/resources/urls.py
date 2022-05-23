@@ -136,7 +136,10 @@ def get_resource_key_value(resource_table):
     key = request.args.get("key")
     if not key:
         return jsonify (build_error_message("No key is provided"))
-    return jsonify(get_resource_attribute_values(resource_table, key))
+    if key !="Name (IDR number)":
+        return jsonify(get_resource_attribute_values(resource_table, key))
+    else:
+        return jsonify (get_resource_names("all"))
 
 #getresourcenames==>names
 @resources.route('/<resource_table>/names/',methods=['GET'])

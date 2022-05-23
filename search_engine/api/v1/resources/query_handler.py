@@ -46,6 +46,7 @@ class QueryGroup(object):
         self.resource=[]
 
     def add_query(self,query):
+        print ("Query....", query, self.group_type)
         self.query_list.append(query)
 
     def divide_filter(self):
@@ -57,6 +58,8 @@ class QueryGroup(object):
                 flist=self.resourses_query[filter.resource]
             flist.append(filter)
             self.resource=self.resourses_query.keys()
+            print (self.resource, "====>>>>")
+        print (len(self.resourses_query))
 
 
     def adjust_query_main_attributes(self):
@@ -64,9 +67,12 @@ class QueryGroup(object):
         for resource, queries in self.resourses_query.items():
             for query in queries:
                 if query.query_type=="main_attribute":
+                    print ("MAIN ....atr")
                     if not resource in self.main_attribute:
+                        print ("Addded 1")
                         self.main_attribute[resource]={"and_main_attributes":[query]}
                     else:
+                        print("Addded 2")
                         self.main_attribute[resource]["and_main_attributes"].append(query)
                     if resource not in to_be_removed:
                         to_be_removed[resource]=[query]
@@ -74,7 +80,9 @@ class QueryGroup(object):
                         to_be_removed[resource].append(query)
 
         for resource, queries in to_be_removed.items():
+            print (resource, queries, "---------------->>>")
             for query in queries:
+                print ("REMOVE: ", query)
                 self.resourses_query[resource].remove(query)
 
 
@@ -92,26 +100,44 @@ class QueryRunner(object, ):
         self.return_columns=return_columns
 
     def get_iameg_non_image_query(self):
+        print ("111111111111111111111")
         has_main=False
         res=None
         or_queries=[]
+       # for org_mains in self.or_query_group:
+       #     for ress, or_main in org_mains.items() :
+       #             self.image_query["main_attribute"] = self.and_query_group.main_attribute.get(ress)
+       #         else:
+       #             self.image_query["main_attribute"] = []
         if len (self.and_query_group.query_list)==0:
+            print ("00000000000000000000000000000000000")
             for or_grp_ in self.or_query_group:
                 for resource, or_grp in or_grp_.resourses_query.items():
+                    print (resource, or_grp)
                     or_queries.append(or_grp_.resourses_query[resource])
+                    for org_main in self.or_query_group:
+                        if org_main.main_attribute.get(resource):
+                            self.image_query["main_attribute"]=org_main.main_attribute.get(resource)
+                        else:
+                            self.image_query["main_attribute"] =[]
             self.image_query["or_filters"] = or_queries
         else:
+            print("333333333333333333333333")
+            #will be used to check if or_groups items are added
+            or_added=[]
             for resource, and_query in self.and_query_group.resourses_query.items():
                 if resource=="image":
                     or_queries=[]
                     self.image_query["and_filters"]=and_query
                     self.image_query["or_filters"] = or_queries
                     if self.and_query_group.main_attribute.get(resource):
+                        has_main = True
                         self.image_query["main_attribute"]=self.and_query_group.main_attribute.get(resource)
                     else:
                         self.image_query["main_attribute"] =[]
                     for or_grp in self.or_query_group:
                         if resource in or_grp.resourses_query:
+                            or_added.append(or_grp.resourses_query[resource])
                             or_queries.append(or_grp.resourses_query[resource])
                 else:
                     has_main=True
@@ -121,18 +147,34 @@ class QueryRunner(object, ):
                     query["or_filters"] = or_queries
                     for or_grp in self.or_query_group:
                         if resource in or_grp.resourses_query:
+                            or_added.append(or_grp.resourses_query[resource])
                             or_queries.append(or_grp.resourses_query[resource])
                     if self.and_query_group.main_attribute.get(resource):
                         query["main_attribute"]=self.and_query_group.main_attribute.get(resource)
                     else:
                         query["main_attribute"]= {}
                     res=self.run_query(query, resource)
+                    print(res)
                     new_cond=get_ids(res, resource)
+
                     if new_cond:
                         self.additional_image_conds.append(new_cond)
                     else:
                         return {"Error": "Your query returns no results"}
-        #for add_query in self.additional_image_conds:
+            not_added_or_filters=[]
+            #This has been added to handle the case when having more than or groups and not having single image and group
+            for or_grp in self.or_query_group:
+                for resource, or_query in or_grp.resourses_query.items():
+                    if not or_grp.resourses_query[resource] in or_added:
+                        not_added_or_filters.append(or_grp.resourses_query[resource])
+                        if resource=="image":
+                            if not self.image_query.get("or_filters"):
+                                self.image_query["or_filters"]=[]
+                            self.image_query["or_filters"].append(or_grp.resourses_query[resource])
+                            #or_queries.append(or_grp.resourses_query[resource])
+                        print ("It is not there, shuld Add it ")
+                    else:
+                        print("It has been added .........")
 
         if len(self.additional_image_conds)==0 and has_main:
             return {"Error" : "Your query returns no results"}
@@ -173,6 +215,9 @@ class QueryRunner(object, ):
                             return {"Error": "M"}
             main_attributes[key]=ss
         query["case_sensitive"]=self.case_sensitive
+        print ("===========================================")
+        print (query)
+        print("===========================================")
         res=seracrh_query(query, resource, self.bookmark, self.raw_elasticsearch_query, main_attributes)
         if resource != "image":
             return res

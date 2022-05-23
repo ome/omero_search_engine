@@ -434,8 +434,16 @@ def get_resource_names(resource, es_index="key_values_resource_cach"):
     '''
     returned_results=[]
     es = search_omero_app.config.get("es_connector")
-    query = key_values_buckets_template_2.substitute(resource=resource)
-    results_ = connect_elasticsearch(es_index,query)#.search(index=es_index, body=query)
-    if len(results_['hits']['hits']) > 0:
-        returned_results = results_['hits']['hits'][0]['_source']['resourcename']
+    if resource!='all':
+        query = key_values_buckets_template_2.substitute(resource=resource)
+        results_ = connect_elasticsearch(es_index,query)#.search(index=es_index, body=query)
+        if len(results_['hits']['hits']) > 0:
+            returned_results = results_['hits']['hits'][0]['_source']['resourcename']
+    else:
+        ress=["project","screen"]
+        for res in ress:
+            query = key_values_buckets_template_2.substitute(resource=res)
+            results_ = connect_elasticsearch(es_index, query)  # .search(index=es_index, body=query)
+            if len(results_['hits']['hits']) > 0:
+                returned_results = returned_results+results_['hits']['hits'][0]['_source']['resourcename']
     return returned_results
