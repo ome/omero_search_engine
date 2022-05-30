@@ -121,10 +121,13 @@ def elasticsearch_query_builder(and_filter, or_filters, case_sensitive,main_attr
 
 
         if main_attributes.get("or_main_attributes"):
+            sh = []
+            ssj = {"main": sh}
+            all_should_part_list.append(ssj)
             for attributes in main_attributes.get("or_main_attributes"):
-                sh=[]
-                ssj={"main":sh}
-                all_should_part_list.append(ssj)
+                #sh=[]
+                #ssj={"main":sh}
+                #all_should_part_list.append(ssj)
                 if isinstance(attributes, list):
                     for attribute in  attributes:
                     #search using id, e.g. project id
@@ -394,9 +397,10 @@ def check_filters(res_table, filters, case_sensitive):
                 check_single_filter(res_table,filter, names, organism_converter)
     if filters[1]:
         for filters_ in filters[1]:
-            for filter in filters_:
-                if not case_sensitive:
-                    check_single_filter(res_table,filter, names,organism_converter)
+            if isinstance(filters_, list):
+                for filter in filters_:
+                    if not case_sensitive :
+                        check_single_filter(res_table,filter, names,organism_converter)
 
 
 def search_index_scrol(index_name, query):
@@ -471,7 +475,6 @@ def search_resource_annotation(table_, query, raw_elasticsearch_query=None, page
     '''
     #print ( query)
     try:
-
         res_index=resource_elasticsearchindex.get(table_)
         if not res_index:
             return build_error_message("{table_} is not a valid resurce".format(table_=table_))
@@ -512,6 +515,6 @@ def search_resource_annotation(table_, query, raw_elasticsearch_query=None, page
         return {"results": res, "query_details": query_details, "resource": table_,
                 "server_query_time": query_time, "raw_elasticsearch_query":raw_query_to_send_back,"notice": notice}
     except Exception as e:
-        search_omero_app.logger.info("Query %s" % query_string)
-        search_omero_app.logger.info("Error: %s" %str(e))
+        search_omero_app.logger.info("Query %s" % str(query))
+        search_omero_app.logger.info("==>>>Error: %s" %str(e))
         return build_error_message("Someting went wrong, please check your query and try again later.")
