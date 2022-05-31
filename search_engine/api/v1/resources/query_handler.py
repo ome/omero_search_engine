@@ -9,7 +9,7 @@ mapping_names={"project":{"Name (IDR number)":"name"},"screen":{"Name (IDR numbe
 class QueryItem (object):
     def __init__ (self, filter):
         '''
-        define query and adjust resource if it is needed
+        define query and adjust resource if it is needed, e.g. idr name is provided
         Args:
             resource:
             attribute_name:
@@ -26,6 +26,8 @@ class QueryItem (object):
 
     def adjust_resource(self):
         #if self.resource != "image":#in mapping_names :
+        #test if t he resource is in the attribute name mappimng dict
+        #if so, it wil check if it attribute name is inside the dict to use the actual attriubute name
         if mapping_names.get(self.resource):
             if mapping_names[self.resource].get(self.name):
                 pr_names=get_resource_names (self.resource)
@@ -37,7 +39,7 @@ class QueryItem (object):
 
 class QueryGroup(object):
     '''
-    check query list and check it is has  multiple resource queries
+    query list is used to check and adjust multiple resources queries
     '''
     def __init__ (self, group_type):
         self.query_list=[]
@@ -82,6 +84,10 @@ class QueryGroup(object):
                 self.resourses_query[resource].remove(query)
 
 class QueryRunner(object, ):
+    '''
+    Run the quries and return the results
+    '''
+
     def __init__(self,and_query_group,  or_query_group, case_sensitive,  bookmark, raw_elasticsearch_query,columns_def, return_columns):
         self.or_query_group=or_query_group
         self.and_query_group=and_query_group
@@ -101,6 +107,7 @@ class QueryRunner(object, ):
         main_or_attribute={}
         main_and_attribute={}
         #check or main attributes
+        #then run and add the results (in term of clauses) to the main image query
         for or_it in self.or_query_group:
             for resource, main in  or_it.main_attribute.items():
                 query={}
@@ -168,8 +175,8 @@ class QueryRunner(object, ):
                             main_and_attribute[resource] = new_cond
                         else:
                             main_and_attribute[resource] = combine_conds(main_and_attribute[resource], new_cond, resource)
-                    else:
-                        return {"Error": "Your query returns no results"}
+                    #else:
+                    #    return {"Error": "Your query returns no results"}
 
         self.image_query["main_attribute"]={"and_main_attributes": list(main_and_attribute.values()),"or_main_attributes": list(main_or_attribute.values())}
         self.image_query["and_filters"]=image_and_queries
@@ -184,23 +191,21 @@ class QueryRunner(object, ):
 
         if query_.get("and_filters"):
             for qu in query_.get("and_filters"):
-                #if isinstance(type(qu), list):
-                for qu_ in qu:
-                    query.get("and_filters").append(qu_.__dict__)
-                #else:
-                 #   print (type(qu),"what is this????")
-                  #  query.get("and_filters").append(qu.__dict__)
+                if isinstance(qu, list):
+                    for qu_ in qu:
+                        query.get("and_filters").append(qu_.__dict__)
+                else:
+                    query.get("and_filters").append(qu.__dict__)
 
         if query_.get("or_filters"):
             for qu_ in query_.get("or_filters"):
                 qq = []
                 query.get("or_filters").append(qq)
-                #if isinstance(type(qu_), list):
-                for qu in qu_:
-                    qq.append(qu.__dict__)
-                #else:
-
-                 #   qq.append(qu_.__dict__)
+                if isinstance(qu_ , list):
+                    for qu in qu_:
+                        qq.append(qu.__dict__)
+                else:
+                   qq.append(qu_.__dict__)
 
         if query_.get("main_attribute"):
 
@@ -234,11 +239,11 @@ class QueryRunner(object, ):
             return res
 
 def seracrh_query(query,resource,bookmark,raw_elasticsearch_query, main_attributes=None):
-    print ("-------------------------------------------------")
-    print (query)
-    print(main_attributes)
-    print (resource)
-    print("-------------------------------------------------")
+    search_omero_app.logger.info ("-------------------------------------------------")
+    search_omero_app.logger.info (query)
+    search_omero_app.logger.info(main_attributes)
+    search_omero_app.logger.info (resource)
+    search_omero_app.logger.info("-------------------------------------------------")
     search_omero_app.logger.info(("%s, %s") % (resource, query))
     if not main_attributes:
         q_data = {"query": {'query_details': query}}
