@@ -116,9 +116,9 @@ class QueryRunner(object, ):
                 new_cond = get_ids(res, resource)
                 if new_cond:
                     if not main_or_attribute.get(resource):
-                        main_or_attribute[resource]= [new_cond]
+                        main_or_attribute[resource]= new_cond
                     else:
-                        main_or_attribute[resource]=main_or_attribute[resource].append(new_cond)
+                        main_or_attribute[resource]=main_or_attribute[resource]+new_cond
                 else:
                     return {"Error": "Your query returns no results"}
         #check or_filters
@@ -136,9 +136,10 @@ class QueryRunner(object, ):
                     new_cond = get_ids(res, resource)
                     if new_cond:
                         if not main_or_attribute.get(resource):
-                            main_or_attribute[resource] = [new_cond]
+                            main_or_attribute[resource] = new_cond
                         else:
-                            main_or_attribute[resource] = main_or_attribute[resource].append(new_cond)
+                            main_or_attribute[resource] = main_or_attribute[resource]+new_cond
+
                         #main_or_attribute.append(new_cond)
                         #self.additional_image_conds.append(new_cond)
                     else:
@@ -175,17 +176,23 @@ class QueryRunner(object, ):
                             main_and_attribute[resource] = new_cond
                         else:
                             main_and_attribute[resource] = combine_conds(main_and_attribute[resource], new_cond, resource)
-                    #else:
-                    #    return {"Error": "Your query returns no results"}
+                    else:
+                        return {"Error": "Your query returns no results"}
 
-        self.image_query["main_attribute"]={"and_main_attributes": list(main_and_attribute.values()),"or_main_attributes": list(main_or_attribute.values())}
+        for res, main_list in main_and_attribute.items():
+            if res in main_or_attribute:
+                m_list=combine_conds(main_list, main_or_attribute[res], res)
+                main_or_attribute[res]=m_list
+            else:
+                main_or_attribute[res] =main_list
+
+        self.image_query["main_attribute"]={"or_main_attributes": list(main_or_attribute.values()),"and_main_attributes": []}
         self.image_query["and_filters"]=image_and_queries
         self.image_query["or_filters"] = image_or_queries
         return  self.run_query(self.image_query, "image")
 
 
     def run_query(self, query_, resource):
-
         main_attributes= {}
         query={"and_filters":[],"or_filters":[]}
 
@@ -198,9 +205,9 @@ class QueryRunner(object, ):
                     query.get("and_filters").append(qu.__dict__)
 
         if query_.get("or_filters"):
+            qq = []
+            query.get("or_filters").append(qq)
             for qu_ in query_.get("or_filters"):
-                qq = []
-                query.get("or_filters").append(qq)
                 if isinstance(qu_ , list):
                     for qu in qu_:
                         qq.append(qu.__dict__)
@@ -208,10 +215,11 @@ class QueryRunner(object, ):
                    qq.append(qu_.__dict__)
 
         if query_.get("main_attribute"):
-
             for key, qu_items in query_.get("main_attribute").items():
                 ss = []
                 for qu in qu_items:
+                    if not qu:
+                        continue
                     if type(qu)!=list:
                         ss.append(qu.__dict__)
                     else:
@@ -229,7 +237,8 @@ class QueryRunner(object, ):
                                 return {"Error": "M"}
                 main_attributes[key]=ss
         query["case_sensitive"]=self.case_sensitive
-
+        #if len(query.get("and_filters"))==0 and len(query.get("or_filters"))==0 and len(main_attributes.get("or_main_attributes"))==0 and len(main_attributes.get("and_main_attributes"))==0:
+        #    return {"Error": "Your query returns no results"}
         res=seracrh_query(query, resource, self.bookmark, self.raw_elasticsearch_query, main_attributes)
         if resource != "image":
             return res
@@ -270,10 +279,9 @@ def combine_conds (curnt_cond, new_cond,resource):
     name="{resource}_id".format(resource=resource)
     cons=[]
     for c_cond in curnt_cond:
-        cons.append(c_cond["value"])
-
+        cons.append(c_cond.value)
     for cond in new_cond:
-        if cond["value"] in cons:
+        if cond.value in cons:
             returned_cond.append(cond)
 
     return returned_cond
@@ -414,8 +422,9 @@ def determine_search_results_(query_, return_columns=False):
         for filters_ in or_filters:
             or_query_group = QueryGroup("or_filters")
             or_query_groups.append(or_query_group)
-            for filter in filters_:
-                or_query_group.add_query((QueryItem(filter)))
+            if isinstance(filters_, list):
+                for filter in filters_:
+                    or_query_group.add_query((QueryItem(filter)))
             or_query_group.divide_filter()
             or_query_group.adjust_query_main_attributes()
 
