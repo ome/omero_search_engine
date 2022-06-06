@@ -72,8 +72,6 @@ create_app()
 from omero_search_engine.api.v1.resources import resources as resources_routers_blueprint_v1
 search_omero_app.register_blueprint(resources_routers_blueprint_v1, url_prefix='/api/v1/resources')
 
-from omero_search_engine.searchresults import searchresults as search_results_routers_blueprint
-search_omero_app.register_blueprint(search_results_routers_blueprint, url_prefix='/searchresults')
 
 #add it to account for CORS
 @search_omero_app.after_request
