@@ -79,7 +79,7 @@ search_omero_app.register_blueprint(search_results_routers_blueprint, url_prefix
 @search_omero_app.after_request
 def after_request(response):
     header = response.headers
-    header['Access-Control-Allow-Origin'] = '*'
+    #header['Access-Control-Allow-Origin'] = '*'
     header["Access-Control-Allow-Headers"]= "*"
     return response
 
