@@ -17,7 +17,7 @@ page=1
 ids=[]
 total_pages=0
 
-def call_omero_return_results(url, data=None, method="post"):
+def call_omero_searchengine_return_results(url, data=None, method="post"):
     if method == "post":
         resp = requests.post(url, data=data)
     else:
@@ -47,7 +47,6 @@ def call_omero_return_results(url, data=None, method="post"):
     except Exception as ex:
         print (resp.text)
         logging.info("Error: %s" % ex)
-        sys.exit()
 
 
 '''
@@ -70,7 +69,7 @@ and_filters=[{"name": "Organism", "value": "Homo sapiens", "operator": "equals",
 query_data={"query_details":{"and_filters": and_filters}}
 
 query_data_json = json.dumps(query_data)
-bookmark, total_results=call_omero_return_results(submit_query_url, data=query_data_json)
+bookmark, total_results=call_omero_searchengine_return_results(submit_query_url, data=query_data_json)
 
 while len(recieved_results) < total_results:
 
@@ -78,7 +77,7 @@ while len(recieved_results) < total_results:
     query_data_ = {"query_details": {"and_filters": and_filters}, "bookmark": bookmark}
     query_data_json_ = json.dumps(query_data_)
 
-    bookmark, total_results = call_omero_return_results(submit_query_url, data=query_data_json_)
+    bookmark, total_results = call_omero_searchengine_return_results(submit_query_url, data=query_data_json_)
 
     logging.info("bookmark: %s, page: %s, / %s received results: %s / %s" % (
         bookmark, page ,total_pages, len(recieved_results) ,total_results))

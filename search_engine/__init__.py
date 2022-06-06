@@ -75,8 +75,6 @@ search_omero_app.register_blueprint(resources_routers_blueprint_v1, url_prefix='
 from search_engine.searchresults import searchresults as search_results_routers_blueprint
 search_omero_app.register_blueprint(search_results_routers_blueprint, url_prefix='/searchresults')
 
-'''
-#commented as it is ebaled at the NGINX confiuration level
 #add it to account for CORS
 @search_omero_app.after_request
 def after_request(response):
@@ -84,4 +82,9 @@ def after_request(response):
     header['Access-Control-Allow-Origin'] = '*'
     header["Access-Control-Allow-Headers"]= "*"
     return response
-'''
+
+#added to let the user know the proper extension they should use
+@search_omero_app.errorhandler(404)
+def page_not_found(error):
+    search_omero_app.logger.info ("Error: %s"%error)
+    return "%s, You may use '/searchengineapi/api/v1/resources/' to test the deployment and '/searchengineapi/apidocs' for the Swagger documents."%error
