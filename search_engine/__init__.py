@@ -86,5 +86,9 @@ def after_request(response):
 #added to let the user know the proper extension they should use
 @search_omero_app.errorhandler(404)
 def page_not_found(error):
+    from flask import Flask, make_response
     search_omero_app.logger.info ("Error: %s"%error)
-    return "%s, You may use '/searchengineapi/api/v1/resources/' to test the deployment and '/searchengineapi/apidocs' for the Swagger documents."%error
+    resp_message= "%s, You may use '/searchengineapi/api/v1/resources/' to test the deployment and '/searchengineapi/apidocs' for the Swagger documents."%error
+    response = make_response(resp_message, 404)
+    response.mimetype = "text/plain"
+    return response
