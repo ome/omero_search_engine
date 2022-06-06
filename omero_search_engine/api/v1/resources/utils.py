@@ -6,10 +6,10 @@ from elasticsearch import  helpers
 from datetime import datetime
 import time
 main_dir = os.path.abspath(os.path.dirname(__file__))
-mm=main_dir.replace("search_engine/api/v2/resources","")
+mm=main_dir.replace("omero_search_engine/api/v2/resources","")
 sys.path.append(mm)
 
-from search_engine import search_omero_app
+from omero_search_engine import search_omero_app
 from string import Template
 from app_data.data_attrs import annotation_resource_link
 
@@ -366,7 +366,7 @@ def check_single_filter(res_table, filter, names, organism_converter):
             if len(key_) == 0:
                 search_omero_app.logger.info("Name Error %s" % str(key))
                 return
-        from search_engine.api.v1.resources.resourse_analyser import get_resource_attribute_values
+        from omero_search_engine.api.v1.resources.resourse_analyser import get_resource_attribute_values
         values=get_resource_attribute_values(res_table, key_[0])
         if not values or len(values) == 0:
             search_omero_app.logger.info("Could not check filters %s" % str(filter))
@@ -383,7 +383,7 @@ def check_filters(res_table, filters, case_sensitive):
     It should be expanded in the future to add more checks and fixes.
     '''
     organism_converter={"human":"Homo sapiens","house mouse":"Mus musculus","mouse":"Mus musculus","chicken":"Gallus gallus"}
-    from search_engine.api.v1.resources.resourse_analyser import get_resource_attributes
+    from omero_search_engine.api.v1.resources.resourse_analyser import get_resource_attributes
 
     names=get_resource_attributes(res_table)
     if not names or len(names)==0:

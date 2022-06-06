@@ -1,12 +1,12 @@
-from search_engine import search_omero_app
+from omero_search_engine import search_omero_app
 from elasticsearch import  helpers
 import  pandas as pd
 import numpy as np
 import os
 import uuid
-from search_engine.api.v1.resources.utils import resource_elasticsearchindex
-from search_engine.api.v1.resources.resourse_analyser  import  query_cashed_bucket, get_all_values_for_a_key
-from search_engine.cache_functions.elasticsearch.elasticsearch_templates import image_template, non_image_template, key_value_buckets_info_template,key_values_resource_cache_template
+from omero_search_engine.api.v1.resources.utils import resource_elasticsearchindex
+from omero_search_engine.api.v1.resources.resourse_analyser  import  query_cashed_bucket, get_all_values_for_a_key
+from omero_search_engine.cache_functions.elasticsearch.elasticsearch_templates import image_template, non_image_template, key_value_buckets_info_template,key_values_resource_cache_template
 from app_data.data_attrs import annotation_resource_link
 from datetime import datetime
 import multiprocessing
@@ -326,7 +326,7 @@ def processo_work(lock, global_counter, val):
     range=val[1]
     resource=val[2]
     search_omero_app.logger.info("%s, %s, %s"%(cur_max_id, range, resource))
-    from search_engine.cache_functions.elasticsearch.sql_to_csv import sqls_resources
+    from omero_search_engine.cache_functions.elasticsearch.sql_to_csv import sqls_resources
     sql_st = sqls_resources.get(resource)
     try:
         lock.acquire()

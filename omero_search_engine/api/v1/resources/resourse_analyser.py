@@ -1,10 +1,10 @@
 from string import Template
-from search_engine import search_omero_app
+from omero_search_engine import search_omero_app
 from datetime import datetime
 import time
 import json
 import os
-from search_engine.api.v1.resources.utils import resource_elasticsearchindex, build_error_message
+from omero_search_engine.api.v1.resources.utils import resource_elasticsearchindex, build_error_message
 
 
 not_allowed_chars=['"', '\\']
@@ -346,7 +346,7 @@ def connect_elasticsearch(es_index, query, count=False):
         return es.count(index=es_index, body=query)
 
 def get_restircted_search_terms():
-    search_terms = "search_engine/api/v1/resources/data/restricted_search_terms.json"
+    search_terms = "omero_search_engine/api/v1/resources/data/restricted_search_terms.json"
 
     if not os.path.isfile(search_terms):
         return {}

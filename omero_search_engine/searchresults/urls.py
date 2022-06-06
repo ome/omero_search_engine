@@ -1,7 +1,7 @@
 from . import searchresults
 from flask import request, jsonify
 
-from search_engine.api.v1.resources.utils import search_resource_annotation
+from omero_search_engine.api.v1.resources.utils import search_resource_annotation
 @searchresults.route('/',methods=['GET'])
 def search_resource():
     task_id=request.args.get("task_id")

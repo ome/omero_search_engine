@@ -1,5 +1,5 @@
 import os
-from search_engine import search_omero_app
+from omero_search_engine import search_omero_app
 from flask_script import Manager
 
 from configurations.configuration import update_config_file
@@ -8,7 +8,7 @@ manager = Manager(search_omero_app)
 
 @manager.command
 def show_saved_indices():
-    from search_engine.cache_functions.elasticsearch.transform_data import  get_all_indexes
+    from omero_search_engine.cache_functions.elasticsearch.transform_data import  get_all_indexes
     all_indexes=get_all_indexes()
     for index in all_indexes:
         print ("Index: ==>>>",index)
@@ -18,13 +18,13 @@ def show_saved_indices():
 @manager.option('-r', '--resource', help='resource name, deleting all the indcese for all the resources is the default')
 @manager.option('-e', '--es_index', help='elastic index name, if it is provided, it will delete and return')
 def delete_es_index(resource='all', es_index=None):
-    from search_engine.cache_functions.elasticsearch.transform_data import  delete_index
+    from omero_search_engine.cache_functions.elasticsearch.transform_data import  delete_index
     delete_index(resource, es_index)
 
 @manager.command
 @manager.option('-r', '--resource', help='resource name, deleting all data from the its related index')
 def delete_all_data_from_es_index(resource='None'):
-    from search_engine.cache_functions.elasticsearch.transform_data import  delte_data_from_index
+    from omero_search_engine.cache_functions.elasticsearch.transform_data import  delte_data_from_index
     delte_data_from_index(resource)
 
 @manager.command
@@ -38,7 +38,7 @@ def add_resource_data_to_es_index(resource=None, data_folder=None,from_json=Fals
     if not resource or not data_folder or not os.path.exists(data_folder):
         search_omero_app.logger.info("Please check the input parameters, resource: {resource}, data_folder: {data_folder}".format(resource=resource, data_folder=data_folder))
         return
-    from search_engine.cache_functions.elasticsearch.transform_data import insert_resource_data
+    from omero_search_engine.cache_functions.elasticsearch.transform_data import insert_resource_data
     insert_resource_data(data_folder, resource, from_json)
 
 @manager.command
@@ -47,7 +47,7 @@ def create_index(resource="all"):
     '''
     Create Elasticsearch index for each resource
     '''
-    from search_engine.cache_functions.elasticsearch.transform_data import create_omero_indexes
+    from omero_search_engine.cache_functions.elasticsearch.transform_data import create_omero_indexes
     create_omero_indexes(resource)
 
 def sql_results_to_panda():
@@ -60,8 +60,8 @@ def get_index_data_from_database(resource="all"):
     insert data in Elasticsearch index for each resource
     It gets the data from postgres database server
     '''
-    from search_engine.cache_functions.elasticsearch.sql_to_csv import sqls_resources
-    from search_engine.cache_functions.elasticsearch.transform_data import get_insert_data_to_index, save_key_value_buckets
+    from omero_search_engine.cache_functions.elasticsearch.sql_to_csv import sqls_resources
+    from omero_search_engine.cache_functions.elasticsearch.transform_data import get_insert_data_to_index, save_key_value_buckets
 
     if resource!="all":
         sql_st=sqls_resources.get(resource)
@@ -160,8 +160,12 @@ def cache_key_value_index(resource=None,create_index=None, only_values=None):
     '''
     Cache the value bucket for each value for each resource
     '''
-    from search_engine.cache_functions.elasticsearch.transform_data import  save_key_value_buckets
+    from omero_search_engine.cache_functions.elasticsearch.transform_data import  save_key_value_buckets
     save_key_value_buckets(resource, create_index, only_values)
+
+
 
 if __name__ == '__main__':
     manager.run()
+    #5184
+#f

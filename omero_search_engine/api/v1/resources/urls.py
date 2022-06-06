@@ -1,10 +1,10 @@
 from . import resources
 from flask import request, jsonify
 import json
-from search_engine.api.v1.resources.utils import search_resource_annotation, build_error_message
-from search_engine.api.v1.resources.resourse_analyser import  search_value_for_resource,query_cashed_bucket, get_resource_attributes, get_resource_attribute_values, get_resource_names, get_values_for_a_key, query_cashed_bucket_value
-from search_engine.api.v1.resources.utils import get_resource_annotation_table
-from search_engine.api.v1.resources.query_handler import determine_search_results_, query_validator
+from omero_search_engine.api.v1.resources.utils import search_resource_annotation, build_error_message
+from omero_search_engine.api.v1.resources.resourse_analyser import  search_value_for_resource,query_cashed_bucket, get_resource_attributes, get_resource_attribute_values, get_resource_names, get_values_for_a_key, query_cashed_bucket_value
+from omero_search_engine.api.v1.resources.utils import get_resource_annotation_table
+from omero_search_engine.api.v1.resources.query_handler import determine_search_results_, query_validator
 
 @resources.route('/',methods=['GET'])
 def index():
@@ -185,6 +185,6 @@ def search(resource_table):
     case_sensitive=request.args.get("case_sensitive")
     operator=request.args.get("operator")
     bookmark=request.args.get("bookmark")
-    from search_engine.api.v1.resources.query_handler import simple_search
+    from omero_search_engine.api.v1.resources.query_handler import simple_search
     results=simple_search(key, value, operator,case_sensitive,bookmark, resource_table)
     return jsonify(results)

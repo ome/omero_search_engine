@@ -1,4 +1,4 @@
-from search_engine import search_omero_app
+from omero_search_engine import search_omero_app
 import pandas as pd
 import os
 from string import Template
@@ -127,5 +127,3 @@ def create_csv_for_non_images(resource, csv_file):
     pass
 
 sqls_resources={"image":image_sql, "project":project_sql, "well": well_sql, "plate":plate_sql, "screen":screen_sql}
-
-

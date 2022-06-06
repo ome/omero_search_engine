@@ -4,7 +4,7 @@ import logging
 from elasticsearch import Elasticsearch
 from flasgger import Swagger, LazyString, LazyJSONEncoder
 
-from search_engine.database.database_connector import DatabaseConnector
+from omero_search_engine.database.database_connector import DatabaseConnector
 from configurations.configuration import configLooader,load_configuration_variables_from_file,set_database_connection_variables
 from logging.handlers import RotatingFileHandler
 
@@ -27,7 +27,7 @@ search_omero_app.json_encoder = LazyJSONEncoder
 
 search_omero_app.config['SWAGGER'] = {
     'title': 'OMERO Search Engine API',
-    #'uiversion': 3
+    "version": "0.2.0"
 }
 
 
@@ -69,10 +69,10 @@ def create_app(config_name="development"):
 create_app()
 
 
-from search_engine.api.v1.resources import resources as resources_routers_blueprint_v1
+from omero_search_engine.api.v1.resources import resources as resources_routers_blueprint_v1
 search_omero_app.register_blueprint(resources_routers_blueprint_v1, url_prefix='/api/v1/resources')
 
-from search_engine.searchresults import searchresults as search_results_routers_blueprint
+from omero_search_engine.searchresults import searchresults as search_results_routers_blueprint
 search_omero_app.register_blueprint(search_results_routers_blueprint, url_prefix='/searchresults')
 
 #add it to account for CORS

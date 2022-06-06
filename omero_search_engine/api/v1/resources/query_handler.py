@@ -1,5 +1,5 @@
-from search_engine import search_omero_app
-from  search_engine.api.v1.resources.urls import search_resource_annotation, get_resource_names
+from omero_search_engine import search_omero_app
+from  omero_search_engine.api.v1.resources.urls import search_resource_annotation, get_resource_names
 import json
 from jsonschema import validate, ValidationError, SchemaError, RefResolver
 from os.path import abspath,dirname
@@ -469,14 +469,14 @@ def add_local_schemas_to(resolver, schema_folder, base_uri, schema_ext='.json'):
                 resolver.store[key] = schema_doc
 
 def query_validator(query):
-    query_schema_file = "search_engine/api/v1/resources/schemas/query_data.json"
+    query_schema_file = "omero_search_engine/api/v1/resources/schemas/query_data.json"
     base_uri = 'file:' + abspath('') + '/'
     with open(query_schema_file, 'r') as schema_f:
         query_schema = json.loads(schema_f.read())
 
     resolver = RefResolver(referrer=query_schema, base_uri=base_uri)
     schema_folder = dirname(query_schema_file)
-    #schema_folder = Path('search_engine/api/v1/resources/schemas')
+    #schema_folder = Path('omero_search_engine/api/v1/resources/schemas')
     add_local_schemas_to(resolver, schema_folder, base_uri)
 
 
