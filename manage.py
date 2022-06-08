@@ -1,7 +1,6 @@
 import os
 from omero_search_engine import search_omero_app
 from flask_script import Manager
-
 from configurations.configuration import update_config_file
 
 manager = Manager(search_omero_app)
@@ -164,6 +163,52 @@ def cache_key_value_index(resource=None,create_index=None, only_values=None):
     save_key_value_buckets(resource, create_index, only_values)
 
 
+@manager.command
+@manager.option('-j', '--json_file', help='creating cached values only ')
+
+def test_indexing_search_query(json_file="app_data/test_index_data.json"):
+    '''
+    test the indexing and the searchengine query functions
+    can be used:
+      * after the indexing to check the elasticsearch index data
+      * after the code modifications to check the searchengine queries results
+    The test data can be provided from and external files, i.e. json file format
+    if the data file, it will use sample file from (test_index_data.json) app_data folder
+    '''
+    from validation.results_validator import Validator
+    import json
+    import os
+    if not os.path.isfile(json_file):
+        return ("file: %s is not exist"%json_file)
+
+    with open(json_file) as json_data:
+        test_data = json.load(json_data)
+
+    test_cases=test_data.get("test_cases")
+    complex_test_cases = test_data.get("complex_test_cases")
+    messages=[]
+    for resource, cases in test_cases.items():
+        for case in cases:
+            name=case[0]
+            value=case[1]
+            search_omero_app.logger.info("Testing %s for name: %s, key: %s"%(resource,name,value))
+            validator=Validator()
+            validator.set_simple_query(resource,name, value)
+            res=validator.compare_results()
+            messages.append("Results for name: %s, value: %s is: %s"%(validator.name, validator.value, res))
+
+
+    for name, cases in complex_test_cases.items():
+        validor=Validator()
+        validor.set_complex_query(name, cases)
+        res= validor.compare_results()
+        messages.append("Results for name: %s, value: %s is: %s" % (validator.name, validator.value, res))
+
+
+    for message in messages:
+        print (message)
+
+#Cell Line= "HeLa" and Gene Symbol = NCAPD2" and Cell Cycle Phase = "anaphase"
 
 if __name__ == '__main__':
     manager.run()

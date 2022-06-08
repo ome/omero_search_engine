@@ -1,0 +1,62 @@
+{
+    "complex_test_cases": {
+        "query_image_and": [
+            [
+                "Cell Cycle Phase",
+                "anaphase"
+            ],
+            [
+                "organism",
+                "homo sapiens"
+            ]
+        ],
+        "query_image_or": [
+            [
+                "Organism Part",
+                "Prostate"
+            ],
+            [
+                "Organism Part Identifier",
+                "T-77100"
+            ]
+        ]
+    },
+    "test_cases": {
+        "image": [
+            [
+                "cell line",
+                "hela"
+            ],
+            [
+                "organism",
+                "homo sapiens"
+            ],
+            [
+                "Cell Cycle Phase",
+                "anaphase"
+            ],
+            [
+                "organism",
+                "homo sapiens"
+            ]
+        ],
+        "project": [
+            [
+                "Imaging Method",
+                "flim"
+            ]
+        ],
+        "project_name": [
+            [
+                "name",
+                "idr0027-dickerson-chromatin/experimentA"
+            ]
+        ],
+        "screen": [
+            [
+                "Screen Type",
+                "validation screen"
+            ]
+        ]
+    }
+}
