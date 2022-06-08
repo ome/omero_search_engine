@@ -18,7 +18,7 @@ OMERO Search Engine
 * The search engine returns the results in a JSON which has the following keys:
 
     * 'notice': reports a message to the sender which may include an error message.
-    " 'Error': specific error message
+    * 'Error': specific error message
     * 'query_details': The submitted query.
     * 'resource': The resource, e.g. image
     * 'server_query_time': The server query time in seconds
