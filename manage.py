@@ -185,7 +185,7 @@ def test_indexing_search_query(json_file="app_data/test_index_data.json"):
         test_data = json.load(json_data)
 
     test_cases=test_data.get("test_cases")
-    complex_test_cases = test_data.get("complex_test_cases")
+    complex_test_cases =test_data.get("complex_test_cases")
     messages=[]
     for resource, cases in test_cases.items():
         for case in cases:
@@ -197,20 +197,18 @@ def test_indexing_search_query(json_file="app_data/test_index_data.json"):
             res=validator.compare_results()
             messages.append("Results for name: %s, value: %s is: %s"%(validator.name, validator.value, res))
 
-
     for name, cases in complex_test_cases.items():
         validator_c=Validator()
         validator_c.set_complex_query(name, cases)
         res= validator_c.compare_results()
         messages.append("Results for %s name: %s, value: %s is: %s" % (name, validator_c.name, validator_c.value, res))
 
-
+    search_omero_app.logger.info(
+        "############################################## Check Report ##############################################")
     for message in messages:
-        print (message)
-
-#Cell Line= "HeLa" and Gene Symbol = NCAPD2" and Cell Cycle Phase = "anaphase"
+        search_omero_app.logger.info(message)
+        search_omero_app.logger.info("-----------------------------------------------------------------------------")
+    search_omero_app.logger.info("###########################################################################################################")
 
 if __name__ == '__main__':
     manager.run()
-    #5184
-#f

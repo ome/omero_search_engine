@@ -41,6 +41,37 @@ class Validator(object):
         self.postgres_results = []
         self.searchengine_results = {}
 
+    def get_or_sql(self, clauses, name="query_image_or"):
+        names = ''
+        values = ''
+        for claus in clauses:
+            if names:
+                names = names + ",'%s'" % claus[0].lower()
+                values = values + ",'%s'" % claus[1].lower()
+            else:
+                names = "'%s'" % claus[0].lower()
+                values = "'%s'" % claus[1].lower()
+        sql = query_methods[name].substitute(names=names, values=values)
+        postgres_results = search_omero_app.config["database_connector"].execute_query(sql)
+        results = [item['id'] for item in postgres_results]
+        search_omero_app.logger.info("results for or received %s" % len(results))
+        return results
+
+
+    def get_and_sql(self, clauses):
+        results = []
+        co = 0
+        for claus in clauses:
+            sql = query_methods["image"].substitute(name=claus[0].lower(), value=claus[1].lower())
+            postgres_results = search_omero_app.config["database_connector"].execute_query(sql)
+            res = [item['id'] for item in postgres_results]
+            search_omero_app.logger.info("results for and  received recived %s" % len(res))
+            if co == 0:
+                results = res
+            else:
+                results = list(set(results) & set(res))
+            co += 1
+        return results
 
     def get_results_postgres(self):
         '''
@@ -49,32 +80,17 @@ class Validator(object):
         search_omero_app.logger.info("Getting results from postgres")
         if self.type=="complex":
             if self.name == "query_image_or":
-                names = ''
-                values = ''
-                for claus in self.clauses:
-                    if names:
-                        names = names + ",'%s'" % claus[0].lower()
-                        values = values + ",'%s'" % claus[1].lower()
-                    else:
-                        names = "'%s'" % claus[0].lower()
-                        values = "'%s'" % claus[1].lower()
-                sql = query_methods[self.name].substitute(names=names, values=values)
+                self.postgres_results=self.get_or_sql(self.clauses)
             elif self.name == "query_image_and":
-                results=[]
-                co=0
-                for claus in self.clauses:
-                    sql=query_methods["image"].substitute(name=claus[0].lower(), value=claus[1].lower())
-
-                    postgres_results = search_omero_app.config["database_connector"].execute_query(sql)
-                    res=[item['id'] for item in postgres_results]
-                    search_omero_app.logger.info("results recived %s" % len(postgres_results))
-                    if co==0:
-                        results=res
-                    else:
-                        results=list(set(results) & set(res))
-                    co+=1
-                self.postgres_results=results
-                return
+                self.postgres_results =self.get_and_sql(self.clauses)
+            else:
+                for name, clauses in self.clauses.items():
+                    if name == "query_image_or":
+                        or_postgres_results = self.get_or_sql(clauses)
+                    elif name == "query_image_and":
+                        and_postgres_results = self.get_and_sql(clauses)
+                self.postgres_results = list(set(or_postgres_results) & set(and_postgres_results))
+            return
         else:
             if self.name!="name":
                 sql=self.sql_statament.substitute(name=self.name.lower(), value=self.value.lower())
@@ -91,17 +107,31 @@ class Validator(object):
         '''
         if self.type == "complex":
             filters = []
-            for claus in self.clauses:
-                filters.append(
-                    {"name": claus[0], "value": claus[1], "operator": "equals", "resource": self.resource})
-            if self.name=="query_image_or":
-                query = {"and_filters": [], "or_filters": [filters]}
-            elif self.name == "query_image_and":
-                query = {"and_filters": filters, "or_filters": []}
+            if self.name!="query_image_and_or":
+                for claus in self.clauses:
+                    filters.append(
+                        {"name": claus[0], "value": claus[1], "operator": "equals", "resource": self.resource})
+                if self.name=="query_image_or":
+                    query = {"or_filters": [], "or_filters": [filters]}
+                elif self.name == "query_image_and":
+                    query = {"and_filters": filters, "or_filters": []}
+            else:
+                query={}
+                or_filters=[]
+                query["or_filters"]=or_filters
+                for filter_name, clauses in self.clauses.items():
+                    filters=[]
+                    if filter_name=="query_image_or":
+                        or_filters.append(filters)
+                    else:
+                        query["and_filters"] = filters
+                    for claus in clauses:
+                        filters.append(
+                            {"name": claus[0], "value": claus[1], "operator": "equals", "resource": self.resource})
+
         else:
             if self.name!="name":
                 and_filters=[{"name": self.name.lower(), "value": self.value.lower(), "operator": "equals", "resource": self.resource}]
-
             else:
                 and_filters=[{'name': 'Name (IDR number)', 'value': self.value,'resource': 'project','operator': 'equals'}]
             query = {"and_filters": and_filters, "or_filters": []}
@@ -146,5 +176,10 @@ class Validator(object):
 {                     'query_details': {'and_filters': [], 'or_filters': [{'name': 'Organism Part', 'value': 'Prostate', 'operator': 'equals', 'resource': 'image'}, {'name': 'Organism Part Identifier', 'value': 'T-77100', 'operator': 'equals', 'resource': 'image'}]}}
 
 {'resource': 'image', 'query_details': {'and_filters': [], 'or_filters': [[{'name': 'Organism Part Identifier', 'value': 't-77100', 'operator': 'equals', 'resource': 'image'}, {'name': 'Organism Part', 'value': 'prostate', 'operator': 'equals', 'resource': 'image'}]], 'case_sensitive': False}, 'mode': 'usesearchterms'}
+
+
+
+{'and_filters': [{'resource': 'image', 'name': 'Organism', 'value': 'homo sapiens', 'operator': 'equals', 'query_type': 'keyvalue'}, {'resource': 'image', 'name': 'Antibody Identifier', 'value': 'cab034889', 'operator': 'equals', 'query_type': 'keyvalue'}], 'or_filters': [[{'resource': 'image', 'name': 'Organism Part', 'value': 'prostate', 'operator': 'equals', 'query_type': 'keyvalue'}, {'resource': 'image', 'name': 'Organism Part Identifier', 'value': 't-77100', 'operator': 'equals', 'query_type': 'keyvalue'}]], 'case_sensitive': False}
+{'and_filters': [{'resource': 'image', 'name': 'Organism', 'value': 'Homo sapiens', 'operator': 'equals', 'query_type': 'keyvalue'}, {'resource': 'image', 'name': 'Antibody', 'value': 'CAB034889', 'operator': 'equals', 'query_type': 'keyvalue'}], 'or_filters': [[{'resource': 'image', 'name': 'Organism Part', 'value': 'Prostate', 'operator': 'equals', 'query_type': 'keyvalue'}, {'resource': 'image', 'name': 'Organism Part Identifier', 'value': 'T-77100', 'operator': 'equals', 'query_type': 'keyvalue'}]], 'case_sensitive': None}
 
 '''

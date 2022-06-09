@@ -1,62 +1,84 @@
 {
-    "complex_test_cases": {
-        "query_image_and": [
+   "complex_test_cases":{
+      "query_image_and":[
+         [
+            "Cell Cycle Phase",
+            "anaphase"
+         ],
+         [
+            "organism",
+            "homo sapiens"
+         ]
+      ],
+      "query_image_or":[
+         [
+            "Organism Part",
+            "Prostate"
+         ],
+         [
+            "Organism Part Identifier",
+            "T-77100"
+         ]
+      ],
+      "query_image_and_or":{
+         "query_image_or":[
             [
-                "Cell Cycle Phase",
-                "anaphase"
+               "Organism Part",
+               "Prostate"
             ],
             [
-                "organism",
-                "homo sapiens"
+               "Organism Part Identifier",
+               "T-77100"
             ]
-        ],
-        "query_image_or": [
+         ],
+         "query_image_and":[
             [
-                "Organism Part",
-                "Prostate"
+               "Organism",
+               "Homo sapiens"
             ],
             [
-                "Organism Part Identifier",
-                "T-77100"
+               "Antibody Identifier",
+               "CAB034889"
             ]
-        ]
-    },
-    "test_cases": {
-        "image": [
-            [
-                "cell line",
-                "hela"
-            ],
-            [
-                "organism",
-                "homo sapiens"
-            ],
-            [
-                "Cell Cycle Phase",
-                "anaphase"
-            ],
-            [
-                "organism",
-                "homo sapiens"
-            ]
-        ],
-        "project": [
-            [
-                "Imaging Method",
-                "flim"
-            ]
-        ],
-        "project_name": [
-            [
-                "name",
-                "idr0027-dickerson-chromatin/experimentA"
-            ]
-        ],
-        "screen": [
-            [
-                "Screen Type",
-                "validation screen"
-            ]
-        ]
-    }
+         ]
+      }
+   },
+   "test_cases":{
+      "image":[
+         [
+            "cell line",
+            "hela"
+         ],
+         [
+            "organism",
+            "homo sapiens"
+         ],
+         [
+            "Cell Cycle Phase",
+            "anaphase"
+         ],
+         [
+            "organism",
+            "homo sapiens"
+         ]
+      ],
+      "project":[
+         [
+            "Imaging Method",
+            "flim"
+         ]
+      ],
+      "project_name":[
+         [
+            "name",
+            "idr0027-dickerson-chromatin/experimentA"
+         ]
+      ],
+      "screen":[
+         [
+            "Screen Type",
+            "validation screen"
+         ]
+      ]
+   }
 }
