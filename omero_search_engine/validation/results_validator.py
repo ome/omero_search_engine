@@ -27,7 +27,7 @@ class Validator(object):
         self.value=value
         self.postgres_results=[]
         self.sql_statament=query_methods[resource]
-        self.searchengine_results = []
+        self.searchengine_results = {}
 
     def set_complex_query (self, name, clauses, resource="image", type="complex"):
         '''
@@ -39,7 +39,7 @@ class Validator(object):
         self.value=clauses
         self.type=type
         self.postgres_results = []
-        self.searchengine_results = []
+        self.searchengine_results = {}
 
 
     def get_results_postgres(self):
@@ -64,7 +64,7 @@ class Validator(object):
                 co=0
                 for claus in self.clauses:
                     sql=query_methods["image"].substitute(name=claus[0].lower(), value=claus[1].lower())
-                    search_omero_app.logger.info("and sql: %s" % sql)
+
                     postgres_results = search_omero_app.config["database_connector"].execute_query(sql)
                     res=[item['id'] for item in postgres_results]
                     search_omero_app.logger.info("results recived %s" % len(postgres_results))
@@ -80,8 +80,9 @@ class Validator(object):
                 sql=self.sql_statament.substitute(name=self.name.lower(), value=self.value.lower())
             else:
                 sql=self.sql_statament.substitute(name=self.value)
-        search_omero_app.logger.info ("sql: %s"%sql)
-        self.postgres_results=search_omero_app.config["database_connector"].execute_query(sql)
+        #search_omero_app.logger.info ("sql: %s"%sql)
+        postgres_results=search_omero_app.config["database_connector"].execute_query(sql)
+        self.postgres_results = [item['id'] for item in postgres_results]
         search_omero_app.logger.info("results recived %s"%len(self.postgres_results))
 
     def get_results_searchengine(self):
@@ -106,7 +107,11 @@ class Validator(object):
             query = {"and_filters": and_filters, "or_filters": []}
         query_data = {'query_details': query}
         search_omero_app.logger.info("Getting results from search engine")
-        self.searchengine_results=determine_search_results_(query_data, True)
+        searchengine_results=determine_search_results_(query_data)
+        size=searchengine_results.get("results").get("size")
+        ids=[item["id"] for item in searchengine_results["results"]["results"] ]
+        self.searchengine_results={"size":size, "ids": ids}
+
         search_omero_app.logger.info\
             ("no of recived results from searchengine  : %s"% self.searchengine_results.get("size") )
 
@@ -117,9 +122,15 @@ class Validator(object):
         self.get_results_postgres()
         self.get_results_searchengine()
         if len(self.postgres_results)==self.searchengine_results.get("size") :
-            search_omero_app.logger.info("No of retuned results are identical ...")
-            return "OK, Identical!"
-        return "Does not return the same results???"
+            ids_in=True
+            for id in self.searchengine_results.get("ids"):
+                if id not in self.postgres_results:
+                    ids_in=False
+                    break
+            if ids_in:
+                search_omero_app.logger.info("No of retuned results are similar ...")
+                return "OK!"
+        return "It is not Ok, the results are not similar?"
 
     def validateclauses(self):
         pass
