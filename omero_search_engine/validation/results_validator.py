@@ -1,6 +1,6 @@
 #import psql_templates
 from omero_search_engine import search_omero_app
-
+from datetime import datetime
 from omero_search_engine.api.v1.resources.query_handler import determine_search_results_
 from omero_search_engine.validation.psql_templates import query_images_key_value, query_image_project_meta_data, \
     query_images_screen_key_value, query_images_in_project_name, query_images_screen_name,query_image_or
@@ -149,8 +149,14 @@ class Validator(object):
         '''
         call the results
         '''
+        st_time=datetime.now()
         self.get_results_postgres()
+        st2_time = datetime.now()
         self.get_results_searchengine()
+        st3_time = datetime.now()
+        sql_time=st2_time-st_time
+        searchengine_time= st3_time - st2_time
+
         if len(self.postgres_results)==self.searchengine_results.get("size") :
             ids_in=True
             for id in self.searchengine_results.get("ids"):
@@ -159,8 +165,8 @@ class Validator(object):
                     break
             if ids_in:
                 search_omero_app.logger.info("No of retuned results are similar ...")
-                return "OK!"
-        return "It is not Ok, the results are not similar?"
+                return "OK!, \n database servere query time= %s, searchengine query time= %s" %(sql_time, searchengine_time)
+        return "It is not Ok, the results are not similar?, \ndatabase server query time= %s, searchengine query time= %s" %(sql_time, searchengine_time)
 
     def validateclauses(self):
         pass
