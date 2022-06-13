@@ -1,12 +1,13 @@
 #import psql_templates
 from omero_search_engine import search_omero_app
 from datetime import datetime
-from omero_search_engine.api.v1.resources.query_handler import determine_search_results_
+from omero_search_engine.api.v1.resources.query_handler import determine_search_results_, query_validator
 from omero_search_engine.validation.psql_templates import query_images_key_value, query_image_project_meta_data, \
     query_images_screen_key_value, query_images_in_project_name, query_images_screen_name,query_image_or
 
 query_methods={"image":query_images_key_value,"project":query_image_project_meta_data, "screen":query_images_screen_key_value,
                "project_name":query_images_in_project_name,"screen_name":query_images_screen_name, "query_image_or": query_image_or}
+
 
 
 class Validator(object):
@@ -136,14 +137,19 @@ class Validator(object):
                 and_filters=[{'name': 'Name (IDR number)', 'value': self.value,'resource': 'project','operator': 'equals'}]
             query = {"and_filters": and_filters, "or_filters": []}
         query_data = {'query_details': query}
-        search_omero_app.logger.info("Getting results from search engine")
-        searchengine_results=determine_search_results_(query_data)
-        size=searchengine_results.get("results").get("size")
-        ids=[item["id"] for item in searchengine_results["results"]["results"] ]
-        self.searchengine_results={"size":size, "ids": ids}
+        #validate the query syntex
+        query_validation_res = query_validator(query_data)
+        if query_validation_res == "OK":
+            search_omero_app.logger.info("Getting results from search engine")
+            searchengine_results=determine_search_results_(query_data)
+            size=searchengine_results.get("results").get("size")
+            ids=[item["id"] for item in searchengine_results["results"]["results"] ]
+            self.searchengine_results={"size":size, "ids": ids}
 
-        search_omero_app.logger.info\
-            ("no of recived results from searchengine  : %s"% self.searchengine_results.get("size") )
+            search_omero_app.logger.info\
+                ("no of recived results from searchengine  : %s"% self.searchengine_results.get("size") )
+        else:
+            search_omero_app.logger.info("The query is not valid")
 
     def compare_results(self):
         '''
