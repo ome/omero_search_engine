@@ -187,21 +187,27 @@ def test_indexing_search_query(json_file="app_data/test_index_data.json"):
     test_cases=test_data.get("test_cases")
     complex_test_cases =test_data.get("complex_test_cases")
     messages=[]
+    from datetime import datetime
     for resource, cases in test_cases.items():
         for case in cases:
+            start_time=datetime.now()
             name=case[0]
             value=case[1]
             search_omero_app.logger.info("Testing %s for name: %s, key: %s"%(resource,name,value))
             validator=Validator()
             validator.set_simple_query(resource,name, value)
             res=validator.compare_results()
+            elabsed_time=str(datetime.now() - start_time)
             messages.append("Results for name: %s, value: %s is: %s"%(validator.name, validator.value, res))
+            search_omero_app.logger.info("Total time=%s" % elabsed_time)
 
     for name, cases in complex_test_cases.items():
+        start_time = datetime.now()
         validator_c=Validator()
         validator_c.set_complex_query(name, cases)
         res= validator_c.compare_results()
         messages.append("Results for %s name: %s, value: %s is: %s" % (name, validator_c.name, validator_c.value, res))
+        search_omero_app.logger.info("Total time=%s" % str(datetime.now() - start_time))
 
     search_omero_app.logger.info(
         "############################################## Check Report ##############################################")

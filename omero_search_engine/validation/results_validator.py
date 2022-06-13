@@ -167,25 +167,3 @@ class Validator(object):
                 search_omero_app.logger.info("No of retuned results are similar ...")
                 return "OK!, \n database servere query time= %s, searchengine query time= %s" %(sql_time, searchengine_time)
         return "It is not Ok, the results are not similar?, \ndatabase server query time= %s, searchengine query time= %s" %(sql_time, searchengine_time)
-
-    def validateclauses(self):
-        pass
-
-
-'''
-{'resource': 'image', 'query_details': {'and_filters': [{'name': 'Name (IDR number)', 'value': 'idr0027-dickerson-chromatin/experimentA', 'operator': 'equals', 'resource': 'project'}], 'or_filters': [], 'case_sensitive': False}, 'mode': 'usesearchterms'}
-                    
-{                      'query_details': {'and_filters': [{'name': 'Name (IDR number)', 'value': 'idr0027-dickerson-chromatin/experimenta', 'resource': 'project', 'operator': 'equals'}], 'or_filters': []}}
-
-
-
-{                     'query_details': {'and_filters': [], 'or_filters': [{'name': 'Organism Part', 'value': 'Prostate', 'operator': 'equals', 'resource': 'image'}, {'name': 'Organism Part Identifier', 'value': 'T-77100', 'operator': 'equals', 'resource': 'image'}]}}
-
-{'resource': 'image', 'query_details': {'and_filters': [], 'or_filters': [[{'name': 'Organism Part Identifier', 'value': 't-77100', 'operator': 'equals', 'resource': 'image'}, {'name': 'Organism Part', 'value': 'prostate', 'operator': 'equals', 'resource': 'image'}]], 'case_sensitive': False}, 'mode': 'usesearchterms'}
-
-
-
-{'and_filters': [{'resource': 'image', 'name': 'Organism', 'value': 'homo sapiens', 'operator': 'equals', 'query_type': 'keyvalue'}, {'resource': 'image', 'name': 'Antibody Identifier', 'value': 'cab034889', 'operator': 'equals', 'query_type': 'keyvalue'}], 'or_filters': [[{'resource': 'image', 'name': 'Organism Part', 'value': 'prostate', 'operator': 'equals', 'query_type': 'keyvalue'}, {'resource': 'image', 'name': 'Organism Part Identifier', 'value': 't-77100', 'operator': 'equals', 'query_type': 'keyvalue'}]], 'case_sensitive': False}
-{'and_filters': [{'resource': 'image', 'name': 'Organism', 'value': 'Homo sapiens', 'operator': 'equals', 'query_type': 'keyvalue'}, {'resource': 'image', 'name': 'Antibody', 'value': 'CAB034889', 'operator': 'equals', 'query_type': 'keyvalue'}], 'or_filters': [[{'resource': 'image', 'name': 'Organism Part', 'value': 'Prostate', 'operator': 'equals', 'query_type': 'keyvalue'}, {'resource': 'image', 'name': 'Organism Part Identifier', 'value': 'T-77100', 'operator': 'equals', 'query_type': 'keyvalue'}]], 'case_sensitive': None}
-
-'''
