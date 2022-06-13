@@ -171,5 +171,9 @@ class Validator(object):
                     break
             if ids_in:
                 search_omero_app.logger.info("No of retuned results are similar ...")
-                return "OK!, \n database servere query time= %s, searchengine query time= %s" %(sql_time, searchengine_time)
-        return "It is not Ok, the results are not similar?, \ndatabase server query time= %s, searchengine query time= %s" %(sql_time, searchengine_time)
+                return "equal (%s images), \n database servere query time= %s, searchengine query time= %s" %(len(self.postgres_results),sql_time, searchengine_time)
+        if self.searchengine_results:
+            searchengine_no=self.searchengine_results.get("size")
+        else:
+            searchengine_no=self.searchengine_results
+        return "not equal, database no of results from server is: %s and the number of results from searchengine is %s?, \ndatabase server query time= %s, searchengine query time= %s" %(len(self.postgres_results),searchengine_no ,sql_time, searchengine_time)

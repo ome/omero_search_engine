@@ -198,7 +198,7 @@ def test_indexing_search_query(json_file="app_data/test_index_data.json"):
             validator.set_simple_query(resource,name, value)
             res=validator.compare_results()
             elabsed_time=str(datetime.now() - start_time)
-            messages.append("Results for name: %s, value: %s is: %s"%(validator.name, validator.value, res))
+            messages.append("Results form  PostgreSQL and search engine for name: %s , value: %s are: %s"%(validator.name, validator.value, res))
             search_omero_app.logger.info("Total time=%s" % elabsed_time)
 
     for name, cases in complex_test_cases.items():
@@ -206,7 +206,7 @@ def test_indexing_search_query(json_file="app_data/test_index_data.json"):
         validator_c=Validator()
         validator_c.set_complex_query(name, cases)
         res= validator_c.compare_results()
-        messages.append("Results for %s name: %s, value: %s is: %s" % (name, validator_c.name, validator_c.value, res))
+        messages.append("Results form  PostgreSQL and search engine for %s name: %s and value: %s are %s" % (name, validator_c.name, validator_c.value, res))
         search_omero_app.logger.info("Total time=%s" % str(datetime.now() - start_time))
 
     search_omero_app.logger.info(
