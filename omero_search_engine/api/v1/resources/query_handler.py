@@ -239,7 +239,11 @@ class QueryRunner(object, ):
         query["case_sensitive"]=self.case_sensitive
         #if len(query.get("and_filters"))==0 and len(query.get("or_filters"))==0 and len(main_attributes.get("or_main_attributes"))==0 and len(main_attributes.get("and_main_attributes"))==0:
         #    return {"Error": "Your query returns no results"}
-        res=seracrh_query(query, resource, self.bookmark, self.raw_elasticsearch_query, main_attributes)
+        if resource == "image":
+            bookmark=self.bookmark
+        else:
+            bookmark=None
+        res=seracrh_query(query, resource, bookmark, self.raw_elasticsearch_query, main_attributes)
         if resource != "image":
             return res
         elif self.return_columns:

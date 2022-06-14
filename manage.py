@@ -175,46 +175,10 @@ def test_indexing_search_query(json_file="app_data/test_index_data.json"):
     The test data can be provided from and external files, i.e. json file format
     if the data file, it will use sample file from (test_index_data.json) app_data folder
     '''
-    from omero_search_engine.validation.results_validator import Validator
-    import json
-    import os
-    if not os.path.isfile(json_file):
-        return ("file: %s is not exist"%json_file)
+    from omero_search_engine.validation.results_validator import validate_quries
+    validate_quries(json_file)
 
-    with open(json_file) as json_data:
-        test_data = json.load(json_data)
 
-    test_cases=test_data.get("test_cases")
-    complex_test_cases =test_data.get("complex_test_cases")
-    messages=[]
-    from datetime import datetime
-    for resource, cases in test_cases.items():
-        for case in cases:
-            start_time=datetime.now()
-            name=case[0]
-            value=case[1]
-            search_omero_app.logger.info("Testing %s for name: %s, key: %s"%(resource,name,value))
-            validator=Validator()
-            validator.set_simple_query(resource,name, value)
-            res=validator.compare_results()
-            elabsed_time=str(datetime.now() - start_time)
-            messages.append("Results form  PostgreSQL and search engine for name: %s , value: %s are: %s"%(validator.name, validator.value, res))
-            search_omero_app.logger.info("Total time=%s" % elabsed_time)
-
-    for name, cases in complex_test_cases.items():
-        start_time = datetime.now()
-        validator_c=Validator()
-        validator_c.set_complex_query(name, cases)
-        res= validator_c.compare_results()
-        messages.append("Results form  PostgreSQL and search engine for %s name: %s and value: %s are %s" % (name, validator_c.name, validator_c.value, res))
-        search_omero_app.logger.info("Total time=%s" % str(datetime.now() - start_time))
-
-    search_omero_app.logger.info(
-        "############################################## Check Report ##############################################")
-    for message in messages:
-        search_omero_app.logger.info(message)
-        search_omero_app.logger.info("-----------------------------------------------------------------------------")
-    search_omero_app.logger.info("###########################################################################################################")
 
 if __name__ == '__main__':
     manager.run()

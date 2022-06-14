@@ -143,9 +143,18 @@ class Validator(object):
             search_omero_app.logger.info("Getting results from search engine")
             searchengine_results=determine_search_results_(query_data)
             size=searchengine_results.get("results").get("size")
-            ids=[item["id"] for item in searchengine_results["results"]["results"] ]
+            ids = [item["id"] for item in searchengine_results["results"]["results"]]
+            #### get all the results if the total number is bigger than the page size
+            if size >= search_omero_app.config["PAGE_SIZE"]:
+                bookmark = searchengine_results["results"]["bookmark"]
+                while len(ids) < size:
+                    search_omero_app.logger.info("Recieved %s/%s"%(len(ids), size))
+                    query_data_ = {"query_details": query, "bookmark": bookmark}
+                    searchengine_results_ = determine_search_results_(query_data_)
+                    ids_ = [item["id"] for item in searchengine_results_["results"]["results"]]
+                    ids=ids+ids_
+                    bookmark = searchengine_results_["results"]["bookmark"]
             self.searchengine_results={"size":size, "ids": ids}
-
             search_omero_app.logger.info\
                 ("no of recived results from searchengine  : %s"% self.searchengine_results.get("size") )
         else:
@@ -165,15 +174,79 @@ class Validator(object):
 
         if len(self.postgres_results)==self.searchengine_results.get("size") :
             ids_in=True
+            is_it_repated=[]
             for id in self.searchengine_results.get("ids"):
+                if id in is_it_repated:
+                    print("ERRORRRRRRRR, REPATED ID .......................")
+                    sys.exit()
+                    break
+                else:
+                    is_it_repated.append(id)
                 if id not in self.postgres_results:
                     ids_in=False
                     break
             if ids_in:
                 search_omero_app.logger.info("No of retuned results are similar ...")
-                return "equal (%s images), \n database servere query time= %s, searchengine query time= %s" %(len(self.postgres_results),sql_time, searchengine_time)
+                return "equal (%s images), \n database server query time= %s, searchengine query time= %s" %(len(self.postgres_results),sql_time, searchengine_time)
         if self.searchengine_results:
             searchengine_no=self.searchengine_results.get("size")
         else:
             searchengine_no=self.searchengine_results
         return "not equal, database no of results from server is: %s and the number of results from searchengine is %s?, \ndatabase server query time= %s, searchengine query time= %s" %(len(self.postgres_results),searchengine_no ,sql_time, searchengine_time)
+
+
+def validate_quries(json_file):
+    import json
+    import os
+    if not os.path.isfile(json_file):
+        return ("file: %s is not exist" % json_file)
+
+    with open(json_file) as json_data:
+        test_data = json.load(json_data)
+
+    #Setthe number pf returend results in one call to 10000
+    search_omero_app.config["PAGE_SIZE"]=10000
+
+    test_cases = test_data.get("test_cases")
+    complex_test_cases = test_data.get("complex_test_cases")
+    messages = []
+    from datetime import datetime
+    for resource, cases in test_cases.items():
+        for case in cases:
+            start_time = datetime.now()
+            name = case[0]
+            value = case[1]
+            search_omero_app.logger.info("Testing %s for name: %s, key: %s" % (resource, name, value))
+            validator = Validator()
+            validator.set_simple_query(resource, name, value)
+            res = validator.compare_results()
+            elabsed_time = str(datetime.now() - start_time)
+            messages.append("Results form  PostgreSQL and search engine for name: %s , value: %s are: %s" % (
+            validator.name, validator.value, res))
+            search_omero_app.logger.info("Total time=%s" % elabsed_time)
+
+    for name, cases in complex_test_cases.items():
+        start_time = datetime.now()
+        validator_c = Validator()
+        validator_c.set_complex_query(name, cases)
+        res = validator_c.compare_results()
+        messages.append("Results form  PostgreSQL and search engine for %s name: %s and value: %s are %s" % (
+        name, validator_c.name, validator_c.value, res))
+        search_omero_app.logger.info("Total time=%s" % str(datetime.now() - start_time))
+    search_omero_app.logger.info(
+        "############################################## Check Report ##############################################")
+    for message in messages:
+        search_omero_app.logger.info(message)
+        search_omero_app.logger.info("-----------------------------------------------------------------------------")
+    search_omero_app.logger.info(
+        "###########################################################################################################")
+    ###save the check report to a text file
+    base_folder = "/etc/searchengine/"
+    if not os.path.isdir(base_folder):
+        base_folder = os.path.expanduser('~')
+
+    report_file = os.path.join(base_folder, 'check_report.txt')
+
+    report = "\n-----------------------------------------------------------------------------\n".join(messages)
+    with open(report_file, 'w') as f:
+        f.write(report)
