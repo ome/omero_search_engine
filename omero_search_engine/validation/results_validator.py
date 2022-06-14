@@ -15,8 +15,8 @@ class Validator(object):
     Compare the results which are coming from postgresql server and from  the searchengine
     '''
 
-    def __init__ (self):
-        pass
+    def __init__ (self, deep_check):
+        self.deep_check=deep_check
 
     def set_simple_query (self, resource, name, value, type="keyvalue"):
         '''
@@ -145,7 +145,7 @@ class Validator(object):
             size=searchengine_results.get("results").get("size")
             ids = [item["id"] for item in searchengine_results["results"]["results"]]
             #### get all the results if the total number is bigger than the page size
-            if size >= search_omero_app.config["PAGE_SIZE"]:
+            if size >= search_omero_app.config["PAGE_SIZE"] and self.deep_check:
                 bookmark = searchengine_results["results"]["bookmark"]
                 while len(ids) < size:
                     search_omero_app.logger.info("Recieved %s/%s"%(len(ids), size))
@@ -194,7 +194,7 @@ class Validator(object):
         return "not equal, database no of the results from server is: %s and the number of results from searchengine is %s?, \ndatabase server query time= %s, searchengine query time= %s" %(len(self.postgres_results),searchengine_no ,sql_time, searchengine_time)
 
 
-def validate_quries(json_file):
+def validate_quries(json_file, deep_check):
     import json
     import os
     if not os.path.isfile(json_file):
@@ -216,7 +216,7 @@ def validate_quries(json_file):
             name = case[0]
             value = case[1]
             search_omero_app.logger.info("Testing %s for name: %s, key: %s" % (resource, name, value))
-            validator = Validator()
+            validator = Validator(deep_check)
             validator.set_simple_query(resource, name, value)
             res = validator.compare_results()
             elabsed_time = str(datetime.now() - start_time)
@@ -226,7 +226,7 @@ def validate_quries(json_file):
 
     for name, cases in complex_test_cases.items():
         start_time = datetime.now()
-        validator_c = Validator()
+        validator_c = Validator(deep_check)
         validator_c.set_complex_query(name, cases)
         res = validator_c.compare_results()
         messages.append("Results form  PostgreSQL and search engine for %s name: %s and value: %s are %s" % (
