@@ -13,11 +13,11 @@
       "query_image_or":[
          [
             "Organism Part",
-            "Prostate"
+            "appendix"
          ],
          [
             "Organism Part Identifier",
-            "T-77100"
+            "T-66000"
          ]
       ],
       "query_image_and_or":{
@@ -47,7 +47,7 @@
       "image":[
          [
             "cell line",
-            "hela"
+            "hcc44"
          ],
          [
             "Cell Cycle Phase",
@@ -55,7 +55,7 @@
          ],
          [
             "organism",
-            "homo sapiens"
+            "escherichia coli"
          ]
       ],
       "project":[
