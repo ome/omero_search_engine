@@ -177,8 +177,7 @@ class Validator(object):
             is_it_repated=[]
             for id in self.searchengine_results.get("ids"):
                 if id in is_it_repated:
-                    print("ERRORRRRRRRR, REPATED ID .......................")
-                    sys.exit()
+                    ids_in=False
                     break
                 else:
                     is_it_repated.append(id)
@@ -186,13 +185,13 @@ class Validator(object):
                     ids_in=False
                     break
             if ids_in:
-                search_omero_app.logger.info("No of retuned results are similar ...")
+                search_omero_app.logger.info("No of the retuned results are similar ...")
                 return "equal (%s images), \n database server query time= %s, searchengine query time= %s" %(len(self.postgres_results),sql_time, searchengine_time)
         if self.searchengine_results:
             searchengine_no=self.searchengine_results.get("size")
         else:
             searchengine_no=self.searchengine_results
-        return "not equal, database no of results from server is: %s and the number of results from searchengine is %s?, \ndatabase server query time= %s, searchengine query time= %s" %(len(self.postgres_results),searchengine_no ,sql_time, searchengine_time)
+        return "not equal, database no of the results from server is: %s and the number of results from searchengine is %s?, \ndatabase server query time= %s, searchengine query time= %s" %(len(self.postgres_results),searchengine_no ,sql_time, searchengine_time)
 
 
 def validate_quries(json_file):

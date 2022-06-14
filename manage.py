@@ -71,6 +71,8 @@ def get_index_data_from_database(resource="all"):
         for res, sql_st in sqls_resources.items():
             get_insert_data_to_index(sql_st, res)
         save_key_value_buckets(resource_table_=None, re_create_index=True, only_values=False)
+    #validat ethe indexing
+    test_indexing_search_query()
 
 
 ##set configurations
