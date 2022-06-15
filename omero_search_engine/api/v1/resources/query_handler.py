@@ -401,8 +401,6 @@ def process_search_results(results, resource, columns_def):
     returned_results["resource"]=results["resource"]+"s"
     return returned_results
 
-
-
 def determine_search_results_(query_, return_columns=False):
     if query_.get("query_details"):
         case_sensitive = query_.get("query_details").get("case_sensitive")
@@ -433,19 +431,24 @@ def determine_search_results_(query_, return_columns=False):
             or_query_group.adjust_query_main_attributes()
 
     query_runner=QueryRunner(and_query_groups, or_query_groups, case_sensitive, bookmark, raw_elasticsearch_query, columns_def,return_columns)
-    return(query_runner.get_iameg_non_image_query())
+    query_results=query_runner.get_iameg_non_image_query()
+    return query_results
 
 
-def simple_search(key, value, operator,  case_sensitive, bookmark, resource):
+def simple_search(key, value, operator,  case_sensitive, bookmark, resource, study):
     if not operator:
         operator='equals'
-    and_filters=[{"name": key, "value": value, "operator": operator }]
+    and_filters=[{"name": key, "value": value, "operator": operator, "resource":resource }]
     query_details={"and_filters": and_filters}
     if bookmark:
         bookmark=[bookmark]
     query_details["bookmark"]=[bookmark]
     query_details["case_sensitive"]=case_sensitive
-    return (search_resource_annotation(resource, {"query_details": query_details},bookmark=bookmark))
+    if not study:
+        return (search_resource_annotation(resource, {"query_details": query_details},bookmark=bookmark))
+    else:
+        and_filters.append({"name": "Name (IDR number)", "value": study, "operator": operator, "resource":"project"})
+        return determine_search_results_({"query_details": query_details})
 
 def add_local_schemas_to(resolver, schema_folder, base_uri, schema_ext='.json'):
     ''' Add local schema instances to a resolver schema cache.
