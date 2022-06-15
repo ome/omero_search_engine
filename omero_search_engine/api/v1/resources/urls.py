@@ -170,7 +170,10 @@ def submit_query():
         return jsonify(build_error_message("No query is provided"))
     return_columns=request.args.get("return_columns")
     if return_columns:
-        return_columns=json.loads(return_columns)
+        try:
+            return_columns=json.loads(return_columns.lower())
+        except:
+            return_columns =False
     validation_results=query_validator(query)
     if validation_results=="OK":
         return jsonify(determine_search_results_(query, return_columns))

@@ -406,6 +406,7 @@ def determine_search_results_(query_, return_columns=False):
         case_sensitive = query_.get("query_details").get("case_sensitive")
     else:
         case_sensitive = False
+
     bookmark = query_.get("bookmark")
     raw_elasticsearch_query = query_.get("raw_elasticsearch_query")
     and_filters = query_.get("query_details").get("and_filters")
@@ -447,7 +448,7 @@ def simple_search(key, value, operator,  case_sensitive, bookmark, resource, stu
     if not study:
         return (search_resource_annotation(resource, {"query_details": query_details},bookmark=bookmark))
     else:
-        and_filters.append({"name": "Name (IDR number)", "value": study, "operator": operator, "resource":"project"})
+        and_filters.append({"name": "Name (IDR number)", "value": study, "operator": "equals", "resource":"project"})
         return determine_search_results_({"query_details": query_details})
 
 def add_local_schemas_to(resolver, schema_folder, base_uri, schema_ext='.json'):
