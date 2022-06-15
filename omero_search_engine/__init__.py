@@ -86,7 +86,7 @@ def after_request(response):
 def page_not_found(error):
     from flask import Flask, make_response
     search_omero_app.logger.info ("Error: %s"%error)
-    resp_message= "%s, You may use '/searchengine/api/v1/resources/' to test the deployment and '/searchengine/apidocs' for the Swagger documents."%error
+    resp_message= "%s, You may use '/searchengine/api/v1/resources/' to test the deployment and '/searchengine/apidocs/' for the Swagger documents."%error
     response = make_response(resp_message, 404)
     response.mimetype = "text/plain"
     return response

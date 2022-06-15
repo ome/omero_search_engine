@@ -379,7 +379,7 @@ def process_search_results(results, resource, columns_def):
         if len(val)!=len(cols):
             for col in cols:
                 if not val.get(col):
-                    val[col]='""'
+                    val[col]=''
     #print (columns_def)
     returned_results["columns"]=columns
     returned_results["columns_def"]=columns_def

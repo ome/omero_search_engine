@@ -55,7 +55,7 @@ tags:
  - Mixed Complex query
 
 parameters:
-  - name: return columns
+  - name: return_columns
     description: return additional columns to help display the results in a table
     in: query
     type: boolean
