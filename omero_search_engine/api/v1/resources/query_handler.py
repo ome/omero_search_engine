@@ -6,8 +6,21 @@ from os.path import abspath,dirname
 from pathlib import Path
 
 mapping_names={"project":{"Name (IDR number)":"name"},"screen":{"Name (IDR number)":"name"}}
+
+
+def check_get_names(idr_ ):
+    #check the idr name and return the reosurce and possible values
+    resource = "project"
+    pr_names=get_resource_names ("project")
+    act_name=[name for name in pr_names if idr_ in name]
+    if len(act_name)==0:
+        pr_names = get_resource_names("screen")
+        act_name = [name for name in pr_names if idr_ in name]
+        resource="screen"
+    return act_name, resource
+
 class QueryItem (object):
-    def __init__ (self, filter):
+    def __init__ (self, filter, adjust_res=True):
         '''
         define query and adjust resource if it is needed, e.g. idr name is provided
         Args:
@@ -21,7 +34,8 @@ class QueryItem (object):
         self.value=filter.get("value")
         self.operator=filter.get("operator")
         self.query_type="keyvalue"
-        self.adjust_resource()
+        if adjust_res:
+            self.adjust_resource()
         #it will be used when buildingthe query
 
     def adjust_resource(self):
@@ -30,11 +44,20 @@ class QueryItem (object):
         #if so, it wil check if it attribute name is inside the dict to use the actual attriubute name
         if mapping_names.get(self.resource):
             if mapping_names[self.resource].get(self.name):
-                pr_names=get_resource_names (self.resource)
+                ac_value, act_res=check_get_names(self.value)
+                if len(ac_value)==1:
+                    self.value = ac_value[0]
+                elif len(ac_value)>1:
+                    self.value = ac_value
+                self.resource=act_res
+                self.name="name"
+                '''
+                pr_names = get_resource_names(self.resource)                
                 if not self.value in pr_names:
-                    ##Assuming that the names is either project or screen
+                    ##Assuming that the resource is either project or screen
                     self.resource="screen"
                 self.name=mapping_names[self.resource].get(self.name)
+                '''
                 self.query_type="main_attribute"
 
 class QueryGroup(object):
@@ -417,7 +440,23 @@ def determine_search_results_(query_, return_columns=False):
     if and_filters and len(and_filters) > 0:
         and_query_group = QueryGroup("and_filters")
         for filter in and_filters:
-            and_query_group.add_query(QueryItem(filter))
+            q_item=QueryItem(filter)
+            #Check the idr number value and, if it is a list, it will create a new or filter for them and move it
+            #Please note it is wokring for and filter when there is not identical match for the idr name
+            if q_item.query_type=="main_attribute" and isinstance(q_item.value, list) and filter["name"]=="Name (IDR number)":
+                new_or_filter=[]
+                if not or_filters:
+                    or_filters=[]
+                or_filters.append(new_or_filter)
+                for val in q_item.value:
+                    new_fil= {}
+                    new_fil["value"]=val
+                    new_fil["name"] = filter["name"]
+                    new_fil["resource"]=q_item.resource
+                    new_fil["operator"]=filter["operator"]
+                    new_or_filter.append(new_fil)
+            else:
+                and_query_group.add_query(q_item)
         and_query_group.divide_filter()
         and_query_group.adjust_query_main_attributes()
         and_query_groups.append(and_query_group)
@@ -427,7 +466,8 @@ def determine_search_results_(query_, return_columns=False):
             or_query_groups.append(or_query_group)
             if isinstance(filters_, list):
                 for filter in filters_:
-                    or_query_group.add_query((QueryItem(filter)))
+                    q_item=QueryItem(filter)
+                    or_query_group.add_query((q_item))
             or_query_group.divide_filter()
             or_query_group.adjust_query_main_attributes()
 
