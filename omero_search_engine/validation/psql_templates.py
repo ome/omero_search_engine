@@ -18,7 +18,6 @@ class SqlSearchEngineTemplate(Template):
 
         return super(SqlSearchEngineTemplate,self).substitute(kwargs)
 
-
 #get images satsify iamge key-value query
 query_images_key_value=Template('''
  Select DISTINCT image.id from image
@@ -96,9 +95,11 @@ inner  join wellsample on wellsample.image=image.id
  inner  join  plate  on well.plate=plate.id      
  inner  join screenplatelink on plate.id=screenplatelink.child     
  inner  join screen on screen.id=screenplatelink.parent  
- where lower(screen.name)='$name'
+ where screen.name='$name'
  ''')
 
 
 #get resource id using its name
 res_by_name=Template('''select id from $resource where name $name ''')
+
+#idr0015-colin-taraoceans/screenA

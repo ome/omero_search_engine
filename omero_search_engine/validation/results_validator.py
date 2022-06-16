@@ -142,9 +142,14 @@ class Validator(object):
         if query_validation_res == "OK":
             search_omero_app.logger.info("Getting results from search engine")
             searchengine_results=determine_search_results_(query_data)
-            size=searchengine_results.get("results").get("size")
-            ids = [item["id"] for item in searchengine_results["results"]["results"]]
-            #### get all the results if the total number is bigger than the page size
+            if searchengine_results.get("results"):
+                size=searchengine_results.get("results").get("size")
+                ids = [item["id"] for item in searchengine_results["results"]["results"]]
+            else:
+                size = 0
+                ids=[]
+
+                #### get all the results if the total number is bigger than the page size
             if size >= search_omero_app.config["PAGE_SIZE"] and self.deep_check:
                 bookmark = searchengine_results["results"]["bookmark"]
                 while len(ids) < size:
@@ -175,15 +180,20 @@ class Validator(object):
         if len(self.postgres_results)==self.searchengine_results.get("size") :
             ids_in=True
             is_it_repated=[]
-            for id in self.searchengine_results.get("ids"):
-                if id in is_it_repated:
+            serach_ids=[id for id in self.searchengine_results.get("ids")]
+            if self.deep_check:
+                if sorted(serach_ids)!=sorted(self.postgres_results):
                     ids_in=False
-                    break
-                else:
-                    is_it_repated.append(id)
-                if id not in self.postgres_results:
-                    ids_in=False
-                    break
+            else:
+                for id in serach_ids:
+                    if id in is_it_repated:
+                        ids_in=False
+                        break
+                    else:
+                        is_it_repated.append(id)
+                    if id not in self.postgres_results:
+                        ids_in=False
+                        break
             if ids_in:
                 search_omero_app.logger.info("No of the retuned results are similar ...")
                 return "equal (%s images), \n database server query time= %s, searchengine query time= %s" %(len(self.postgres_results),sql_time, searchengine_time)
@@ -224,14 +234,15 @@ def validate_quries(json_file, deep_check):
             validator.name, validator.value, res))
             search_omero_app.logger.info("Total time=%s" % elabsed_time)
 
-    for name, cases in complex_test_cases.items():
-        start_time = datetime.now()
-        validator_c = Validator(deep_check)
-        validator_c.set_complex_query(name, cases)
-        res = validator_c.compare_results()
-        messages.append("Results form  PostgreSQL and search engine for %s name: %s and value: %s are %s" % (
-        name, validator_c.name, validator_c.value, res))
-        search_omero_app.logger.info("Total time=%s" % str(datetime.now() - start_time))
+    for name, cases_ in complex_test_cases.items():
+        for cases in cases_:
+            start_time = datetime.now()
+            validator_c = Validator(deep_check)
+            validator_c.set_complex_query(name, cases)
+            res = validator_c.compare_results()
+            messages.append("Results form  PostgreSQL and search engine for %s name: %s and value: %s are %s" % (
+            name, validator_c.name, validator_c.value, res))
+            search_omero_app.logger.info("Total time=%s" % str(datetime.now() - start_time))
     search_omero_app.logger.info(
         "############################################## Check Report ##############################################")
     for message in messages:
@@ -249,3 +260,66 @@ def validate_quries(json_file, deep_check):
     report = "\n-----------------------------------------------------------------------------\n".join(messages)
     with open(report_file, 'w') as f:
         f.write(report)
+
+
+def test_no_images(studies_file):
+    import os, sys
+
+    from omero_search_engine.api.v1.resources.query_handler import determine_search_results_, query_validator
+    with  open(studies_file) as studies:
+        lines = studies.readlines()
+
+    headers = lines[0]
+    headers = headers.split("\t")
+    print(len(headers))
+    for i in range (len(headers)-1):
+        print(i, headers[i])
+
+    names = {}
+    for line in lines:
+        if lines.index(line) == 0:
+            continue
+
+        study = line.split("\t")
+        print(study[12])
+        name = "%s/%s" % (study[0], study[1])
+        names[name] = int(study[9])
+
+    results = {}
+    base_folder = "/etc/searchengine/"
+    if not os.path.isdir(base_folder):
+        base_folder = os.path.expanduser('~')
+
+    report_file = os.path.join(base_folder, 'check_report.txt')
+
+    report=["\n======================== Test number of images inside each study ============================\n"]
+    for name, numbers in names.items():
+        and_filters = [{"name": "Name (IDR number)", "value": name, "operator": "equals", "resource": "project"}]
+        or_filtes = []
+        query = {"and_filters": and_filters, "or_filters": or_filtes}
+        query_data = {"query_details": query}
+        returned_results = determine_search_results_(query_data)
+        if returned_results.get("results"):
+            if returned_results.get("results").get("size"):
+                total_results = returned_results["results"]["size"]
+        else:
+            total_results = 0
+        results[name] = [numbers, total_results]
+
+    for name, result in results.items():
+        if result[0] != result[1]:
+            message="Error:%s, results: %s"%( name, result)
+        else:
+            message= "%s is fine, results: %s"%(name, result)
+        report.append(message)
+    search_omero_app.logger.info(message)
+    report = "\n\n\n-----------------------------------------------------------------------------\n".join(report)
+    with open(report_file, 'a') as f:
+        f.write(report)
+
+        '''print (name, type(names[name]))
+    0 Study
+    1 Container
+    9 5D Images
+    12 Size
+    '''
