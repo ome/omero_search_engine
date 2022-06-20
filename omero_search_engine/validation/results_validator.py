@@ -297,7 +297,7 @@ def test_no_images():
 
     report_file = os.path.join(base_folder, 'check_report.txt')
 
-    report=["\n======================== Test number of images inside each study ============================\n"]
+    report=["\n\n\n======================== Test number of images inside each study ============================\n"]
     for name, numbers in names.items():
         and_filters = [{"name": "Name (IDR number)", "value": name, "operator": "equals", "resource": "project"}]
         or_filtes = []
@@ -318,7 +318,7 @@ def test_no_images():
             message= "%s is fine, results [idr stats, searchengine]: %s"%(name, result)
         report.append(message)
     search_omero_app.logger.info(message)
-    report = "\n\n\n-----------------------------------------------------------------------------\n".join(report)
+    report = "\n-----------------------------------------------------------------------------\n".join(report)
     with open(report_file, 'a') as f:
         f.write(report)
 
