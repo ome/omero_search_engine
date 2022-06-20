@@ -7,6 +7,7 @@ CACHE_FOLDER : "path/to/folder/app_data"
 SECRET_KEY : "fsdasdh3424vvcsd467fgh"
 ASYNCHRONOUS_SEARCH : True
 ELASTICSEARCH_URL : "http://localhost:9200"
+IDR_TEST_FILE_URL : "https://raw.githubusercontent.com/IDR/idr.openmicroscopy.org/master/_data/studies.tsv"
 PAGE_SIZE : 1000
 CACHE_ROWS : 10000
 MAX_RETUNED_ITEMS : 1700000

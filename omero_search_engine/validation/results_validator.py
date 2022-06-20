@@ -263,25 +263,30 @@ def validate_quries(json_file, deep_check):
         f.write(report)
 
 
-def test_no_images(studies_file):
+def test_no_images():
+    idr_url = search_omero_app.config.get("IDR_TEST_FILE_URL")
+    if not idr_url:
+        search_omero_app.logger.info("No idr test file is found")
 
+    import requests
+    response = requests.get(idr_url)
+    data = response.text
+    lines=[]
+    for i, line in enumerate(data.split('\n')):
+        lines.append(line)
     from omero_search_engine.api.v1.resources.query_handler import determine_search_results_
-    with  open(studies_file) as studies:
-        lines = studies.readlines()
-
     headers = lines[0]
     headers = headers.split("\t")
     print(len(headers))
     for i in range (len(headers)-1):
         print(i, headers[i])
-
     names = {}
     for line in lines:
         if lines.index(line) == 0:
             continue
-
         study = line.split("\t")
-        print(study[12])
+        if len(study)==1:
+            continue
         name = "%s/%s" % (study[0], study[1])
         names[name] = int(study[9])
 
@@ -333,7 +338,6 @@ def get_omero_stats():
     from omero_search_engine.api.v1.resources.resourse_analyser import  get_restircted_search_terms, query_cashed_bucket
     data=[]
     terms=get_restircted_search_terms()
-    print (terms)
     data.append(','.join(["Attribute","No. buckets","Total number","Resource"]))
     for resource,names in terms.items():
         for name in names:
@@ -343,7 +347,7 @@ def get_omero_stats():
             data.append("%s, %s, %s,%s"%(name,returned_results.get("total_number_of_buckets"),returned_results.get("total_number"),resource))
             for dat in returned_results.get("data"):
                 if not dat["Value"]:
-                    print ("toz", dat["Key"])
+                    print ("Value is empty string", dat["Key"])
     report ="\n".join(data)
 
     with open(stats_file, 'w') as f:

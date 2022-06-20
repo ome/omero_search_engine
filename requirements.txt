@@ -33,3 +33,4 @@ wcwidth==0.2.5
 Werkzeug==1.0.1
 elasticsearch==7.15.1
 flasgger==0.9.5
+requests==2.26.0
