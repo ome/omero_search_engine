@@ -72,7 +72,7 @@ def get_index_data_from_database(resource="all"):
             get_insert_data_to_index(sql_st, res)
         save_key_value_buckets(resource_table_=None, re_create_index=True, only_values=False)
         #validat ethe indexing
-        test_indexing_search_query(deep_check=True)
+        test_indexing_search_query(deep_check=True, check_studies=True)
 
 
 ##set configurations
@@ -118,6 +118,13 @@ def set_cache_folder (cache_folder=None):
     else:
         search_omero_app.logger.info("No attribute is provided")
 
+@manager.command
+@manager.option('-i', '--idr_url', help='URL for idr test file')
+def set_idr_test_file (idr_url=None):
+    if idr_url:
+        update_config_file({"IDR_TEST_FILE_URL":idr_url})
+    else:
+        search_omero_app.logger.info("No attribute is provided")
 
 
 @manager.command
@@ -167,8 +174,9 @@ def cache_key_value_index(resource=None,create_index=None, only_values=None):
 
 @manager.command
 @manager.option('-j', '--json_file', help='creating cached values only ')
+@manager.option('-c', '--check_studies', help='check studies from idr ')
 @manager.option('-d', '--deep_check', help='compare all the images from both searhc engine and database server, default is False so it will compare the number of images and the first searchengine page')
-def test_indexing_search_query(json_file="app_data/test_index_data.json", deep_check=False):
+def test_indexing_search_query(json_file="app_data/test_index_data.json", deep_check=False, check_studies=False):
     '''
     test the indexing and the searchengine query functions
     can be used:
@@ -177,11 +185,11 @@ def test_indexing_search_query(json_file="app_data/test_index_data.json", deep_c
     The test data can be provided from and external files, i.e. json file format
     if the data file, it will use sample file from (test_index_data.json) app_data folder
     '''
-    print (json_file)
+
     from omero_search_engine.validation.results_validator import validate_quries, test_no_images,get_omero_stats
     validate_quries(json_file, deep_check)
-    studies_file = r"app_data/studies_data.tsv"
-    test_no_images(studies_file)
+    if check_studies:
+        test_no_images()
     get_omero_stats()
 
 if __name__ == '__main__':
