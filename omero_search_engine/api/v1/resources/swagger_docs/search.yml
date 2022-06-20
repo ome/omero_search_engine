@@ -19,6 +19,11 @@ parameters:
     in: query
     type: string
     required: true
+  - name: study
+    description: filter by study name
+    in: query
+    type: string
+    required: False
   - name: operator
     description: operator, default equals
     in: query

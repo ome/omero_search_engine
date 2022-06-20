@@ -4,7 +4,8 @@ import json
 # url to send the query
 image_search = "/resources/image/search/"
 # search engine url
-base_url = "http://127.0.0.1:5577/api/v1/"
+#base_url = "http://127.0.0.1:5577/api/v1/"
+base_url ="https://idr-testing.openmicroscopy.org/searchengineapi/api/v1/"
 import sys
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 '''
@@ -42,7 +43,7 @@ def call_omero_return_results(url, data=None, method="post"):
         return bookmark, total_results, total_pages
 
     except Exception as ex:
-        logging.info("Error: %s" % e)
+        logging.info("Error: %s" % str(ex))
         sys.exit()
 
 url="%s%s?key=Organism&value=Homo sapiens"%(base_url,image_search)
@@ -53,3 +54,6 @@ while len(recieved_results)<total_results:
     url_=url+"&bookmark=%s"%bookmark
     bookmark, total_results, total_pages=call_omero_return_results(url_, method="get")
     logging.info("recieved: %s /%s, page: %s/%s, bookmark:  %s"%(len(recieved_results),total_results,page,total_pages, bookmark))
+
+# 2000 /11686633, page: 1/11687, bookmark: 109600
+#2000 /12225067, page: 1/12226, bookmark:  109600

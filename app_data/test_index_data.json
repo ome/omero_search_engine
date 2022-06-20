@@ -1,0 +1,86 @@
+{
+   "complex_test_cases":{
+      "query_image_and":[
+         [
+            [
+               "Cell Cycle Phase",
+               "anaphase"
+            ],
+            [
+               "organism",
+               "homo sapiens"
+            ]
+         ]
+      ],
+      "query_image_or":[
+         [
+            [
+               "Organism Part",
+               "appendix"
+            ],
+            [
+               "Organism Part Identifier",
+               "T-66000"
+            ]
+         ]
+      ],
+      "query_image_and_or":[
+         {
+            "query_image_or":[
+               [
+                  "Organism Part",
+                  "Prostate"
+               ],
+               [
+                  "Organism Part Identifier",
+                  "T-77100"
+               ]
+            ],
+            "query_image_and":[
+               [
+                  "Organism",
+                  "Homo sapiens"
+               ],
+               [
+                  "Antibody Identifier",
+                  "CAB034889"
+               ]
+            ]
+         }
+      ]
+   },
+   "test_cases":{
+      "image":[
+         [
+            "cell line",
+            "hcc44"
+         ],
+         [
+            "Cell Cycle Phase",
+            "anaphase"
+         ],
+         [
+            "organism",
+            "escherichia coli"
+         ]
+      ],
+      "project":[
+         [
+            "Imaging Method",
+            "flim"
+         ]
+      ],
+      "project_name":[
+         [
+            "name",
+            "idr0018-neff-histopathology/experimentA"
+         ]
+      ],
+      "screen":[
+         [
+            "Screen Type",
+            "validation screen"
+         ]
+      ]
+   }
+}

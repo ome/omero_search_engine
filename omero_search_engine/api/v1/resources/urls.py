@@ -168,7 +168,12 @@ def submit_query():
         query=None
     if not query:
         return jsonify(build_error_message("No query is provided"))
-    return_columns = request.args.get("return_columns")
+    return_columns=request.args.get("return_columns")
+    if return_columns:
+        try:
+            return_columns=json.loads(return_columns.lower())
+        except:
+            return_columns =False
     validation_results=query_validator(query)
     if validation_results=="OK":
         return jsonify(determine_search_results_(query, return_columns))
@@ -182,9 +187,10 @@ def search(resource_table):
     """
     key = request.args.get("key")
     value = request.args.get("value")
+    study=request.args.get("study")
     case_sensitive=request.args.get("case_sensitive")
     operator=request.args.get("operator")
     bookmark=request.args.get("bookmark")
     from omero_search_engine.api.v1.resources.query_handler import simple_search
-    results=simple_search(key, value, operator,case_sensitive,bookmark, resource_table)
+    results=simple_search(key, value, operator,case_sensitive,bookmark, resource_table, study)
     return jsonify(results)
