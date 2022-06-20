@@ -4,6 +4,7 @@ from datetime import datetime
 from omero_search_engine.api.v1.resources.query_handler import determine_search_results_, query_validator
 from omero_search_engine.validation.psql_templates import query_images_key_value, query_image_project_meta_data, \
     query_images_screen_key_value, query_images_in_project_name, query_images_screen_name,query_image_or
+import os, sys
 
 query_methods={"image":query_images_key_value,"project":query_image_project_meta_data, "screen":query_images_screen_key_value,
                "project_name":query_images_in_project_name,"screen_name":query_images_screen_name, "query_image_or": query_image_or}
@@ -263,9 +264,8 @@ def validate_quries(json_file, deep_check):
 
 
 def test_no_images(studies_file):
-    import os, sys
 
-    from omero_search_engine.api.v1.resources.query_handler import determine_search_results_, query_validator
+    from omero_search_engine.api.v1.resources.query_handler import determine_search_results_
     with  open(studies_file) as studies:
         lines = studies.readlines()
 
@@ -323,3 +323,28 @@ def test_no_images(studies_file):
     9 5D Images
     12 Size
     '''
+
+def get_omero_stats():
+    base_folder = "/etc/searchengine/"
+    if not os.path.isdir(base_folder):
+        base_folder = os.path.expanduser('~')
+    stats_file = os.path.join(base_folder, 'stats.csv')
+
+    from omero_search_engine.api.v1.resources.resourse_analyser import  get_restircted_search_terms, query_cashed_bucket
+    data=[]
+    terms=get_restircted_search_terms()
+    print (terms)
+    data.append(','.join(["Attribute","No. buckets","Total number","Resource"]))
+    for resource,names in terms.items():
+        for name in names:
+            if name=="Name (IDR number)":
+                continue
+            returned_results=query_cashed_bucket(name, resource)
+            data.append("%s, %s, %s,%s"%(name,returned_results.get("total_number_of_buckets"),returned_results.get("total_number"),resource))
+            for dat in returned_results.get("data"):
+                if not dat["Value"]:
+                    print ("toz", dat["Key"])
+    report ="\n".join(data)
+
+    with open(stats_file, 'w') as f:
+        f.write(report)

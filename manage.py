@@ -178,10 +178,11 @@ def test_indexing_search_query(json_file="app_data/test_index_data.json", deep_c
     if the data file, it will use sample file from (test_index_data.json) app_data folder
     '''
     print (json_file)
-    from omero_search_engine.validation.results_validator import validate_quries, test_no_images
+    from omero_search_engine.validation.results_validator import validate_quries, test_no_images,get_omero_stats
     validate_quries(json_file, deep_check)
     studies_file = r"app_data/studies_data.tsv"
     test_no_images(studies_file)
+    get_omero_stats()
 
 if __name__ == '__main__':
     manager.run()
