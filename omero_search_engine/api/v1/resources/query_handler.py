@@ -10,6 +10,8 @@ mapping_names={"project":{"Name (IDR number)":"name"},"screen":{"Name (IDR numbe
 
 def check_get_names(idr_ ):
     #check the idr name and return the reosurce and possible values
+    if idr_:
+        idr_=idr_.strip()
     resource = "project"
     pr_names=get_resource_names ("project")
     act_name=[name for name in pr_names if idr_ in name]
@@ -33,7 +35,11 @@ class QueryItem (object):
         self.name=filter.get("name")
         self.value=filter.get("value")
         self.operator=filter.get("operator")
-        self.query_type="keyvalue"
+        if filter.get("set_query_type") and filter.get("query_type"):
+                self.query_type=filter.get("query_type")
+        else:
+            self.query_type="keyvalue"
+
         if adjust_res:
             self.adjust_resource()
         #it will be used when buildingthe query
@@ -238,6 +244,7 @@ class QueryRunner(object, ):
                    qq.append(qu_.__dict__)
 
         if query_.get("main_attribute"):
+            print ("Main attribute:::::::")
             for key, qu_items in query_.get("main_attribute").items():
                 ss = []
                 for qu in qu_items:
@@ -327,7 +334,6 @@ def get_ids(results, resource):
             ids.append(qur_item_)
         return ids
     return None
-
 
 def process_search_results(results, resource, columns_def):
     returned_results={}
@@ -451,9 +457,11 @@ def determine_search_results_(query_, return_columns=False):
                 for val in q_item.value:
                     new_fil= {}
                     new_fil["value"]=val
-                    new_fil["name"] = filter["name"]
+                    new_fil["name"] = q_item.name
                     new_fil["resource"]=q_item.resource
                     new_fil["operator"]=filter["operator"]
+                    new_fil["set_query_type"]=True
+                    new_fil["query_type"]=q_item.query_type
                     new_or_filter.append(new_fil)
             else:
                 and_query_group.add_query(q_item)
