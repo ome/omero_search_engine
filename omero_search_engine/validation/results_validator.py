@@ -310,7 +310,7 @@ def test_no_images(studies_file):
         if result[0] != result[1]:
             message="Error:%s, results: %s"%( name, result)
         else:
-            message= "%s is fine, results: %s"%(name, result)
+            message= "%s is fine, results: %s, [idr stats, searchengine]"%(name, result)
         report.append(message)
     search_omero_app.logger.info(message)
     report = "\n\n\n-----------------------------------------------------------------------------\n".join(report)
