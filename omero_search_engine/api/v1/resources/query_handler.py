@@ -117,7 +117,7 @@ class QueryRunner(object, ):
     Run the quries and return the results
     '''
 
-    def __init__(self,and_query_group,  or_query_group, case_sensitive,  bookmark, raw_elasticsearch_query,columns_def, return_columns):
+    def __init__(self,and_query_group,  or_query_group, case_sensitive,  bookmark, raw_elasticsearch_query,columns_def, return_columns, return_containers):
         self.or_query_group=or_query_group
         self.and_query_group=and_query_group
         self.case_sensitive=case_sensitive
@@ -127,6 +127,7 @@ class QueryRunner(object, ):
         self.image_query={}
         self.additional_image_conds=[]
         self.return_columns=return_columns
+        self.return_containers=self.return_containers
 
     def get_iameg_non_image_query(self):
         has_main=False
@@ -244,7 +245,6 @@ class QueryRunner(object, ):
                    qq.append(qu_.__dict__)
 
         if query_.get("main_attribute"):
-            print ("Main attribute:::::::")
             for key, qu_items in query_.get("main_attribute").items():
                 ss = []
                 for qu in qu_items:
@@ -273,7 +273,10 @@ class QueryRunner(object, ):
             bookmark=self.bookmark
         else:
             bookmark=None
-        res=seracrh_query(query, resource, bookmark, self.raw_elasticsearch_query, main_attributes)
+
+        res=seracrh_query(query, resource, bookmark, self.raw_elasticsearch_query, main_attributes,return_containers=self.return_containers)
+        if resource=="image" and self.return_containers:
+            pass
         if resource != "image":
             return res
         elif self.return_columns:
@@ -281,7 +284,7 @@ class QueryRunner(object, ):
         else:
             return res
 
-def seracrh_query(query,resource,bookmark,raw_elasticsearch_query, main_attributes=None):
+def seracrh_query(query,resource,bookmark,raw_elasticsearch_query, main_attributes=None, return_containers=False):
     search_omero_app.logger.info ("-------------------------------------------------")
     search_omero_app.logger.info (query)
     search_omero_app.logger.info(main_attributes)
@@ -301,7 +304,12 @@ def seracrh_query(query,resource,bookmark,raw_elasticsearch_query, main_attribut
             ress=search_resource_annotation(resource, q_data.get("query"), raw_elasticsearch_query=raw_elasticsearch_query,
                                        page=query.get("page"), bookmark=bookmark)
         else:
-            ress=search_resource_annotation(resource, q_data.get("query"))
+            if not return_containers:
+                ress=search_resource_annotation(resource, q_data.get("query"))
+            else:
+                ###Should have a method to search the elasticsearch and returns the containers only,
+                #It is hard coddedno in the util search_annotation  method.
+                ress = search_resource_annotation_retuen_conatines_only(resource, q_data.get("query"))
         ress["Error"] = "none"
         return ress
     except Exception as ex:
@@ -430,7 +438,7 @@ def process_search_results(results, resource, columns_def):
     returned_results["resource"]=results["resource"]+"s"
     return returned_results
 
-def determine_search_results_(query_, return_columns=False):
+def determine_search_results_(query_, return_columns=False, return_containers=False):
     if query_.get("query_details"):
         case_sensitive = query_.get("query_details").get("case_sensitive")
     else:
@@ -479,7 +487,7 @@ def determine_search_results_(query_, return_columns=False):
             or_query_group.divide_filter()
             or_query_group.adjust_query_main_attributes()
 
-    query_runner=QueryRunner(and_query_groups, or_query_groups, case_sensitive, bookmark, raw_elasticsearch_query, columns_def,return_columns)
+    query_runner=QueryRunner(and_query_groups, or_query_groups, case_sensitive, bookmark, raw_elasticsearch_query, columns_def,return_columns, return_containers)
     query_results=query_runner.get_iameg_non_image_query()
     return query_results
 

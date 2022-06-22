@@ -157,6 +157,29 @@ def get_resource_names_(resource_table):
     return jsonify (names)
 
 
+@resources.route('/submitquery_returnstudies/',methods=['POST'])
+def submit_query_return_containers():
+    """
+    file: swagger_docs/submitquery.yml
+    """
+    try:
+        query =json.loads(request.data)
+    except:
+        query=None
+    if not query:
+        return jsonify(build_error_message("No query is provided"))
+    return_columns=request.args.get("return_columns")
+    if return_columns:
+        try:
+            return_columns=json.loads(return_columns.lower())
+        except:
+            return_columns =False
+    validation_results=query_validator(query)
+    if validation_results=="OK":
+        return jsonify(determine_search_results_(query, return_columns, True))
+    else:
+        return jsonify(build_error_message(validation_results))
+
 @resources.route('/submitquery/',methods=['POST'])
 def submit_query():
     """

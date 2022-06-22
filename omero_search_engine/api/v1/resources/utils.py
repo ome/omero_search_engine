@@ -428,11 +428,11 @@ def search_index_using_search_after(e_index, query, page, bookmark_):
     returned_results = []
     if not page:
         page = 1
-    page_size = search_omero_app.config.get("PAGE_SIZE")
+    page_size =search_omero_app.config.get("PAGE_SIZE")
     es = search_omero_app.config.get("es_connector")
     start__ = datetime.now()
-    res = es.count(index=e_index, body=query)
-    size = res['count']
+    #res = es.count(index=e_index, body=query)
+    size = 1#res['count']
     search_omero_app.logger.info("Total: %s" % size)
     query['size'] = page_size
     if size % page_size == 0:
@@ -466,7 +466,10 @@ def search_index_using_search_after(e_index, query, page, bookmark_):
         bookmark = [res['hits']['hits'][-1]['sort'][0]]
         page += 1
     return {"results": returned_results, "total_pages": no_of_pages, "bookmark": bookmark, "size": size, "page": page}
-    
+
+def search_resource_annotation_return_conatines_only(table_, query, raw_elasticsearch_query=None, page=None,bookmark=None):
+
+    pass
 def search_resource_annotation(table_, query, raw_elasticsearch_query=None, page=None,bookmark=None):
     '''
     @table_: the resource table, e.g. image. project, etc.
@@ -508,6 +511,13 @@ def search_resource_annotation(table_, query, raw_elasticsearch_query=None, page
         else:
             query=raw_elasticsearch_query
             raw_query_to_send_back=copy.copy(raw_elasticsearch_query)
+        #code to return the containers only, needs to be alrted to diffemtiate between this and retrun the results, may be new method
+        query["collapse"]= {
+            "field": "project_name.keyvalue"
+        }
+        query["_source"]= {
+            "includes": ["screen_name","project_name" ]
+        }
         res=search_index_using_search_after(res_index, query, page, bookmark)
         notice=""
         end_time = time.time()
