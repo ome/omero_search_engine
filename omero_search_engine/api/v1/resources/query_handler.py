@@ -490,7 +490,7 @@ def determine_search_results_(query_, return_columns=False, return_containers=Fa
     return query_results
 
 
-def simple_search(key, value, operator,  case_sensitive, bookmark, resource, study):
+def simple_search(key, value, operator,  case_sensitive, bookmark, resource, study, return_containers=False):
     if not operator:
         operator='equals'
     and_filters=[{"name": key, "value": value, "operator": operator, "resource":resource }]
@@ -500,7 +500,7 @@ def simple_search(key, value, operator,  case_sensitive, bookmark, resource, stu
     query_details["bookmark"]=[bookmark]
     query_details["case_sensitive"]=case_sensitive
     if not study:
-        return (search_resource_annotation(resource, {"query_details": query_details},bookmark=bookmark))
+        return (search_resource_annotation(resource, {"query_details": query_details},bookmark=bookmark, return_containers=return_containers))
     else:
         and_filters.append({"name": "Name (IDR number)", "value": study, "operator": "equals", "resource":"project"})
         return determine_search_results_({"query_details": query_details})

@@ -37,6 +37,10 @@ parameters:
     description: bookmark is used to the call the next page if number of results is bigger than 1000, it returns with each reasult page.
     in: query
     type: integer
+  - name: return_containers
+    in: query
+    type: boolean
+    required: false
 responses:
   200:
     description: A JSON contains the search results

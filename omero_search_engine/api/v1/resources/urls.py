@@ -33,6 +33,9 @@ def search_resource_page(resource_table):
             bookmark=data.get("bookmark")
             raw_elasticsearch_query=data.get("raw_elasticsearch_query")
             return_containers = data.get("return_containers")
+            if return_containers:
+                return_containers = json.loads(return_containers.lower())
+
             resource_list = search_resource_annotation(resource_table, query, raw_elasticsearch_query=raw_elasticsearch_query,page=page,bookmark=bookmark, return_containers=return_containers)
             return jsonify(resource_list)
         else:
@@ -81,12 +84,13 @@ def search_resource(resource_table):
     validation_results=query_validator(query)
     if validation_results=="OK":
         return_containers = request.args.get("return_containers")
+        if return_containers:
+            return_containers = json.loads(return_containers.lower())
+
         resource_list = search_resource_annotation(resource_table, query,return_containers=return_containers )
         return jsonify(resource_list)
     else:
         return jsonify(build_error_message(validation_results))
-
-
 
 @resources.route('/<resource_table>/searchvalues/',methods=['GET'])
 def get_values_using_value(resource_table):
@@ -217,5 +221,8 @@ def search(resource_table):
     operator=request.args.get("operator")
     bookmark=request.args.get("bookmark")
     from omero_search_engine.api.v1.resources.query_handler import simple_search
-    results=simple_search(key, value, operator,case_sensitive,bookmark, resource_table, study)
+    return_containers = request.args.get("return_containers")
+    if return_containers:
+        return_containers = json.loads(return_containers.lower())
+    results=simple_search(key, value, operator,case_sensitive,bookmark, resource_table, study, return_containers)
     return jsonify(results)

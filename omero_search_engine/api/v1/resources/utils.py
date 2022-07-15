@@ -530,7 +530,26 @@ def search_resource_annotation(table_, query, raw_elasticsearch_query=None, page
             query["_source"]= {
                 "includes": ["screen_name","project_name" ]
             }
-        res=search_index_using_search_after(res_index, query, page, bookmark, return_containers)
+            res = search_index_using_search_after(res_index, query, page, bookmark, return_containers)
+            query["collapse"] = {
+                "field": "screen_name.keyvalue"
+            }
+            res_2 = search_index_using_search_after(res_index, query, page, bookmark, return_containers)
+            studies=[]
+            if len(res)>0:
+                for item1 in res.get("results"):
+                    pr=item1.get("project_name")
+                    if pr and pr not in studies:
+                        studies.append({"Name (IDR number)": pr})
+            if len(res_2) > 0:
+                for item2 in res_2.get("results"):
+                    sc = item2.get("screen_name")
+                    if sc and sc not in studies:
+                        studies.append({"Name (IDR number)": sc})
+            res={"results": studies}
+
+        else:
+            res=search_index_using_search_after(res_index, query, page, bookmark, return_containers)
         notice=""
         end_time = time.time()
         query_time = ("%.2f" % (end_time - start_time))

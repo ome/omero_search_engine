@@ -36,6 +36,10 @@ parameters:
   - name: data
     in: body
     required: true
+  - name: return_containers
+    in: query
+    type: boolean
+    required: false
    # required:
    #   - and_filter
    #   - or_filter
