@@ -32,7 +32,8 @@ def search_resource_page(resource_table):
             page=data.get("page")
             bookmark=data.get("bookmark")
             raw_elasticsearch_query=data.get("raw_elasticsearch_query")
-            resource_list = search_resource_annotation(resource_table, query, raw_elasticsearch_query=raw_elasticsearch_query,page=page,bookmark=bookmark)
+            return_containers = data.get("return_containers")
+            resource_list = search_resource_annotation(resource_table, query, raw_elasticsearch_query=raw_elasticsearch_query,page=page,bookmark=bookmark, return_containers=return_containers)
             return jsonify(resource_list)
         else:
             return jsonify(build_error_message(validation_results))
@@ -79,7 +80,8 @@ def search_resource(resource_table):
         #check if the app configuration will use ASYNCHRONOUS SEARCH or not.
     validation_results=query_validator(query)
     if validation_results=="OK":
-        resource_list = search_resource_annotation(resource_table, query)
+        return_containers = request.args.get("return_containers")
+        resource_list = search_resource_annotation(resource_table, query,return_containers=return_containers )
         return jsonify(resource_list)
     else:
         return jsonify(build_error_message(validation_results))

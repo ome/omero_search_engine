@@ -1,5 +1,6 @@
 from omero_search_engine import search_omero_app
 from  omero_search_engine.api.v1.resources.urls import search_resource_annotation, get_resource_names
+from  omero_search_engine.api.v1.resources.utils import search_resource_annotation_return_conatines_only
 import json
 from jsonschema import validate, ValidationError, SchemaError, RefResolver
 from os.path import abspath,dirname
@@ -127,7 +128,7 @@ class QueryRunner(object, ):
         self.image_query={}
         self.additional_image_conds=[]
         self.return_columns=return_columns
-        self.return_containers=self.return_containers
+        self.return_containers=return_containers
 
     def get_iameg_non_image_query(self):
         has_main=False
@@ -302,14 +303,11 @@ def seracrh_query(query,resource,bookmark,raw_elasticsearch_query, main_attribut
             q_data["bookmark"] =bookmark
             q_data["raw_elasticsearch_query"] = raw_elasticsearch_query
             ress=search_resource_annotation(resource, q_data.get("query"), raw_elasticsearch_query=raw_elasticsearch_query,
-                                       page=query.get("page"), bookmark=bookmark)
+                                       page=query.get("page"), bookmark=bookmark,return_containers=return_containers)
         else:
-            if not return_containers:
-                ress=search_resource_annotation(resource, q_data.get("query"))
-            else:
-                ###Should have a method to search the elasticsearch and returns the containers only,
-                #It is hard coddedno in the util search_annotation  method.
-                ress = search_resource_annotation_retuen_conatines_only(resource, q_data.get("query"))
+            ###Should have a method to search the elasticsearch and returns the containers only,
+            #It is hard coddedno in the util search_annotation  method.
+            ress = search_resource_annotation(resource, q_data.get("query"),return_containers=return_containers)
         ress["Error"] = "none"
         return ress
     except Exception as ex:
