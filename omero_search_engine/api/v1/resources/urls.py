@@ -163,10 +163,10 @@ def get_resource_names_(resource_table):
     return jsonify (names)
 
 
-@resources.route('/submitquery_returnstudies/',methods=['POST'])
+@resources.route('/submitquery_returncontainers/',methods=['POST'])
 def submit_query_return_containers():
     """
-    file: swagger_docs/submitquery.yml
+    file: swagger_docs/submitquery_returncontainers.yml
     """
     try:
         query =json.loads(request.data)
@@ -182,7 +182,7 @@ def submit_query_return_containers():
             return_columns =False
     validation_results=query_validator(query)
     if validation_results=="OK":
-        return jsonify(determine_search_results_(query, return_columns, True))
+        return jsonify(determine_search_results_(query, return_columns, return_containers=True))
     else:
         return jsonify(build_error_message(validation_results))
 

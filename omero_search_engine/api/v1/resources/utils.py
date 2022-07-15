@@ -523,7 +523,8 @@ def search_resource_annotation(table_, query, raw_elasticsearch_query=None, page
             query=raw_elasticsearch_query
             raw_query_to_send_back=copy.copy(raw_elasticsearch_query)
         if return_containers:
-            #code to return the containers only, needs to be alrted to diffentiate between this and retrun the results, may be a new method
+            #code to return the containers only
+            # It will call the projects container first then search within screens
             query["collapse"]= {
                 "field": "project_name.keyvalue"
             }
@@ -535,6 +536,7 @@ def search_resource_annotation(table_, query, raw_elasticsearch_query=None, page
                 "field": "screen_name.keyvalue"
             }
             res_2 = search_index_using_search_after(res_index, query, page, bookmark, return_containers)
+            #Combines the containers reults
             studies=[]
             if len(res)>0:
                 for item1 in res.get("results"):

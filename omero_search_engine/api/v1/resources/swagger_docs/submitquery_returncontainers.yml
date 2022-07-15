@@ -1,0 +1,63 @@
+A searchengine endpoint to accept complex query but it will return the continers only (Name (Idr number))
+API endpoint to search the annotation (key/value pair), the main difference between this endpoint and searchannotation is this one can be used to search different resources and return the images which satisfy the search conditions.
+The query data has a similar format to the query for searchannotation.
+Example:
+  
+  {
+     "resource":"image",
+     "query_details":{
+        "and_filters":[
+           {
+              "name":"Cell Line",
+              "operator":"equals",
+              "query_type":"keyvalue",
+              "resource":"image",
+              "value":"hela"
+           }
+        ],
+        "case_sensitive":false,
+        "or_filters":[
+
+        ]
+     }
+
+
+  }
+---
+tags:
+ - Mixed Complex query
+
+parameters:
+  - name: return_columns
+    description: return additional columns to help display the results in a table
+    in: query
+    type: boolean
+    required: false
+  - name: data
+    in: body
+    required: true
+    #examples:
+    #  query: {
+    #    "resource": "image",
+    #    "query_details": {
+    #      "and_filters": [
+    #        {
+    #          "name": "Gene Symbol",
+    #          "value": "pdx1",
+    #          "operator": "equals",
+    #          "resource": "image"
+    #        }
+    #      ],
+    #      "or_filters": [#
+
+    #      ],
+    #      "case_sensitive": false
+    #    },
+    #    "mode": "usesearchterms"
+    #  }
+
+responses:
+  200:
+    description: A JSON contains the results
+    examples:
+      results: []
