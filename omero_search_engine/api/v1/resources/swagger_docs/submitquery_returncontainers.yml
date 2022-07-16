@@ -2,11 +2,11 @@ A searchengine endpoint to accept complex query but it will return the continers
 API endpoint to search the annotation (key/value pair), the main difference between this endpoint and searchannotation is this one can be used to search different resources and return the images which satisfy the search conditions.
 The query data has a similar format to the query for searchannotation.
 Example:
-  
+
   {
      "resource":"image",
-     "query_details":{
-        "and_filters":[
+     "query_details": {
+        "and_filters": [
            {
               "name":"Cell Line",
               "operator":"equals",
@@ -15,14 +15,38 @@ Example:
               "value":"hela"
            }
         ],
-        "case_sensitive":false,
-        "or_filters":[
+        "case_sensitive": false,
+        "or_filters": [
 
         ]
      }
-
-
   }
+
+Another example:
+
+  {
+    "resource": "image",
+    "query_details": {
+      "and_filters": [
+        {
+          "name": "Organism",
+          "value": "mus musculus",
+          "operator": "equals",
+          "resource": "image"
+        },
+        {
+          "name": "Imaging Method",
+          "value": "light sheet fluorescence microscopy, spim",
+          "operator": "equals",
+          "resource": "project"
+        }
+      ],
+      "or_filters": [
+      ],
+      "case_sensitive": false
+    }
+  }
+
 ---
 tags:
  - Mixed Complex query
@@ -37,24 +61,8 @@ parameters:
     in: body
     required: true
     #examples:
-    #  query: {
-    #    "resource": "image",
-    #    "query_details": {
-    #      "and_filters": [
-    #        {
-    #          "name": "Gene Symbol",
-    #          "value": "pdx1",
-    #          "operator": "equals",
-    #          "resource": "image"
-    #        }
-    #      ],
-    #      "or_filters": [#
 
-    #      ],
-    #      "case_sensitive": false
-    #    },
-    #    "mode": "usesearchterms"
-    #  }
+
 
 responses:
   200:

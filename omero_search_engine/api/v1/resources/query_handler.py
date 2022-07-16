@@ -275,9 +275,13 @@ class QueryRunner(object, ):
         else:
             bookmark=None
 
-        res=seracrh_query(query, resource, bookmark, self.raw_elasticsearch_query, main_attributes,return_containers=self.return_containers)
+        #res=seracrh_query(query, resource, bookmark, self.raw_elasticsearch_query, main_attributes,return_containers=self.return_containers)
         if resource=="image" and self.return_containers:
-            pass
+            res = seracrh_query(query, resource, bookmark, self.raw_elasticsearch_query, main_attributes,
+                                return_containers=self.return_containers)
+        else:
+            res = seracrh_query(query, resource, bookmark, self.raw_elasticsearch_query, main_attributes)
+
         if resource != "image":
             return res
         elif self.return_columns:
