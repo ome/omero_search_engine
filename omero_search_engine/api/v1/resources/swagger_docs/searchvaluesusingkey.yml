@@ -1,4 +1,36 @@
 Get the available values for an attribute for one or all resources.
+This following is the most common attributes for each resource
+
+   project:
+      Imaging Method,
+      Publication Title,
+      Publication Authors,
+      Study Type,
+      License
+
+   screen:
+      Screen Technology Type,
+      Screen Type
+
+   image:
+      Organism,
+      Organism Part,
+      Cell Line,
+      Gene Name,
+      Gene Symbol,
+      Compound Name,
+      PubChem CID,
+      InChIKey,
+      Antibody,
+      Antibody Identifier,
+      Protein,
+      Pathology,
+      Pathology Identifier,
+      Phenotype,
+      Phenotype Term Accession,
+      siRNA Identifier,
+      siRNA Pool Identifier
+
  ---
 tags:
  -  Available values for a resourse key (attribute)
@@ -6,13 +38,18 @@ parameters:
   - name: resource_table
     in: path
     type: string
-    enum: ['image', 'project', 'screen', 'well', 'plate', 'all']
+    enum: ['image', 'project', 'screen', 'well', 'plate']
     required: true
   - name: key
     description: the resource attribute
     in: query
     type: string
     required: true
+  - name: csv
+    description: a flag to return a csv file which is created on the fly instead of json
+    in: query
+    type: boolean
+    required: false
 
 responses:
   200:

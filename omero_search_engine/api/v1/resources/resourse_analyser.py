@@ -238,6 +238,24 @@ def prepare_search_results_buckets(results_):
     return {"data": returned_results, "total_number": total_number,
             "total_number_of_%s" % (resource): total, "total_number_of_buckets": number_of_buckets, "total_items":total_items}
 
+
+def get_key_values_return_contents(name ,resource,csv):
+    from flask import jsonify, Response
+    resource_keys = query_cashed_bucket(name, resource)
+    #if a csv flag is true thenm iut will send a scv file which contains the results
+    d = resource_keys.get("data")
+    key_string = ','.join(d[0].keys())
+    st = ''
+    for e in d:
+        st = st + '\n' + ','.join(str(sr) for sr in e.values())
+    content = key_string + st
+    return Response(
+        content,
+        mimetype="text/csv",
+        headers={"Content-disposition":
+                     "attachment; filename=%s.csv" % name})
+    return jsonify(resource_keys)
+
 def query_cashed_bucket(name ,resource, es_index="key_value_buckets_information"):
     #returns possible matches for a specific resource
     if resource !="all":
