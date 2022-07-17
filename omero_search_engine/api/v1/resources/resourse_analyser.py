@@ -243,18 +243,34 @@ def get_key_values_return_contents(name ,resource,csv):
     from flask import jsonify, Response
     resource_keys = query_cashed_bucket(name, resource)
     #if a csv flag is true thenm iut will send a scv file which contains the results
+    #otherwise it will return a json 
     if csv:
-        d = resource_keys.get("data")
-        key_string = ','.join(d[0].keys())
-        st = ''
-        for e in d:
-            st = st + '\n' + ','.join(str(sr) for sr in e.values())
-        content = key_string + st
+        if resource != 'all':
+            d = resource_keys.get("data")
+            print (d)
+            key_string = ','.join(d[0].keys())
+            st = ''
+            for e in d:
+                st = st + '\n' + ','.join(str(sr) for sr in e.values())
+            content = key_string + st
+
+        else:
+            key_string=''
+            content=[]
+            for resource_, data in resource_keys.items():
+                d = data.get("data")
+                if not key_string:
+                    key_string ="resourse,"+ ','.join(d[0].keys())
+                for e in d:
+                    content.append(resource_ +", "+','.join(str(sr) for sr in e.values()))
+
+            content = key_string +'\n'+ '\n'.join(content)
         return Response(
             content,
             mimetype="text/csv",
             headers={"Content-disposition":
-                         "attachment; filename=%s.csv" % name})
+                         "attachment; filename=%s_%s.csv" % (name,resource)})
+
     return jsonify(resource_keys)
 
 def query_cashed_bucket(name ,resource, es_index="key_value_buckets_information"):
