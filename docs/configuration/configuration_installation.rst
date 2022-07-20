@@ -71,8 +71,8 @@ Ubuntu and CentOS7 images are provided.
 
     $ docker run --rm -p 5577:5577 -v $HOME/:/etc/searchengine/  searchengine show_saved_indices
 
-Searchengine installation and configuration using Ansible:
-==========================================================
+Searchengine installation and configuration using Ansible
+=========================================================
 
 The ansible playbook :omero_search_engine:`management-searchengine.yml <deployment/ansible/management-searchengine.yml>` has been developed to deploy the apps:
 
