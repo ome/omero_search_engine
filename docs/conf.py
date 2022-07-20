@@ -17,6 +17,7 @@
 
 # -- Project information -----------------------------------------------------
 
+import datetime
 import os
 import sys
 path=os.path.abspath('..')
@@ -25,8 +26,9 @@ sys.path.append(os.path.abspath(os.path.join(path, '..')))
 
 
 project = 'OMERO Search Engine'
-copyright = '2022 Ome group'
-author = 'Ome team'
+# General information about the project.
+author = u'The Open Microscopy Environment'
+copyright = u'2022-%d, ' % datetime.datetime.now().year + author
 
 
 # -- General configuration ---------------------------------------------------
