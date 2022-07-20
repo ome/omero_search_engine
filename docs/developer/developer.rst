@@ -1,2 +1,2 @@
-Devloper's documents
-====================
+Developer's documents
+=====================
