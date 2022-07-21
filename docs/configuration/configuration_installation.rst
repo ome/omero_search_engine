@@ -42,7 +42,7 @@ The application should have the access attributes (e.g, URL, username, password,
 Application installation using Docker
 =====================================
 
-Ubuntu and CentOS7 images are provided.
+Ubuntu and CentOS 7 images are provided.
 
 * The user may build the Docker image using the following command::
 
