@@ -17,16 +17,18 @@
 
 # -- Project information -----------------------------------------------------
 
+import datetime
 import os
 import sys
-path=os.path.abspath('..')
+path = os.path.abspath('..')
 sys.path.insert(0, path)
 sys.path.append(os.path.abspath(os.path.join(path, '..')))
 
 
 project = 'OMERO Search Engine'
-copyright = '2022 Ome group'
-author = 'Ome team'
+# General information about the project.
+author = u'The Open Microscopy Environment'
+copyright = u'2022-%d, ' % datetime.datetime.now().year + author
 
 
 # -- General configuration ---------------------------------------------------
@@ -34,9 +36,9 @@ author = 'Ome team'
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.autodoc']
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.extlinks']
 
-autodoc_mock_imports=[]
+autodoc_mock_imports = []
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -57,4 +59,18 @@ html_theme = 'default'
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+# html_static_path = ['_static']
+
+# Variables used to define other extlinks
+github_root = 'https://github.com/'
+ome_github_root = github_root + '/ome/'
+
+extlinks = {
+  # GitHub links
+  'omero_search_engine': (ome_github_root + 'omero_search_engine/blob/main/' + '%s', None),  # noqa
+}
+
+rst_epilog = """
+.. _ElasticSearch: https://www.elastic.co/
+
+ """

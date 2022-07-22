@@ -1,2 +1,0 @@
-Devloper's documents
-====================
