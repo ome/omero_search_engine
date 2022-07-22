@@ -273,7 +273,7 @@ def get_key_values_return_contents(name ,resource,csv):
                 content,
                 mimetype="text/csv",
                 headers={"Content-disposition":
-                             "attachment; filename=%s_%s.csv" % (name,resource)})
+                             "attachment; filename=%s_%s.csv" % (name.replace(' ','_'),resource)})
 
     return jsonify(resource_keys)
 
