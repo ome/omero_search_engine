@@ -2,7 +2,7 @@ from . import resources
 from flask import request, jsonify
 import json
 from omero_search_engine.api.v1.resources.utils import search_resource_annotation, build_error_message
-from omero_search_engine.api.v1.resources.resourse_analyser import  search_value_for_resource,query_cashed_bucket, get_resource_attributes, get_resource_attribute_values, get_resource_names, get_values_for_a_key, query_cashed_bucket_value
+from omero_search_engine.api.v1.resources.resourse_analyser import  search_value_for_resource,query_cashed_bucket, get_resource_attributes, get_resource_attribute_values, get_resource_names, get_values_for_a_key, query_cashed_bucket_value,get_key_values_return_contents
 from omero_search_engine.api.v1.resources.utils import get_resource_annotation_table
 from omero_search_engine.api.v1.resources.query_handler import determine_search_results_, query_validator
 
@@ -104,11 +104,23 @@ def search_values_for_a_key(resource_table):
     """
     file: swagger_docs/searchvaluesusingkey.yml
     """
-
     key=request.args.get("key")
     if not key:
         return jsonify(build_error_message("No key is provided "))
-    return jsonify(query_cashed_bucket (key, resource_table))
+
+    #csv is a flag true of false,
+    #default is false
+    #if it sets to true, a sv file content will be sent insetead of dict
+    csv = request.args.get("csv")
+    if csv:
+        try:
+            csv = json.loads(csv.lower())
+        except:
+            csv = False
+
+    return get_key_values_return_contents(key, resource_table, csv)
+
+
 #getannotationkeys==> keys
 @resources.route('/<resource_table>/keys/',methods=['GET'])
 def get_resource_keys(resource_table):

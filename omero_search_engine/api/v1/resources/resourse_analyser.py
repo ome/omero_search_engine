@@ -238,8 +238,49 @@ def prepare_search_results_buckets(results_):
     return {"data": returned_results, "total_number": total_number,
             "total_number_of_%s" % (resource): total, "total_number_of_buckets": number_of_buckets, "total_items":total_items}
 
+
+def get_key_values_return_contents(name ,resource,csv):
+    from flask import jsonify, Response
+    resource_keys = query_cashed_bucket(name, resource)
+    #if a csv flag is true thenm iut will send a scv file which contains the results
+    #otherwise it will return a json
+    if csv:
+        if resource != 'all':
+            content=''
+            d = resource_keys.get("data")
+            if d and len (d)>0:
+                key_string = ','.join(d[0].keys())
+                st = ''
+                for e in d:
+                    st = st + '\n" %s"'%('","'.join(str(sr) for sr in e.values()))
+                content = key_string + st
+
+        else:
+            key_string=''
+            content=[]
+            for resource_, data in resource_keys.items():
+                d = data.get("data")
+                if d and len(d)>0:
+                    if not key_string:
+                        key_string ="resourse,"+ ','.join(d[0].keys())
+                    for e in d:
+                        content.append('%s,'%resource_+'"%s"'%(('","'.join(str(sr) for sr in e.values()))))
+
+
+            content = key_string +'\n'+ '\n'.join(content)
+        if content and len(content)>0:
+            return Response(
+                content,
+                mimetype="text/csv",
+                headers={"Content-disposition":
+                             "attachment; filename=%s_%s.csv" % (name.replace(' ','_'),resource)})
+
+    return jsonify(resource_keys)
+
 def query_cashed_bucket(name ,resource, es_index="key_value_buckets_information"):
     #returns possible matches for a specific resource
+    if name:
+        name=name.strip()
     if resource !="all":
         query=key_values_buckets_template.substitute(name=name, resource=resource)
         res=search_index_for_values_get_all_buckets(es_index, query)

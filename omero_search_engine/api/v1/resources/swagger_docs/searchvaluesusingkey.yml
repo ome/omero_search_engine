@@ -1,4 +1,38 @@
 Get the available values for an attribute for one or all resources.
+  It returns a JASON string containing the results.
+  It is possible to return a CSV file by setting the csv flag as true.
+The following are the most common attributes for each resource
+
+   project:
+      Imaging Method,
+      Publication Title,
+      Publication Authors,
+      Study Type,
+      License
+
+   screen:
+      Screen Technology Type,
+      Screen Type
+
+   image:
+      Organism,
+      Organism Part,
+      Cell Line,
+      Gene Name,
+      Gene Symbol,
+      Compound Name,
+      PubChem CID,
+      InChIKey,
+      Antibody,
+      Antibody Identifier,
+      Protein,
+      Pathology,
+      Pathology Identifier,
+      Phenotype,
+      Phenotype Term Accession,
+      siRNA Identifier,
+      siRNA Pool Identifier
+
  ---
 tags:
  -  Available values for a resourse key (attribute)
@@ -13,6 +47,11 @@ parameters:
     in: query
     type: string
     required: true
+  - name: csv
+    description: a flag to return a csv file which is created on the fly instead of json
+    in: query
+    type: boolean
+    required: false
 
 responses:
   200:
