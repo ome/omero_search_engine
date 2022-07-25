@@ -67,7 +67,7 @@ while len(received_results) < total_results:
         url_, method="get"
     )  # noqa
     logging.info(
-        "recieved: %s /%s, page: %s/%s, bookmark:  %s"
+        "received: %s /%s, page: %s/%s, bookmark:  %s"
         % (len(received_results), total_results, page, total_pages, bookmark)
     )
 

@@ -9,7 +9,7 @@ Cell Type = "induced pluripotent stem cell" and compound = "fibronectin"
 The "and" query clauses should be as follows:
 """
 
-recieved_results_data = []
+received_results_data = []
 and_filters = [
     {
         "name": "Cell Type",
@@ -25,7 +25,7 @@ and_filters = [
     },
 ]
 
-recieved_results_data = []
+received_results_data = []
 """
 If we need to restrict the results to a specific owner,
 we can use the main attribute that can be used to add

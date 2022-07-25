@@ -11,7 +11,7 @@ and_filters = [
 main_attributes = []
 query = {"and_filters": and_filters}
 
-recieved_results_data = query_the_search_ending(query, main_attributes)
+received_results_data = query_the_search_ending(query, main_attributes)
 
 # Another example: Cell line = "U2OS" and Gene Symbol = "RHEB"
 
@@ -20,4 +20,4 @@ and_filters_2 = [
     {"name": "Gene Symbol", "value": "RHEB", "operator": "equals"},
 ]
 query_2 = {"and_filters": and_filters_2, "case_sensitive": True}
-recieved_results_data_2 = query_the_search_ending(query_2, main_attributes)
+received_results_data_2 = query_the_search_ending(query_2, main_attributes)

@@ -73,7 +73,7 @@ try:
         # if the number of pages is bigger than 1,
         # then the bookmark needs to get the next page
         bookmark = returned_results.get("results").get("bookmark")
-        no_recieved_results = len(returned_results["results"]["results"])
+        no_received_results = len(returned_results["results"]["results"])
 
     else:
         logging.info("No results.")
