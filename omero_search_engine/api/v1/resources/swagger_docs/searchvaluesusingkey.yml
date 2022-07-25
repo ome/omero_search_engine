@@ -1,6 +1,6 @@
 Get the available values for an attribute for one or all resources.
-  It returns a JASON string containing the results.
-  It is possible to return a CSV file by setting the csv flag as true.
+It returns a JSON string containing the results.
+It is possible to return a CSV file by setting the csv flag as true.
 The following are the most common attributes for each resource
 
    project:
@@ -35,7 +35,7 @@ The following are the most common attributes for each resource
 
  ---
 tags:
- -  Available values for a resourse key (attribute)
+ -  Available values for a resource key (attribute)
 parameters:
   - name: resource_table
     in: path
@@ -48,7 +48,7 @@ parameters:
     type: string
     required: true
   - name: csv
-    description: a flag to return a csv file which is created on the fly instead of json
+    description: a flag to return a CSV file which is created on the fly instead of JSON
     in: query
     type: boolean
     required: false
