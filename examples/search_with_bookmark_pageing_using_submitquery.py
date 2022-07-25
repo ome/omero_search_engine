@@ -35,7 +35,7 @@ def call_omero_searchengine_return_results(url, data=None, method="post"):
         elif len(returned_results["results"]) == 0:
             logging.info("Your query returns no results")
             sys.exit()
-        # get the boomark which will be used to call
+        # get the bookmark which will be used to call
         # the next page of the results
         bookmark = returned_results["results"]["bookmark"]
         # get the size of the total results

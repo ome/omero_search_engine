@@ -28,7 +28,7 @@ attributes = res.get("image")
 logging.info("Number of available attributes for images: %s" % len(attributes))  # noqa
 
 """
-The user can get the avilable values for the "Organism" attribute
+The user can get the available values for the "Organism" attribute
 and the number of images for each value
 """
 key = "Organism"

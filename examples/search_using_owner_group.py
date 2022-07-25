@@ -4,9 +4,9 @@ from utils import query_the_search_ending, logging
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 """
-Find images of cells treated with specific drug
+Find images of cells treated with a specific drug
 Cell Type = "induced pluripotent stem cell" and compound = "fibronectin"
-The and query clauses should be as follows:
+The "and" query clauses should be as follows:
 """
 
 recieved_results_data = []
