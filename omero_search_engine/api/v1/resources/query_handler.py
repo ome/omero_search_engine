@@ -130,7 +130,7 @@ class QueryRunner(
     object,
 ):
     """
-    Run the quries and return the results
+    Run the queries and return the results
     """
 
     def __init__(
