@@ -50,7 +50,7 @@ class BasicTestCase(unittest.TestCase):
         tester = search_omero_app.test_client(self)
         query = {"query_details": {}}
 
-        response = tester.post("/api/v1/resources/image/searchannotation/", data=query)
+        response = tester.post("/api/v1/resources/image/searchannotation/", data=query) # noqa
         self.assertEqual(response.status_code, 200)
         Error = response.json["Error"]
         self.assertIsInstance(Error, str)
@@ -87,7 +87,8 @@ class BasicTestCase(unittest.TestCase):
         """
         test output of query builderis valid json
         """
-        query = elasticsearch_query_builder(valid_and_filters, valid_or_filters, False)
+        query = elasticsearch_query_builder(valid_and_filters,
+                                            valid_or_filters, False)
         self.assertTrue(self.validate_json_syntax(query))
 
     def test_is_not_valid_json_query(self):
