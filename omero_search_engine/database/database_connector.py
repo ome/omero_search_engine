@@ -1,19 +1,16 @@
 import psycopg2
-from sqlalchemy.orm import scoped_session, sessionmaker
+from sqlalchemy.orm import sessionmaker
 from psycopg2.extras import (
-    DictCursor,
-    RealDictCursor,
-    RealDictConnection,
-    DictCursor,
-    DictCursorBase,
+    RealDictCursor
 )
 from sqlalchemy.pool import QueuePool
-from sqlalchemy import create_engine, func, select, exists, text as sqlformat
+from sqlalchemy import create_engine
 
 
 class DatabaseConnector(object):
     """
-    An abstract base class which is inhearted to provide diffrent database operations,
+    An abstract base class which is inherited to provide different
+    database operations,
     child classes need to implement all its methods:
     """
 
@@ -32,7 +29,8 @@ class DatabaseConnector(object):
             self.DATABASE_URI,
             convert_unicode=True,
             echo=echo_db,
-            pool=QueuePool(self._conn, pool_size=20, max_overflow=3, timeout=30),
+            pool=QueuePool(self._conn, pool_size=20, max_overflow=3,
+                           timeout=30),
         )
         self.engine = engine
         Session = sessionmaker(bind=engine)
