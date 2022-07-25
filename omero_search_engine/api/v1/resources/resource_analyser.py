@@ -355,7 +355,7 @@ def get_key_values_return_contents(name, resource, csv):
                 d = data.get("data")
                 if d and len(d) > 0:
                     if not key_string:
-                        key_string = "resourse," + ",".join(d[0].keys())
+                        key_string = "resource," + ",".join(d[0].keys())
                     for e in d:
                         content.append(
                             "%s," % resource_
@@ -451,7 +451,7 @@ def search_value_for_resource(table_, value, es_index="key_value_buckets_informa
 
 
 """
-Search using key and resourse
+Search using key and resource
 """
 key_values_buckets_template = Template(
     """
@@ -473,7 +473,7 @@ ss = Template(
 )
 
 """
-Search using value and resourse
+Search using value and resource
 """
 key_values_search_buckets_template = Template(
     """
@@ -591,7 +591,7 @@ def get_resource_attribute_search_values(
     resource, name, value="", es_index="key_value_buckets_information"
 ):
     """
-    Search values for a resourse attribute,
+    Search values for a resource attribute,
     It can be used for autocomplete, to work like any attribute
     """
     returned_results = []
@@ -614,7 +614,7 @@ def get_resource_attribute_values(
     resource, name, es_index="key_value_buckets_information"
 ):
     """
-    return values for a resourse attribute
+    return values for a resource attribute
     """
     returned_results = []
     try:

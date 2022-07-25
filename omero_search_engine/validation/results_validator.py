@@ -452,7 +452,7 @@ def get_omero_stats():
         base_folder = os.path.expanduser("~")
     stats_file = os.path.join(base_folder, "stats.csv")
 
-    from omero_search_engine.api.v1.resources.resourse_analyser import (
+    from omero_search_engine.api.v1.resources.resource_analyser import (
         get_restircted_search_terms,
         query_cashed_bucket,
     )

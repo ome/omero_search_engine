@@ -33,7 +33,7 @@ OMERO Search Engine
 
     127.0.0.01:5577/api/v1/resources/all/keys
 
-* The user can get the available values for a specific key for a resourse, e.g. what are the available values for "Organism"::
+* The user can get the available values for a specific key for a resource, e.g. what are the available values for "Organism"::
 
     http://127.0.0.1:5577/api/v1/resources/image/getannotationvalueskey/?key=Organism
 

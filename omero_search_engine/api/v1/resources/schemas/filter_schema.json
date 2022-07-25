@@ -21,7 +21,7 @@
       "enum": ["equals", "not_equals", "contains","not_contains"]
     }
      ,"resource": {
-      "name": "resourse",
+      "name": "resource",
       "type": "string",
       "enum": ["image", "screen", "project","study","plate"]
     }

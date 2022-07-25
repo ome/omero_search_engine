@@ -5,7 +5,7 @@ from omero_search_engine.api.v1.resources.utils import (
     search_resource_annotation,
     build_error_message,
 )
-from omero_search_engine.api.v1.resources.resourse_analyser import (
+from omero_search_engine.api.v1.resources.resource_analyser import (
     search_value_for_resource,
     get_resource_attributes,
     get_resource_attribute_values,

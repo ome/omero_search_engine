@@ -606,7 +606,7 @@ def check_single_filter(res_table, filter, names, organism_converter):
             if len(key_) == 0:
                 search_omero_app.logger.info("Name Error %s" % str(key))
                 return
-        from omero_search_engine.api.v1.resources.resourse_analyser import (
+        from omero_search_engine.api.v1.resources.resource_analyser import (
             get_resource_attribute_values,
         )
 
@@ -634,7 +634,7 @@ def check_filters(res_table, filters, case_sensitive):
         "mouse": "Mus musculus",
         "chicken": "Gallus gallus",
     }
-    from omero_search_engine.api.v1.resources.resourse_analyser import (
+    from omero_search_engine.api.v1.resources.resource_analyser import (
         get_resource_attributes,
     )
 

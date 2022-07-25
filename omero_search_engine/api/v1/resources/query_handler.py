@@ -86,7 +86,7 @@ class QueryGroup(object):
     def __init__(self, group_type):
         self.query_list = []
         self.group_type = group_type
-        self.resourses_query = {}
+        self.resources_query = {}
         self.main_attribute = {}
         self.resource = []
 
@@ -95,13 +95,13 @@ class QueryGroup(object):
 
     def divide_filter(self):
         for filter in self.query_list:
-            if filter.resource not in self.resourses_query:
+            if filter.resource not in self.resources_query:
                 flist = []
-                self.resourses_query[filter.resource] = flist
+                self.resources_query[filter.resource] = flist
             else:
-                flist = self.resourses_query[filter.resource]
+                flist = self.resources_query[filter.resource]
             flist.append(filter)
-            self.resource = self.resourses_query.keys()
+            self.resource = self.resources_query.keys()
 
     def adjust_query_main_attributes(self):
         if self.group_type == "and_filters":
@@ -109,7 +109,7 @@ class QueryGroup(object):
         else:
             main_type = "or_main_attributes"
         to_be_removed = {}
-        for resource, queries in self.resourses_query.items():
+        for resource, queries in self.resources_query.items():
             for query in queries:
                 if query.query_type == "main_attribute":
                     if resource not in self.main_attribute:
@@ -123,7 +123,7 @@ class QueryGroup(object):
 
         for resource, queries in to_be_removed.items():
             for query in queries:
-                self.resourses_query[resource].remove(query)
+                self.resources_query[resource].remove(query)
 
 
 class QueryRunner(
@@ -181,7 +181,7 @@ class QueryRunner(
                     return {"Error": "Your query returns no results"}
         # check or_filters
         for or_it in self.or_query_group:
-            for resource, or_query in or_it.resourses_query.items():
+            for resource, or_query in or_it.resources_query.items():
                 if resource == "image":
                     image_or_queries.append(or_query)
                 else:
@@ -224,7 +224,7 @@ class QueryRunner(
 
         # check and_filters
         for and_it in self.and_query_group:
-            for resource, and_query in and_it.resourses_query.items():
+            for resource, and_query in and_it.resources_query.items():
                 if resource == "image":
                     image_and_queries.append(and_query)
                 else:

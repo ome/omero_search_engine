@@ -5,7 +5,7 @@ import numpy as np
 import os
 import uuid
 from omero_search_engine.api.v1.resources.utils import resource_elasticsearchindex
-from omero_search_engine.api.v1.resources.resourse_analyser import (
+from omero_search_engine.api.v1.resources.resource_analyser import (
     query_cashed_bucket,
     get_all_values_for_a_key,
 )

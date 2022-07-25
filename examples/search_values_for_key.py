@@ -10,7 +10,7 @@ base_url = "http://127.0.0.1:5577/api/v1/"
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 # Get the available attributes for a resource, e.g. image
 image_attributes = "/resources/image/keys/"
-# Get available values for a resourse attribute
+# Get available values for a resource attribute
 image_key_values = "resources/image/searchvaluesusingkey/"
 
 
