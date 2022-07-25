@@ -13,9 +13,7 @@ from configurations.configuration import (
 from logging.handlers import RotatingFileHandler
 
 from configurations.configuration import app_config as config_
-from omero_search_engine.api.v1.resources import (
-    resources as resources_routers_blueprint_v1,
-)
+
 
 template = {
     "swaggerUiPrefix": LazyString(
@@ -88,6 +86,10 @@ def create_app(config_name="development"):
 
 
 create_app()
+
+from omero_search_engine.api.v1.resources import (
+    resources as resources_routers_blueprint_v1,
+)
 
 search_omero_app.register_blueprint(
     resources_routers_blueprint_v1, url_prefix="/api/v1/resources"
