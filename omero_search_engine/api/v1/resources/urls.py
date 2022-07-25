@@ -32,7 +32,11 @@ def search_resource_page(resource_table):
             page=data.get("page")
             bookmark=data.get("bookmark")
             raw_elasticsearch_query=data.get("raw_elasticsearch_query")
-            resource_list = search_resource_annotation(resource_table, query, raw_elasticsearch_query=raw_elasticsearch_query,page=page,bookmark=bookmark)
+            return_containers = data.get("return_containers")
+            if return_containers:
+                return_containers = json.loads(return_containers.lower())
+
+            resource_list = search_resource_annotation(resource_table, query, raw_elasticsearch_query=raw_elasticsearch_query,page=page,bookmark=bookmark, return_containers=return_containers)
             return jsonify(resource_list)
         else:
             return jsonify(build_error_message(validation_results))
@@ -79,12 +83,14 @@ def search_resource(resource_table):
         #check if the app configuration will use ASYNCHRONOUS SEARCH or not.
     validation_results=query_validator(query)
     if validation_results=="OK":
-        resource_list = search_resource_annotation(resource_table, query)
+        return_containers = request.args.get("return_containers")
+        if return_containers:
+            return_containers = json.loads(return_containers.lower())
+
+        resource_list = search_resource_annotation(resource_table, query,return_containers=return_containers )
         return jsonify(resource_list)
     else:
         return jsonify(build_error_message(validation_results))
-
-
 
 @resources.route('/<resource_table>/searchvalues/',methods=['GET'])
 def get_values_using_value(resource_table):
@@ -169,6 +175,29 @@ def get_resource_names_(resource_table):
     return jsonify (names)
 
 
+@resources.route('/submitquery_returnstudies/',methods=['POST'])
+def submit_query_return_containers():
+    """
+    file: swagger_docs/submitquery_returncontainers.yml
+    """
+    try:
+        query =json.loads(request.data)
+    except:
+        query=None
+    if not query:
+        return jsonify(build_error_message("No query is provided"))
+    return_columns=request.args.get("return_columns")
+    if return_columns:
+        try:
+            return_columns=json.loads(return_columns.lower())
+        except:
+            return_columns =False
+    validation_results=query_validator(query)
+    if validation_results=="OK":
+        return jsonify(determine_search_results_(query, return_columns, return_containers=True))
+    else:
+        return jsonify(build_error_message(validation_results))
+
 @resources.route('/submitquery/',methods=['POST'])
 def submit_query():
     """
@@ -204,5 +233,8 @@ def search(resource_table):
     operator=request.args.get("operator")
     bookmark=request.args.get("bookmark")
     from omero_search_engine.api.v1.resources.query_handler import simple_search
-    results=simple_search(key, value, operator,case_sensitive,bookmark, resource_table, study)
+    return_containers = request.args.get("return_containers")
+    if return_containers:
+        return_containers = json.loads(return_containers.lower())
+    results=simple_search(key, value, operator,case_sensitive,bookmark, resource_table, study, return_containers)
     return jsonify(results)

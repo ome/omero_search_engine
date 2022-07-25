@@ -424,13 +424,20 @@ def search_index_scrol(index_name, query):
     search_omero_app.logger.info ("Total =%s"% counter)
     return results
 
-def search_index_using_search_after(e_index, query, page, bookmark_):
+def search_index_using_search_after(e_index, query, page, bookmark_,return_containers):
     returned_results = []
     if not page:
         page = 1
-    page_size = search_omero_app.config.get("PAGE_SIZE")
     es = search_omero_app.config.get("es_connector")
-    start__ = datetime.now()
+    if return_containers:
+        res = es.search(index=e_index, body=query)
+        for el in res['hits']['hits']:
+            returned_results.append(el["_source"])
+        if len(res['hits']['hits']) == 0:
+            search_omero_app.logger.info("No result is found")
+            return returned_results
+        return {"results": returned_results}
+    page_size =search_omero_app.config.get("PAGE_SIZE")
     res = es.count(index=e_index, body=query)
     size = res['count']
     search_omero_app.logger.info("Total: %s" % size)
@@ -466,8 +473,15 @@ def search_index_using_search_after(e_index, query, page, bookmark_):
         bookmark = [res['hits']['hits'][-1]['sort'][0]]
         page += 1
     return {"results": returned_results, "total_pages": no_of_pages, "bookmark": bookmark, "size": size, "page": page}
-    
-def search_resource_annotation(table_, query, raw_elasticsearch_query=None, page=None,bookmark=None):
+
+
+def handle_query(table_,query):
+    pass
+
+def search_resource_annotation_return_conatines_only(table_, query, raw_elasticsearch_query=None, page=None,bookmark=None):
+    pass
+
+def search_resource_annotation(table_, query, raw_elasticsearch_query=None, page=None,bookmark=None, return_containers=False):
     '''
     @table_: the resource table, e.g. image. project, etc.
     @query: the a dict contains the three filters (or, and and  not) items
@@ -508,7 +522,36 @@ def search_resource_annotation(table_, query, raw_elasticsearch_query=None, page
         else:
             query=raw_elasticsearch_query
             raw_query_to_send_back=copy.copy(raw_elasticsearch_query)
-        res=search_index_using_search_after(res_index, query, page, bookmark)
+        if return_containers:
+            #code to return the containers only
+            # It will call the projects container first then search within screens
+            query["collapse"]= {
+                "field": "project_name.keyvalue"
+            }
+            query["_source"]= {
+                "includes": ["screen_name","project_name" ]
+            }
+            res = search_index_using_search_after(res_index, query, page, bookmark, return_containers)
+            query["collapse"] = {
+                "field": "screen_name.keyvalue"
+            }
+            res_2 = search_index_using_search_after(res_index, query, page, bookmark, return_containers)
+            #Combines the containers reults
+            studies=[]
+            if len(res)>0:
+                for item1 in res.get("results"):
+                    pr=item1.get("project_name")
+                    if pr and pr not in studies:
+                        studies.append({"Name (IDR number)": pr})
+            if len(res_2) > 0:
+                for item2 in res_2.get("results"):
+                    sc = item2.get("screen_name")
+                    if sc and sc not in studies:
+                        studies.append({"Name (IDR number)": sc})
+            res={"results": studies}
+
+        else:
+            res=search_index_using_search_after(res_index, query, page, bookmark, return_containers)
         notice=""
         end_time = time.time()
         query_time = ("%.2f" % (end_time - start_time))
