@@ -54,8 +54,8 @@ non_image_template = {
 }
 
 """
-image_template is derived from  Omero tables into
-a single Elasticsearch index (image, annoation_mapvalue,
+image_template is derived from Omero tables into
+a single Elasticsearch index (image, annotation_mapvalue,
 imageannotationlink, project, dataset, well, plate and screen
 to generate a single index.
 """
@@ -132,7 +132,7 @@ image_template = {
 }
 
 """
-Template rebresents a bucket in a resource, i.e. key and value
+Template represents a bucket in a resource, i.e. key and value
 and the total number of values (number of images)
 """
 key_values_resource_cache_template = {

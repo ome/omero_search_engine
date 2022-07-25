@@ -187,7 +187,7 @@ def get_images_plates_screens(ids):
 
 def create_csv_for_images(folder):
     """
-    Query databasse to get the image data then save them to multiple csv files
+    Query database to get the image data then save them to multiple CSV files
     """
     conn = search_omero_app.config["database_connector"]
     image_data = conn.execute_query(image_sql)

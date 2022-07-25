@@ -397,11 +397,11 @@ total_process = 0
 def get_insert_data_to_index(sql_st, resource):
     """
     - Query the postgreSQL database server and get metadata (key-value pair)
-    - Process the resulted data
+    - Process the results data
     - Insert them to the elasticsearch
     - Use multiprocessing to reduce the indexing time
     These are performed using multiprocessing pool to reduce
-    the indexing time by using parallel processing..
+    the indexing time by using parallel processing.
     """
     from datetime import datetime
 
