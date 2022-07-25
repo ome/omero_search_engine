@@ -16,8 +16,7 @@ logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 def query_the_search_ending(query, main_attributes):
     recieved_results_data = []
-    query_data = {"query": {"query_details": query,
-                            "main_attributes": main_attributes}}
+    query_data = {"query": {"query_details": query, "main_attributes": main_attributes}}
     query_data_json = json.dumps(query_data)
     resp = requests.post(
         url="%s%s" % (base_url, image_ext), data=json.dumps(query_data)
@@ -30,8 +29,7 @@ def query_the_search_ending(query, main_attributes):
         logging.info(res)
         return []
 
-    if not returned_results.get("results") or \
-       len(returned_results["results"]) == 0:
+    if not returned_results.get("results") or len(returned_results["results"]) == 0:
         logging.info("Your query returns no results")
         return []
 

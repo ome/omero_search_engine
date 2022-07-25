@@ -39,8 +39,6 @@ resp = requests.get(url=values_attr_url)
 res = json.loads(resp.text)
 # a list contains dicts of the available values with the number of images
 buckets = res.get("data")
-logging.info(
-    "Number of available buckets for attribute %s is %s" % (key, len(buckets))
-)
+logging.info("Number of available buckets for attribute %s is %s" % (key, len(buckets)))
 # The first bucket
 logging.info("First bucket: %s " % buckets[0])

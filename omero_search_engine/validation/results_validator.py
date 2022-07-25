@@ -46,8 +46,7 @@ class Validator(object):
         self.sql_statament = query_methods[resource]
         self.searchengine_results = {}
 
-    def set_complex_query(self, name, clauses, resource="image",
-                          type="complex"):
+    def set_complex_query(self, name, clauses, resource="image", type="complex"):
         """
         complex query
         """
@@ -73,7 +72,9 @@ class Validator(object):
         conn = search_omero_app.config["database_connector"]
         postgres_results = conn.execute_query(sql)
         results = [item["id"] for item in postgres_results]
-        search_omero_app.logger.info("results for or received %s" % len(results))  # noqa
+        search_omero_app.logger.info(
+            "results for or received %s" % len(results)
+        )  # noqa
         return results
 
     def get_and_sql(self, clauses):
@@ -127,7 +128,9 @@ class Validator(object):
         conn = search_omero_app.config["database_connector"]
         postgres_results = conn.execute_query(sql)
         self.postgres_results = [item["id"] for item in postgres_results]
-        search_omero_app.logger.info("results received %s" % len(self.postgres_results))  # noqa
+        search_omero_app.logger.info(
+            "results received %s" % len(self.postgres_results)
+        )  # noqa
 
     def get_results_searchengine(self):
         """
@@ -198,7 +201,8 @@ class Validator(object):
             if searchengine_results.get("results"):
                 size = searchengine_results.get("results").get("size")
                 ids = [
-                    item["id"] for item in searchengine_results["results"]["results"]  # noqa
+                    item["id"]
+                    for item in searchengine_results["results"]["results"]  # noqa
                 ]
             else:
                 size = 0
@@ -206,16 +210,16 @@ class Validator(object):
 
                 # get all the results if the total number is bigger
                 # than the page size
-            if size >= search_omero_app.config["PAGE_SIZE"]\
-               and self.deep_check:
+            if size >= search_omero_app.config["PAGE_SIZE"] and self.deep_check:
                 bookmark = searchengine_results["results"]["bookmark"]
                 while len(ids) < size:
-                    search_omero_app.logger.info("Received %s/%s" % (len(ids), size))  # noqa
-                    query_data_ = {
-                                    "query_details": query,
-                                    "bookmark": bookmark
-                                  }
-                    searchengine_results_ = determine_search_results_(query_data_) # noqa
+                    search_omero_app.logger.info(
+                        "Received %s/%s" % (len(ids), size)
+                    )  # noqa
+                    query_data_ = {"query_details": query, "bookmark": bookmark}
+                    searchengine_results_ = determine_search_results_(
+                        query_data_
+                    )  # noqa
                     ids_ = [
                         item["id"]
                         for item in searchengine_results_["results"]["results"]
@@ -276,9 +280,7 @@ class Validator(object):
             "not equal, database no of the results from server is: %s and\
              the number of results from searchengine is %s?,\
              \ndatabase server query time= %s, searchengine query time= %s"
-            % (len(self.postgres_results),
-                searchengine_no, sql_time,
-                searchengine_time)
+            % (len(self.postgres_results), searchengine_no, sql_time, searchengine_time)
         )
 
 
@@ -339,7 +341,7 @@ def validate_queries(json_file, deep_check):
     for message in messages:
         search_omero_app.logger.info(message)
         search_omero_app.logger.info(
-            "-----------------------------------------------------------------------------" # noqa
+            "-----------------------------------------------------------------------------"  # noqa
         )
     search_omero_app.logger.info(
         "###########################################################################################################"  # noqa
@@ -351,7 +353,7 @@ def validate_queries(json_file, deep_check):
 
     report_file = os.path.join(base_folder, "check_report.txt")
 
-    report = "\n-----------------------------------------------------------------------------\n".join( # noqa
+    report = "\n-----------------------------------------------------------------------------\n".join(  # noqa
         messages
     )
     with open(report_file, "w") as f:
@@ -397,7 +399,7 @@ def test_no_images():
     report_file = os.path.join(base_folder, "check_report.txt")
 
     report = [
-        "\n\n\n======================== Test number of images inside each study ============================\n" # noqa
+        "\n\n\n======================== Test number of images inside each study ============================\n"  # noqa
     ]
     for name, numbers in names.items():
         and_filters = [
@@ -421,8 +423,7 @@ def test_no_images():
 
     for name, result in results.items():
         if result[0] != result[1]:
-            message = "Error:%s, results [idr stats, searchengine]: %s" % (
-                name, result)
+            message = "Error:%s, results [idr stats, searchengine]: %s" % (name, result)
         else:
             message = "%s is fine, results [idr stats, searchengine]: %s" % (
                 name,
@@ -430,7 +431,7 @@ def test_no_images():
             )
         report.append(message)
     search_omero_app.logger.info(message)
-    report = "\n-----------------------------------------------------------------------------\n".join( # noqa
+    report = "\n-----------------------------------------------------------------------------\n".join(  # noqa
         report
     )
     with open(report_file, "a") as f:

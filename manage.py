@@ -9,7 +9,7 @@ from omero_search_engine.cache_functions.elasticsearch.transform_data import (
     get_insert_data_to_index,
     get_all_indexes,
     insert_resource_data,
-    save_key_value_buckets
+    save_key_value_buckets,
 )
 
 from omero_search_engine.cache_functions.elasticsearch.sql_to_csv import (
@@ -37,7 +37,7 @@ def show_saved_indices():
 @manager.option(
     "-r",
     "--resource",
-    help="resource name, deleting all the indexes for all the resources is the default", # noqa
+    help="resource name, deleting all the indexes for all the resources is the default",  # noqa
 )
 @manager.option(
     "-e",
@@ -62,8 +62,7 @@ def delete_all_data_from_es_index(resource="None"):
 @manager.option("-r", "--resource", help="resource name, e.g. image")
 @manager.option("-d", "--data_folder", help="Folder contains the data files")
 @manager.option("-f", "--from_json", help="Folder contains the data files")
-def add_resource_data_to_es_index(resource=None, data_folder=None,
-                                  from_json=False):
+def add_resource_data_to_es_index(resource=None, data_folder=None, from_json=False):
     """=
     Insert data inside elastic search index by getting the data from csv files
     """
@@ -82,7 +81,7 @@ def add_resource_data_to_es_index(resource=None, data_folder=None,
 @manager.option(
     "-r",
     "--resource",
-    help="resource name, creating all the indcese for all the resources is the default", # noqa
+    help="resource name, creating all the indcese for all the resources is the default",  # noqa
 )
 def create_index(resource="all"):
     """
@@ -99,7 +98,7 @@ def sql_results_to_panda():
 @manager.option(
     "-r",
     "--resource",
-    help="resource name, creating all the indcese for all the resources is the default", # noqa
+    help="resource name, creating all the indcese for all the resources is the default",  # noqa
 )
 def get_index_data_from_database(resource="all"):
     """
@@ -220,10 +219,12 @@ def set_no_processes(no_processes=None):
 @manager.option(
     "-r",
     "--resource",
-    help="resource name, creating all the indexes for all the resources is the default", # noqa
+    help="resource name, creating all the indexes for all the resources is the default",  # noqa
 )
 @manager.option(
-    "-c", "--create_index", help="creating the elastic search index if set to True" # noqa
+    "-c",
+    "--create_index",
+    help="creating the elastic search index if set to True",  # noqa
 )
 @manager.option("-o", "--only_values", help="creating cached values only ")
 def cache_key_value_index(resource=None, create_index=None, only_values=None):
@@ -239,11 +240,10 @@ def cache_key_value_index(resource=None, create_index=None, only_values=None):
 @manager.option(
     "-d",
     "--deep_check",
-    help="compare all the images from both search engine and database server, default is False so it will compare the number of images and the first searchengine page", # noqa
+    help="compare all the images from both search engine and database server, default is False so it will compare the number of images and the first searchengine page",  # noqa
 )
 def test_indexing_search_query(
-    json_file="app_data/test_index_data.json", deep_check=False,
-    check_studies=False
+    json_file="app_data/test_index_data.json", deep_check=False, check_studies=False
 ):
     """
     test the indexing and the searchengine query functions

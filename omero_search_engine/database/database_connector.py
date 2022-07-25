@@ -1,8 +1,6 @@
 import psycopg2
 from sqlalchemy.orm import sessionmaker
-from psycopg2.extras import (
-    RealDictCursor
-)
+from psycopg2.extras import RealDictCursor
 from sqlalchemy.pool import QueuePool
 from sqlalchemy import create_engine
 
@@ -29,8 +27,7 @@ class DatabaseConnector(object):
             self.DATABASE_URI,
             convert_unicode=True,
             echo=echo_db,
-            pool=QueuePool(self._conn, pool_size=20, max_overflow=3,
-                           timeout=30),
+            pool=QueuePool(self._conn, pool_size=20, max_overflow=3, timeout=30),
         )
         self.engine = engine
         Session = sessionmaker(bind=engine)

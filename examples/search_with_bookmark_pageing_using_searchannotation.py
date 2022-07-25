@@ -79,12 +79,7 @@ and_filters = [
         "operator": "equals",
         "resource": "image",
     },
-    {
-        "name": "Sex",
-        "value": "Female",
-        "operator": "equals",
-        "resource": "image"
-    },
+    {"name": "Sex", "value": "Female", "operator": "equals", "resource": "image"},
     {
         "name": "Pathology",
         "value": "Normal tissue, NOS",

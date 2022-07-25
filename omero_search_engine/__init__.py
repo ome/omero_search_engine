@@ -1,8 +1,4 @@
-from flask import (
-    Flask,
-    make_response,
-    request
-)
+from flask import Flask, make_response, request
 import os
 import logging
 from elasticsearch import Elasticsearch
@@ -22,7 +18,9 @@ from omero_search_engine.api.v1.resources import (
 )
 
 template = {
-    "swaggerUiPrefix": LazyString(lambda: request.environ.get("SCRIPT_NAME", "")) # noqa
+    "swaggerUiPrefix": LazyString(
+        lambda: request.environ.get("SCRIPT_NAME", "")
+    )  # noqa
 }
 
 

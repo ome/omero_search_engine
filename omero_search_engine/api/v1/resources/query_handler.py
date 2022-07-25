@@ -239,8 +239,7 @@ class QueryRunner(
                             main_and_attribute[resource] = new_cond
                         else:
                             main_and_attribute[resource] = combine_conds(
-                                main_and_attribute[resource], new_cond,
-                                resource
+                                main_and_attribute[resource], new_cond, resource
                             )
                     else:
                         return {"Error": "Your query returns no results"}
@@ -329,8 +328,7 @@ class QueryRunner(
             )
         else:
             res = seracrh_query(
-                query, resource, bookmark, self.raw_elasticsearch_query,
-                main_attributes
+                query, resource, bookmark, self.raw_elasticsearch_query, main_attributes
             )
 
         if resource != "image":
@@ -349,30 +347,22 @@ def seracrh_query(
     main_attributes=None,
     return_containers=False,
 ):
-    search_omero_app.logger.info("-------------------------------------------------") # noqa
+    search_omero_app.logger.info(
+        "-------------------------------------------------"
+    )  # noqa
     search_omero_app.logger.info(query)
     search_omero_app.logger.info(main_attributes)
     search_omero_app.logger.info(resource)
-    search_omero_app.logger.info("-------------------------------------------------") # noqa
+    search_omero_app.logger.info(
+        "-------------------------------------------------"
+    )  # noqa
     search_omero_app.logger.info(("%s, %s") % (resource, query))
     if not main_attributes:
         q_data = {"query": {"query_details": query}}
     elif resource == "image":
-        q_data = {
-            "query":
-            {
-                "query_details": query,
-                "main_attributes": main_attributes
-            }
-        }
+        q_data = {"query": {"query_details": query, "main_attributes": main_attributes}}
     else:
-        q_data = {
-            "query":
-            {
-                "query_details": query,
-                "main_attributes": main_attributes
-            }
-        }
+        q_data = {"query": {"query_details": query, "main_attributes": main_attributes}}
     try:
         if bookmark:
             q_data["bookmark"] = bookmark
@@ -390,8 +380,7 @@ def seracrh_query(
             # returns the containers only,
             # It is hard coded in the util search_annotation method.
             ress = search_resource_annotation(
-                resource, q_data.get("query"),
-                return_containers=return_containers
+                resource, q_data.get("query"), return_containers=return_containers
             )
         ress["Error"] = "none"
         return ress
@@ -522,7 +511,9 @@ def process_search_results(results, resource, columns_def):
     returned_results["total_pages"] = results["results"]["total_pages"]
     returned_results["extend_url"] = extend_url
     returned_results["names_ids"] = names_ids
-    returned_results["raw_elasticsearch_query"] = results["raw_elasticsearch_query"] # noqa
+    returned_results["raw_elasticsearch_query"] = results[
+        "raw_elasticsearch_query"
+    ]  # noqa
     if len(values) <= results["results"]["size"]:
         returned_results["contains_all_results"] = True
     else:
@@ -532,8 +523,7 @@ def process_search_results(results, resource, columns_def):
     return returned_results
 
 
-def determine_search_results_(query_, return_columns=False,
-                              return_containers=False):
+def determine_search_results_(query_, return_columns=False, return_containers=False):
     if query_.get("query_details"):
         case_sensitive = query_.get("query_details").get("case_sensitive")
     else:
@@ -615,12 +605,7 @@ def simple_search(
     if not operator:
         operator = "equals"
     and_filters = [
-        {
-            "name": key,
-            "value": value,
-            "operator": operator,
-            "resource": resource
-        }
+        {"name": key, "value": value, "operator": operator, "resource": resource}
     ]
     query_details = {"and_filters": and_filters}
     if bookmark:
@@ -646,8 +631,7 @@ def simple_search(
         return determine_search_results_({"query_details": query_details})
 
 
-def add_local_schemas_to(resolver, schema_folder, base_uri,
-                         schema_ext=".json"):
+def add_local_schemas_to(resolver, schema_folder, base_uri, schema_ext=".json"):
     """Add local schema instances to a resolver schema cache.
 
     Arguments:
@@ -669,7 +653,9 @@ def add_local_schemas_to(resolver, schema_folder, base_uri,
 
 
 def query_validator(query):
-    query_schema_file = "omero_search_engine/api/v1/resources/schemas/query_data.json"  # noqa
+    query_schema_file = (
+        "omero_search_engine/api/v1/resources/schemas/query_data.json"  # noqa
+    )
     base_uri = "file:" + abspath("") + "/"
     with open(query_schema_file, "r") as schema_f:
         query_schema = json.loads(schema_f.read())

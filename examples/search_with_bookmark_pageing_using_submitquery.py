@@ -81,12 +81,7 @@ and_filters = [
         "operator": "equals",
         "resource": "image",
     },
-    {
-        "name": "Sex",
-        "value": "Female",
-        "operator": "equals",
-        "resource": "image"
-    },
+    {"name": "Sex", "value": "Female", "operator": "equals", "resource": "image"},
     {
         "name": "Pathology",
         "value": "Normal tissue, NOS",
@@ -105,8 +100,7 @@ bookmark, total_results = call_omero_searchengine_return_results(
 while len(received_results) < total_results:
 
     page += 1
-    query_data_ = {"query_details": {"and_filters": and_filters},
-                   "bookmark": bookmark}
+    query_data_ = {"query_details": {"and_filters": and_filters}, "bookmark": bookmark}
     query_data_json_ = json.dumps(query_data_)
 
     bookmark, total_results = call_omero_searchengine_return_results(

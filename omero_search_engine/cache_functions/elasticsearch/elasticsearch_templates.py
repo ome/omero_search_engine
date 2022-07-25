@@ -16,7 +16,10 @@ non_image_template = {
         "properties": {
             "doc_type": {"type": "keyword"},
             "id": {"type": "long"},
-            "name": {"type": "text", "fields": {"keyvalue": {"type": "keyword"}}}, # noqa
+            "name": {
+                "type": "text",
+                "fields": {"keyvalue": {"type": "keyword"}},
+            },  # noqa
             "owner_id": {"type": "long"},
             "group_id": {"type": "long"},
             "permissions": {"type": "long"},
@@ -60,7 +63,7 @@ image_template = {
     "settings": {
         "analysis": {
             "normalizer": {
-                "valuesnormalizer": {"type": "custom", "filter": ["lowercase"]} # noqa
+                "valuesnormalizer": {"type": "custom", "filter": ["lowercase"]}  # noqa
             }
         }
     },
@@ -78,7 +81,10 @@ image_template = {
             "plate_id": {"type": "long"},
             "well_id": {"type": "long"},
             "wellsample_id": {"type": "long"},
-            "name": {"type": "text", "fields": {"keyvalue": {"type": "keyword"}}}, # noqa
+            "name": {
+                "type": "text",
+                "fields": {"keyvalue": {"type": "keyword"}},
+            },  # noqa
             "project_name": {
                 "type": "text",
                 "fields": {"keyvalue": {"type": "keyword"}},
@@ -87,7 +93,10 @@ image_template = {
                 "type": "text",
                 "fields": {"keyvalue": {"type": "keyword"}},
             },
-            "plate_name": {"type": "text", "fields": {"keyvalue": {"type": "keyword"}}}, # noqa
+            "plate_name": {
+                "type": "text",
+                "fields": {"keyvalue": {"type": "keyword"}},
+            },  # noqa
             "screen_name": {
                 "type": "text",
                 "fields": {"keyvalue": {"type": "keyword"}},
@@ -129,7 +138,10 @@ and the total number of values (number of images)
 key_values_resource_cache_template = {
     "mappings": {
         "properties": {"doc_type": {"type": "keyword"}},
-        "resource": {"type": "text", "fields": {"keyresource": {"type": "keyword"}}}, # noqa
+        "resource": {
+            "type": "text",
+            "fields": {"keyresource": {"type": "keyword"}},
+        },  # noqa
         "name": {"type": "text", "fields": {"keyname": {"type": "keyword"}}},
     }
 }
@@ -197,7 +209,10 @@ key_values_resource_cache_template = {
                 "type": "text",
                 "fields": {"keyresource": {"type": "keyword"}},
             },
-            "name": {"type": "text", "fields": {"keyname": {"type": "keyword"}}}, # noqa
+            "name": {
+                "type": "text",
+                "fields": {"keyname": {"type": "keyword"}},
+            },  # noqa
             "resourcename": {
                 "type": "text",
                 "fields": {"keyresourcename": {"type": "keyword"}},

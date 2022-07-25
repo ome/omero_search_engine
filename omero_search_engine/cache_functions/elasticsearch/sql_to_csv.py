@@ -4,7 +4,8 @@ import os
 from string import Template
 
 
-image_sql = Template("""
+image_sql = Template(
+    """
 select image.id, image.owner_id, image.experiment, image.group_id,
 image.name as name, annotation_mapvalue.name as mapvalue_name,
 annotation_mapvalue.value as mapvalue_value,
@@ -32,12 +33,18 @@ GROUP BY image.id, annotation_mapvalue.index,
 annotation_mapvalue.name, annotation_mapvalue.value,
 annotation_mapvalue.index, project.name, project.id,
 dataset.name, dataset.id, screen.id, screen.name,
-plate.id, plate.name, well.id,wellsample.id""")
+plate.id, plate.name, well.id,wellsample.id"""
+)
 
-images_sql_to_csv = """copy ({image_sql}) TO 'images_sorted_ids.csv'  WITH CSV HEADER""".format(image_sql=image_sql.substitute(whereclause=""))  # noqa
+images_sql_to_csv = (
+    """copy ({image_sql}) TO 'images_sorted_ids.csv'  WITH CSV HEADER""".format(
+        image_sql=image_sql.substitute(whereclause="")
+    )
+)  # noqa
 
 
-plate_sql = Template("""
+plate_sql = Template(
+    """
 select plate.id, plate.owner_id, plate.group_id,
 plate.name as name, annotation_mapvalue.name as mapvalue_name,
 annotation_mapvalue.value as mapvalue_value,
@@ -47,11 +54,17 @@ inner join annotation_mapvalue on
 annotation_mapvalue.annotation_id=plateannotationlink.child
 $whereclause
 GROUP BY plate.id, annotation_mapvalue.index,
-annotation_mapvalue.name, annotation_mapvalue.value""")
+annotation_mapvalue.name, annotation_mapvalue.value"""
+)
 
-plate_sql_to_csv = """copy ({plate_sql}) TO 'plates_sorted_ids.csv' WITH CSV HEADER""".format(plate_sql=plate_sql.substitute(whereclause="")) # noqa
+plate_sql_to_csv = (
+    """copy ({plate_sql}) TO 'plates_sorted_ids.csv' WITH CSV HEADER""".format(
+        plate_sql=plate_sql.substitute(whereclause="")
+    )
+)  # noqa
 
-project_sql = Template("""
+project_sql = Template(
+    """
 select project.id, project.owner_id, project.group_id,
 project.name as name, annotation_mapvalue.name as mapvalue_name,
 annotation_mapvalue.value as mapvalue_value,
@@ -62,7 +75,8 @@ inner join annotation_mapvalue on
 annotation_mapvalue.annotation_id=projectannotationlink.child
 $whereclause
 GROUP BY project.id, annotation_mapvalue.index,
-annotation_mapvalue.name, annotation_mapvalue.value""")
+annotation_mapvalue.name, annotation_mapvalue.value"""
+)
 
 project_sql_to_csv = """
 copy ({project_sql}) TO 'projects_sorted_projects_screen_ids.csv'
@@ -71,7 +85,8 @@ WITH CSV HEADER""".format(
 )
 
 
-screen_sql = Template("""
+screen_sql = Template(
+    """
 select screen.id, screen.owner_id, screen.group_id,  screen.name as name,
 annotation_mapvalue.name as mapvalue_name,
 annotation_mapvalue.value as mapvalue_value,
@@ -81,7 +96,8 @@ inner join annotation_mapvalue on
 annotation_mapvalue.annotation_id=screenannotationlink.child
 $whereclause
 GROUP BY screen.id, annotation_mapvalue.index,
-annotation_mapvalue.name, annotation_mapvalue.value""")
+annotation_mapvalue.name, annotation_mapvalue.value"""
+)
 
 screen_sql_to_csv = """
 copy ({screen_sql}) TO 'screens_sorted_projects_screen_ids.csv'
@@ -90,7 +106,8 @@ WITH CSV HEADER""".format(
 )
 
 
-well_sql = Template("""
+well_sql = Template(
+    """
 select well.id, well.owner_id, well.group_id,
 annotation_mapvalue.name as mapvalue_name,
 annotation_mapvalue.value as mapvalue_value,
@@ -100,7 +117,8 @@ inner join annotation_mapvalue on
 annotation_mapvalue.annotation_id=wellannotationlink.child
 $whereclause
 GROUP BY well.id,  annotation_mapvalue.index,
-annotation_mapvalue.name, annotation_mapvalue.value""")
+annotation_mapvalue.name, annotation_mapvalue.value"""
+)
 
 well_sql_to_csv = """
 copy ({well_sql}) TO 'wells_sorted_ids.csv'  WITH CSV HEADER""".format(
@@ -129,15 +147,15 @@ inner join screen on screen.id=screenplatelink.parent
 
 
 def get_images_dataset_project(ids):
-    sql = (
-        "select project.name as project_name,project.id as project_id,\
+    sql = "select project.name as project_name,project.id as project_id,\
          dataset.name as dataset_name, dataset.id as dataset_id,\
          datasetimagelink.child as image_id from projectdatasetlink\
          inner join dataset on dataset.id=projectdatasetlink.child\
          inner join project on project.id=projectdatasetlink.parent\
          inner join datasetimagelink on datasetimagelink.parent=dataset.id\
          where project.id is not null and dataset.id is not null and\
-         datasetimagelink.child in ({ids})".format(ids=ids)
+         datasetimagelink.child in ({ids})".format(
+        ids=ids
     )
     results = search_omero_app.config["database_connector"].execute_query(sql)
     return results
@@ -182,7 +200,7 @@ def create_csv_for_images(folder):
     # data.to_csv(os.path(f'total_image_data.csv',folder),index=False)
     for i in range(no_files):
         print("Processing file no: {i}".format(i=i))
-        df = data[file_size * i: file_size * (i + 1)]
+        df = data[file_size * i : file_size * (i + 1)]
         df.to_csv(os.path.join(f"image_data{i + 1}.csv", folder), index=False)
 
 

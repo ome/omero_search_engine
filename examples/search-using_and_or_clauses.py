@@ -29,16 +29,8 @@ each clause should have the same format so the second clause should be:
 The and_filters list should contain the two clauses:
 """
 and_filters = [
-    {
-        "name": "Organism",
-        "value": "Homo sapiens",
-        "operator": "equals"
-    },
-    {
-        "name": "Antibody Identifier",
-        "value": "CAB034889",
-        "operator": "equals"
-    },
+    {"name": "Organism", "value": "Homo sapiens", "operator": "equals"},
+    {"name": "Antibody Identifier", "value": "CAB034889", "operator": "equals"},
 ]
 """
 The same should be done for "or" filters as they are also a list and
@@ -47,16 +39,8 @@ have clauses in the same format as "and" filters.
 
 or_filters = [
     [
-        {
-            "name": "Organism Part",
-            "value": "Prostate",
-            "operator": "equals"
-        },
-        {
-            "name": "Organism Part Identifier",
-            "value": "T-77100",
-            "operator": "equals"
-        },
+        {"name": "Organism Part", "value": "Prostate", "operator": "equals"},
+        {"name": "Organism Part Identifier", "value": "T-77100", "operator": "equals"},
     ]
 ]
 """
@@ -73,8 +57,7 @@ i.e. "case_sensitive"=True
 """
 
 # send the request
-resp = requests.post(url="%s%s" % (base_url, image_ext),
-                     data=json.dumps(query_data))
+resp = requests.post(url="%s%s" % (base_url, image_ext), data=json.dumps(query_data))
 # Extract the results from the response
 try:
     returned_results = json.loads(resp.text)

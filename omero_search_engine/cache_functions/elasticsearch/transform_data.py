@@ -4,14 +4,12 @@ import pandas as pd
 import numpy as np
 import os
 import uuid
-from omero_search_engine.api.v1.resources.utils import (
-    resource_elasticsearchindex
-)
+from omero_search_engine.api.v1.resources.utils import resource_elasticsearchindex
 from omero_search_engine.api.v1.resources.resourse_analyser import (
     query_cashed_bucket,
     get_all_values_for_a_key,
 )
-from omero_search_engine.cache_functions.elasticsearch.elasticsearch_templates import ( # noqa
+from omero_search_engine.cache_functions.elasticsearch.elasticsearch_templates import (  # noqa
     image_template,
     non_image_template,
     key_value_buckets_info_template,
@@ -124,13 +122,11 @@ def delete_data_from_index(resource):
     if resource_elasticsearchindex.get(resource) and resource != "all":
         es_index = resource_elasticsearchindex[resource]
         es = search_omero_app.config.get("es_connector")
-        es.delete_by_query(index=es_index,
-                           body={"query": {"match_all": {}}})
+        es.delete_by_query(index=es_index, body={"query": {"match_all": {}}})
     elif resource == "all":
         es = search_omero_app.config.get("es_connector")
         for resource_, es_index in resource_elasticsearchindex.items():
-            es.delete_by_query(index=es_index,
-                               body={"query": {"match_all": {}}})
+            es.delete_by_query(index=es_index, body={"query": {"match_all": {}}})
     else:
         search_omero_app.logger.info(
             "\nNo index is found for resource:%s" % str(resource)
@@ -183,7 +179,9 @@ def prepare_images_data(data, doc_type):
         if counter % 100000 == 0:
             search_omero_app.logger.info(
                 "Process:\
-                {counter}/{total}".format(counter=counter, total=total)
+                {counter}/{total}".format(
+                    counter=counter, total=total
+                )
             )
 
         if row["id"] in data_to_be_inserted:
@@ -227,7 +225,9 @@ def prepare_data(data, doc_type):
         if counter % 100000 == 0:
             search_omero_app.logger.info(
                 "Process:\
-                {counter}/{total}".format(counter=counter, total=total)
+                {counter}/{total}".format(
+                    counter=counter, total=total
+                )
             )
 
         if row["id"] in data_to_be_inserted:
@@ -306,11 +306,18 @@ def get_file_list(path_name):
 
 
 def insert_resource_data(folder, resource, from_json):
-    search_omero_app.logger.info("Adding data to\
-        {} using {}".format(resource, folder))
+    search_omero_app.logger.info(
+        "Adding data to\
+        {} using {}".format(
+            resource, folder
+        )
+    )
     if not resource_elasticsearchindex.get(resource):
-        search_omero_app.logger.info("No index found for\
-            resource: %s" % resource)
+        search_omero_app.logger.info(
+            "No index found for\
+            resource: %s"
+            % resource
+        )
         return
 
     es_index = resource_elasticsearchindex.get(resource)
@@ -423,7 +430,8 @@ def get_insert_data_to_index(sql_st, resource):
         no_processors = int(multiprocessing.cpu_count() / 2)
     search_omero_app.logger.info(
         "Number of the allowed parallel\
-        processes inside the pool: %s" % no_processors
+        processes inside the pool: %s"
+        % no_processors
     )
     # create the multiprocessing pool
     pool = multiprocessing.Pool(no_processors)
@@ -532,32 +540,28 @@ def insert_resource_data_from_df(df, resource, lock=None):
 def insert_project_data(folder, project_file):
     file_name = folder + "\\" + project_file
     es_index = "project_keyvalue_pair_metadata"
-    cols = ["id", "owner_id", "group_id", "name",
-            "mapvalue_name", "mapvalue_value"]
+    cols = ["id", "owner_id", "group_id", "name", "mapvalue_name", "mapvalue_value"]
     handle_file(file_name, es_index, cols)
 
 
 def insert_screen_data(folder, screen_file):
     file_name = folder + "\\" + screen_file
     es_index = "screen_keyvalue_pair_metadata"
-    cols = ["id", "owner_id", "group_id", "name",
-            "mapvalue_name", "mapvalue_value"]
+    cols = ["id", "owner_id", "group_id", "name", "mapvalue_name", "mapvalue_value"]
     handle_file(file_name, es_index, cols)
 
 
 def insert_well_data(folder, well_file):
     file_name = folder + "\\" + folder
     es_index = "well_keyvalue_pair_metadata"
-    cols = ["id", "owner_id", "group_id", "name",
-            "mapvalue_name", "mapvalue_value"]
+    cols = ["id", "owner_id", "group_id", "name", "mapvalue_name", "mapvalue_value"]
     handle_file(file_name, es_index, cols)
 
 
 def insert_plate_data(folder, plate_file):
     file_name = folder + "\\" + plate_file
     es_index = "plate_keyvalue_pair_metadata"
-    cols = ["id", "owner_id", "group_id", "name",
-            "mapvalue_name", "mapvalue_value"]
+    cols = ["id", "owner_id", "group_id", "name", "mapvalue_name", "mapvalue_value"]
     handle_file(file_name, es_index, cols)
 
 
@@ -596,8 +600,11 @@ def save_key_value_buckets(
             if resource_table_ != resource_table:
                 continue
 
-        search_omero_app.logger.info("check table:\
-            %s ......." % resource_table)
+        search_omero_app.logger.info(
+            "check table:\
+            %s ......."
+            % resource_table
+        )
         resource_keys = get_keys(resource_table)
         name_results = None
         if resource_table in ["project", "screen"]:
@@ -606,8 +613,7 @@ def save_key_value_buckets(
             name_results = conn.execute_query(sql)
             name_results = [res["name"] for res in name_results]
 
-        push_keys_cache_index(resource_keys, resource_table,
-                              es_index_2, name_results)
+        push_keys_cache_index(resource_keys, resource_table, es_index_2, name_results)
         if only_values:
             continue
         search_omero_app.logger.info(
@@ -654,13 +660,19 @@ def save_key_value_buckets_process(lock, global_counter, vals):
     finally:
         lock.release()
     try:
-        search_omero_app.logger.info("Processing \
-            %s/%s" % (global_counter.value, total))
+        search_omero_app.logger.info(
+            "Processing \
+            %s/%s"
+            % (global_counter.value, total)
+        )
         search_omero_app.logger.info("Checking {key}".format(key=key))
         data_to_be_pushed = get_buckets(key, resource_table, es_index, lock)
         actions = []
-        search_omero_app.logger.info("data_to_be_pushed:\
-            %s" % len(data_to_be_pushed))
+        search_omero_app.logger.info(
+            "data_to_be_pushed:\
+            %s"
+            % len(data_to_be_pushed)
+        )
         for record in data_to_be_pushed:
             actions.append({"_index": es_index, "_source": record})
         es = search_omero_app.config.get("es_connector")
@@ -674,8 +686,11 @@ def save_key_value_buckets_process(lock, global_counter, vals):
         finally:
             lock.release()
     except Exception as e:
-        search_omero_app.logger.info("%s, \
-            Error:%s " % (global_counter.value, str(e)))
+        search_omero_app.logger.info(
+            "%s, \
+            Error:%s "
+            % (global_counter.value, str(e))
+        )
         if wrong_keys.get(resource_table):
             wrong_keys[resource_table] = wrong_keys[resource_table].append(key)
         else:

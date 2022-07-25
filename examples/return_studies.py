@@ -5,7 +5,9 @@ import sys
 
 # url to send the query
 # search engine url
-submit_query_url = "http://127.0.0.1:5577/api/v1/resources/submitquery_returnstudies/"  # noqa
+submit_query_url = (
+    "http://127.0.0.1:5577/api/v1/resources/submitquery_returnstudies/"  # noqa
+)
 
 # base_url ="https://idr-testing.openmicroscopy.org/searchengineapi/api/v1/"
 

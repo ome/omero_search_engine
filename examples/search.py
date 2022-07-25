@@ -56,12 +56,16 @@ def call_omero_return_results(url, data=None, method="post"):
 
 
 url = "%s%s?key=Organism&value=Homo sapiens" % (base_url, image_search)
-bookmark, total_results, total_pages = call_omero_return_results(url, method="get") # noqa
+bookmark, total_results, total_pages = call_omero_return_results(
+    url, method="get"
+)  # noqa
 
 while len(received_results) < total_results:
     page += 1
     url_ = url + "&bookmark=%s" % bookmark
-    bookmark, total_results, total_pages = call_omero_return_results(url_, method="get") # noqa
+    bookmark, total_results, total_pages = call_omero_return_results(
+        url_, method="get"
+    )  # noqa
     logging.info(
         "recieved: %s /%s, page: %s/%s, bookmark:  %s"
         % (len(received_results), total_results, page, total_pages, bookmark)

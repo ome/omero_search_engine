@@ -12,56 +12,70 @@ import math
 
 not_allowed_chars = ['"', "\\"]
 
-key_number_search_template = Template("""
+key_number_search_template = Template(
+    """
 {"size":0,"aggs":{"value_search":{"nested":{"path":"key_values"},
 "aggs":{"value_filter":{"filter":{"terms":
 {"key_values.name.keyword":["$key"]}},
 "aggs":{"required_values":{"cardinality":
 {"field":"key_values.value.keyvalue","precision_threshold":4000
-}}}}}}}}""")
+}}}}}}}}"""
+)
 
-search_by_value_only = Template("""
+search_by_value_only = Template(
+    """
 {"query":{"bool":{"must":[{"nested":
 {"path":"key_values","query":{"bool":{"must":[{"wildcard":
-{"key_values.value.keyvaluenormalize":"*eLa*"}}]}}}}]}}}""")
+{"key_values.value.keyvaluenormalize":"*eLa*"}}]}}}}]}}}"""
+)
 
-value_number_search_template = Template("""
+value_number_search_template = Template(
+    """
 {"size": 0,"aggs": {"name_search": {"nested":
 {"path": "key_values"},"aggs": {"value_filter": {"filter": {
 "terms": {"key_values.value.keyvaluenormalize":
 ["$value"]}},"aggs": {"required_name": {"cardinality": {
-"field": "key_values.name.keyword","precision_threshold": 4000}}}}}}}}""")
+"field": "key_values.name.keyword","precision_threshold": 4000}}}}}}}}"""
+)
 
-value_search_template = Template("""
+value_search_template = Template(
+    """
 {"size": 0,"aggs": {"name_search":
 {"nested": {"path": "key_values"},"aggs": {"value_filter": {
 "filter": {"terms": {"key_values.value.keyvaluenormalize":
 ["$value"]}},"aggs": {"required_name": {
-"terms": {"field": "key_values.name.keyword","size": 9999}}}}}}}}""")
+"terms": {"field": "key_values.name.keyword","size": 9999}}}}}}}}"""
+)
 
-value_search_contain_template = Template("""
+value_search_contain_template = Template(
+    """
 {"size": 0,"aggs": {"name_search": {"nested": {"path": "key_values"},
 "aggs": {"value_filter": {"terms":
 {"field":"key_values.value.keyvaluenormalize","include": ".*$value.*"},
 "aggs": {"required_name": {"terms":
-{"field": "key_values.name.keyword","size": 9999}}}}}}}}""")
+{"field": "key_values.name.keyword","size": 9999}}}}}}}}"""
+)
 
-key_search_template = Template("""
+key_search_template = Template(
+    """
 {"size": 0,"aggs": {"name_search": {"nested": {"path": "key_values"},
 "aggs": {"value_filter": {
 "filter": {"terms": {"key_values.name.keyword": ["$key"]}},
 "aggs": {"required_values": {
 "terms": {"field": "key_values.value.keyvaluenormalize",
-"size": 9999}}}}}}}}""")
+"size": 9999}}}}}}}}"""
+)
 
-values_for_key_template = Template("""
+values_for_key_template = Template(
+    """
 {"size":0,
 "aggs":{"name_search":{"nested":{ "path":"key_values"},
 "aggs":{"value_filter":{"filter":{
 "terms":{"key_values.name.keyword":["$key"]}},"aggs":{"required_values":{
 "terms":{"field":"key_values.value.keyvaluenormalize",
 "include": {"partition": "$cur","num_partitions": "$total"},
-"size":10000 }}}}}}}}""")
+"size":10000 }}}}}}}}"""
+)
 
 
 def search_index_for_value(e_index, query):
@@ -108,7 +122,8 @@ def search_index_for_values_get_all_buckets(e_index, query):
         if len(res["hits"]["hits"]) == 0:
             search_omero_app.logger.info(
                 "No result is found in the final\
-                loop: %s for size %s" % (co, size)
+                loop: %s for size %s"
+                % (co, size)
             )
             return returened_results
         bookmark = [res["hits"]["hits"][-1]["sort"][0]]
@@ -156,10 +171,7 @@ def get_number_of_buckets(key, res_index):
         .get("value")
     )
     number_of_images = (
-        res.get("aggregations")
-        .get("value_search")
-        .get("value_filter")
-        .get("doc_count")
+        res.get("aggregations").get("value_search").get("value_filter").get("doc_count")
     )
     # print (number_of_buckets, number_of_images)
     return number_of_buckets, number_of_images
@@ -177,10 +189,7 @@ def get_all_values_for_a_key(table_, key):
         .get("value")
     )
     number_of_items = (
-        res.get("aggregations")
-        .get("value_search")
-        .get("value_filter")
-        .get("doc_count")
+        res.get("aggregations").get("value_search").get("value_filter").get("doc_count")
     )
 
     total = math.ceil(number_of_buckets / 10000)
@@ -190,14 +199,13 @@ def get_all_values_for_a_key(table_, key):
     total_ret = 0
     while co < total:
         search_omero_app.logger.info("processing: %s / %s" % ((co + 1), total))
-        query = values_for_key_template.substitute(key=key,
-                                                   total=total,
-                                                   cur=co)
+        query = values_for_key_template.substitute(key=key, total=total, cur=co)
         res = search_index_for_value(res_index, query)
         results.append(res)
         total_ret += len(
-            res["aggregations"]["name_search"]["value_filter"]
-               ["required_values"]["buckets"]
+            res["aggregations"]["name_search"]["value_filter"]["required_values"][
+                "buckets"
+            ]
         )
         co += 1
     returned_results = []
@@ -351,8 +359,7 @@ def get_key_values_return_contents(name, resource, csv):
                     for e in d:
                         content.append(
                             "%s," % resource_
-                            + '"%s"'
-                            % (('","'.join(str(sr) for sr in e.values())))
+                            + '"%s"' % (('","'.join(str(sr) for sr in e.values())))
                         )
 
             content = key_string + "\n" + "\n".join(content)
@@ -369,14 +376,12 @@ def get_key_values_return_contents(name, resource, csv):
     return jsonify(resource_keys)
 
 
-def query_cashed_bucket(name, resource,
-                        es_index="key_value_buckets_information"):
+def query_cashed_bucket(name, resource, es_index="key_value_buckets_information"):
     # returns possible matches for a specific resource
     if name:
         name = name.strip()
     if resource != "all":
-        query = key_values_buckets_template.substitute(name=name,
-                                                       resource=resource)
+        query = key_values_buckets_template.substitute(name=name, resource=resource)
         res = search_index_for_values_get_all_buckets(es_index, query)
         returned_results = prepare_search_results_buckets(res)
         return returned_results
@@ -384,8 +389,7 @@ def query_cashed_bucket(name, resource,
         # search all resources for all possible matches
         returned_results = {}
         for table in resource_elasticsearchindex:
-            query = key_values_buckets_template.substitute(name=name,
-                                                           resource=table)
+            query = key_values_buckets_template.substitute(name=name, resource=table)
             res = search_index_for_values_get_all_buckets(es_index, query)
             returned_results[table] = prepare_search_results_buckets(res)
         return returned_results
@@ -397,8 +401,7 @@ def query_cashed_bucket_value(value, es_index="key_value_buckets_information"):
     return prepare_search_results(res)
 
 
-def search_value_for_resource(table_, value,
-                              es_index="key_value_buckets_information"):
+def search_value_for_resource(table_, value, es_index="key_value_buckets_information"):
     """
     send the request to elasticsearch and format the results
     It support wildcard operations only
@@ -428,8 +431,7 @@ def search_value_for_resource(table_, value,
         for crh in not_allowed_chars:
             if crh in value:
                 return build_error_message(
-                    " , ".join(not_allowed_chars) +
-                    " are not allowed in the query term"
+                    " , ".join(not_allowed_chars) + " are not allowed in the query term"
                 )
         # If the user does not specify anything,
         # it will add * at the start and at the end to
@@ -451,51 +453,63 @@ def search_value_for_resource(table_, value,
 """
 Search using key and resourse
 """
-key_values_buckets_template = Template("""
+key_values_buckets_template = Template(
+    """
 {"query":{"bool":{"must":[{"bool":{
 "must":{"match":{"Attribute.keyrnamenormalize":"$name"}}}},{
 "bool": {"must": {"match":
-{"resource.keyresource": "$resource"}}}}]}}}""")
+{"resource.keyresource": "$resource"}}}}]}}}"""
+)
 
 # "fields": ["Attribute","Value","items_in_the_bucket",
 # "total_items_in_saved_buckets","total_buckets","total_items"],
 # "_source": false,
-ss = Template("""
+ss = Template(
+    """
 {"query":{"bool":{"must":[{"bool":{
 "must":{"match":{"Attribute.keyname":"$name"}}}},{"bool": {
 "must": {"match": {"resource.keyresource": "$resource"}}}}]}}
-"size": 9999}""")
+"size": 9999}"""
+)
 
 """
 Search using value and resourse
 """
-key_values_search_buckets_template = Template("""
+key_values_search_buckets_template = Template(
+    """
 {"query":{"bool":{"must":[{"bool":{
 "must":{"match":{"Value.keyvalue":"$value"}}}},{
 "bool": {"must": {"match":
-{"resource.keyresource": "$resource"}}}}]}},"size": 9999}""")
+{"resource.keyresource": "$resource"}}}}]}},"size": 9999}"""
+)
 
 """
 Search using value or part of value and return all the posible mathes
 """
 
-value_all_buckets_template = Template("""
+value_all_buckets_template = Template(
+    """
 {"query":{"bool":{"must":[{"bool":{
 "must":{"wildcard":
-{"Value.keyvaluenormalize":"*$value*"}}}}]}},"size": 9999}""")
+{"Value.keyvaluenormalize":"*$value*"}}}}]}},"size": 9999}"""
+)
 
 
-resource_key_values_buckets_template = Template("""
+resource_key_values_buckets_template = Template(
+    """
 {"query":{"bool":{"must":[{"bool":{
 "must":{"wildcard":{"Value.keyvaluenormalize":"$value"}}}},{
 "bool": {"must": {"match":
 {"resource.keyresource": "$resource"}}}}]}},
-"size": 9999}""")
+"size": 9999}"""
+)
 
 
-key_values_buckets_template_2 = Template("""
+key_values_buckets_template_2 = Template(
+    """
 {"query":{"bool":{"must":[{"bool":{"must":{"match":{
-"resource.keyresource":"$resource"}}}}]}}} """)
+"resource.keyresource":"$resource"}}}}]}}} """
+)
 
 
 def connect_elasticsearch(es_index, query, count=False):
@@ -511,7 +525,7 @@ def connect_elasticsearch(es_index, query, count=False):
 
 def get_restircted_search_terms():
     search_terms = (
-        "omero_search_engine/api/v1/resources/data/restricted_search_terms.json" # noqa
+        "omero_search_engine/api/v1/resources/data/restricted_search_terms.json"  # noqa
     )
 
     if not os.path.isfile(search_terms):
@@ -521,8 +535,7 @@ def get_restircted_search_terms():
     return restricted_search_terms
 
 
-def get_resource_attributes(resource, mode=None,
-                            es_index="key_values_resource_cach"):
+def get_resource_attributes(resource, mode=None, es_index="key_values_resource_cach"):
     """
     return the available attributes for one or all resources
     """
@@ -565,11 +578,13 @@ def get_resource_attributes(resource, mode=None,
     return returned_results
 
 
-attribute_search_values_template = Template("""
+attribute_search_values_template = Template(
+    """
 {"query":{"bool":{"must":[
 {"bool":{"must":{"match":{"resource.keyresource":"$resource"}}}},
 {"bool": {"must":
-{"match": {"Attribute.keyname":"$name"}}}}]}},"size":9999}""")
+{"match": {"Attribute.keyname":"$name"}}}}]}},"size":9999}"""
+)
 
 
 def get_resource_attribute_search_values(
@@ -589,7 +604,9 @@ def get_resource_attribute_search_values(
             row = {}
             returned_results.append(row)
             row["value"] = res["_source"]["Value"]
-            row["Number of %ss" % resource] = res["_source"]["items_in_the_bucket"] # noqa
+            row["Number of %ss" % resource] = res["_source"][
+                "items_in_the_bucket"
+            ]  # noqa
     return returned_results
 
 
@@ -601,8 +618,7 @@ def get_resource_attribute_values(
     """
     returned_results = []
     try:
-        query = key_values_buckets_template.substitute(name=name,
-                                                       resource=resource)
+        query = key_values_buckets_template.substitute(name=name, resource=resource)
         results_ = search_index_for_values_get_all_buckets(es_index, query)
         for results in results_:
             for hit in results["hits"]["hits"]:

@@ -12,9 +12,7 @@ from omero_search_engine.api.v1.resources.resourse_analyser import (
     get_resource_names,
     get_key_values_return_contents,
 )
-from omero_search_engine.api.v1.resources.utils import (
-    get_resource_annotation_table
-)
+from omero_search_engine.api.v1.resources.utils import get_resource_annotation_table
 from omero_search_engine.api.v1.resources.query_handler import (
     determine_search_results_,
     simple_search,
@@ -115,8 +113,7 @@ def search_resource(resource_table):
     data = request.data
     if not data:
         return jsonify(
-            build_error_message(
-                "{error}".format(error="No query data is provided "))
+            build_error_message("{error}".format(error="No query data is provided "))
         )
     try:
         data = json.loads(data)
@@ -161,8 +158,7 @@ def get_values_using_value(resource_table):
     value = request.args.get("value")
     if not value:
         return jsonify(
-            build_error_message(
-                "Error: {error}".format(error="No value is provided "))
+            build_error_message("Error: {error}".format(error="No value is provided "))
         )
     # print (value, resource_table)
     return jsonify(search_value_for_resource(resource_table, value))
@@ -260,9 +256,7 @@ def submit_query_return_containers():
     validation_results = query_validator(query)
     if validation_results == "OK":
         return jsonify(
-            determine_search_results_(query,
-                                      return_columns,
-                                      return_containers=True)
+            determine_search_results_(query, return_columns, return_containers=True)
         )
     else:
         return jsonify(build_error_message(validation_results))
