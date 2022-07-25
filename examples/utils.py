@@ -1,7 +1,6 @@
-import requests
-from datetime import datetime
 import json
 import logging
+import requests
 import sys
 
 # url to send the query
@@ -17,7 +16,8 @@ logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 def query_the_search_ending(query, main_attributes):
     recieved_results_data = []
-    query_data = {"query": {"query_details": query, "main_attributes": main_attributes}}
+    query_data = {"query": {"query_details": query,
+                            "main_attributes": main_attributes}}
     query_data_json = json.dumps(query_data)
     resp = requests.post(
         url="%s%s" % (base_url, image_ext), data=json.dumps(query_data)
@@ -26,11 +26,12 @@ def query_the_search_ending(query, main_attributes):
     res = resp.text
     try:
         returned_results = json.loads(res)
-    except:
+    except Exception:
         logging.info(res)
         return []
 
-    if not returned_results.get("results") or len(returned_results["results"]) == 0:
+    if not returned_results.get("results") or \
+       len(returned_results["results"]) == 0:
         logging.info("Your query returns no results")
         return []
 
@@ -49,7 +50,8 @@ def query_the_search_ending(query, main_attributes):
         recieved_results_data.append(res)
 
     recieved_results = len(returned_results["results"]["results"])
-    # set the bookmark to used in the next the page, if the number of pages is greater than 1
+    # set the bookmark to used in the next the page,
+    # if the number of pages is greater than 1
     bookmark = returned_results["results"]["bookmark"]
     # get the total number of pages
     total_pages = returned_results["results"]["total_pages"]

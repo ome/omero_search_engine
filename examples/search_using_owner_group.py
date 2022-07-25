@@ -1,10 +1,14 @@
 import sys
-from utils import query_the_search_ending, logging
+from utils import (
+    query_the_search_ending,
+    logging
+)
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 """
-Find images of cells treated with specific drug Cell Type = "induced pluripotent stem cell" and compound = "fibronectin"
+Find images of cells treated with specific drug
+Cell Type = "induced pluripotent stem cell" and compound = "fibronectin"
 The and query clauses should be as follows:
 """
 
@@ -27,7 +31,8 @@ and_filters = [
 recieved_results_data = []
 """
 If we need to restrict the results to a specific owner,
-we can use the main attribute that can be used to add to the search terms like owner id, group id etc.
+we can use the main attribute that can be used to add
+to the search terms like owner id, group id etc.
 """
 main_attributes = {
     "and_main_attributes": [

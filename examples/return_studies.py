@@ -1,30 +1,31 @@
 import logging
-import requests
 import json
+import requests
+import sys
 
 # url to send the query
 # search engine url
-submit_query_url = "http://127.0.0.1:5577/api/v1/resources/submitquery_returnstudies/"
+submit_query_url = "http://127.0.0.1:5577/api/v1/resources/submitquery_returnstudies/"  # noqa
 
 # base_url ="https://idr-testing.openmicroscopy.org/searchengineapi/api/v1/"
-import sys
+
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 """
 The following query will answer this question:
 Get a list of studies which satsidy the following conditions:
-"Organism"="mus musculus" 
- and 
+"Organism"="mus musculus"
+ and
 "Imaging Method"="light sheet fluorescence microscopy, spim"
 """
-recieved_results = []
 
 logging.info(
-    "Get a study list for:  (Organism= mus musculus) and (Imaging Method=light sheet fluorescence microscopy, spim)"
+    "Get a study list for:  (Organism= mus musculus) and \
+    (Imaging Method=light sheet fluorescence microscopy, spim)"
 )
 
 """
-url="%s%s?key=Organism&value=Homo sapiens&return_containers=true"%(base_url,image_search)
+url="%s%s?key=Organism&value=Homo sapiens&return_containers=true"%(base_url,image_search)  # noqa
 resp = requests.get(url)
 returned_results = json.loads(resp.text)
 if returned_results.get("results"):

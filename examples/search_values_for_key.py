@@ -15,7 +15,7 @@ image_key_values = "resources/image/searchvaluesusingkey/"
 
 
 """
-In case the user needs to know the avilable attributes for images
+In case the user needs to know the available attributes for images
 """
 attrs_url = "{base_url}{image_attributes}".format(
     image_attributes=image_attributes, base_url=base_url
@@ -25,10 +25,11 @@ resp = requests.get(url=attrs_url)
 res = json.loads(resp.text)
 # a list contains the available attributes
 attributes = res.get("image")
-logging.info("Number of the available attributes  for images is %s" % len(attributes))
+logging.info("Number of available attributes for images: %s" % len(attributes))  # noqa
 
 """
-The user can get the avilable values for the "Organism" attribute and the number of images for each value
+The user can get the avilable values for the "Organism" attribute
+and the number of images for each value
 """
 key = "Organism"
 values_attr_url = "{base_url}{image_key_values}?key={key}".format(
@@ -39,7 +40,7 @@ res = json.loads(resp.text)
 # a list contains dicts of the available values with the number of images
 buckets = res.get("data")
 logging.info(
-    "Number of the available buckets for attribute %s is %s" % (key, len(buckets))
+    "Number of available buckets for attribute %s is %s" % (key, len(buckets))
 )
 # The first bucket
 logging.info("First bucket: %s " % buckets[0])

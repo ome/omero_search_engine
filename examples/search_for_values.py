@@ -1,6 +1,6 @@
 import logging
-import requests
 import json
+import requests
 import sys
 
 # url to send the query
@@ -10,7 +10,7 @@ base_url = "http://127.0.0.1:5577/api/v1/"
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 """
-If the user needs to search for a value whose attribute is not known e.g 
+If the user needs to search for a value whose attribute is not known e.g.
 search to find if diabetes is a part of any attribute values:
 """
 search_url = "%S/%s%value=diabetes"

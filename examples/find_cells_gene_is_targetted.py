@@ -1,4 +1,4 @@
-from utils import query_the_search_ending, logging
+from utils import query_the_search_ending
 
 # Find images of cells where a specific gene was targeted
 # Cell line = "HeLa" and Gene Symbol = "KIF11"
