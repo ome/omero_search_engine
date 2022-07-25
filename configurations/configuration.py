@@ -65,7 +65,8 @@ class app_config(object):
     DEPLOYED_CONFIG = r"/etc/searchengine/.app_config.yml"
     if not os.path.isfile(INSTANCE_CONFIG):
         # Check if the configuration file exists in the docker deployed folder
-        # if not, it will assume it is either development environment or deploying using other methods
+        # if not, it will assume it is either development environment or
+        # deploying using other methods
 
         if os.path.isfile(DEPLOYED_CONFIG):
             INSTANCE_CONFIG = DEPLOYED_CONFIG
