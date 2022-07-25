@@ -440,7 +440,7 @@ def get_insert_data_to_index(sql_st, resource):
     lock = manger.Lock()
     # a counter which will be used by the processes in the pool
     counter_val = manger.Value("i", 0)
-    func = partial(processo_work, lock, counter_val)
+    func = partial(processor_work, lock, counter_val)
     # map the data which will be consumed by the processes inside the pool
     res = pool.map(func, vals)
     pool.close()
@@ -451,7 +451,7 @@ def get_insert_data_to_index(sql_st, resource):
     search_omero_app.logger.info("Total time=%s" % delta)
 
 
-def processo_work(lock, global_counter, val):
+def processor_work(lock, global_counter, val):
     """
     A method to do the work inside a process within the multiprocessing pool
     """
