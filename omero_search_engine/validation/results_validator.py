@@ -42,7 +42,7 @@ class Validator(object):
         self.name = name
         self.value = value
         self.postgres_results = []
-        self.sql_statament = query_methods[resource]
+        self.sql_statement = query_methods[resource]
         self.searchengine_results = {}
 
     def set_complex_query(self, name, clauses, resource="image", type="complex"):
@@ -118,11 +118,11 @@ class Validator(object):
             return
         else:
             if self.name != "name":
-                sql = self.sql_statament.substitute(
+                sql = self.sql_statement.substitute(
                     name=self.name.lower(), value=self.value.lower()
                 )
             else:
-                sql = self.sql_statament.substitute(name=self.value)
+                sql = self.sql_statement.substitute(name=self.value)
         # search_omero_app.logger.info ("sql: %s"%sql)
         conn = search_omero_app.config["database_connector"]
         postgres_results = conn.execute_query(sql)
