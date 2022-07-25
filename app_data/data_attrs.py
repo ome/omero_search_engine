@@ -1,12 +1,17 @@
-tables=["projects","iamges","datasets","plates"]
-annotation_resource_link={'image': 'imageannotationlink', 'project': 'projectannotationlink',
-                       'plate':'plateannotationlink','screen':'screenannotationlink','well':'wellannotationlink'}
-#screen ==> study
-distinct_study_name='''
+tables = ["projects", "iamges", "datasets", "plates"]
+annotation_resource_link = {
+    "image": "imageannotationlink",
+    "project": "projectannotationlink",
+    "plate": "plateannotationlink",
+    "screen": "screenannotationlink",
+    "well": "wellannotationlink",
+}
+# screen ==> study
+distinct_study_name = """
 Study Title
  Study Type
-'''
-distinct_gene_name='''
+"""
+distinct_gene_name = """
  Gene In Validation Screen
  Gene Description
  Gene Annotation
@@ -26,4 +31,4 @@ distinct_gene_name='''
  Gene Expression CIS Region
  Genetic Modification
  Gene Allele Name
-'''
+"""
