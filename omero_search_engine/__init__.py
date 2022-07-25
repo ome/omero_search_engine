@@ -87,7 +87,7 @@ def create_app(config_name="development"):
 
 create_app()
 
-from omero_search_engine.api.v1.resources import (
+from omero_search_engine.api.v1.resources import (  # noqa
     resources as resources_routers_blueprint_v1,
 )
 
