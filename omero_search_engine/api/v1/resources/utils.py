@@ -51,10 +51,10 @@ Each of them represent Elastic search query template part.
 
 Must ==> AND
 must_not ==>  NOT
-should ==>OR
+should ==> OR
 
 """
-# main atgtribute such as project_id, dataset_id, owner_id,
+# main attribute such as project_id, dataset_id, owner_id,
 # group_id, owner_id, etc.
 # It supports not two operators, equals and not_equals
 main_attribute_query_template = Template(
@@ -96,9 +96,9 @@ nested_query_template_must_not = Template(
 {"nested": {"path": "key_values",
 "query":{"bool": {"must_not":[$must_not_value ]}}}}"""
 )
-# ==>>equal term
+# ==> equal term
 must_term_template = Template(""""must" : [$must_term]""")
-# ===>not equal
+# ==> not equal
 must_not_term_template = Template(""""must_not": [$must_not_term]""")
 # Used for contains and not contains
 case_sensitive_wildcard_value_condition_template = Template(
@@ -123,7 +123,7 @@ should_term_template = Template(
     """
 {"bool":{ "should": [$should_term],
 "minimum_should_match" : $minimum_should_match ,"boost" : 1.0 }}"""
-)  # ==>or
+)  # ==> or
 
 
 query_template = Template("""{"query": {"bool": {$query}}}""")
@@ -819,7 +819,7 @@ def search_resource_annotation(
             res_2 = search_index_using_search_after(
                 res_index, query, page, bookmark, return_containers
             )
-            # Combines the containers reults
+            # Combines the containers results
             studies = []
             if len(res) > 0:
                 for item1 in res.get("results"):
@@ -852,5 +852,5 @@ def search_resource_annotation(
         search_omero_app.logger.info("Query %s" % str(query))
         search_omero_app.logger.info("==>>>Error: %s" % str(e))
         return build_error_message(
-            "Someting went wrong, please check your query and try again later."
+            "Something went wrong, please check your query and try again later."
         )
