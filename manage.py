@@ -17,7 +17,7 @@ from omero_search_engine.cache_functions.elasticsearch.sql_to_csv import (
 )
 
 from omero_search_engine.validation.results_validator import (
-    validate_quries,
+    validate_queries,
     test_no_images,
     get_omero_stats,
 )
@@ -256,7 +256,7 @@ def test_indexing_search_query(
     (test_index_data.json) app_data folder
     """
 
-    validate_quries(json_file, deep_check)
+    validate_queries(json_file, deep_check)
     if check_studies:
         test_no_images()
     get_omero_stats()

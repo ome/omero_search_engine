@@ -282,7 +282,7 @@ class Validator(object):
         )
 
 
-def validate_quries(json_file, deep_check):
+def validate_queries(json_file, deep_check):
     import json
     import os
 
