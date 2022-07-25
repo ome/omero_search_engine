@@ -120,7 +120,7 @@ def delete_es_index(es_index):
     return True
 
 
-def delte_data_from_index(resource):
+def delete_data_from_index(resource):
     if resource_elasticsearchindex.get(resource) and resource != "all":
         es_index = resource_elasticsearchindex[resource]
         es = search_omero_app.config.get("es_connector")

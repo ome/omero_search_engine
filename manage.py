@@ -4,7 +4,7 @@ from flask_script import Manager
 from configurations.configuration import update_config_file
 from omero_search_engine.cache_functions.elasticsearch.transform_data import (
     create_omero_indexes,
-    delte_data_from_index,
+    delete_data_from_index,
     delete_index,
     get_insert_data_to_index,
     get_all_indexes,
@@ -55,7 +55,7 @@ def delete_es_index(resource="all", es_index=None):
     help="resource name, deleting all data from the its related index",
 )
 def delete_all_data_from_es_index(resource="None"):
-    delte_data_from_index(resource)
+    delete_data_from_index(resource)
 
 
 @manager.command
