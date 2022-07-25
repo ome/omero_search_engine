@@ -7,17 +7,17 @@ from omero_search_engine.api.v1.resources.utils import (
 )
 from omero_search_engine.api.v1.resources.resourse_analyser import (
     search_value_for_resource,
-    query_cashed_bucket,
     get_resource_attributes,
     get_resource_attribute_values,
     get_resource_names,
-    get_values_for_a_key,
-    query_cashed_bucket_value,
     get_key_values_return_contents,
 )
-from omero_search_engine.api.v1.resources.utils import get_resource_annotation_table
+from omero_search_engine.api.v1.resources.utils import (
+    get_resource_annotation_table
+)
 from omero_search_engine.api.v1.resources.query_handler import (
     determine_search_results_,
+    simple_search,
     query_validator,
 )
 
@@ -47,7 +47,7 @@ def search_resource_page(resource_table):
         )
     try:
         data = json.loads(data)
-    except Exception as ex:
+    except Exception:
         return jsonify(
             build_error_message(
                 "{error}".format(error="No proper query data is provided ")
@@ -91,13 +91,16 @@ def search_resource(resource_table):
     file: swagger_docs/searchannotation.yml
     """
     """
-     API end point to search the annotation (key/value pair) for a resource (resource table, e.g. image, project, study, ..)
-       the request data contation a dict (query) which contains the the query detatins.
-       this version (1)  uses Elastic search
-       an example of a query dict i:
-       q_data={"query":{'query_details':{"and_filters":and_filters,"or_filters":or_filters}}}
-       each of and_filtersand or_filters is a list of dict whihc contains the search conditions, an example of and_filters is:
-       and_filters=[{"Organism" : "Homo sapiens", "operator": "equals"},{"Gene Symbol": "NCAPD2", "operator": "equals"},{ "Cell Cycle Phase" :"anaphase", "operator": "equals"}]
+    API end point to search the annotation (key/value pair) for a resource 
+    (resource table, e.g. image, project, study, ..)
+    the request data contation a dict (query) which contains the the query detatins.
+    this version (1)  uses Elastic search
+    an example of a query dict i:
+       q_data={"query":{'query_details':{"and_filters":and_filters,"or_filters":or_filters}}}  # noqa
+       each of and_filtersand or_filters is a list of dict
+       which contains the search conditions, 
+       an example of and_filters is:
+       and_filters=[{"Organism" : "Homo sapiens", "operator": "equals"},{"Gene Symbol": "NCAPD2", "operator": "equals"},{ "Cell Cycle Phase" :"anaphase", "operator": "equals"}] # noqa
        and_filters means that the results have to saitisy the conditions
        not_filters means that the results have not to the conditions
        or_filters means that the results should satsify at least one condition inside the filters
@@ -112,11 +115,12 @@ def search_resource(resource_table):
     data = request.data
     if not data:
         return jsonify(
-            build_error_message("{error}".format(error="No query data is provided "))
+            build_error_message(
+                "{error}".format(error="No query data is provided "))
         )
     try:
         data = json.loads(data)
-    except Exception as ex:
+    except Exception:
         return jsonify(
             build_error_message(
                 "{error}".format(error="No proper query data is provided.")
@@ -157,7 +161,8 @@ def get_values_using_value(resource_table):
     value = request.args.get("value")
     if not value:
         return jsonify(
-            build_error_message("Error: {error}".format(error="No value is provided "))
+            build_error_message(
+                "Error: {error}".format(error="No value is provided "))
         )
     # print (value, resource_table)
     return jsonify(search_value_for_resource(resource_table, value))
@@ -180,7 +185,7 @@ def search_values_for_a_key(resource_table):
     if csv:
         try:
             csv = json.loads(csv.lower())
-        except:
+        except Exception:
             csv = False
 
     return get_key_values_return_contents(key, resource_table, csv)
@@ -242,7 +247,7 @@ def submit_query_return_containers():
     """
     try:
         query = json.loads(request.data)
-    except:
+    except Exception:
         query = None
     if not query:
         return jsonify(build_error_message("No query is provided"))
@@ -250,12 +255,14 @@ def submit_query_return_containers():
     if return_columns:
         try:
             return_columns = json.loads(return_columns.lower())
-        except:
+        except Exception:
             return_columns = False
     validation_results = query_validator(query)
     if validation_results == "OK":
         return jsonify(
-            determine_search_results_(query, return_columns, return_containers=True)
+            determine_search_results_(query,
+                                      return_columns,
+                                      return_containers=True)
         )
     else:
         return jsonify(build_error_message(validation_results))
@@ -268,7 +275,7 @@ def submit_query():
     """
     try:
         query = json.loads(request.data)
-    except:
+    except Exception:
         query = None
     if not query:
         return jsonify(build_error_message("No query is provided"))
@@ -276,7 +283,7 @@ def submit_query():
     if return_columns:
         try:
             return_columns = json.loads(return_columns.lower())
-        except:
+        except Exception:
             return_columns = False
     validation_results = query_validator(query)
     if validation_results == "OK":
@@ -296,8 +303,6 @@ def search(resource_table):
     case_sensitive = request.args.get("case_sensitive")
     operator = request.args.get("operator")
     bookmark = request.args.get("bookmark")
-    from omero_search_engine.api.v1.resources.query_handler import simple_search
-
     return_containers = request.args.get("return_containers")
     if return_containers:
         return_containers = json.loads(return_containers.lower())

@@ -1,18 +1,16 @@
 import copy
-import os, sys
+import os
+import sys
 import json
 from elasticsearch import helpers
-
-from datetime import datetime
 import time
+from omero_search_engine import search_omero_app
+from string import Template
+from app_data.data_attrs import annotation_resource_link
 
 main_dir = os.path.abspath(os.path.dirname(__file__))
 mm = main_dir.replace("omero_search_engine/api/v2/resources", "")
 sys.path.append(mm)
-
-from omero_search_engine import search_omero_app
-from string import Template
-from app_data.data_attrs import annotation_resource_link
 
 
 def get_resource_annotation_table(resource_table):
@@ -38,7 +36,7 @@ resource_elasticsearchindex = {
     "image1": "image_keyvalue_pair_metadata_1",
 }
 
-# curl -XPUT -H 'Content-Type: application/json' -d '{"index": {"max_result_window": 20000 }}' 'http://127.0.0.1:9200/image_keyvalue_pair_metadata/_settings'
+# curl -XPUT -H 'Content-Type: application/json' -d '{"index": {"max_result_window": 20000 }}' 'http://127.0.0.1:9200/image_keyvalue_pair_metadata/_settings' # noqa
 
 range_dict = {
     "gte": ">=",  # "Greater-than or equal to",
@@ -56,54 +54,52 @@ must_not ==>  NOT
 should ==>OR
 
 """
-# main atgtribute such as project_id, dataset_id, owner_id, group_id, owner_id, etc...
+# main atgtribute such as project_id, dataset_id, owner_id,
+# group_id, owner_id, etc.
 # It supports not two operators, equals and not_equals
 main_attribute_query_template = Template(
     """{"bool":{"must":{"match":{"$attribute.keyvalue":"$value"}}}}"""
 )
-# Search main attribute which has long data type ends with "_id" in the image index (template)
-main_attribute_query_template_id = Template(
-    """{"bool":{"must":{"match":{"$attribute":"$value"}}}}"""
-)
+# Search main attribute which has long data type
+# ends with "_id" in the image index (template)
+main_attribute_query_template_id = Template("""
+{"bool":{"must":{"match":{"$attribute":"$value"}}}}""")
 
-# must_name_condition_template= Template('''{"match": {"key_values.name.keyword":"$name"}}''')
+# must_name_condition_template= Template('''{"match": {"key_values.name.keyword":"$name"}}''')  # noqa
 # support case_sensitive and case_insensitive for keys
-case_sensitive_must_name_condition_template = Template(
-    """{"match": {"key_values.name.keyword":"$name"}}"""
-)
-case_insensitive_must_name_condition_template = Template(
-    """{"match": {"key_values.name.keynamenormalize":"$name"}}"""
-)
+case_sensitive_must_name_condition_template = Template("""
+{"match": {"key_values.name.keyword":"$name"}}""")
+case_insensitive_must_name_condition_template = Template("""
+{"match": {"key_values.name.keynamenormalize":"$name"}}""")
 
-case_insensitive_must_value_condition_template = Template(
-    """{"match": {"key_values.value.keyvaluenormalize":"$value"}}"""
-)
-case_sensitive_must_value_condition_template = Template(
-    """{"match": {"key_values.value.keyvalue":"$value"}}"""
-)
-nested_keyvalue_pair_query_template = Template(
-    """{"nested": {"path": "key_values", "query":{"bool": {"must":[$nested ] }}}}"""
-)
-nested_query_template_must_not = Template(
-    """{"nested": {"path": "key_values", "query":{"bool": {"must_not":[$must_not_value ] }}}}"""
-)
-must_term_template = Template(""""must" : [$must_term]""")  # ==>>equal term
-must_not_term_template = Template(""""must_not": [$must_not_term]""")  # ===>not equal
-case_sensitive_wildcard_value_condition_template = Template(
-    """{"wildcard": {"key_values.value.keyvalue":"$wild_card_value"}}"""
-)  # Used for contains and not contains
-case_insensitive_wildcard_value_condition_template = Template(
-    """{"wildcard": {"key_values.value.keyvaluenormalize":"$wild_card_value"}}"""
-)  # Used for contains and not contains
-case_sensitive_range_value_condition_template = Template(
-    """{"range":{"key_values.value.keyvalue":{"$operator":"$value"} }}"""
-)
-case_insensitive_range_value_condition_template = Template(
-    """{"range":{"key_values.value.keyvaluenormalize":{"$operator":"$value"} }}"""
-)
-should_term_template = Template(
-    """{"bool":{ "should": [$should_term],"minimum_should_match" : $minimum_should_match ,"boost" : 1.0 }}"""
-)  # ==>or
+case_insensitive_must_value_condition_template = Template("""
+{"match": {"key_values.value.keyvaluenormalize":"$value"}}""")
+case_sensitive_must_value_condition_template = Template("""
+{"match": {"key_values.value.keyvalue":"$value"}}""")
+nested_keyvalue_pair_query_template = Template("""
+{"nested": {"path": "key_values",
+"query":{"bool": {"must":[$nested ] }}}}""")
+nested_query_template_must_not = Template("""
+{"nested": {"path": "key_values",
+"query":{"bool": {"must_not":[$must_not_value ]}}}}""")
+# ==>>equal term
+must_term_template = Template(""""must" : [$must_term]""")
+# ===>not equal
+must_not_term_template = Template(""""must_not": [$must_not_term]""")
+# Used for contains and not contains
+case_sensitive_wildcard_value_condition_template = Template("""
+{"wildcard": {"key_values.value.keyvalue":"$wild_card_value"}}""")
+
+# Used for contains and not contains
+case_insensitive_wildcard_value_condition_template = Template("""
+{"wildcard": {"key_values.value.keyvaluenormalize":"$wild_card_value"}}""")
+case_sensitive_range_value_condition_template = Template("""
+{"range":{"key_values.value.keyvalue":{"$operator":"$value"} }}""")
+case_insensitive_range_value_condition_template = Template("""
+{"range":{"key_values.value.keyvaluenormalize":{"$operator":"$value"}}}""")
+should_term_template = Template("""
+{"bool":{ "should": [$should_term],
+"minimum_should_match" : $minimum_should_match ,"boost" : 1.0 }}""")  # ==>or
 
 
 query_template = Template("""{"query": {"bool": {$query}}}""")
@@ -119,7 +115,8 @@ def build_error_message(error):
 def elasticsearch_query_builder(
     and_filter, or_filters, case_sensitive, main_attributes=None
 ):
-    global nested_keyvalue_pair_query_template, must_term_template, must_not_term_template, should_term
+    global nested_keyvalue_pair_query_template
+    global must_term_template, must_not_term_template, should_term
     nested_must_part = []
     nested_must_not_part = []
     all_should_part_list = []
@@ -132,7 +129,7 @@ def elasticsearch_query_builder(
                 if isinstance(clause, list):
                     for attribute in clause:
                         if attribute["name"].endswith("_id"):
-                            main_dd = main_attribute_query_template_id.substitute(
+                            main_dd = main_attribute_query_template_id.substitute( # noqa
                                 attribute=attribute["name"].strip(),
                                 value=str(attribute["value"]).strip(),
                             )
@@ -174,7 +171,7 @@ def elasticsearch_query_builder(
                     for attribute in attributes:
                         # search using id, e.g. project id
                         if attribute["name"].endswith("_id"):
-                            main_dd = main_attribute_query_template_id.substitute(
+                            main_dd = main_attribute_query_template_id.substitute( # noqa
                                 attribute=attribute["name"].strip(),
                                 value=str(attribute["value"]).strip(),
                             )
@@ -224,31 +221,32 @@ def elasticsearch_query_builder(
             except Exception as e:
                 search_omero_app.logger.info(str(e))
                 return build_error_message(
-                    "Each Filter needs to have, name, value and operator keywords."
+                    "Each Filter needs to have, name,\
+                    value and operator keywords."
                 )
             search_omero_app.logger.info("%s %s %s" % (operator, key, value))
             search_omero_app.logger.info("%s %s %s" % (operator, key, value))
             _nested_must_part = []
             if operator == "equals":
-                # _nested_must_part.append(must_name_condition_template.substitute(name=key))
+                # _nested_must_part.append(must_name_condition_template.substitute(name=key)) # noqa
                 if case_sensitive:
                     _nested_must_part.append(
-                        case_sensitive_must_value_condition_template.substitute(
+                        case_sensitive_must_value_condition_template.substitute( # noqa
                             value=value
                         )
                     )
                     _nested_must_part.append(
-                        case_sensitive_must_name_condition_template.substitute(name=key)
+                        case_sensitive_must_name_condition_template.substitute(name=key) # noqa
                     )
 
                 else:
                     _nested_must_part.append(
-                        case_insensitive_must_value_condition_template.substitute(
+                        case_insensitive_must_value_condition_template.substitute( # noqa
                             value=value
                         )
                     )
                     _nested_must_part.append(
-                        case_insensitive_must_name_condition_template.substitute(
+                        case_insensitive_must_name_condition_template.substitute( # noqa
                             name=key
                         )
                     )
@@ -260,25 +258,25 @@ def elasticsearch_query_builder(
                 )
             if operator == "contains":
                 value = "*{value}*".format(value=value)
-                # _nested_must_part.append(must_name_condition_template.substitute(name=key))
+                # _nested_must_part.append(must_name_condition_template.substitute(name=key)) # noqa
                 if case_sensitive:
                     _nested_must_part.append(
-                        case_sensitive_wildcard_value_condition_template.substitute(
+                        case_sensitive_wildcard_value_condition_template.substitute( # noqa
                             wild_card_value=value
                         )
                     )
                     _nested_must_part.append(
-                        case_sensitive_must_name_condition_template.substitute(name=key)
+                        case_sensitive_must_name_condition_template.substitute(name=key) # noqa
                     )
 
                 else:
                     _nested_must_part.append(
-                        case_insensitive_wildcard_value_condition_template.substitute(
+                        case_insensitive_wildcard_value_condition_template.substitute( # noqa
                             wild_card_value=value
                         )
                     )
                     _nested_must_part.append(
-                        case_insensitive_must_name_condition_template.substitute(
+                        case_insensitive_must_name_condition_template.substitute( # noqa
                             name=key
                         )
                     )
@@ -295,14 +293,14 @@ def elasticsearch_query_builder(
                     if case_sensitive:
                         nested_must_part.append(
                             nested_keyvalue_pair_query_template.substitute(
-                                nested=case_sensitive_must_name_condition_template.substitute(
+                                nested=case_sensitive_must_name_condition_template.substitute( # noqa
                                     name=key
                                 )
                             )
                         )
                         nested_must_not_part.append(
                             nested_keyvalue_pair_query_template.substitute(
-                                nested=case_sensitive_wildcard_value_condition_template.substitute(
+                                nested=case_sensitive_wildcard_value_condition_template.substitute( # noqa
                                     wild_card_value=value
                                 )
                             )
@@ -310,14 +308,14 @@ def elasticsearch_query_builder(
                     else:
                         nested_must_part.append(
                             nested_keyvalue_pair_query_template.substitute(
-                                nested=case_insensitive_must_name_condition_template.substitute(
+                                nested=case_insensitive_must_name_condition_template.substitute( # noqa
                                     name=key
                                 )
                             )
                         )
                         nested_must_not_part.append(
                             nested_keyvalue_pair_query_template.substitute(
-                                nested=case_insensitive_wildcard_value_condition_template.substitute(
+                                nested=case_insensitive_wildcard_value_condition_template.substitute( # noqa
                                     wild_card_value=value
                                 )
                             )
@@ -327,14 +325,14 @@ def elasticsearch_query_builder(
                     if case_sensitive:
                         nested_must_part.append(
                             nested_keyvalue_pair_query_template.substitute(
-                                nested=case_sensitive_must_name_condition_template.substitute(
+                                nested=case_sensitive_must_name_condition_template.substitute( # noqa
                                     name=key
                                 )
                             )
                         )
                         nested_must_not_part.append(
                             nested_keyvalue_pair_query_template.substitute(
-                                nested=case_sensitive_must_value_condition_template.substitute(
+                                nested=case_sensitive_must_value_condition_template.substitute( # noqa
                                     value=value
                                 )
                             )
@@ -342,25 +340,25 @@ def elasticsearch_query_builder(
                     else:
                         nested_must_part.append(
                             nested_keyvalue_pair_query_template.substitute(
-                                nested=case_insensitive_must_name_condition_template.substitute(
+                                nested=case_insensitive_must_name_condition_template.substitute( # noqa
                                     name=key
                                 )
                             )
                         )
                         nested_must_not_part.append(
                             nested_keyvalue_pair_query_template.substitute(
-                                nested=case_insensitive_must_value_condition_template.substitute(
+                                nested=case_insensitive_must_value_condition_template.substitute( # noqa
                                     value=value
                                 )
                             )
                         )
 
             elif operator in ["lt", "lte", "gt", "gte"]:
-                # nested_must_part.append(nested_keyvalue_pair_query_template.substitute(nested=must_name_condition_template.substitute(name=key)))
+                # nested_must_part.append(nested_keyvalue_pair_query_template.substitute(nested=must_name_condition_template.substitute(name=key))) # noqa
                 if case_sensitive:
                     nested_must_part.append(
                         nested_keyvalue_pair_query_template.substitute(
-                            nested=case_sensitive_must_name_condition_template.substitute(
+                            nested=case_sensitive_must_name_condition_template.substitute( # noqa
                                 name=key
                             )
                         )
@@ -368,7 +366,7 @@ def elasticsearch_query_builder(
 
                     nested_must_part.append(
                         nested_keyvalue_pair_query_template.substitute(
-                            nested=case_sensitive_range_value_condition_template.substitute(
+                            nested=case_sensitive_range_value_condition_template.substitute( # noqa
                                 operator=operator, value=value
                             )
                         )
@@ -376,7 +374,7 @@ def elasticsearch_query_builder(
                 else:
                     nested_must_part.append(
                         nested_keyvalue_pair_query_template.substitute(
-                            nested=case_insensitive_must_name_condition_template.substitute(
+                            nested=case_insensitive_must_name_condition_template.substitute( # noqa
                                 name=key
                             )
                         )
@@ -384,7 +382,7 @@ def elasticsearch_query_builder(
 
                     nested_must_part.append(
                         nested_keyvalue_pair_query_template.substitute(
-                            nested=case_insensitive_range_value_condition_template.substitute(
+                            nested=case_insensitive_range_value_condition_template.substitute( # noqa
                                 operator=operator, value=value
                             )
                         )
@@ -403,33 +401,34 @@ def elasticsearch_query_builder(
                     key = or_filter["name"].strip()
                     value = or_filter["value"].strip()
                     operator = or_filter["operator"].strip()
-                except Exception as e:
+                except Exception:
                     return build_error_message(
-                        "Each Filter needs to have, name, value and operator keywords."
+                        "Each Filter needs to have,\
+                        name, value and operator keywords."
                     )
 
                 if key not in added_keys:
                     added_keys.append(key)
                 if case_sensitive:
                     should_names.append(
-                        case_sensitive_must_name_condition_template.substitute(name=key)
+                        case_sensitive_must_name_condition_template.substitute(name=key) # noqa
                     )
                 else:
                     should_names.append(
-                        case_insensitive_must_name_condition_template.substitute(
+                        case_insensitive_must_name_condition_template.substitute( # noqa
                             name=key
                         )
                     )
                 if operator == "equals":
                     if case_sensitive:
                         should_values.append(
-                            case_sensitive_must_value_condition_template.substitute(
+                            case_sensitive_must_value_condition_template.substitute( # noqa
                                 value=value
                             )
                         )
                     else:
                         should_values.append(
-                            case_insensitive_must_value_condition_template.substitute(
+                            case_insensitive_must_value_condition_template.substitute( # noqa
                                 value=value
                             )
                         )
@@ -437,13 +436,13 @@ def elasticsearch_query_builder(
                     value = "*{value}*".format(value=value)
                     if case_sensitive:
                         should_values.append(
-                            case_sensitive_wildcard_value_condition_template.substitute(
+                            case_sensitive_wildcard_value_condition_template.substitute( # noqa
                                 wild_card_value=value
                             )
                         )
                     else:
                         should_values.append(
-                            case_insensitive_wildcard_value_condition_template.substitute(
+                            case_insensitive_wildcard_value_condition_template.substitute( # noqa
                                 wild_card_value=value
                             )
                         )
@@ -452,39 +451,39 @@ def elasticsearch_query_builder(
                         value = "*{value}*".format(value=value)
                         if case_sensitive:
                             shoud_not_value.append(
-                                case_sensitive_wildcard_value_condition_template.substitute(
+                                case_sensitive_wildcard_value_condition_template.substitute( # noqa
                                     wild_card_value=value
                                 )
                             )
                         else:
                             shoud_not_value.append(
-                                case_insensitive_wildcard_value_condition_template.substitute(
+                                case_insensitive_wildcard_value_condition_template.substitute( # noqa
                                     wild_card_value=value
                                 )
                             )
                     else:
                         if case_sensitive:
                             shoud_not_value.append(
-                                case_sensitive_must_value_condition_template.substitute(
+                                case_sensitive_must_value_condition_template.substitute( # noqa
                                     value=value
                                 )
                             )
                         else:
                             shoud_not_value.append(
-                                case_insensitive_must_value_condition_template.substitute(
+                                case_insensitive_must_value_condition_template.substitute( # noqa
                                     value=value
                                 )
                             )
                 elif operator in ["lt", "lte", "gt", "gte"]:
                     if case_sensitive:
                         should_values.append(
-                            case_sensitive_range_value_condition_template.substitute(
+                            case_sensitive_range_value_condition_template.substitute( # noqa
                                 operator=operator, value=value
                             )
                         )
                 else:
                     should_values.append(
-                        case_insensitive_range_value_condition_template.substitute(
+                        case_insensitive_range_value_condition_template.substitute( # noqa
                             operator=operator, value=value
                         )
                     )
@@ -497,7 +496,8 @@ def elasticsearch_query_builder(
                 should_part_list_or.append(ff)
                 if len(shoud_not_value) > 0:
                     ss = ",".join(shoud_not_value)
-                    ff = nested_query_template_must_not.substitute(must_not_value=ss)
+                    ff = nested_query_template_must_not.substitute(
+                        must_not_value=ss)
                     should_part_list_or.append(ff)
     all_terms = ""
 
@@ -523,7 +523,8 @@ def elasticsearch_query_builder(
 
             should_part_ = ",".join(should_part_list)
             should_part_ = should_term_template.substitute(
-                should_term=should_part_, minimum_should_match=minimum_should_match
+                should_term=should_part_,
+                minimum_should_match=minimum_should_match
             )
             nested_must_part.append(should_part_)
 
@@ -579,18 +580,22 @@ def check_single_filter(res_table, filter, names, organism_converter):
 
         values = get_resource_attribute_values(res_table, key_[0])
         if not values or len(values) == 0:
-            search_omero_app.logger.info("Could not check filters %s" % str(filter))
+            search_omero_app.logger.info("Could not check filters %s" %
+                                         str(filter))
             return
         value_ = [val for val in values if val.casefold() == value.casefold()]
         if len(value_) == 1:
             filter["value"] = value_[0]
         elif len(value_) == 0:
-            search_omero_app.logger.info("Value Error: %s/%s" % (str(key), str(value)))
+            search_omero_app.logger.info("Value Error: %s/%s" %
+                                         (str(key), str(value)))
 
 
 def check_filters(res_table, filters, case_sensitive):
     """
-    This method checks the name and value inside the filter and fixes if nay is not correct, case sensitive error, using the general term rather than scientific terms.
+    This method checks the name and value inside the filter and
+    fixes if it is not correct, case sensitive error,
+    using the general term rather than scientific terms.
     It should be expanded in the future to add more checks and fixes.
     """
     organism_converter = {
@@ -605,14 +610,16 @@ def check_filters(res_table, filters, case_sensitive):
 
     names = get_resource_attributes(res_table)
     if not names or len(names) == 0:
-        search_omero_app.logger.info("Could not check filters %s" % str(filters))
+        search_omero_app.logger.info("Could not check\
+                                      filters %s" % str(filters))
         return
 
     search_omero_app.logger.info(str(filters))
     if filters[0]:
         for filter in filters[0]:
             if not case_sensitive:
-                check_single_filter(res_table, filter, names, organism_converter)
+                check_single_filter(res_table, filter,
+                                    names, organism_converter)
     if filters[1]:
         for filters_ in filters[1]:
             if isinstance(filters_, list):
@@ -627,7 +634,8 @@ def search_index_scrol(index_name, query):
     results = []
     es = search_omero_app.config.get("es_connector")
     try:
-        res = helpers.scan(client=es, scroll="1m", query=query, index=index_name)
+        res = helpers.scan(client=es, scroll="1m",
+                           query=query, index=index_name)
     except Exception as ex:
         search_omero_app.logger.info(str(ex))
         return results
@@ -641,7 +649,8 @@ def search_index_scrol(index_name, query):
     return results
 
 
-def search_index_using_search_after(e_index, query, page, bookmark_, return_containers):
+def search_index_using_search_after(e_index, query, page, bookmark_,
+                                    return_containers):
     returned_results = []
     if not page:
         page = 1
@@ -717,7 +726,7 @@ def search_resource_annotation(
     """
     @table_: the resource table, e.g. image. project, etc.
     @query: the a dict contains the three filters (or, and and  not) items
-    @raw_elasticsearch_query: is a raw query which send directly to elasticsearch
+    @raw_elasticsearch_query: raw query sending directly to elasticsearch
     """
     # print ( query)
     try:
@@ -732,7 +741,8 @@ def search_resource_annotation(
         if not raw_elasticsearch_query:
             query_details = query.get("query_details")
             main_attributes = query.get("main_attributes")
-            if not query_details and main_attributes and len(main_attributes) > 0:
+            if not query_details and main_attributes\
+               and len(main_attributes) > 0:
                 pass
 
             elif (
@@ -749,12 +759,14 @@ def search_resource_annotation(
             and_filters = query_details.get("and_filters")
             or_filters = query_details.get("or_filters")
             case_sensitive = query_details.get("case_sensitive")
-            # check and fid if possible names and values inside filters conditions
+            # check and fid if possible names and values inside
+            # filters conditions
             check_filters(table_, [and_filters, or_filters], case_sensitive)
             query_string = elasticsearch_query_builder(
                 and_filters, or_filters, case_sensitive, main_attributes
             )
-            # query_string has to be string, if it is a dict, something went wrong and the message inside the dict
+            # query_string has to be string, if it is a dict,
+            # something went wrong and the message inside the dict
             # which will be returned to the sender:
             if isinstance(query_string, dict):
                 return query_string
@@ -767,7 +779,8 @@ def search_resource_annotation(
             raw_query_to_send_back = copy.copy(raw_elasticsearch_query)
         if return_containers:
             # code to return the containers only
-            # It will call the projects container first then search within screens
+            # It will call the projects container first then
+            # search within screens
             query["collapse"] = {"field": "project_name.keyvalue"}
             query["_source"] = {"includes": ["screen_name", "project_name"]}
             res = search_index_using_search_after(

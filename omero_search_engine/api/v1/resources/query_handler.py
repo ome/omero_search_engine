@@ -3,13 +3,12 @@ from omero_search_engine.api.v1.resources.urls import (
     search_resource_annotation,
     get_resource_names,
 )
-from omero_search_engine.api.v1.resources.utils import (
-    search_resource_annotation_return_conatines_only,
-)
 import json
 from jsonschema import validate, ValidationError, SchemaError, RefResolver
 from os.path import abspath, dirname
 from pathlib import Path
+import os
+from urllib.parse import urljoin
 
 mapping_names = {
     "project": {"Name (IDR number)": "name"},
@@ -34,7 +33,8 @@ def check_get_names(idr_):
 class QueryItem(object):
     def __init__(self, filter, adjust_res=True):
         """
-        define query and adjust resource if it is needed, e.g. idr name is provided
+        define query and adjust resource if it is needed,
+        e.g. idr name is provided
         Args:
             resource:
             attribute_name:
@@ -56,8 +56,9 @@ class QueryItem(object):
 
     def adjust_resource(self):
         # if self.resource != "image":#in mapping_names :
-        # test if t he resource is in the attribute name mappimng dict
-        # if so, it wil check if it attribute name is inside the dict to use the actual attriubute name
+        # test if the resource is in the attribute name mapping dict
+        # if so, it will check if its attribute name is inside the dict
+        # to use the actual attriubute name
         if mapping_names.get(self.resource):
             if mapping_names[self.resource].get(self.name):
                 ac_value, act_res = check_get_names(self.value)
@@ -68,7 +69,7 @@ class QueryItem(object):
                 self.resource = act_res
                 self.name = "name"
                 """
-                pr_names = get_resource_names(self.resource)                
+                pr_names = get_resource_names(self.resource)
                 if not self.value in pr_names:
                     ##Assuming that the resource is either project or screen
                     self.resource="screen"
@@ -94,7 +95,7 @@ class QueryGroup(object):
 
     def divide_filter(self):
         for filter in self.query_list:
-            if not filter.resource in self.resourses_query:
+            if filter.resource not in self.resourses_query:
                 flist = []
                 self.resourses_query[filter.resource] = flist
             else:
@@ -111,7 +112,7 @@ class QueryGroup(object):
         for resource, queries in self.resourses_query.items():
             for query in queries:
                 if query.query_type == "main_attribute":
-                    if not resource in self.main_attribute:
+                    if resource not in self.main_attribute:
                         self.main_attribute[resource] = {main_type: [query]}
                     else:
                         self.main_attribute[resource][main_type].append(query)
@@ -155,14 +156,14 @@ class QueryRunner(
         self.return_containers = return_containers
 
     def get_iameg_non_image_query(self):
-        has_main = False
         res = None
         image_or_queries = []
         image_and_queries = []
         main_or_attribute = {}
         main_and_attribute = {}
         # check or main attributes
-        # then run and add the results (in term of clauses) to the main image query
+        # then run and add the results (in term of clauses)
+        # to the main image query
         for or_it in self.or_query_group:
             for resource, main in or_it.main_attribute.items():
                 query = {}
@@ -184,7 +185,8 @@ class QueryRunner(
                 if resource == "image":
                     image_or_queries.append(or_query)
                 else:
-                    # non image or filters should be inside the or main attributes filters
+                    # non image or filters should be inside the or main
+                    # attributes filters
                     if len(or_query) == 0:
                         continue
                     query = {}
@@ -237,7 +239,8 @@ class QueryRunner(
                             main_and_attribute[resource] = new_cond
                         else:
                             main_and_attribute[resource] = combine_conds(
-                                main_and_attribute[resource], new_cond, resource
+                                main_and_attribute[resource], new_cond,
+                                resource
                             )
                     else:
                         return {"Error": "Your query returns no results"}
@@ -302,14 +305,19 @@ class QueryRunner(
                                 return {"Error": "M"}
                 main_attributes[key] = ss
         query["case_sensitive"] = self.case_sensitive
-        # if len(query.get("and_filters"))==0 and len(query.get("or_filters"))==0 and len(main_attributes.get("or_main_attributes"))==0 and len(main_attributes.get("and_main_attributes"))==0:
+        # if len(query.get("and_filters"))==0 and
+        # len(query.get("or_filters"))==0 and
+        # len(main_attributes.get("or_main_attributes"))==0 and
+        # len(main_attributes.get("and_main_attributes"))==0:
         #    return {"Error": "Your query returns no results"}
         if resource == "image":
             bookmark = self.bookmark
         else:
             bookmark = None
 
-        # res=seracrh_query(query, resource, bookmark, self.raw_elasticsearch_query, main_attributes,return_containers=self.return_containers)
+        # res=seracrh_query(query, resource, bookmark,
+        #                   self.raw_elasticsearch_query,
+        #                   main_attributes,return_containers=self.return_containers)
         if resource == "image" and self.return_containers:
             res = seracrh_query(
                 query,
@@ -321,7 +329,8 @@ class QueryRunner(
             )
         else:
             res = seracrh_query(
-                query, resource, bookmark, self.raw_elasticsearch_query, main_attributes
+                query, resource, bookmark, self.raw_elasticsearch_query,
+                main_attributes
             )
 
         if resource != "image":
@@ -340,18 +349,30 @@ def seracrh_query(
     main_attributes=None,
     return_containers=False,
 ):
-    search_omero_app.logger.info("-------------------------------------------------")
+    search_omero_app.logger.info("-------------------------------------------------") # noqa
     search_omero_app.logger.info(query)
     search_omero_app.logger.info(main_attributes)
     search_omero_app.logger.info(resource)
-    search_omero_app.logger.info("-------------------------------------------------")
+    search_omero_app.logger.info("-------------------------------------------------") # noqa
     search_omero_app.logger.info(("%s, %s") % (resource, query))
     if not main_attributes:
         q_data = {"query": {"query_details": query}}
     elif resource == "image":
-        q_data = {"query": {"query_details": query, "main_attributes": main_attributes}}
+        q_data = {
+            "query":
+            {
+                "query_details": query,
+                "main_attributes": main_attributes
+            }
+        }
     else:
-        q_data = {"query": {"query_details": query, "main_attributes": main_attributes}}
+        q_data = {
+            "query":
+            {
+                "query_details": query,
+                "main_attributes": main_attributes
+            }
+        }
     try:
         if bookmark:
             q_data["bookmark"] = bookmark
@@ -365,23 +386,26 @@ def seracrh_query(
                 return_containers=return_containers,
             )
         else:
-            ###Should have a method to search the elasticsearch and returns the containers only,
-            # It is hard coddedno in the util search_annotation  method.
+            # Should have a method to search the elasticsearch and
+            # returns the containers only,
+            # It is hard coded in the util search_annotation method.
             ress = search_resource_annotation(
-                resource, q_data.get("query"), return_containers=return_containers
+                resource, q_data.get("query"),
+                return_containers=return_containers
             )
         ress["Error"] = "none"
         return ress
     except Exception as ex:
         search_omero_app.logger.info("Error: " + str(ex))
         return {
-            "Error": "Something went wrong, please try later. If you have this error again, please contact the system administrator."
+            "Error": "Something went wrong, please try later.\
+            If you have this error again, please contact the\
+            system administrator."
         }
 
 
 def combine_conds(curnt_cond, new_cond, resource):
     returned_cond = []
-    name = "{resource}_id".format(resource=resource)
     cons = []
     for c_cond in curnt_cond:
         cons.append(c_cond.value)
@@ -434,10 +458,8 @@ def process_search_results(results, resource, columns_def):
         value["Name"] = item.get("name")
         value["Project name"] = item.get("project_name")
         if item.get("screen_name"):
-            to_add = True
             value["Study name"] = item.get("screen_name")
         elif item.get("project_name"):
-            to_add = True
             value["Study name"] = item.get("project_name")
 
         for k in item["key_values"]:
@@ -500,7 +522,7 @@ def process_search_results(results, resource, columns_def):
     returned_results["total_pages"] = results["results"]["total_pages"]
     returned_results["extend_url"] = extend_url
     returned_results["names_ids"] = names_ids
-    returned_results["raw_elasticsearch_query"] = results["raw_elasticsearch_query"]
+    returned_results["raw_elasticsearch_query"] = results["raw_elasticsearch_query"] # noqa
     if len(values) <= results["results"]["size"]:
         returned_results["contains_all_results"] = True
     else:
@@ -510,7 +532,8 @@ def process_search_results(results, resource, columns_def):
     return returned_results
 
 
-def determine_search_results_(query_, return_columns=False, return_containers=False):
+def determine_search_results_(query_, return_columns=False,
+                              return_containers=False):
     if query_.get("query_details"):
         case_sensitive = query_.get("query_details").get("case_sensitive")
     else:
@@ -527,8 +550,10 @@ def determine_search_results_(query_, return_columns=False, return_containers=Fa
         and_query_group = QueryGroup("and_filters")
         for filter in and_filters:
             q_item = QueryItem(filter)
-            # Check the idr number value and, if it is a list, it will create a new or filter for them and move it
-            # Please note it is wokring for and filter when there is not identical match for the idr name
+            # Check the idr number value and, if it is a list,
+            # it will create a new or filter for them and move it
+            # Please note it is working for and filter when there is not
+            # identical match for the idr name
             if (
                 q_item.query_type == "main_attribute"
                 and isinstance(q_item.value, list)
@@ -590,7 +615,12 @@ def simple_search(
     if not operator:
         operator = "equals"
     and_filters = [
-        {"name": key, "value": value, "operator": operator, "resource": resource}
+        {
+            "name": key,
+            "value": value,
+            "operator": operator,
+            "resource": resource
+        }
     ]
     query_details = {"and_filters": and_filters}
     if bookmark:
@@ -616,7 +646,8 @@ def simple_search(
         return determine_search_results_({"query_details": query_details})
 
 
-def add_local_schemas_to(resolver, schema_folder, base_uri, schema_ext=".json"):
+def add_local_schemas_to(resolver, schema_folder, base_uri,
+                         schema_ext=".json"):
     """Add local schema instances to a resolver schema cache.
 
     Arguments:
@@ -626,11 +657,6 @@ def add_local_schemas_to(resolver, schema_folder, base_uri, schema_ext=".json"):
             in the schemas
         schema_ext (str): filter files with this extension in the schema_folder
     """
-    from pathlib import Path
-    import json
-    import os
-    from urllib.parse import urljoin
-
     for dir, _, files in os.walk(schema_folder):
         for file in files:
             if file.endswith(schema_ext):
@@ -643,7 +669,7 @@ def add_local_schemas_to(resolver, schema_folder, base_uri, schema_ext=".json"):
 
 
 def query_validator(query):
-    query_schema_file = "omero_search_engine/api/v1/resources/schemas/query_data.json"
+    query_schema_file = "omero_search_engine/api/v1/resources/schemas/query_data.json"  # noqa
     base_uri = "file:" + abspath("") + "/"
     with open(query_schema_file, "r") as schema_f:
         query_schema = json.loads(schema_f.read())
