@@ -91,17 +91,17 @@ def search_resource(resource_table):
     """
     API end point to search the annotation (key/value pair) for a resource 
     (resource table, e.g. image, project, study, ..)
-    the request data contation a dict (query) which contains the the query detatins.
-    this version (1)  uses Elastic search
-    an example of a query dict i:
+    the request data contains a dict (query) which contains the query details.
+    this version (1) uses Elastic search
+    an example of a query dict is:
        q_data={"query":{'query_details':{"and_filters":and_filters,"or_filters":or_filters}}}  # noqa
        each of and_filtersand or_filters is a list of dict
        which contains the search conditions, 
        an example of and_filters is:
        and_filters=[{"Organism" : "Homo sapiens", "operator": "equals"},{"Gene Symbol": "NCAPD2", "operator": "equals"},{ "Cell Cycle Phase" :"anaphase", "operator": "equals"}] # noqa
-       and_filters means that the results have to saitisy the conditions
-       not_filters means that the results have not to the conditions
-       or_filters means that the results should satsify at least one condition inside the filters
+       and_filters means that the results have to satisfy the conditions
+       not_filters means that the results do not have to satisfy the conditions
+       or_filters means that the results should satisfy at least one condition inside the filters
     """
 
     if not (get_resource_annotation_table):
@@ -135,7 +135,7 @@ def search_resource(resource_table):
             )
         )
 
-        # check if the app configuration will use ASYNCHRONOUS SEARCH or not.
+    # check if the app configuration will use ASYNCHRONOUS SEARCH or not.
     validation_results = query_validator(query)
     if validation_results == "OK":
         return_containers = request.args.get("return_containers")
@@ -162,7 +162,6 @@ def get_values_using_value(resource_table):
         )
     # print (value, resource_table)
     return jsonify(search_value_for_resource(resource_table, value))
-    # return json.dumps(query_cashed_bucket
 
 
 @resources.route("/<resource_table>/searchvaluesusingkey/", methods=["GET"])
@@ -176,7 +175,7 @@ def search_values_for_a_key(resource_table):
 
     # csv is a flag true of false,
     # default is false
-    # if it sets to true, a sv file content will be sent insetead of dict
+    # if it sets to true, a CSV file content will be sent instead of dict
     csv = request.args.get("csv")
     if csv:
         try:
