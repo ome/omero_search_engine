@@ -17,7 +17,7 @@ mapping_names = {
 
 
 def check_get_names(idr_):
-    # check the idr name and return the reosurce and possible values
+    # check the idr name and return the resource and possible values
     if idr_:
         idr_ = idr_.strip()
     resource = "project"
@@ -58,7 +58,7 @@ class QueryItem(object):
         # if self.resource != "image":#in mapping_names :
         # test if the resource is in the attribute name mapping dict
         # if so, it will check if its attribute name is inside the dict
-        # to use the actual attriubute name
+        # to use the actual attribute name
         if mapping_names.get(self.resource):
             if mapping_names[self.resource].get(self.name):
                 ac_value, act_res = check_get_names(self.value)
@@ -71,7 +71,7 @@ class QueryItem(object):
                 """
                 pr_names = get_resource_names(self.resource)
                 if not self.value in pr_names:
-                    ##Assuming that the resource is either project or screen
+                    # Assuming that the resource is either project or screen
                     self.resource="screen"
                 self.name=mapping_names[self.resource].get(self.name)
                 """
@@ -314,11 +314,11 @@ class QueryRunner(
         else:
             bookmark = None
 
-        # res=seracrh_query(query, resource, bookmark,
-        #                   self.raw_elasticsearch_query,
-        #                   main_attributes,return_containers=self.return_containers)
+        # res = search_query(query, resource, bookmark,
+        #                    self.raw_elasticsearch_query,
+        #                    main_attributes,return_containers=self.return_containers)
         if resource == "image" and self.return_containers:
-            res = seracrh_query(
+            res = search_query(
                 query,
                 resource,
                 bookmark,
@@ -327,7 +327,7 @@ class QueryRunner(
                 return_containers=self.return_containers,
             )
         else:
-            res = seracrh_query(
+            res = search_query(
                 query, resource, bookmark, self.raw_elasticsearch_query, main_attributes
             )
 
@@ -339,7 +339,7 @@ class QueryRunner(
             return res
 
 
-def seracrh_query(
+def search_query(
     query,
     resource,
     bookmark,
