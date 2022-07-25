@@ -23,7 +23,7 @@ two filter groups, i.e. "and" filters and "or" filters;
 And filters:
 It has two clauses:
 Organism ="Homo sapiens", i.e. name ="Organism", value="Homo sapiens", and operator ="equals" # noqa
-this can be translated to a d dict {"name" : "Organism", "value":"Homo sapiens", "operator" :"equals"} # noqa
+this can be translated to a dict {"name" : "Organism", "value":"Homo sapiens", "operator" :"equals"} # noqa
 each clause should have the same format so the second clause should be:
 {"name" : "Antibody Identifier", "value":"CAB034889", "operator" :"equals"}
 The and_filters list should contain the two clauses:

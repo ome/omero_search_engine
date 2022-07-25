@@ -17,7 +17,7 @@ It is required to search the database for:
 "Organism"="Homo sapiens" 
 and return the containers only, the studies which contains the results
 As it is a simple search, a single clause then search can be 
-used to simplfy the request
+used to simplify the request
 http://127.0.0.1:5577/api/v1/resources/image/search/?key=cell%20line&value=hela&return_containers=true # noqa
 
 curl -X GET "http://127.0.0.1:5577/api/v1/resources/image/search/?key=Organism&value=Homo%20sapiens&return_containers=true" # noqa

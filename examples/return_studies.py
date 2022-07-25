@@ -15,7 +15,7 @@ submit_query_url = (
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 """
 The following query will answer this question:
-Get a list of studies which satsidy the following conditions:
+Get a list of studies which satisfy the following conditions:
 "Organism"="mus musculus"
  and
 "Imaging Method"="light sheet fluorescence microscopy, spim"
