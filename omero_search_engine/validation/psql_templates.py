@@ -22,7 +22,7 @@ class SqlSearchEngineTemplate(Template):
         return super(SqlSearchEngineTemplate, self).substitute(kwargs)
 
 
-# get images satsify iamge key-value query
+# get images satsify image key-value query
 query_images_key_value = Template("""
 Select DISTINCT image.id from image
 inner join imageannotationlink on image.id =imageannotationlink.parent

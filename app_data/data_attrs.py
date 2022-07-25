@@ -1,4 +1,4 @@
-tables = ["projects", "iamges", "datasets", "plates"]
+tables = ["projects", "images", "datasets", "plates"]
 annotation_resource_link = {
     "image": "imageannotationlink",
     "project": "projectannotationlink",

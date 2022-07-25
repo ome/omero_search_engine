@@ -155,7 +155,7 @@ class QueryRunner(
         self.return_columns = return_columns
         self.return_containers = return_containers
 
-    def get_iameg_non_image_query(self):
+    def get_image_non_image_query(self):
         res = None
         image_or_queries = []
         image_and_queries = []
@@ -598,7 +598,7 @@ def determine_search_results_(query_, return_columns=False,
         return_columns,
         return_containers,
     )
-    query_results = query_runner.get_iameg_non_image_query()
+    query_results = query_runner.get_image_non_image_query()
     return query_results
 
 
