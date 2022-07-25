@@ -1,4 +1,3 @@
-# import psql_templates
 from omero_search_engine import search_omero_app
 from datetime import datetime
 from omero_search_engine.api.v1.resources.query_handler import (
@@ -28,7 +27,7 @@ query_methods = {
 class Validator(object):
     """
     Compare the results which are coming from postgresql server
-    and from  the searchengine
+    and from the searchengine
     """
 
     def __init__(self, deep_check):

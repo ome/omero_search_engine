@@ -1,10 +1,10 @@
 """
 This file contains SQLstatment templates which are used to test the app
-It will compare the results from  the PostgreSql and the searchengine and
-reported it to the user.
-It will use direct Postgres SQL statement templates to allow the tester to
-compare the results through a method inside manag.py
-It will support compound queries as well as single queries.
+It will compare the results from the PostgreSQL and the searchengine and
+report it to the user.
+It will use direct PostgreSQL statement templates to allow the tester to
+compare the results through a method inside manage.py
+It will support complex queries as well as single queries.
 """
 
 from string import Template
@@ -22,7 +22,7 @@ class SqlSearchEngineTemplate(Template):
         return super(SqlSearchEngineTemplate, self).substitute(kwargs)
 
 
-# get images satsify image key-value query
+# get images satisfy image key-value query
 query_images_key_value = Template(
     """
 Select DISTINCT image.id from image
@@ -33,7 +33,7 @@ where lower(annotation_mapvalue.name)='$name' and
 lower(annotation_mapvalue.value)='$value'"""
 )
 
-# Get number of images which satsify project key-value query
+# Get number of images which satisfy project key-value query
 query_image_project_meta_data = Template(
     """
 Select image.id from image inner join datasetimagelink
