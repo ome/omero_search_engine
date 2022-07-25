@@ -2,31 +2,16 @@ import os
 from omero_search_engine import search_omero_app
 from flask_script import Manager
 from configurations.configuration import update_config_file
-from omero_search_engine.cache_functions.elasticsearch.transform_data import (
-    create_omero_indexes,
-    delete_data_from_index,
-    delete_index,
-    get_insert_data_to_index,
-    get_all_indexes,
-    insert_resource_data,
-    save_key_value_buckets,
-)
-
-from omero_search_engine.cache_functions.elasticsearch.sql_to_csv import (
-    sqls_resources,
-)
-
-from omero_search_engine.validation.results_validator import (
-    validate_queries,
-    test_no_images,
-    get_omero_stats,
-)
 
 manager = Manager(search_omero_app)
 
 
 @manager.command
 def show_saved_indices():
+    from omero_search_engine.cache_functions.elasticsearch.transform_data import (  # noqa
+        get_all_indexes,
+    )
+
     all_indexes = get_all_indexes()
     for index in all_indexes:
         print("Index: ==>>>", index)
@@ -45,6 +30,10 @@ def show_saved_indices():
     help="elastic index name, if it is provided, it will delete and return",
 )
 def delete_es_index(resource="all", es_index=None):
+    from omero_search_engine.cache_functions.elasticsearch.transform_data import (  # noqa
+        delete_index,
+    )
+
     delete_index(resource, es_index)
 
 
@@ -55,6 +44,10 @@ def delete_es_index(resource="all", es_index=None):
     help="resource name, deleting all data from the its related index",
 )
 def delete_all_data_from_es_index(resource="None"):
+    from omero_search_engine.cache_functions.elasticsearch.transform_data import (
+        delete_data_from_index,
+    )
+
     delete_data_from_index(resource)
 
 
@@ -66,6 +59,10 @@ def add_resource_data_to_es_index(resource=None, data_folder=None, from_json=Fal
     """=
     Insert data inside elastic search index by getting the data from csv files
     """
+    from omero_search_engine.cache_functions.elasticsearch.transform_data import (
+        insert_resource_data,
+    )
+
     if not resource or not data_folder or not os.path.exists(data_folder):
         search_omero_app.logger.info(
             "Please check the input parameters, resource:\
@@ -87,6 +84,10 @@ def create_index(resource="all"):
     """
     Create Elasticsearch index for each resource
     """
+    from omero_search_engine.cache_functions.elasticsearch.transform_data import (
+        create_omero_indexes,
+    )
+
     create_omero_indexes(resource)
 
 
@@ -105,6 +106,14 @@ def get_index_data_from_database(resource="all"):
     insert data in Elasticsearch index for each resource
     It gets the data from postgres database server
     """
+    from omero_search_engine.cache_functions.elasticsearch.sql_to_csv import (
+        sqls_resources,
+    )
+    from omero_search_engine.cache_functions.elasticsearch.transform_data import (
+        get_insert_data_to_index,
+        save_key_value_buckets,
+    )
+
     if resource != "all":
         sql_st = sqls_resources.get(resource)
         if not sql_st:
@@ -231,6 +240,10 @@ def cache_key_value_index(resource=None, create_index=None, only_values=None):
     """
     Cache the value bucket for each value for each resource
     """
+    from omero_search_engine.cache_functions.elasticsearch.transform_data import (
+        save_key_value_buckets,
+    )
+
     save_key_value_buckets(resource, create_index, only_values)
 
 
@@ -255,6 +268,11 @@ def test_indexing_search_query(
     if the data file, it will use sample file from
     (test_index_data.json) app_data folder
     """
+    from omero_search_engine.validation.results_validator import (
+        validate_queries,
+        test_no_images,
+        get_omero_stats,
+    )
 
     validate_queries(json_file, deep_check)
     if check_studies:
