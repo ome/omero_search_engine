@@ -653,8 +653,8 @@ def save_key_value_buckets(
         search_omero_app.logger.info(
             "No of the allowed parallel processes: %s" % no_processors
         )
+        pool = multiprocessing.Pool(no_processors)
         try:
-            pool = multiprocessing.Pool(no_processors)
             manager = multiprocessing.Manager()
             lock = manager.Lock()
             counter_val = manager.Value("i", 0)
