@@ -97,7 +97,7 @@ def add_resource_data_to_es_index(resource=None, data_folder=None, from_json=Fal
 @manager.option(
     "-r",
     "--resource",
-    help="resource name, creating all the indcese for all the resources is the default",  # noqa
+    help="resource name, creating all the indexes for all the resources is the default",  # noqa
 )
 def create_index(resource="all"):
     """
@@ -118,7 +118,7 @@ def sql_results_to_panda():
 @manager.option(
     "-r",
     "--resource",
-    help="resource name, creating all the indcese for all the resources is the default",  # noqa
+    help="resource name, creating all the indexes for all the resources is the default",  # noqa
 )
 def get_index_data_from_database(resource="all"):
     """
