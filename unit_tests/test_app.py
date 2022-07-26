@@ -34,7 +34,7 @@ from omero_search_engine.cache_functions.elasticsearch.elasticsearch_templates i
 )
 
 from omero_search_engine.cache_functions.elasticsearch.transform_data import (
-    delete_es_index,
+    # delete_es_index,
     create_index,
 )
 from test_data import (
@@ -128,8 +128,9 @@ class BasicTestCase(unittest.TestCase):
         es_index = "image_keyvalue_pair_metadata_1"
         self.assertTrue(create_index(es_index, image_template))
         res = search_resource_annotation(table, query)
-        assert len(res.get("results")) >= 0
-        self.assertTrue(delete_es_index(es_index))
+        print(res)
+        # assert len(res.get("results")) >= 0
+        # self.assertTrue(delete_es_index(es_index))
 
     # def test_add_delete_es_index(self):
     #    '''
