@@ -164,3 +164,13 @@ OMERO Search Engine
 
 For the configuration and installation instructions, please read the following document `configuration_installation <docs/configuration/configuration_installation.rst>`_
 
+
+License
+-------
+
+OMERO search engine is released under the GPL v2.
+
+Copyright
+---------
+
+2022, The Open Microscopy Environment, Glencoe Software, Inc.
