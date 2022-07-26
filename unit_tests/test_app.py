@@ -29,9 +29,13 @@ from omero_search_engine.api.v1.resources.utils import (
     search_resource_annotation,
 )
 
+from omero_search_engine.cache_functions.elasticsearch.elasticsearch_templates import (  # noqa
+    image_template,
+)
+
 from omero_search_engine.cache_functions.elasticsearch.transform_data import (
     delete_es_index,
-    # create_index
+    create_index,
 )
 from test_data import (
     sql,
@@ -97,9 +101,8 @@ class BasicTestCase(unittest.TestCase):
             return False
 
     def validate_json_syntax_for_es_templates(self):
-        pass
-        # self.assertTrue(self.validate_json_syntax(image_template))
-        # self.assertTrue( self.validate_json_syntax(image_template))
+        self.assertTrue(self.validate_json_syntax(image_template))
+        self.assertTrue(self.validate_json_syntax(image_template))
 
     def test_is_valid_json_for_query(self):
         """
@@ -123,7 +126,7 @@ class BasicTestCase(unittest.TestCase):
         """
         table = "image1"
         es_index = "image_keyvalue_pair_metadata_1"
-        # self.assertTrue(create_index(es_index, image_template))
+        self.assertTrue(create_index(es_index, image_template))
         res = search_resource_annotation(table, query)
         assert len(res.get("results")) >= 0
         self.assertTrue(delete_es_index(es_index))
