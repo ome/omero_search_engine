@@ -117,7 +117,7 @@ class BasicTestCase(unittest.TestCase):
         )
         self.assertTrue("Error" in no_valid_message.keys())
 
-    def est_add_submit_query_delete_es_index(self):
+    def test_add_submit_query_delete_es_index(self):
         """'
         test submit query and get results
         """
