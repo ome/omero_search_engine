@@ -75,7 +75,7 @@ def delete_all_data_from_es_index(resource="None"):
 @manager.option("-d", "--data_folder", help="Folder contains the data files")
 @manager.option("-f", "--from_json", help="Folder contains the data files")
 def add_resource_data_to_es_index(resource=None, data_folder=None, from_json=False):
-    """=
+    """
     Insert data inside elastic search index by getting the data from csv files
     """
     from omero_search_engine.cache_functions.elasticsearch.transform_data import (
@@ -174,7 +174,7 @@ def set_database_configuration(
         update_config_file(database_attrs)
     else:
         search_omero_app.logger.info(
-            "At least one database attributed\
+            "At least one database attribute\
              (i.e. url, database name, username, username password)\
              should be provided"
         )
@@ -282,7 +282,7 @@ def test_indexing_search_query(
     can be used:
       * after the indexing to check the elasticsearch index data
       * after the code modifications to check the searchengine queries results
-    The test data can be provided from and external files,
+    The test data can be provided from external files,
     i.e. json file format
     if the data file, it will use sample file from
     (test_index_data.json) app_data folder
