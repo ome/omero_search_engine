@@ -33,7 +33,7 @@ OMERO Search Engine
 
     127.0.0.01:5577/api/v1/resources/all/keys
 
-* The user can get the available values for a specific key for a resourse, e.g. what are the available values for "Organism"::
+* The user can get the available values for a specific key for a resource, e.g. what are the available values for "Organism"::
 
     http://127.0.0.1:5577/api/v1/resources/image/getannotationvalueskey/?key=Organism
 
@@ -83,19 +83,19 @@ OMERO Search Engine
         logging.info("Server query time: %s seconds" % returned_results["server_query_time"])
         logging.info("Included results in the current page %s" % len(returned_results["results"]["results"]))
 
-        recieved_results_data = []
+        received_results_data = []
         for res in returned_results["results"]["results"]:
-            recieved_results_data.append(res)
+            received_results_data.append(res)
 
-        recieved_results = len(returned_results["results"]["results"])
+        received_results = len(returned_results["results"]["results"])
         #set the bookmark to be used in the next the page if the number of pages is greater than 1
         bookmark = returned_results["results"]["bookmark"]
         #get the total number of pages
         total_pages = returned_results["results"]["total_pages"]
         page = 1
         logging.info("bookmark: %s, page: %s, received results: %s" % (
-        bookmark, (str(page) + "/" + str(total_pages)), (str(recieved_results) + "/" + str(total_results))))
-        while recieved_results < total_results:
+        bookmark, (str(page) + "/" + str(total_pages)), (str(received_results) + "/" + str(total_results))))
+        while received_results < total_results:
             page += 1
             query_data = {"query": {'query_details': returned_results["query_details"]}, "bookmark": bookmark}
             query_data_json = json.dumps(query_data)
@@ -107,15 +107,15 @@ OMERO Search Engine
                 logging.info("%s, Error: %s"%(resp.text,e))
                 return
             bookmark = returned_results["results"]["bookmark"]
-            recieved_results = recieved_results + len(returned_results["results"]["results"])
+            received_results = received_results + len(returned_results["results"]["results"])
             for res in returned_results["results"]["results"]:
-                recieved_results_data.append(res)
+                received_results_data.append(res)
 
             logging.info("bookmark: %s, page: %s, received results: %s" % (
-            bookmark, (str(page) + "/" + str(total_pages)), (str(recieved_results) + "/" + str(total_results))))
+            bookmark, (str(page) + "/" + str(total_pages)), (str(received_results) + "/" + str(total_results))))
 
-        logging.info("Total received results: %s" % len(recieved_results_data))
-        return recieved_results_data
+        logging.info("Total received results: %s" % len(received_results_data))
+        return received_results_data
 
 
     query_1 = {"and_filters": [{"name": "Organism", "value": "Homo sapiens", "operator": "equals"},
@@ -164,3 +164,13 @@ OMERO Search Engine
 
 For the configuration and installation instructions, please read the following document `configuration_installation <docs/configuration/configuration_installation.rst>`_
 
+
+License
+-------
+
+OMERO search engine is released under the GPL v2.
+
+Copyright
+---------
+
+2022, The Open Microscopy Environment, Glencoe Software, Inc.
