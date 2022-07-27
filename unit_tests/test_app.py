@@ -31,11 +31,13 @@ from omero_search_engine.api.v1.resources.utils import (
 
 from omero_search_engine.cache_functions.elasticsearch.elasticsearch_templates import (  # noqa
     image_template,
+    key_values_resource_cache_template,
 )
 
 from omero_search_engine.cache_functions.elasticsearch.transform_data import (
-     delete_es_index,
+    delete_es_index,
     create_index,
+    get_all_indexes,
 )
 from test_data import (
     sql,
@@ -126,11 +128,25 @@ class BasicTestCase(unittest.TestCase):
         """
         table = "image1"
         es_index = "image_keyvalue_pair_metadata_1"
+        es_index_2 = "key_values_resource_cach"
+        create_es_index_2 = True
+        all_all_indices = get_all_indexes()
+        print(all_all_indices)
+        print(all_all_indices.keys())
+        if es_index_2 in all_all_indices.keys():
+            create_es_index_2 = False
+
         self.assertTrue(create_index(es_index, image_template))
+        if create_es_index_2:
+            self.assertTrue(
+                create_index(es_index_2, key_values_resource_cache_template)
+            )
         res = search_resource_annotation(table, query)
         print(res)
         assert len(res.get("results")) >= 0
         self.assertTrue(delete_es_index(es_index))
+        if create_es_index_2:
+            self.assertTrue(delete_es_index(es_index_2))
 
     # def test_add_delete_es_index(self):
     #    '''
