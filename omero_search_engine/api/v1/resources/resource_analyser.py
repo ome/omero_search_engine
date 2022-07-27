@@ -666,7 +666,7 @@ def get_resource_names(resource, es_index="key_values_resource_cach"):
         )  # .search(index=es_index, body=query)
         hits = results_["hits"]["hits"]
         if len(hits) > 0:
-            returned_results = hits["_source"]["resourcename"]
+            returned_results = hits[0]["_source"]["resourcename"]
     else:
         ress = ["project", "screen"]
         for res in ress:
