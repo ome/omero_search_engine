@@ -454,20 +454,21 @@ def get_insert_data_to_index(sql_st, resource):
     )
     # create the multiprocessing pool
     pool = multiprocessing.Pool(no_processors)
-    manger = multiprocessing.Manager()
-    # a lock which will be used between the processes in the pool
-    lock = manger.Lock()
-    # a counter which will be used by the processes in the pool
-    counter_val = manger.Value("i", 0)
-    func = partial(processor_work, lock, counter_val)
-    # map the data which will be consumed by the processes inside the pool
-    res = pool.map(func, vals)
-    pool.close()
-    print(res)
-    # search_omero_app.logger.info ( ', '.join(res))
-    search_omero_app.logger.info(cur_max_id)
-    delta = str(datetime.now() - start_time)
-    search_omero_app.logger.info("Total time=%s" % delta)
+    try:
+        manager = multiprocessing.Manager()
+        # a lock which will be used between the processes in the pool
+        lock = manager.Lock()
+        # a counter which will be used by the processes in the pool
+        counter_val = manager.Value("i", 0)
+        func = partial(processor_work, lock, counter_val)
+        # map the data which will be consumed by the processes inside the pool
+        res = pool.map(func, vals)
+        search_omero_app.logger.info(cur_max_id)
+        delta = str(datetime.now() - start_time)
+        search_omero_app.logger.info("Total time=%s" % delta)
+        print(res)
+    finally:
+        pool.close()
 
 
 def processor_work(lock, global_counter, val):
@@ -653,14 +654,15 @@ def save_key_value_buckets(
             "No of the allowed parallel processes: %s" % no_processors
         )
         pool = multiprocessing.Pool(no_processors)
-        manger = multiprocessing.Manager()
-        lock = manger.Lock()
-        counter_val = manger.Value("i", 0)
-        func = partial(save_key_value_buckets_process, lock, counter_val)
-        res = pool.map(func, vals)
-        print(res)
-        pool.close()
-        print(res)
+        try:
+            manager = multiprocessing.Manager()
+            lock = manager.Lock()
+            counter_val = manager.Value("i", 0)
+            func = partial(save_key_value_buckets_process, lock, counter_val)
+            res = pool.map(func, vals)
+            print(res)
+        finally:
+            pool.close()
 
 
 def save_key_value_buckets_process(lock, global_counter, vals):

@@ -55,20 +55,18 @@ class DatabaseConnector(object):
 
     def execute_query(self, query, return_results=True):
         results = {}
+        conn = psycopg2.connect(
+            self.DATABASE_URI
+        )  # options='-c statement_timeout=300000') #default units ms
         try:
-            conn = psycopg2.connect(
-                self.DATABASE_URI
-            )  # options='-c statement_timeout=300000') #default units ms
-            cursor = conn.cursor(cursor_factory=RealDictCursor)
-            cursor.execute("SET statement_timeout = '5000 s'")
-            cursor.execute(query)
-            if return_results:
-                results = cursor.fetchall()
-            else:
-                conn.commit()
-                cursor.close()
-
-            conn.close()
+            with conn:
+                with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+                    cursor.execute("SET statement_timeout = '5000 s'")
+                    cursor.execute(query)
+                    if return_results:
+                        results = cursor.fetchall()
+                    else:
+                        conn.commit()
         except Exception as e:
             from omero_search_engine import search_omero_app
 
@@ -77,4 +75,6 @@ class DatabaseConnector(object):
             )
             # return None
             pass
+        finally:
+            conn.close()
         return results
