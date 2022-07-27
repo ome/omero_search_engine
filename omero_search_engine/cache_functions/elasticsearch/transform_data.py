@@ -453,8 +453,8 @@ def get_insert_data_to_index(sql_st, resource):
         % no_processors
     )
     # create the multiprocessing pool
+    pool = multiprocessing.Pool(no_processors)
     try:
-        pool = multiprocessing.Pool(no_processors)
         manager = multiprocessing.Manager()
         # a lock which will be used between the processes in the pool
         lock = manager.Lock()
