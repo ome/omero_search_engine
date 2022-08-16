@@ -28,7 +28,7 @@ parameters:
     description: operator, default equals
     in: query
     type: string
-    enum: ['equals', 'not_equals', 'contains', 'not_contains']
+    enum: ['equals', 'not_equals', 'contains', 'not_contains','in']
   - name: case_sensitive
     description: case sensitive query, default False
     in: query
