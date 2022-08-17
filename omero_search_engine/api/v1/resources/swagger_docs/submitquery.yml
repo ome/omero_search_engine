@@ -25,6 +25,30 @@ Example:
      }
     }
 
+Another example uses 'in' operator:
+{
+   "query_details":{
+      "and_filters":[
+         {
+            "name":"Gene Symbol",
+            "value":[
+               "Duoxa2",
+               "Bach2",
+               "Cxcr2",
+               "Mysm1"
+            ],
+            "operator":"in",
+            "resource":"image"
+         },
+        {
+           "name": "Name (IDR number)",
+           "value": "idr0043-uhlen-humanproteinatlas/experimentA",
+           "operator": "equals",
+           "resource": "project"
+         }
+      ]
+   }
+}
 
 The maximum number of returned results is 1000, so if the number of results is bigger than that, a `bookmark` should be added to the query to call the next page.
 `bookmark` is returned with each page of results and should be used to call the next page.
