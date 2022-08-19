@@ -442,7 +442,7 @@ def search_value_for_resource(table_, value, es_index="key_value_buckets_informa
             value = value.replace("\\", "\\\\")
         value = "*{value}*".format(value=value)
         query = resource_key_values_buckets_template.substitute(
-            value=value, resource="image"
+            value=value, resource=table_
         )
         res = search_index_for_value(es_index, query)
         return prepare_search_results(res)
