@@ -291,7 +291,7 @@ class QueryRunner(
                     query.get("and_filters").append(qu.__dict__)
 
         if query_.get("or_filters"):
-            qq=[]
+            qq = []
             for qu_ in query_.get("or_filters"):
                 if isinstance(qu_, list):
                     tmpss = []
