@@ -179,6 +179,12 @@ def get_values_using_value(resource_table):
         return jsonify(
             build_error_message("Error: {error}".format(error="No value is provided "))
         )
+    #check if resource_table is vaild
+    if not (get_resource_annotation_table(resource_table)):
+        message= "NO data for table {table}".format(table=resource_table)
+        return jsonify(
+            build_error_message(message)
+    )
     # print (value, resource_table)
     return jsonify(search_value_for_resource(resource_table, value))
 
