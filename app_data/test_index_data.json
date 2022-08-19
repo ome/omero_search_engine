@@ -22,6 +22,16 @@
                "Organism Part Identifier",
                "T-66000"
             ]
+         ],
+          [
+            [
+               "Antibody",
+               "nup133-aa566-582 antibody"
+            ],
+            [
+               "HGNC Gene Symbol",
+               "pdxdc1"
+            ]
          ]
       ],
       "query_image_and_or":[

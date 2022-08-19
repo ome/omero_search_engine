@@ -163,7 +163,6 @@ def elasticsearch_query_builder(
     nested_must_part = []
     nested_must_not_part = []
     all_should_part_list = []
-    minimum_should_match = 0
     if main_attributes and len(main_attributes) > 0:
         # should_part_list=[]
         # all_should_part_list.append(should_part_list)
@@ -232,8 +231,6 @@ def elasticsearch_query_builder(
                             sh.append(main_dd)
                         elif attribute["operator"].strip() == "not_equals":
                             sh.append(main_dd)
-                    if len(sh) > 0:
-                        minimum_should_match = len(sh)
                 else:
                     attribute = attributes
                     # search using id, e.g. project id
@@ -252,8 +249,6 @@ def elasticsearch_query_builder(
                         sh.append(main_dd)
                     elif attribute["operator"].strip() == "not_equals":
                         sh.append(main_dd)
-                if len(sh) > 0:
-                    minimum_should_match = len(sh)
 
             # if len(should_part_list)>0:
             #    minimum_should_match=len(should_part_list)
@@ -441,13 +436,15 @@ def elasticsearch_query_builder(
     # must_not_term
     if or_filters and len(or_filters) > 0:
         added_keys = []
+        co = 0
         for or_filters_ in or_filters:
+            co = co + 1
             should_part_list_or = []
             all_should_part_list.append(should_part_list_or)
             for or_filter in or_filters_:
                 should_values = []
                 shoud_not_value = []
-                should_names = []
+                # should_names = []
                 try:
                     key = or_filter["name"].strip()
                     value = or_filter["value"].strip()
@@ -460,18 +457,7 @@ def elasticsearch_query_builder(
 
                 if key not in added_keys:
                     added_keys.append(key)
-                if case_sensitive:
-                    should_names.append(
-                        case_sensitive_must_name_condition_template.substitute(
-                            name=key
-                        )  # noqa
-                    )
-                else:
-                    should_names.append(
-                        case_insensitive_must_name_condition_template.substitute(  # noqa
-                            name=key
-                        )
-                    )
+
                 if operator == "equals":
                     if case_sensitive:
                         should_values.append(
@@ -479,10 +465,20 @@ def elasticsearch_query_builder(
                                 value=value
                             )
                         )
+                        should_values.append(
+                            case_sensitive_must_name_condition_template.substitute(
+                                name=key
+                            )
+                        )
                     else:
                         should_values.append(
                             case_insensitive_must_value_condition_template.substitute(  # noqa
                                 value=value
+                            )
+                        )
+                        should_values.append(
+                            case_insensitive_must_name_condition_template.substitute(
+                                name=key
                             )
                         )
                 elif operator == "contains":
@@ -493,10 +489,20 @@ def elasticsearch_query_builder(
                                 wild_card_value=value
                             )
                         )
+                        should_values.append(
+                            case_sensitive_must_name_condition_template.substitute(
+                                name=key
+                            )
+                        )
                     else:
                         should_values.append(
                             case_insensitive_wildcard_value_condition_template.substitute(  # noqa
                                 wild_card_value=value
+                            )
+                        )
+                        should_values.append(
+                            case_insensitive_must_name_condition_template.substitute(
+                                name=key
                             )
                         )
                 elif operator in ["not_equals", "not_contains"]:
@@ -508,10 +514,20 @@ def elasticsearch_query_builder(
                                     wild_card_value=value
                                 )
                             )
+                            shoud_not_value.append(
+                                case_sensitive_must_name_condition_template.substitute(
+                                    name=key
+                                )
+                            )
                         else:
                             shoud_not_value.append(
                                 case_insensitive_wildcard_value_condition_template.substitute(  # noqa
                                     wild_card_value=value
+                                )
+                            )
+                            shoud_not_value.append(
+                                case_insensitive_must_name_condition_template.substitute(  # noqa
+                                    name=key
                                 )
                             )
                     else:
@@ -521,10 +537,20 @@ def elasticsearch_query_builder(
                                     value=value
                                 )
                             )
+                            shoud_not_value.append(
+                                case_sensitive_must_name_condition_template.substitute(
+                                    name=key
+                                )
+                            )
                         else:
                             shoud_not_value.append(
                                 case_insensitive_must_value_condition_template.substitute(  # noqa
                                     value=value
+                                )
+                            )
+                            shoud_not_value.append(
+                                case_insensitive_must_name_condition_template.substitute(  # noqa
+                                    name=key
                                 )
                             )
                 elif operator in ["lt", "lte", "gt", "gte"]:
@@ -534,16 +560,23 @@ def elasticsearch_query_builder(
                                 operator=operator, value=value
                             )
                         )
+                        should_values.append(
+                            case_sensitive_must_name_condition_template.substitute(
+                                name=key
+                            )
+                        )
                 else:
                     should_values.append(
                         case_insensitive_range_value_condition_template.substitute(  # noqa
                             operator=operator, value=value
                         )
                     )
+                    should_values.append(
+                        case_insensitive_must_name_condition_template.substitute(
+                            name=key
+                        )
+                    )
                     # must_value_condition
-                ss = ",".join(should_names)
-                ff = nested_keyvalue_pair_query_template.substitute(nested=ss)
-                should_part_list_or.append(ff)
                 ss = ",".join(should_values)
                 ff = nested_keyvalue_pair_query_template.substitute(nested=ss)
                 should_part_list_or.append(ff)
@@ -556,26 +589,14 @@ def elasticsearch_query_builder(
     for should_part_list_ in all_should_part_list:
         if isinstance(should_part_list_, dict):
             should_part_list = should_part_list_.get("main")
-            minimum_should_match = 1
         else:
             should_part_list = should_part_list_
-            minimum_should_match = 0
 
         if len(should_part_list) > 0:
-            if minimum_should_match == 0:
-                if minimum_should_match == len(should_part_list):
-                    minimum_should_match = 1
-                else:
-                    minimum_should_match = int(
-                        (len(should_part_list) - minimum_should_match) / 2 + 1
-                    )
-
-                if minimum_should_match < 0:
-                    minimum_should_match = 1
 
             should_part_ = ",".join(should_part_list)
             should_part_ = should_term_template.substitute(
-                should_term=should_part_, minimum_should_match=minimum_should_match
+                should_term=should_part_, minimum_should_match=1
             )
             nested_must_part.append(should_part_)
 
