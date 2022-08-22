@@ -89,7 +89,7 @@ while len(received_results) < total_results:
     )
 
 # another example using in operators and send items inside value as a string,
-# Items inside in the list are seprated by ','
+# The List items are separated by ','
 logging.info("Using in operator")
 url = "%s%s?key=Gene Symbol&value=Pdgfc,Rnase10&operator=in" % (base_url, image_search)
 bookmark, total_results, total_pages = call_omero_return_results(url, method="get")
