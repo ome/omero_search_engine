@@ -284,7 +284,7 @@ def elasticsearch_query_builder(
                         value_ = filter["value"]
                     else:
                         # in case of providing it with single query, the values should
-                        # be provided as a string seprated the array items by ','
+                        # be provided as a string separated the array items by ','
                         value_ = filter["value"].split(",")
                     value = [val.strip() for val in value_]
                     value = json.dumps(value)

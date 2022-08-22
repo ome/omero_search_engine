@@ -22,14 +22,14 @@ from utils import query_the_search_ending, logging
 
 # It is similar to use 'in operator' in a sql statement,
 # rather than having multiple 'or' conditions,
-# it will use onle a single condition.
+# it will only use a single condition.
 
 # The following example will search for the images which have any of the 'Gene Symbol'
-# values in this list "Duoxa2", "Bach2", "Cxcr2", "Mysm1"]
+# values in this list ["Duoxa2", "Bach2", "Cxcr2", "Mysm1"]
 
 # and filters
 
-logging.info("Exmple of using in operator")
+logging.info("Example of using in operator")
 
 
 values_in = ["Duoxa2", "Bach2", "Cxcr2", "Mysm1"]
