@@ -30,6 +30,7 @@ from omero_search_engine.api.v1.resources.resource_analyser import (
     get_resource_attribute_values,
     get_resource_names,
     get_key_values_return_contents,
+    query_cashed_bucket_part_value_keys,
 )
 from omero_search_engine.api.v1.resources.utils import get_resource_annotation_table
 from omero_search_engine.api.v1.resources.query_handler import (
@@ -180,7 +181,12 @@ def get_values_using_value(resource_table):
             build_error_message("Error: {error}".format(error="No value is provided "))
         )
     # print (value, resource_table)
-    return jsonify(search_value_for_resource(resource_table, value))
+    key = request.args.get("key")
+    if key:
+        # If the key is provided it will restrict the search to the provided key.
+        return query_cashed_bucket_part_value_keys(key, value, resource_table)
+    else:
+        return jsonify(search_value_for_resource(resource_table, value))
 
 
 @resources.route("/<resource_table>/searchvaluesusingkey/", methods=["GET"])
