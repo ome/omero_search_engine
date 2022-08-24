@@ -292,12 +292,15 @@ class QueryRunner(
 
         if query_.get("or_filters"):
             qq = []
-            query.get("or_filters").append(qq)
             for qu_ in query_.get("or_filters"):
                 if isinstance(qu_, list):
+                    tmpss = []
+                    query.get("or_filters").append(tmpss)
                     for qu in qu_:
-                        qq.append(qu.__dict__)
+                        tmpss.append(qu.__dict__)
                 else:
+                    if qq not in query.get("or_filters"):
+                        query.get("or_filters").append(qq)
                     qq.append(qu_.__dict__)
 
         if query_.get("main_attribute"):
