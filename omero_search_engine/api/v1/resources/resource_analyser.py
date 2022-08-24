@@ -120,6 +120,9 @@ def search_index_for_values_get_all_buckets(e_index, query):
     """
     page_size = 9999
     bookmark = 0
+    print("=========================")
+    print(query)
+    print("=========================")
     query = json.loads(query)
     returened_results = []
     # es = search_omero_app.config.get("es_connector")
@@ -395,6 +398,41 @@ def get_key_values_return_contents(name, resource, csv):
     return jsonify(resource_keys)
 
 
+def query_cashed_bucket_part_value_keys(
+    name, value, resource, es_index="key_value_buckets_information"
+):
+    """
+    Search for and obtain the available values for an attribute and part of the
+    value for one or all resources
+    e.g. 'homo' to return all values which contain 'homo'
+    for the provided attribute and resource.
+
+    """
+    if name:
+        name = name.strip()
+    if value:
+        value = value.strip()
+        if "*" not in value and "?" not in value:
+            value = "*%s*" % value
+    if resource != "all":
+        query = key_part_values_buckets_template.substitute(
+            name=name, value=value, resource=resource
+        )
+        res = search_index_for_values_get_all_buckets(es_index, query)
+        returned_results = prepare_search_results_buckets(res)
+        return returned_results
+    else:
+        # search all resources for all possible matches
+        returned_results = {}
+        for table in resource_elasticsearchindex:
+            query = key_part_values_buckets_template.substitute(
+                name=name, value=value, resource=table
+            )
+            res = search_index_for_values_get_all_buckets(es_index, query)
+            returned_results[table] = prepare_search_results_buckets(res)
+        return returned_results
+
+
 def query_cashed_bucket(name, resource, es_index="key_value_buckets_information"):
     # returns possible matches for a specific resource
     if name:
@@ -478,6 +516,21 @@ key_values_buckets_template = Template(
 "must":{"match":{"Attribute.keyrnamenormalize":"$name"}}}},{
 "bool": {"must": {"match":
 {"resource.keyresource": "$resource"}}}}]}}}"""
+)
+
+"""
+Search using key, part of the value and resource
+"""
+key_part_values_buckets_template = Template(
+    """
+{"query":{"bool":{"must":[{"bool":{
+"must":[{"match":{"Attribute.keyrnamenormalize":"$name"}},
+{"wildcard":{"Value.keyvaluenormalize":"$value"}}
+]
+}},{
+"bool": {"must": [
+{"match":{"resource.keyresource": "$resource"}}
+]}}]}}}"""
 )
 
 # "fields": ["Attribute","Value","items_in_the_bucket",
