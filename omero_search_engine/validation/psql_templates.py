@@ -69,7 +69,7 @@ and lower(annotation_mapvalue.value)='$value'"""
 )
 
 # Get the  number of images using "in"
-query_image_or = Template(
+query_image_in = Template(
     """
 Select DISTINCT image.id from image
 inner join imageannotationlink

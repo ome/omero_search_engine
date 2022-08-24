@@ -29,7 +29,7 @@ from omero_search_engine.validation.psql_templates import (
     query_images_screen_key_value,
     query_images_in_project_name,
     query_images_screen_name,
-    query_image_or,
+    query_image_in,
 )
 import os
 
@@ -39,8 +39,8 @@ query_methods = {
     "screen": query_images_screen_key_value,
     "project_name": query_images_in_project_name,
     "screen_name": query_images_screen_name,
-    "query_image_or": query_image_or,
-    "in_clause": query_image_or,
+    "query_image_or": query_image_in,
+    "in_clause": query_image_in,
 }
 
 
