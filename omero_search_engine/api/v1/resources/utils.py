@@ -148,6 +148,13 @@ should_term_template = Template(
 query_template = Template("""{"query": {"bool": {$query}}}""")
 
 
+# This template is added to the query to return the count of an attribute
+count_attr_template = Template(
+    """{"key_count": {"terms": {"field": "$field","size": 10000}}}
+"""
+)
+
+
 def build_error_message(error):
     """
     Build an error respond
@@ -720,19 +727,28 @@ def search_index_scrol(index_name, query):
     return results
 
 
-def search_index_using_search_after(e_index, query, page, bookmark_, return_containers):
+def search_index_using_search_after(
+    e_index, query, page, bookmark_, return_containers, ret_type=None
+):
     returned_results = []
     if not page:
         page = 1
     es = search_omero_app.config.get("es_connector")
     if return_containers:
         res = es.search(index=e_index, body=query)
-        for el in res["hits"]["hits"]:
-            returned_results.append(el["_source"])
+        keys_counts = res["aggregations"]["key_count"]["buckets"]
+        for ek in keys_counts:
+            returned_results.append(
+                {
+                    "Name (IDR number)": ek["key"],
+                    "count": ek["doc_count"],
+                    "type": ret_type,
+                }
+            )
         if len(res["hits"]["hits"]) == 0:
             search_omero_app.logger.info("No result is found")
             return returned_results
-        return {"results": returned_results}
+        return returned_results
     page_size = search_omero_app.config.get("PAGE_SIZE")
     res = es.count(index=e_index, body=query)
     size = res["count"]
@@ -850,29 +866,23 @@ def search_resource_annotation(
             # code to return the containers only
             # It will call the projects container first then
             # search within screens
-            query["collapse"] = {"field": "project_name.keyvalue"}
-            query["_source"] = {"includes": ["screen_name", "project_name"]}
-            res = search_index_using_search_after(
-                res_index, query, page, bookmark, return_containers
+            query["aggs"] = json.loads(
+                count_attr_template.substitute(field="project_name.keyvalue")
             )
-            query["collapse"] = {"field": "screen_name.keyvalue"}
+            query["_source"] = {"includes": [""]}
+            res = search_index_using_search_after(
+                res_index, query, page, bookmark, return_containers, "project"
+            )
+            query["aggs"] = json.loads(
+                count_attr_template.substitute(field="screen_name.keyvalue")
+            )
+
             res_2 = search_index_using_search_after(
-                res_index, query, page, bookmark, return_containers
+                res_index, query, page, bookmark, return_containers, "screen"
             )
             # Combines the containers results
-            studies = []
-            if len(res) > 0:
-                for item1 in res.get("results"):
-                    pr = item1.get("project_name")
-                    if pr and pr not in studies:
-                        studies.append({"Name (IDR number)": pr})
-            if len(res_2) > 0:
-                for item2 in res_2.get("results"):
-                    sc = item2.get("screen_name")
-                    if sc and sc not in studies:
-                        studies.append({"Name (IDR number)": sc})
+            studies = res + res_2
             res = {"results": studies}
-
         else:
             res = search_index_using_search_after(
                 res_index, query, page, bookmark, return_containers
