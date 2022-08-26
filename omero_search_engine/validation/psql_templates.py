@@ -148,3 +148,31 @@ where screen.name='$name'"""
 res_by_name = Template("""select id from $resource where name $name""")
 
 # idr0015-colin-taraoceans/screenA
+
+projects_count = Template(
+    """
+select DISTINCT project.name from image
+inner join imageannotationlink on image.id=imageannotationlink.parent
+inner join annotation_mapvalue on
+annotation_mapvalue.annotation_id=imageannotationlink.child
+inner join datasetimagelink on datasetimagelink.child=image.id
+inner join dataset on datasetimagelink.parent=dataset.id
+inner join projectdatasetlink on dataset.id=projectdatasetlink.child
+inner join project on project.id=projectdatasetlink.parent
+where annotation_mapvalue.name='$key' and  annotation_mapvalue.value ='$value'
+"""
+)
+
+screens_count = Template(
+    """
+select DISTINCT screen.name from image
+inner join imageannotationlink on image.id = imageannotationlink.parent
+inner join annotation_mapvalue on
+annotation_mapvalue.annotation_id=imageannotationlink.child
+inner join wellsample on wellsample.image=image.id
+inner join well on wellsample.well= well.id
+inner join plate on well.plate=plate.id
+inner join screenplatelink on plate.id=screenplatelink.child
+inner join screen on screen.id=screenplatelink.parent
+where annotation_mapvalue.name='$key' and  annotation_mapvalue.value ='$value'"""
+)
