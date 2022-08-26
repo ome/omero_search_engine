@@ -18,7 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from . import resources
-from flask import request, jsonify
+from flask import request, jsonify, make_response
 import json
 from omero_search_engine.api.v1.resources.utils import (
     search_resource_annotation,
@@ -50,12 +50,12 @@ def search_resource_page(resource_table):
     """
     used to get the next results page
     """
-    if not (get_resource_annotation_table):
-        return jsonify(
-            build_error_message(
-                "No data for table {table}".format(table=resource_table)
-            )
-        )
+    if not (get_resource_annotation_table(resource_table)):
+        resp_message = "No data for table {table}".format(table=resource_table)
+        response = make_response(resp_message, 404)
+        response.mimetype = "text/plain"
+        return response
+
     data = request.data
     if not data:
         return jsonify(
@@ -124,12 +124,12 @@ def search_resource(resource_table):
        or_filters means that the results should satisfy at least one condition inside the filters
     """
 
-    if not (get_resource_annotation_table):
-        return jsonify(
-            build_error_message(
-                "NO data for table {table}".format(table=resource_table)
-            )
-        )
+    if not (get_resource_annotation_table(resource_table)):
+        resp_message = "No data for table {table}".format(table=resource_table)
+        response = make_response(resp_message, 404)
+        response.mimetype = "text/plain"
+        return response
+
     data = request.data
     if not data:
         return jsonify(
@@ -180,6 +180,14 @@ def get_values_using_value(resource_table):
         return jsonify(
             build_error_message("Error: {error}".format(error="No value is provided "))
         )
+    # check if resource_table is vaild
+    if not (get_resource_annotation_table(resource_table)):
+        # If the resource does not exist, it will return a 404 with a message.
+        resp_message = "No data for table {table}".format(table=resource_table)
+        response = make_response(resp_message, 404)
+        response.mimetype = "text/plain"
+        return response
+
     # print (value, resource_table)
     key = request.args.get("key")
     if key:
@@ -254,7 +262,10 @@ def get_resource_names_(resource_table):
     Query the available attributes for a specific resource
     """
     if not (get_resource_annotation_table(resource_table)):
-        return "NO data for table {table}".format(table=resource_table)
+        resp_message = "No data for table {table}".format(table=resource_table)
+        response = make_response(resp_message, 404)
+        response.mimetype = "text/plain"
+        return response
 
     names = get_resource_names(resource_table)
     return jsonify(names)
