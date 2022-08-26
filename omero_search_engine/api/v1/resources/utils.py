@@ -154,6 +154,12 @@ count_attr_template = Template(
 """
 )
 
+# This template is used to get the study using its idr
+res_raw_query = Template(
+    """{"query": {"bool": {"must": [{"bool": {"must": {"match":
+    {"name.keyvalue": "$idr"}}}}]}}} """
+)
+
 
 def build_error_message(error):
     """
@@ -737,14 +743,26 @@ def search_index_using_search_after(
     if return_containers:
         res = es.search(index=e_index, body=query)
         keys_counts = res["aggregations"]["key_count"]["buckets"]
+        idrs = []
+
         for ek in keys_counts:
+            idrs.append(ek["key"])
+            res_res = get_studies_titles(ek["key"], ret_type)
+            if res_res.get("Study Title"):
+                st = res_res.get("Study Title")
+            elif res_res.get("Publication Title"):
+                st = res_res.get("Publication Title")
+            else:
+                st = ""
             returned_results.append(
                 {
                     "Name (IDR number)": ek["key"],
-                    "count": ek["doc_count"],
+                    "image count": ek["doc_count"],
+                    "title": st,
                     "type": ret_type,
                 }
             )
+
         if len(res["hits"]["hits"]) == 0:
             search_omero_app.logger.info("No result is found")
             return returned_results
@@ -814,7 +832,6 @@ def search_resource_annotation(
     @query: the a dict contains the three filters (or, and and  not) items
     @raw_elasticsearch_query: raw query sending directly to elasticsearch
     """
-    # print ( query)
     try:
         res_index = resource_elasticsearchindex.get(table_)
         if not res_index:
@@ -904,3 +921,23 @@ def search_resource_annotation(
         return build_error_message(
             "Something went wrong, please check your query and try again later."
         )
+
+
+def get_studies_titles(idr_name, resource):
+    """
+    use the res_raw_query to return the study title (publication and study)
+    """
+    study_title = {}
+    res_index = resource_elasticsearchindex.get(resource)
+    resource_query = json.loads(res_raw_query.substitute(idr=idr_name))
+    resourse_res = search_index_using_search_after(
+        res_index, resource_query, None, None, None
+    )
+    for item_ in resourse_res["results"]:
+        for item in item_["key_values"]:
+            if item["name"] == "Publication Title" or item["name"] == "Study Title":
+                study_title[item["name"]] = item["value"]
+                if len(study_title) == 2:
+                    break
+
+    return study_title
