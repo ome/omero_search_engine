@@ -760,6 +760,7 @@ def search_index_using_search_after(
                     "image count": ek["doc_count"],
                     "title": st,
                     "type": ret_type,
+                    "id": res_res.get("id"),
                 }
             )
 
@@ -934,10 +935,11 @@ def get_studies_titles(idr_name, resource):
         res_index, resource_query, None, None, None
     )
     for item_ in resourse_res["results"]:
+        study_title["id"] = item_["id"]
         for item in item_["key_values"]:
             if item["name"] == "Publication Title" or item["name"] == "Study Title":
                 study_title[item["name"]] = item["value"]
-                if len(study_title) == 2:
+                if len(study_title) == 3:
                     break
 
     return study_title
