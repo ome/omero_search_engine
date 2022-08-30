@@ -742,31 +742,19 @@ def search_index_using_search_after(
     es = search_omero_app.config.get("es_connector")
     if return_containers:
         res = es.search(index=e_index, body=query)
+        if len(res["hits"]["hits"]) == 0:
+            search_omero_app.logger.info("No result is found")
+            return returned_results
         keys_counts = res["aggregations"]["key_count"]["buckets"]
         idrs = []
 
         for ek in keys_counts:
             idrs.append(ek["key"])
             res_res = get_studies_titles(ek["key"], ret_type)
-            if res_res.get("Study Title"):
-                st = res_res.get("Study Title")
-            elif res_res.get("Publication Title"):
-                st = res_res.get("Publication Title")
-            else:
-                st = ""
-            returned_results.append(
-                {
-                    "Name (IDR number)": ek["key"],
-                    "image count": ek["doc_count"],
-                    "title": st,
-                    "type": ret_type,
-                    "id": res_res.get("id"),
-                }
-            )
 
-        if len(res["hits"]["hits"]) == 0:
-            search_omero_app.logger.info("No result is found")
-            return returned_results
+            returned_results.append(res_res)
+
+
         return returned_results
     page_size = search_omero_app.config.get("PAGE_SIZE")
     res = es.count(index=e_index, body=query)
@@ -934,12 +922,12 @@ def get_studies_titles(idr_name, resource):
     resourse_res = search_index_using_search_after(
         res_index, resource_query, None, None, None
     )
+    print (resourse_res)
     for item_ in resourse_res["results"]:
-        study_title["id"] = item_["id"]
-        for item in item_["key_values"]:
-            if item["name"] == "Publication Title" or item["name"] == "Study Title":
-                study_title[item["name"]] = item["value"]
-                if len(study_title) == 3:
-                    break
-
+        print (item_)
+        study_title["id"] = item_.get("id")
+        study_title["name"] = item_.get("name")
+        study_title["type"] = resource
+        study_title["description"] = item_.get("description")
+        study_title["key_values"]=item_.get("key_values")
     return study_title
