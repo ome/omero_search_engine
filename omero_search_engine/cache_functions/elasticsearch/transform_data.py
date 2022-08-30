@@ -413,7 +413,7 @@ def insert_resource_data(folder, resource, from_json):
 total_process = 0
 
 
-def get_insert_data_to_index(sql_st, resource):
+def get_insert_data_to_index(sql_st, resource, dry_run=False):
     """
     - Query the postgreSQL database server and get metadata (key-value pair)
     - Process the results data
@@ -424,12 +424,15 @@ def get_insert_data_to_index(sql_st, resource):
     """
     from datetime import datetime
 
-    delete_index(resource)
-    create_omero_indexes(resource)
+    if not dry_run:
+        delete_index(resource)
+        create_omero_indexes(resource)
     sql_ = "select max (id) from %s" % resource
     res2 = search_omero_app.config["database_connector"].execute_query(sql_)
-    max_id = res2[0]["max"]
-    page_size = search_omero_app.config["CACHE_ROWS"]
+    max_id = res2[0].get("max", 0)
+    if max_id is None:
+        max_id = 0
+    page_size = search_omero_app.config.get("CACHE_ROWS", 1000)
     start_time = datetime.now()
     cur_max_id = page_size
     vals = []
@@ -460,7 +463,7 @@ def get_insert_data_to_index(sql_st, resource):
         lock = manager.Lock()
         # a counter which will be used by the processes in the pool
         counter_val = manager.Value("i", 0)
-        func = partial(processor_work, lock, counter_val)
+        func = partial(processor_work, lock, counter_val, dry_run)
         # map the data which will be consumed by the processes inside the pool
         res = pool.map(func, vals)
         search_omero_app.logger.info(cur_max_id)
@@ -471,7 +474,7 @@ def get_insert_data_to_index(sql_st, resource):
         pool.close()
 
 
-def processor_work(lock, global_counter, val):
+def processor_work(lock, global_counter, val, dry_run):
     """
     A method to do the work inside a process within the multiprocessing pool
     """
@@ -503,15 +506,18 @@ def processor_work(lock, global_counter, val):
     conn = search_omero_app.config["database_connector"]
     results = conn.execute_query(mod_sql)
     search_omero_app.logger.info("Processing the results...")
-    process_results(results, resource, lock)
+    process_results(results, resource, lock, dry_run)
     average_time = (datetime.now() - st) / 2
     search_omero_app.logger.info("Done")
     search_omero_app.logger.info("elpased time:%s" % average_time)
 
 
-def process_results(results, resource, lock=None):
+def process_results(results, resource, lock=None, dry_run=False):
     df = pd.DataFrame(results).replace({np.nan: None})
-    insert_resource_data_from_df(df, resource, lock)
+    if dry_run:
+        print(df)
+    else:
+        insert_resource_data_from_df(df, resource, lock)
 
 
 def insert_resource_data_from_df(df, resource, lock=None):
