@@ -177,6 +177,7 @@ def prepare_images_data(data, doc_type):
         "experiment",
         "group_id",
         "name",
+        "description",
         "mapvalue_name",
         "mapvalue_value",
         "project_name",
@@ -233,6 +234,7 @@ def prepare_data(data, doc_type):
         "owner_id",
         "group_id",
         "name",
+        "description",
         "mapvalue_name",
         "mapvalue_value",
     ]
@@ -348,6 +350,7 @@ def insert_resource_data(folder, resource, from_json):
             "experiment",
             "group_id",
             "name",
+            "description",
             "mapvalue_name",
             "mapvalue_value",
             "mapvalue_index",
@@ -379,6 +382,7 @@ def insert_resource_data(folder, resource, from_json):
                 "owner_id",
                 "group_id",
                 "name",
+                "description",
                 "mapvalue_name",
                 "mapvalue_value",
                 "mapvalue_index",
@@ -560,14 +564,30 @@ def insert_resource_data_from_df(df, resource, lock=None):
 def insert_project_data(folder, project_file):
     file_name = folder + "\\" + project_file
     es_index = "project_keyvalue_pair_metadata"
-    cols = ["id", "owner_id", "group_id", "name", "mapvalue_name", "mapvalue_value"]
+    cols = [
+        "id",
+        "owner_id",
+        "group_id",
+        "name",
+        "description",
+        "mapvalue_name",
+        "mapvalue_value",
+    ]
     handle_file(file_name, es_index, cols)
 
 
 def insert_screen_data(folder, screen_file):
     file_name = folder + "\\" + screen_file
     es_index = "screen_keyvalue_pair_metadata"
-    cols = ["id", "owner_id", "group_id", "name", "mapvalue_name", "mapvalue_value"]
+    cols = [
+        "id",
+        "owner_id",
+        "group_id",
+        "name",
+        "description",
+        "mapvalue_name",
+        "mapvalue_value",
+    ]
     handle_file(file_name, es_index, cols)
 
 
@@ -581,7 +601,15 @@ def insert_well_data(folder, well_file):
 def insert_plate_data(folder, plate_file):
     file_name = folder + "\\" + plate_file
     es_index = "plate_keyvalue_pair_metadata"
-    cols = ["id", "owner_id", "group_id", "name", "mapvalue_name", "mapvalue_value"]
+    cols = [
+        "id",
+        "owner_id",
+        "group_id",
+        "name",
+        "description",
+        "mapvalue_name",
+        "mapvalue_value",
+    ]
     handle_file(file_name, es_index, cols)
 
 
