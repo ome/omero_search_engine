@@ -57,4 +57,7 @@ if returned_results.get("results"):
     if len(returned_results.get("results").get("results")) == 0:
         logging.info("No results is found")
     for item in returned_results.get("results").get("results"):
-        logging.info("%s: %s contains %s images" % (item.get("type"),item.get("name"), item.get("image count")))
+        logging.info(
+            "%s: %s contains %s images"
+            % (item.get("type"), item.get("name"), item.get("image count"))
+        )
