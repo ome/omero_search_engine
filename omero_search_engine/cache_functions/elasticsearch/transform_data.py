@@ -448,9 +448,12 @@ def get_insert_data_to_index(sql_st, resource, dry_run=False):
     # Determine the number of processes inside the multiprocessing pool,
     # i.e the number of allowed processors to run at the same time
     # It depends on the number of the processors that the hosting machine has
-    no_processors = search_omero_app.config.get("NO_PROCESSES")
-    if not no_processors:
-        no_processors = int(multiprocessing.cpu_count() / 2)
+    if dry_run:
+        no_processors = 1
+    else:
+        no_processors = search_omero_app.config.get("NO_PROCESSES")
+        if not no_processors:
+            no_processors = int(multiprocessing.cpu_count() / 2)
     search_omero_app.logger.info(
         "Number of the allowed parallel\
         processes inside the pool: %s"
@@ -508,16 +511,28 @@ def processor_work(lock, global_counter, val):
     conn = search_omero_app.config["database_connector"]
     results = conn.execute_query(mod_sql)
     search_omero_app.logger.info("Processing the results...")
-    process_results(results, resource, lock, dry_run)
+    process_results(results, resource, global_counter, lock, dry_run)
     average_time = (datetime.now() - st) / 2
     search_omero_app.logger.info("Done")
     search_omero_app.logger.info("elpased time:%s" % average_time)
 
 
-def process_results(results, resource, lock=None, dry_run=False):
+def process_results(results, resource, global_counter, lock=None, dry_run=False):
     df = pd.DataFrame(results).replace({np.nan: None})
     if dry_run:
-        print(df)
+        try:
+            base_folder = "/etc/searchengine/"
+            if not os.path.isdir(base_folder):
+                base_folder = os.path.expanduser("~")
+            print(base_folder)
+            json_file_name = "data_{counter}.json".format(counter=global_counter.value)
+            print(json_file_name)
+            json_file = os.path.join(base_folder, json_file_name)
+            print(json_file)
+            df.to_json(json_file)
+        except Exception as e:
+            search_omero_app.logger.info("Error %s" % str(e))
+            print(df)
     else:
         insert_resource_data_from_df(df, resource, lock)
 
