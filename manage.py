@@ -121,7 +121,7 @@ def sql_results_to_panda():
     help="resource name, creating all the indexes for all the resources is the default",  # noqa
 )
 @manager.option(
-    "-n",
+    "-d",
     "--dry-run",
     action="store_true",
     help="perform a dry-run by accessing the database but not updating the indexes",  # noqa
