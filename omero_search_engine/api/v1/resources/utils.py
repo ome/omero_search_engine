@@ -747,13 +747,11 @@ def search_index_using_search_after(
             return returned_results
         keys_counts = res["aggregations"]["key_count"]["buckets"]
         idrs = []
-
         for ek in keys_counts:
             idrs.append(ek["key"])
             res_res = get_studies_titles(ek["key"], ret_type)
-
+            res_res["image count"] = ek["doc_count"]
             returned_results.append(res_res)
-
 
         return returned_results
     page_size = search_omero_app.config.get("PAGE_SIZE")
@@ -922,12 +920,10 @@ def get_studies_titles(idr_name, resource):
     resourse_res = search_index_using_search_after(
         res_index, resource_query, None, None, None
     )
-    print (resourse_res)
     for item_ in resourse_res["results"]:
-        print (item_)
         study_title["id"] = item_.get("id")
         study_title["name"] = item_.get("name")
         study_title["type"] = resource
         study_title["description"] = item_.get("description")
-        study_title["key_values"]=item_.get("key_values")
+        study_title["key_values"] = item_.get("key_values")
     return study_title
