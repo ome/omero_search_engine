@@ -524,11 +524,8 @@ def process_results(results, resource, global_counter, lock=None, dry_run=False)
             base_folder = "/etc/searchengine/"
             if not os.path.isdir(base_folder):
                 base_folder = os.path.expanduser("~")
-            print(base_folder)
             json_file_name = "data_{counter}.json".format(counter=global_counter.value)
-            print(json_file_name)
             json_file = os.path.join(base_folder, json_file_name)
-            print(json_file)
             df.to_json(json_file)
         except Exception as e:
             search_omero_app.logger.info("Error %s" % str(e))
