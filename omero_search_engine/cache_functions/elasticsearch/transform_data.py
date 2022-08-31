@@ -419,6 +419,7 @@ def get_insert_data_to_index(sql_st, resource, dry_run=False):
     - Process the results data
     - Insert them to the elasticsearch
     - Use multiprocessing to reduce the indexing time
+    - If dry_run is true, the data will not be inserted to elasticsearch index
     These are performed using multiprocessing pool to reduce
     the indexing time by using parallel processing.
     """
@@ -438,7 +439,7 @@ def get_insert_data_to_index(sql_st, resource, dry_run=False):
     vals = []
     # Prepare the multiprocessing data
     while True:
-        vals.append((cur_max_id, (cur_max_id - page_size), resource))
+        vals.append((cur_max_id, (cur_max_id - page_size), resource, dry_run))
         if cur_max_id > max_id:
             break
         cur_max_id += page_size
@@ -447,7 +448,7 @@ def get_insert_data_to_index(sql_st, resource, dry_run=False):
     # Determine the number of processes inside the multiprocessing pool,
     # i.e the number of allowed processors to run at the same time
     # It depends on the number of the processors that the hosting machine has
-    no_processors = search_omero_app.config.get("NO_PROCESSES")
+    no_processors = 1  # search_omero_app.config.get("NO_PROCESSES")
     if not no_processors:
         no_processors = int(multiprocessing.cpu_count() / 2)
     search_omero_app.logger.info(
@@ -463,7 +464,7 @@ def get_insert_data_to_index(sql_st, resource, dry_run=False):
         lock = manager.Lock()
         # a counter which will be used by the processes in the pool
         counter_val = manager.Value("i", 0)
-        func = partial(processor_work, lock, counter_val, dry_run)
+        func = partial(processor_work, lock, counter_val)
         # map the data which will be consumed by the processes inside the pool
         res = pool.map(func, vals)
         search_omero_app.logger.info(cur_max_id)
@@ -474,13 +475,14 @@ def get_insert_data_to_index(sql_st, resource, dry_run=False):
         pool.close()
 
 
-def processor_work(lock, global_counter, val, dry_run):
+def processor_work(lock, global_counter, val):
     """
     A method to do the work inside a process within the multiprocessing pool
     """
     cur_max_id = val[0]
     range = val[1]
     resource = val[2]
+    dry_run = val[3]
     search_omero_app.logger.info("%s, %s, %s" % (cur_max_id, range, resource))
     from omero_search_engine.cache_functions.elasticsearch.sql_to_csv import (
         sqls_resources,
