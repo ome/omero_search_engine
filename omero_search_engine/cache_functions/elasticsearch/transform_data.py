@@ -448,7 +448,7 @@ def get_insert_data_to_index(sql_st, resource, dry_run=False):
     # Determine the number of processes inside the multiprocessing pool,
     # i.e the number of allowed processors to run at the same time
     # It depends on the number of the processors that the hosting machine has
-    no_processors = 1  # search_omero_app.config.get("NO_PROCESSES")
+    no_processors = search_omero_app.config.get("NO_PROCESSES")
     if not no_processors:
         no_processors = int(multiprocessing.cpu_count() / 2)
     search_omero_app.logger.info(
