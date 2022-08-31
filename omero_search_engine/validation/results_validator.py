@@ -292,33 +292,33 @@ class Validator(object):
         if search_engine_results["results"].get("results"):
             for item in search_engine_results["results"].get("results"):
                 if item["type"] == "screen":
-                    if item["Name (IDR number)"] in screens_results_idr:
+                    if item["name"] in screens_results_idr:
                         mes = (
                             "Screen %s is found in the PostgreSQL results"
-                            % item["Name (IDR number)"]
+                            % item["name"]
                         )
                         mess.append(mes)
                         search_omero_app.logger.info(mes)
                     else:
                         mes = (
                             "Erro, screen %s is not found in the PostgreSQL results"
-                            % item["Name (IDR number)"]
+                            % item["name"]
                         )
                         mess.append(mes)
                         search_omero_app.logger.info(mes)
 
                 elif item["type"] == "project":
-                    if item["Name (IDR number)"] in projects_results_idr:
+                    if item["name"] in projects_results_idr:
                         mes = (
                             "Project %s is found in the PostgreSQL results"
-                            % item["Name (IDR number)"]
+                            % item["name"]
                         )
                         mess.append(mes)
                         search_omero_app.logger.info(mes)
                     else:
                         mes = (
                             "Error, project %s is not found in the PostgreSQL results"
-                            % item["Name (IDR number)"]
+                            % item["name"]
                         )
                         mess.append(mes)
                         search_omero_app.logger.info(mes)
