@@ -151,8 +151,8 @@ def get_index_data_from_database(resource="all", dry_run=False):
             save_key_value_buckets(
                 resource_table_=None, re_create_index=True, only_values=False
             )
-        # validat ethe indexing
-        test_indexing_search_query(deep_check=True, check_studies=True)
+            # validate the indexing
+            test_indexing_search_query(deep_check=True, check_studies=True)
 
 
 # set configurations
