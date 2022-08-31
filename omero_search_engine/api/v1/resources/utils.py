@@ -925,5 +925,9 @@ def get_studies_titles(idr_name, resource):
         study_title["name"] = item_.get("name")
         study_title["type"] = resource
         study_title["description"] = item_.get("description")
+        for value in item_.get("key_values"):
+            if value.get("name"):
+                value["key"] = value["name"]
+                del value["name"]
         study_title["key_values"] = item_.get("key_values")
     return study_title
