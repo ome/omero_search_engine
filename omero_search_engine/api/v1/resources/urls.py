@@ -260,7 +260,7 @@ def get_resource_names_(resource_table):
     return jsonify(names)
 
 
-@resources.route("/submitquery_returnstudies/", methods=["POST"])
+@resources.route("/submitquery/containers/", methods=["POST"])
 def submit_query_return_containers():
     """
     file: swagger_docs/submitquery_returncontainers.yml
