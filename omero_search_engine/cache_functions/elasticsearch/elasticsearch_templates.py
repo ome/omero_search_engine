@@ -39,6 +39,10 @@ non_image_template = {
                 "type": "text",
                 "fields": {"keyvalue": {"type": "keyword"}},
             },  # noqa
+            "description": {
+                "type": "text",
+                "fields": {"keyvalue": {"type": "keyword"}},
+            },  # noqa
             "owner_id": {"type": "long"},
             "group_id": {"type": "long"},
             "permissions": {"type": "long"},
@@ -101,6 +105,10 @@ image_template = {
             "well_id": {"type": "long"},
             "wellsample_id": {"type": "long"},
             "name": {
+                "type": "text",
+                "fields": {"keyvalue": {"type": "keyword"}},
+            },  # noqa
+            "description": {
                 "type": "text",
                 "fields": {"keyvalue": {"type": "keyword"}},
             },  # noqa

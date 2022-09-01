@@ -22,6 +22,7 @@ from datetime import datetime
 from omero_search_engine.api.v1.resources.query_handler import (
     determine_search_results_,
     query_validator,
+    simple_search,
 )
 from omero_search_engine.validation.psql_templates import (
     query_images_key_value,
@@ -30,6 +31,8 @@ from omero_search_engine.validation.psql_templates import (
     query_images_in_project_name,
     query_images_screen_name,
     query_image_or,
+    screens_count,
+    projects_count,
 )
 import os
 
@@ -40,6 +43,8 @@ query_methods = {
     "project_name": query_images_in_project_name,
     "screen_name": query_images_screen_name,
     "query_image_or": query_image_or,
+    "screens_count": screens_count,
+    "projects_count": projects_count,
 }
 
 
@@ -252,6 +257,96 @@ class Validator(object):
         else:
             search_omero_app.logger.info("The query is not valid")
 
+    def get_containers_test_cases(self):
+        """
+        Compare the results containers from postgres and the searchengine
+        """
+        mess = []
+        mes = "Checking the results containers for name '%s' and value '%s'" % (
+            self.name,
+            self.value,
+        )
+        mess.append(mes)
+        search_omero_app.logger.info(mes)
+        screens_count_sql = query_methods["screens_count"].substitute(
+            key=self.name, value=self.value
+        )
+        projects_count_sql = query_methods["projects_count"].substitute(
+            key=self.name, value=self.value
+        )
+        conn = search_omero_app.config["database_connector"]
+        screens_results = conn.execute_query(screens_count_sql)
+        projects_results = conn.execute_query(projects_count_sql)
+        screens_results_idr = [item["name"] for item in screens_results]
+        projects_results_idr = [item["name"] for item in projects_results]
+        search_engine_results = simple_search(
+            self.name,
+            self.value,
+            "equals",
+            False,
+            None,
+            self.resource,
+            None,
+            return_containers=True,
+        )
+        if search_engine_results["results"].get("results"):
+            for item in search_engine_results["results"].get("results"):
+                if item["type"] == "screen":
+                    if item["name"] in screens_results_idr:
+                        mes = (
+                            "Screen %s is found in the PostgreSQL results"
+                            % item["name"]
+                        )
+                        mess.append(mes)
+                        search_omero_app.logger.info(mes)
+                    else:
+                        mes = (
+                            "Erro, screen %s is not found in the PostgreSQL results"
+                            % item["name"]
+                        )
+                        mess.append(mes)
+                        search_omero_app.logger.info(mes)
+
+                elif item["type"] == "project":
+                    if item["name"] in projects_results_idr:
+                        mes = (
+                            "Project %s is found in the PostgreSQL results"
+                            % item["name"]
+                        )
+                        mess.append(mes)
+                        search_omero_app.logger.info(mes)
+                    else:
+                        mes = (
+                            "Error, project %s is not found in the PostgreSQL results"
+                            % item["name"]
+                        )
+                        mess.append(mes)
+                        search_omero_app.logger.info(mes)
+            no_results_searchengine = len(
+                search_engine_results["results"].get("results")
+            )
+            no_results_postgresql = len(screens_results_idr) + len(projects_results_idr)
+            if no_results_postgresql == no_results_searchengine:
+                mes = (
+                    "The number of the results from PostgreSQL "
+                    "and the Searchengine (%s) are equal" % no_results_postgresql
+                )
+                mess.append(mes)
+                search_omero_app.logger.info(mes)
+            else:
+                mes = (
+                    "Error, the number of the results from PostgreSQL %s "
+                    "and the Searchengine %s are not equal"
+                    % (no_results_postgresql, no_results_searchengine)
+                )
+                mess.append(mes)
+                search_omero_app.logger.info(mes)
+        else:
+            mes = "No results found in the Searchengine"
+            mess.append(mes)
+            search_omero_app.logger.info(mes)
+        return mess
+
     def compare_results(self):
         """
         call the results
@@ -286,8 +381,8 @@ class Validator(object):
                     "No of the retuned results are similar ..."
                 )
                 return (
-                    "equal (%s images), \n database server query time= %s,\
-                     searchengine query time= %s"
+                    "equal (%s images), \n database server query time= %s,"
+                    "searchengine query time= %s"
                     % (len(self.postgres_results), sql_time, searchengine_time)
                 )
         if self.searchengine_results:
@@ -330,11 +425,15 @@ def validate_queries(json_file, deep_check):
             )
             validator = Validator(deep_check)
             validator.set_simple_query(resource, name, value)
+            if resource == "image":
+                mess = validator.get_containers_test_cases()
+                messages = messages + mess
+
             res = validator.compare_results()
             elabsed_time = str(datetime.now() - start_time)
             messages.append(
-                "Results form  PostgreSQL and search engine\
-                 for name: %s , value: %s are: %s"
+                "Results from PostgreSQL and search engine for "
+                "name '%s', value '%s', are: %s"
                 % (validator.name, validator.value, res)
             )
             search_omero_app.logger.info("Total time=%s" % elabsed_time)
@@ -346,8 +445,8 @@ def validate_queries(json_file, deep_check):
             validator_c.set_complex_query(name, cases)
             res = validator_c.compare_results()
             messages.append(
-                "Results form  PostgreSQL and search engine\
-                for %s name: %s and value: %s are %s"
+                "Results from PostgreSQL and search engine for %s name"
+                "'%s' and value '%s' are %s"
                 % (name, validator_c.name, validator_c.value, res)
             )
             search_omero_app.logger.info(

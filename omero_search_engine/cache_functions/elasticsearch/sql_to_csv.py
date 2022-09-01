@@ -25,7 +25,7 @@ from string import Template
 
 image_sql = Template(
     """
-select image.id, image.owner_id, image.experiment, image.group_id,
+select image.id, image.description, image.owner_id, image.experiment, image.group_id,
 image.name as name, annotation_mapvalue.name as mapvalue_name,
 annotation_mapvalue.value as mapvalue_value,
 annotation_mapvalue.index as mapvalue_index,
@@ -64,7 +64,7 @@ images_sql_to_csv = (
 
 plate_sql = Template(
     """
-select plate.id, plate.owner_id, plate.group_id,
+select plate.id, plate.owner_id, plate.group_id,plate.description,
 plate.name as name, annotation_mapvalue.name as mapvalue_name,
 annotation_mapvalue.value as mapvalue_value,
 annotation_mapvalue.index as mapvalue_index from plate
@@ -84,7 +84,7 @@ plate_sql_to_csv = (
 
 project_sql = Template(
     """
-select project.id, project.owner_id, project.group_id,
+select project.id, project.owner_id, project.group_id, project.description,
 project.name as name, annotation_mapvalue.name as mapvalue_name,
 annotation_mapvalue.value as mapvalue_value,
 annotation_mapvalue.index as mapvalue_index
@@ -106,7 +106,8 @@ WITH CSV HEADER""".format(
 
 screen_sql = Template(
     """
-select screen.id, screen.owner_id, screen.group_id,  screen.name as name,
+select screen.id, screen.owner_id, screen.group_id,
+screen.name as name,screen.description,
 annotation_mapvalue.name as mapvalue_name,
 annotation_mapvalue.value as mapvalue_value,
 annotation_mapvalue.index as mapvalue_index from screen

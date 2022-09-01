@@ -573,7 +573,7 @@ resource_key_values_buckets_template = Template(
 "must":{"wildcard":{"Value.keyvaluenormalize":"$value"}}}},{
 "bool": {"must": {"match":
 {"resource.keyresource": "$resource"}}}}]}},
-"size": 9999}"""
+"size": 9999, "sort": [{"items_in_the_bucket": "desc"}]}"""
 )
 
 
