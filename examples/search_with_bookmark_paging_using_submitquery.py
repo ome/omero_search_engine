@@ -64,8 +64,9 @@ def call_omero_searchengine_return_results(url, data=None, method="post"):
             if res["id"] in ids:
                 raise Exception(" Id dublicated error  %s" % res["id"])
             ids.append(res["id"])
-        global total_pages
+        global total_pages, page
         total_pages = returned_results["results"]["total_pages"]
+        page = returned_results["results"]["page"]
         return bookmark, total_results
 
     except Exception as ex:
@@ -118,7 +119,6 @@ bookmark, total_results = call_omero_searchengine_return_results(
 
 while len(received_results) < total_results:
 
-    page += 1
     query_data_ = {"query_details": {"and_filters": and_filters}, "bookmark": bookmark}
     query_data_json_ = json.dumps(query_data_)
 
