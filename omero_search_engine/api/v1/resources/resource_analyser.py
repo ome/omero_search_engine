@@ -120,9 +120,6 @@ def search_index_for_values_get_all_buckets(e_index, query):
     """
     page_size = 9999
     bookmark = 0
-    print("=========================")
-    print(query)
-    print("=========================")
     query = json.loads(query)
     returened_results = []
     # es = search_omero_app.config.get("es_connector")
@@ -149,7 +146,6 @@ def search_index_for_values_get_all_buckets(e_index, query):
             )
             return returened_results
         bookmark = [res["hits"]["hits"][-1]["sort"][0]]
-
     return returened_results
 
 
@@ -298,29 +294,32 @@ def get_values_for_a_key(table_, key):
 
 def prepare_search_results(results):
     returned_results = []
-    total = 0
     total_number = 0
-    total_items = 0
     number_of_buckets = 0
     resource = None
-    # print (len(results.get("hits").get("hits")))
     for hit in results["hits"]["hits"]:
+        res = hit["_source"]
+        resource = res.get("resource")
+        # ignore organism key in the results
+        # please see (https://github.com/ome/omero_search_engine/issues/45)
+        # This will be checked later.
+        if (
+            resource == "image"
+            and res["Attribute"]
+            and res["Attribute"].lower() == "organism"
+        ):
+            continue
         row = {}
         returned_results.append(row)
-        res = hit["_source"]
         row["Key"] = res["Attribute"]
         row["Value"] = res["Value"]
-        resource = res.get("resource")
         row["Number of %ss" % resource] = res.get("items_in_the_bucket")
-        total_number = res["total_items_in_saved_buckets"]
-        number_of_buckets = res["total_buckets"]
-        total_items = res["total_items"]
+        total_number += res["items_in_the_bucket"]
+        number_of_buckets += 1
     return {
         "data": returned_results,
-        "total_number": total_number,
-        "total_number_of_%s" % (resource): total,
+        "total_number_of_%s" % (resource): total_number,
         "total_number_of_buckets": number_of_buckets,
-        "total_items": total_items,
     }
 
 
@@ -483,6 +482,7 @@ def search_value_for_resource(table_, value, es_index="key_value_buckets_informa
             value=value, resource=table_
         )
         res = search_index_for_value(es_index, query)
+
         return prepare_search_results(res)
     else:
         for crh in not_allowed_chars:
@@ -497,6 +497,9 @@ def search_value_for_resource(table_, value, es_index="key_value_buckets_informa
             value = "*{value}*".format(value=value)
         returned_results = {}
         for table in resource_elasticsearchindex:
+            # ignore image1 as it is used for testing
+            if table == "image1":
+                continue
             # res = es.count(index=e_index, body=query)
             query = resource_key_values_buckets_template.substitute(
                 value=value, resource=table
@@ -635,6 +638,7 @@ def get_resource_attributes(resource, mode=None, es_index="key_values_resource_c
             hits = res["hits"]["hits"]
             if len(hits) > 0:
                 returned_results[table] = hits[0]["_source"]["name"]
+
     if mode == "searchterms":
         restricted_search_terms = get_restircted_search_terms()
         restircted_resources = {}
