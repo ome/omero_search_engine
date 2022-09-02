@@ -519,22 +519,10 @@ def processor_work(lock, global_counter, val):
 
 def process_results(results, resource, global_counter, lock=None, dry_run=False):
     df = pd.DataFrame(results).replace({np.nan: None})
-    if dry_run:
-        try:
-            base_folder = "/etc/searchengine/"
-            if not os.path.isdir(base_folder):
-                base_folder = os.path.expanduser("~")
-            json_file_name = "data_{counter}.json".format(counter=global_counter.value)
-            json_file = os.path.join(base_folder, json_file_name)
-            df.to_json(json_file)
-        except Exception as e:
-            search_omero_app.logger.info("Error %s" % str(e))
-            print(df)
-    else:
-        insert_resource_data_from_df(df, resource, lock)
+    insert_resource_data_from_df(df, resource, global_counter, dry_run, lock)
 
 
-def insert_resource_data_from_df(df, resource, lock=None):
+def insert_resource_data_from_df(df, resource, global_counter, dry_lock, lock=None):
     if resource == "image":
         is_image = True
     else:
@@ -560,21 +548,37 @@ def insert_resource_data_from_df(df, resource, lock=None):
             )
 
         actions.append({"_index": es_index, "_source": record})  # ,
-    es = search_omero_app.config.get("es_connector")
-    search_omero_app.logger.info("Pushing the data to the Elasticsearch")
-    try:
-        lock.acquire()
-        res = helpers.bulk(es, actions)
-        search_omero_app.logger.info("Pushing results: %s" % str(res))
+    if dry_lock:
+        try:
+            base_folder = "/etc/searchengine/"
+            if not os.path.isdir(base_folder):
+                base_folder = os.path.expanduser("~")
+            json_file_name = "data_{counter}.json".format(counter=global_counter.value)
+            json_file = os.path.join(base_folder, json_file_name)
 
-    except Exception as err:
-        search_omero_app.logger.info("Error: %s" % str(err))
-        raise err
+            data_string = json.dumps(actions, indent=4)
+            with open(json_file, "w") as the_file:
+                the_file.write(data_string)
 
-    finally:
-        lock.release()
+        except Exception as e:
+            search_omero_app.logger.info("Error: %s" % str(e))
+            print(json.dumps(actions, indent=4))
+    else:
+        es = search_omero_app.config.get("es_connector")
+        search_omero_app.logger.info("Pushing the data to the Elasticsearch")
+        try:
+            lock.acquire()
+            res = helpers.bulk(es, actions)
+            search_omero_app.logger.info("Pushing results: %s" % str(res))
 
-    search_omero_app.logger.info("Added to search engine")
+        except Exception as err:
+            search_omero_app.logger.info("Error: %s" % str(err))
+            raise err
+
+        finally:
+            lock.release()
+
+        search_omero_app.logger.info("Added to search engine")
 
 
 def insert_project_data(folder, project_file):
