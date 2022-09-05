@@ -12,10 +12,8 @@
       "Screen Type"
    ],
    "image":[
-      "Organism",
-      "Organism Part",
       "Cell Line",
-      "Gene Name",
+      "Gene Identifier",
       "Gene Symbol",
       "Compound Name",
       "PubChem CID",
