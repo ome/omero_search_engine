@@ -32,6 +32,18 @@ mm = main_dir.replace("omero_search_engine/api/v2/resources", "")
 sys.path.append(mm)
 
 
+def adjust_value(value):
+    """
+    Adjust the value to search terms which includes * or ?
+    and support search special characters
+    """
+    if value:
+        value = value.strip().strip().lower()
+        value = value.translate({ord(c): "\\\\%s" % c for c in "*?&"})
+        value = value.translate({ord(c): "\\%s" % c for c in '"'})
+    return value
+
+
 def get_resource_annotation_table(resource_table):
     """
     return the related annotation for the resources table
@@ -314,7 +326,7 @@ def elasticsearch_query_builder(
                     )
                 )
             if operator == "contains":
-                value = "*{value}*".format(value=value)
+                value = "*{value}*".format(value=adjust_value(value))
                 # _nested_must_part.append(must_name_condition_template.substitute(name=key)) # noqa
                 if case_sensitive:
                     _nested_must_part.append(
@@ -348,7 +360,7 @@ def elasticsearch_query_builder(
             elif operator in ["not_equals", "not_contains"]:
                 # nested_must_part.append(nested_keyvalue_pair_query_template.substitute(nested=must_name_condition_template.substitute(name=key)))
                 if operator == "not_contains":
-                    value = "*{value}*".format(value=value)
+                    value = "*{value}*".format(value=adjust_value(value))
                     if case_sensitive:
                         nested_must_part.append(
                             nested_keyvalue_pair_query_template.substitute(
