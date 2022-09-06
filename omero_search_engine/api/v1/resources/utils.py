@@ -745,18 +745,29 @@ def search_index_scrol(index_name, query):
     return results
 
 
-def mange_pagination(page,total_pages, bookmaek, pagination_dict):
+def mange_pagination(page, total_pages, cur_bookmark,next_bookmark, pagination_dict):
     '''
     This add keep track of pages
     '''
     if not pagination_dict:
         pagination_dict={}
         pagination_dict["total_pages"]=total_pages
+        pagination_dict["page_records"] = []
 
     if not pagination_dict.get("page_records"):
         pagination_dict["page_records"]=[]
 
     page_records=pagination_dict["page_records"]
+    cur_page_record={"page":page,"bookmark":next_bookmark}
+    is_it_added = False
+    if len(page_records)>0:
+        for page_record in page_records:
+            if page_record.get("page")==page:
+                is_it_added=True
+                break
+    elif not is_it_added or len(page_records)==0:
+        page_records.append(cur_page_record)
+
 
     pass
 
