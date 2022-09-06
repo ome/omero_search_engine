@@ -25,6 +25,7 @@ import os
 from omero_search_engine.api.v1.resources.utils import (
     resource_elasticsearchindex,
     build_error_message,
+    adjust_value,
 )
 import math
 
@@ -393,18 +394,6 @@ def get_key_values_return_contents(name, resource, csv):
             )
 
     return jsonify(resource_keys)
-
-
-def adjust_value(value):
-    """
-    Adjust the value to search terms which includes * or ?
-    and support search special characters
-    """
-    if value:
-        value = value.strip().strip().lower()
-        value = value.translate({ord(c): "\\\\%s" % c for c in "*?&"})
-        value = value.translate({ord(c): "\\%s" % c for c in '"'})
-    return value
 
 
 def query_cashed_bucket_part_value_keys(
