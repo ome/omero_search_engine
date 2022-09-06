@@ -745,6 +745,21 @@ def search_index_scrol(index_name, query):
     return results
 
 
+def mange_pagination(page,total_pages, bookmaek, pagination_dict):
+    '''
+    This add keep track of pages
+    '''
+    if not pagination_dict:
+        pagination_dict={}
+        pagination_dict["total_pages"]=total_pages
+
+    if not pagination_dict.get("page_records"):
+        pagination_dict["page_records"]=[]
+
+    page_records=pagination_dict["page_records"]
+
+    pass
+
 def search_index_using_search_after(
     e_index, query, page, bookmark_, return_containers, ret_type=None
 ):
