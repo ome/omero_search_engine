@@ -395,7 +395,7 @@ def get_key_values_return_contents(name, resource, csv):
     return jsonify(resource_keys)
 
 
-def adjuest_value(value):
+def adjust_value(value):
     """
     Adjust the value to search terms which includes * or ?
     and support search special characters
@@ -419,7 +419,7 @@ def query_cashed_bucket_part_value_keys(
     """
     if name:
         name = name.strip()
-    value = adjuest_value(value)
+    value = adjust_value(value)
     if resource != "all":
         query = key_part_values_buckets_template.substitute(
             name=name, value=value, resource=resource
@@ -469,7 +469,7 @@ def search_value_for_resource(table_, value, es_index="key_value_buckets_informa
     send the request to elasticsearch and format the results
     It support wildcard operations only
     """
-    value = adjuest_value(value)
+    value = adjust_value(value)
 
     if table_ != "all":
         query = resource_key_values_buckets_template.substitute(
