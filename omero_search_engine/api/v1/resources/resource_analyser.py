@@ -135,6 +135,7 @@ def search_index_for_values_get_all_buckets(e_index, query):
                 "order": "asc",
             }
         },
+        {"items_in_the_bucket": "desc"},
         {"id": "asc"},
     ]
     co = 0
@@ -156,7 +157,8 @@ def search_index_for_values_get_all_buckets(e_index, query):
             return returened_results
         bookmark = [
             int(res["hits"]["hits"][-1]["sort"][0]),
-            res["hits"]["hits"][-1]["sort"][1],
+            int(res["hits"]["hits"][-1]["sort"][1]),
+            res["hits"]["hits"][-1]["sort"][2],
         ]
     return returened_results
 
@@ -337,11 +339,12 @@ def prepare_search_results(results, size=0):
 
     if size > 0:
         results_dict["total_number_of_all_buckets "] = size
-        if total_number < size:
+        if number_of_buckets < size:
             # this should be later to get the next page
             results_dict["bookmark"] = [
                 int(results["hits"]["hits"][-1]["sort"][0]),
-                results["hits"]["hits"][-1]["sort"][1],
+                int(results["hits"]["hits"][-1]["sort"][1]),
+                results["hits"]["hits"][-1]["sort"][2],
             ]
     return results_dict
 
@@ -587,7 +590,7 @@ resource_key_values_buckets_template = Template(
         "script": "doc['Value.keyvaluenormalize'].value.length()",
         "type": "number",
         "order": "asc"
-    }},{"id": "asc"}]}"""
+    }},{"items_in_the_bucket": "desc"}, {"id": "asc"}]}"""
 )
 
 key_values_buckets_template_2 = Template(
