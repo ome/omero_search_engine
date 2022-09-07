@@ -109,6 +109,7 @@ def search_index_for_value(e_index, query, get_size=False):
     res = es.search(index=e_index, body=query)
     return res
 
+
 def search_index_for_values_get_all_buckets(e_index, query):
     """
     Perform search the elastcisearch using value and
@@ -126,16 +127,15 @@ def search_index_for_values_get_all_buckets(e_index, query):
     # res = es.count(index=e_index, body=query)
     size = res["count"]
     query["size"] = page_size
-
     query["sort"] = [
         {
-       "_script": {
-           "script": "doc['Value.keyvaluenormalize'].value.length()",
-           "type": "number",
-           "order": "asc",
-       }
-    },
-        {"id": "asc"}
+            "_script": {
+                "script": "doc['Value.keyvaluenormalize'].value.length()",
+                "type": "number",
+                "order": "asc",
+            }
+        },
+        {"id": "asc"},
     ]
     co = 0
     while co < size:
@@ -154,7 +154,10 @@ def search_index_for_values_get_all_buckets(e_index, query):
                 % (co, size)
             )
             return returened_results
-        bookmark = [int (res["hits"]["hits"][-1]["sort"][0]), res["hits"]["hits"][-1]["sort"][1]]
+        bookmark = [
+            int(res["hits"]["hits"][-1]["sort"][0]),
+            res["hits"]["hits"][-1]["sort"][1],
+        ]
     return returened_results
 
 
@@ -302,8 +305,6 @@ def get_values_for_a_key(table_, key):
 
 
 def prepare_search_results(results, size=0):
-    print (results)
-    print ("=================roro")
     returned_results = []
     total_number = 0
     number_of_buckets = 0
@@ -328,16 +329,20 @@ def prepare_search_results(results, size=0):
         total_number += res["items_in_the_bucket"]
         number_of_buckets += 1
 
-    results_dict= {
+    results_dict = {
         "data": returned_results,
         "total_number_of_%s" % (resource): total_number,
         "total_number_of_buckets": number_of_buckets,
     }
-    if size>0 and  total_number!=size:
-        results_dict["total_number_all_results "]=size
-        results_dict["bookmark"] = [int(results["hits"]["hits"][-1]["sort"][0]), results["hits"]["hits"][-1]["sort"][1]]
-        print (results_dict["bookmark"] )
 
+    if size > 0:
+        results_dict["total_number_of_all_buckets "] = size
+        if total_number < size:
+            # this should be later to get the next page
+            results_dict["bookmark"] = [
+                int(results["hits"]["hits"][-1]["sort"][0]),
+                results["hits"]["hits"][-1]["sort"][1],
+            ]
     return results_dict
 
 
@@ -356,7 +361,7 @@ def prepare_search_results_buckets(results_):
             resource = res.get("resource")
             row["Number of %ss" % resource] = res.get("items_in_the_bucket")
             total_number += res["items_in_the_bucket"]
-            number_of_buckets +=1
+            number_of_buckets += 1
     return {
         "data": returned_results,
         "total_number_of_%s" % (resource): total_number,
@@ -478,16 +483,13 @@ def search_value_for_resource(table_, value, es_index="key_value_buckets_informa
         query = resource_key_values_buckets_template.substitute(
             value=value, resource=table_
         )
-        qq=resource_key_values_buckets_size_template.substitute(
+        size_query = resource_key_values_buckets_size_template.substitute(
             value=value, resource=table_
         )
-        res = search_index_for_value(es_index, qq, True)
-        size= (res["count"])
-
+        # Get the total number of the results.
+        res = search_index_for_value(es_index, size_query, True)
+        size = res["count"]
         res = search_index_for_value(es_index, query)
-
-        print ("================TOOOZ")
-
         return prepare_search_results(res, size)
     else:
         # If the user does not specify anything,
