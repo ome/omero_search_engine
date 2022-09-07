@@ -95,7 +95,7 @@ values_for_key_template = Template(
 )
 
 
-def search_index_for_value(e_index, query):
+def search_index_for_value(e_index, query, get_size=False):
     """
     Perform search the elastcisearch using value and
     return all the key values whihch this value has been used,
@@ -104,9 +104,10 @@ def search_index_for_value(e_index, query):
     to the elasticsearcg hosting machine
     """
     es = search_omero_app.config.get("es_connector")
+    if get_size:
+        return es.count(index=e_index, body=query)
     res = es.search(index=e_index, body=query)
     return res
-
 
 def search_index_for_values_get_all_buckets(e_index, query):
     """
@@ -125,7 +126,17 @@ def search_index_for_values_get_all_buckets(e_index, query):
     # res = es.count(index=e_index, body=query)
     size = res["count"]
     query["size"] = page_size
-    query["sort"] = [{"id": "asc"}]
+
+    query["sort"] = [
+        {
+       "_script": {
+           "script": "doc['Value.keyvaluenormalize'].value.length()",
+           "type": "number",
+           "order": "asc",
+       }
+    },
+        {"id": "asc"}
+    ]
     co = 0
     while co < size:
         if co != 0:
@@ -143,7 +154,7 @@ def search_index_for_values_get_all_buckets(e_index, query):
                 % (co, size)
             )
             return returened_results
-        bookmark = [res["hits"]["hits"][-1]["sort"][0]]
+        bookmark = [int (res["hits"]["hits"][-1]["sort"][0]), res["hits"]["hits"][-1]["sort"][1]]
     return returened_results
 
 
@@ -290,7 +301,9 @@ def get_values_for_a_key(table_, key):
     }
 
 
-def prepare_search_results(results):
+def prepare_search_results(results, size=0):
+    print (results)
+    print ("=================roro")
     returned_results = []
     total_number = 0
     number_of_buckets = 0
@@ -314,18 +327,23 @@ def prepare_search_results(results):
         row["Number of %ss" % resource] = res.get("items_in_the_bucket")
         total_number += res["items_in_the_bucket"]
         number_of_buckets += 1
-    return {
+
+    results_dict= {
         "data": returned_results,
         "total_number_of_%s" % (resource): total_number,
         "total_number_of_buckets": number_of_buckets,
     }
+    if size>0 and  total_number!=size:
+        results_dict["total_number_all_results "]=size
+        results_dict["bookmark"] = [int(results["hits"]["hits"][-1]["sort"][0]), results["hits"]["hits"][-1]["sort"][1]]
+        print (results_dict["bookmark"] )
+
+    return results_dict
 
 
 def prepare_search_results_buckets(results_):
     returned_results = []
-    total = 0
     total_number = 0
-    total_items = 0
     number_of_buckets = 0
     resource = None
     for results in results_:
@@ -337,15 +355,12 @@ def prepare_search_results_buckets(results_):
             row["Value"] = res["Value"]
             resource = res.get("resource")
             row["Number of %ss" % resource] = res.get("items_in_the_bucket")
-            total_number = res["total_items_in_saved_buckets"]
-            number_of_buckets = res["total_buckets"]
-            total_items = res["total_items"]
+            total_number += res["items_in_the_bucket"]
+            number_of_buckets +=1
     return {
         "data": returned_results,
-        "total_number": total_number,
-        "total_number_of_%s" % (resource): total,
+        "total_number_of_%s" % (resource): total_number,
         "total_number_of_buckets": number_of_buckets,
-        "total_items": total_items,
     }
 
 
@@ -463,9 +478,17 @@ def search_value_for_resource(table_, value, es_index="key_value_buckets_informa
         query = resource_key_values_buckets_template.substitute(
             value=value, resource=table_
         )
+        qq=resource_key_values_buckets_size_template.substitute(
+            value=value, resource=table_
+        )
+        res = search_index_for_value(es_index, qq, True)
+        size= (res["count"])
+
         res = search_index_for_value(es_index, query)
 
-        return prepare_search_results(res)
+        print ("================TOOOZ")
+
+        return prepare_search_results(res, size)
     else:
         # If the user does not specify anything,
         # it will add * at the start and at the end to
@@ -544,6 +567,13 @@ value_all_buckets_template = Template(
 {"Value.keyvaluenormalize":"*$value*"}}}}]}},"size": 9999}"""
 )
 
+resource_key_values_buckets_size_template = Template(
+    """
+{"query":{"bool":{"must":[{"bool":{
+"must":{"wildcard":{"Value.keyvaluenormalize":"*$value*"}}}},{
+"bool": {"must": {"match":
+{"resource.keyresource": "$resource"}}}}]}}}"""
+)
 
 resource_key_values_buckets_template = Template(
     """
@@ -551,9 +581,12 @@ resource_key_values_buckets_template = Template(
 "must":{"wildcard":{"Value.keyvaluenormalize":"*$value*"}}}},{
 "bool": {"must": {"match":
 {"resource.keyresource": "$resource"}}}}]}},
-"size": 9999, "sort": [{"items_in_the_bucket": "desc"}]}"""
+"size": 9999, "sort":[{ "_script": {
+        "script": "doc['Value.keyvaluenormalize'].value.length()",
+        "type": "number",
+        "order": "asc"
+    }},{"id": "asc"}]}"""
 )
-
 
 key_values_buckets_template_2 = Template(
     """
