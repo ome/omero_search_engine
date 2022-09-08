@@ -25,11 +25,9 @@ import os
 from omero_search_engine.api.v1.resources.utils import (
     resource_elasticsearchindex,
     build_error_message,
+    adjust_value,
 )
 import math
-
-
-not_allowed_chars = ['"', "\\"]
 
 key_number_search_template = Template(
     """
@@ -409,10 +407,7 @@ def query_cashed_bucket_part_value_keys(
     """
     if name:
         name = name.strip()
-    if value:
-        value = value.strip()
-        if "*" not in value and "?" not in value:
-            value = "*%s*" % value
+    value = adjust_value(value)
     if resource != "all":
         query = key_part_values_buckets_template.substitute(
             name=name, value=value, resource=resource
@@ -462,22 +457,9 @@ def search_value_for_resource(table_, value, es_index="key_value_buckets_informa
     send the request to elasticsearch and format the results
     It support wildcard operations only
     """
-    if value:
-        value = value.strip().lower()
+    value = adjust_value(value)
 
-    # query=value_all_buckets_template.substitute(value=value)
-    # check the the value, if contains ", it will remove it
-
-    # check thevalue if contains \ it wil replaced it with \\
-
-    # the if the value does not contain *, it will make it
-    # generic wildcard by adding * at the start and at the end
     if table_ != "all":
-        if '"' in value:
-            value = value.replace('"', "")
-        elif "\\" in value:
-            value = value.replace("\\", "\\\\")
-        value = "*{value}*".format(value=value)
         query = resource_key_values_buckets_template.substitute(
             value=value, resource=table_
         )
@@ -485,16 +467,9 @@ def search_value_for_resource(table_, value, es_index="key_value_buckets_informa
 
         return prepare_search_results(res)
     else:
-        for crh in not_allowed_chars:
-            if crh in value:
-                return build_error_message(
-                    " , ".join(not_allowed_chars) + " are not allowed in the query term"
-                )
         # If the user does not specify anything,
         # it will add * at the start and at the end to
         # return all the values which contain the search term
-        if "*" not in value and "?" not in value:
-            value = "*{value}*".format(value=value)
         returned_results = {}
         for table in resource_elasticsearchindex:
             # ignore image1 as it is used for testing
@@ -528,7 +503,7 @@ key_part_values_buckets_template = Template(
     """
 {"query":{"bool":{"must":[{"bool":{
 "must":[{"match":{"Attribute.keyrnamenormalize":"$name"}},
-{"wildcard":{"Value.keyvaluenormalize":"$value"}}
+{"wildcard":{"Value.keyvaluenormalize":"*$value*"}}
 ]
 }},{
 "bool": {"must": [
@@ -573,7 +548,7 @@ value_all_buckets_template = Template(
 resource_key_values_buckets_template = Template(
     """
 {"query":{"bool":{"must":[{"bool":{
-"must":{"wildcard":{"Value.keyvaluenormalize":"$value"}}}},{
+"must":{"wildcard":{"Value.keyvaluenormalize":"*$value*"}}}},{
 "bool": {"must": {"match":
 {"resource.keyresource": "$resource"}}}}]}},
 "size": 9999, "sort": [{"items_in_the_bucket": "desc"}]}"""
