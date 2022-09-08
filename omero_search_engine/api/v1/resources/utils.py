@@ -745,34 +745,79 @@ def search_index_scrol(index_name, query):
     return results
 
 
-def mange_pagination(page, total_pages, cur_bookmark,next_bookmark, pagination_dict):
+def get_bookmark(pagination_dict):
     '''
-    This add keep track of pages
+    get book mark from the pagination section if the the request does not contain bookmark
+    '''
+    if pagination_dict:
+        n_p=pagination_dict.get("next_page")
+        bookmark=None
+        for page_rcd in pagination_dict.get("page_records"):
+            if page_rcd.get("page")==n_p:
+                bookmark=page_rcd.get("bookmark")
+                break
+        return bookmark
+
+def set_pagination(total_pages, next_bookmark, pagination_dict):
+    '''
+    This keeps track of pages, it can be used in UI to lood pages (next by default)
+
+    {
+       "current_page":4,
+       "next_page":5,
+       "page_records":[
+          {
+             "bookmark":[
+                304586
+             ],
+             "page":2
+          },
+          {
+             "bookmark":[
+                643303
+             ],
+             "page":3
+          },
+          {
+             "bookmark":[
+                1362671
+             ],
+             "page":4
+          },
+          {
+             "bookmark":[
+                1459210
+             ],
+             "page":5
+          }
+       ],
+       "total_pages":13
+        }
     '''
     if not pagination_dict:
         pagination_dict={}
         pagination_dict["total_pages"]=total_pages
-        pagination_dict["page_records"] = []
+        page_rcds=[]
+        pagination_dict["page_records"] = page_rcds
+        pagination_dict["current_page"]=1
+        pagination_dict["next_page"] = 2
+        page_rcds.append({"page": 2, "bookmark": next_bookmark})
+        return pagination_dict
+    pagination_dict["current_page"]=pagination_dict["next_page"]
+    if pagination_dict["current_page"]== total_pages:
+        pagination_dict["next_page"]=None
+        return pagination_dict
+    pagination_dict["next_page"] = pagination_dict["next_page"]+1
+    if not get_bookmark(pagination_dict):
+        next_page_record = {"page": pagination_dict["current_page"]+1, "bookmark": next_bookmark}
+        page_records=pagination_dict.get("page_records")
+        page_records.append(next_page_record)
+    return pagination_dict
 
-    if not pagination_dict.get("page_records"):
-        pagination_dict["page_records"]=[]
 
-    page_records=pagination_dict["page_records"]
-    cur_page_record={"page":page,"bookmark":next_bookmark}
-    is_it_added = False
-    if len(page_records)>0:
-        for page_record in page_records:
-            if page_record.get("page")==page:
-                is_it_added=True
-                break
-    elif not is_it_added or len(page_records)==0:
-        page_records.append(cur_page_record)
-
-
-    pass
 
 def search_index_using_search_after(
-    e_index, query, page, bookmark_, return_containers, ret_type=None
+    e_index, query, page, bookmark_, pagination_dict, return_containers,  ret_type=None
 ):
     returned_results = []
     if not page:
@@ -804,6 +849,8 @@ def search_index_using_search_after(
     no_of_pages = (int)(size / page_size) + add_to_page
     search_omero_app.logger.info("No of pages: %s" % no_of_pages)
     query["sort"] = [{"id": "asc"}]
+    if not bookmark_ and pagination_dict:
+        bookmark_.get_bookmark(pagination_dict)
     if not bookmark_:
         result = es.search(index=e_index, body=query)
         if len(result["hits"]["hits"]) == 0:
@@ -825,12 +872,14 @@ def search_index_using_search_after(
             return returned_results
         bookmark = [res["hits"]["hits"][-1]["sort"][0]]
         page += 1
+    pagination_dict=set_pagination( no_of_pages, bookmark, pagination_dict)
     return {
         "results": returned_results,
         "total_pages": no_of_pages,
         "bookmark": bookmark,
         "size": size,
         "page": page,
+        "pagination": pagination_dict
     }
 
 
@@ -850,6 +899,7 @@ def search_resource_annotation(
     raw_elasticsearch_query=None,
     page=None,
     bookmark=None,
+    pagination_dict=None,
     return_containers=False,
 ):
     """
@@ -864,6 +914,8 @@ def search_resource_annotation(
                 "{table_} is not a valid resurce".format(table_=table_)
             )
         query_details = query.get("query_details")
+        print (pagination_dict)
+        print ("########################2")
 
         start_time = time.time()
         if not raw_elasticsearch_query:
@@ -913,21 +965,21 @@ def search_resource_annotation(
             )
             query["_source"] = {"includes": [""]}
             res = search_index_using_search_after(
-                res_index, query, page, bookmark, return_containers, "project"
+                res_index, query, page, bookmark, pagination_dict, return_containers, "project"
             )
             query["aggs"] = json.loads(
                 count_attr_template.substitute(field="screen_name.keyvalue")
             )
 
             res_2 = search_index_using_search_after(
-                res_index, query, page, bookmark, return_containers, "screen"
+                res_index, query, page, bookmark,pagination_dict,  return_containers, "screen"
             )
             # Combines the containers results
             studies = res + res_2
             res = {"results": studies}
         else:
             res = search_index_using_search_after(
-                res_index, query, page, bookmark, return_containers
+                res_index, query, page, bookmark,pagination_dict, return_containers
             )
         notice = ""
         end_time = time.time()

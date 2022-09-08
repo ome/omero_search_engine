@@ -79,6 +79,7 @@ def search_resource_page(resource_table):
             page = data.get("page")
             bookmark = data.get("bookmark")
             raw_elasticsearch_query = data.get("raw_elasticsearch_query")
+            pagination_dict = data.get("pagination")
             return_containers = data.get("return_containers")
             if return_containers:
                 return_containers = json.loads(return_containers.lower())
@@ -89,6 +90,7 @@ def search_resource_page(resource_table):
                 raw_elasticsearch_query=raw_elasticsearch_query,
                 page=page,
                 bookmark=bookmark,
+                pagination_dict=pagination_dict,
                 return_containers=return_containers,
             )
             return jsonify(resource_list)
