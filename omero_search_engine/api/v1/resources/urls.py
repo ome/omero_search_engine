@@ -76,7 +76,6 @@ def search_resource_page(resource_table):
         query = data["query"]
         validation_results = query_validator(query)
         if validation_results == "OK":
-            page = data.get("page")
             bookmark = data.get("bookmark")
             raw_elasticsearch_query = data.get("raw_elasticsearch_query")
             pagination_dict = data.get("pagination")
@@ -88,7 +87,6 @@ def search_resource_page(resource_table):
                 resource_table,
                 query,
                 raw_elasticsearch_query=raw_elasticsearch_query,
-                page=page,
                 bookmark=bookmark,
                 pagination_dict=pagination_dict,
                 return_containers=return_containers,

@@ -289,6 +289,8 @@ class Validator(object):
             None,
             return_containers=True,
         )
+        print (search_engine_results["results"])
+        print ("======================")
         if search_engine_results["results"].get("results"):
             for item in search_engine_results["results"].get("results"):
                 if item["type"] == "screen":
@@ -328,7 +330,7 @@ class Validator(object):
             no_results_postgresql = len(screens_results_idr) + len(projects_results_idr)
             if no_results_postgresql == no_results_searchengine:
                 mes = (
-                    "The number of the results from PostgreSQL "
+                    "The number of the results (containers) from PostgreSQL "
                     "and the Searchengine (%s) are equal" % no_results_postgresql
                 )
                 mess.append(mes)

@@ -393,7 +393,6 @@ def search_query(
                 resource,
                 q_data.get("query"),
                 raw_elasticsearch_query=raw_elasticsearch_query,
-                page=query.get("page"),
                 bookmark=bookmark,
                 return_containers=return_containers,
             )

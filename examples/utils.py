@@ -74,9 +74,8 @@ def query_the_search_ending(query, main_attributes):
     total_pages = returned_results["results"]["total_pages"]
     page = 1
     logging.info(
-        "bookmark: %s, page: %s, received results: %s"
+        "page: %s, received results: %s"
         % (
-            bookmark,
             (str(page) + "/" + str(total_pages)),
             (str(received_results) + "/" + str(total_results)),
         )
@@ -97,7 +96,6 @@ def query_the_search_ending(query, main_attributes):
         except Exception as e:
             logging.info("%s, Error: %s" % (resp.text, e))
             return
-        bookmark = returned_results["results"]["bookmark"]
         received_results = received_results + len(
             returned_results["results"]["results"]
         )
@@ -112,6 +110,7 @@ def query_the_search_ending(query, main_attributes):
                 (str(received_results) + "/" + str(total_results)),
             )
         )
+        bookmark = returned_results["results"]["bookmark"]
 
     logging.info("Total received results: %s" % len(received_results_data))
     return received_results_data
