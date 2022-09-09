@@ -60,4 +60,5 @@ res = json.loads(resp.text)
 buckets = res.get("data")
 logging.info("Number of available buckets for attribute %s is %s" % (key, len(buckets)))
 # The first bucket
-logging.info("First bucket: %s " % buckets[0])
+for bucket in buckets:
+    logging.info("Bucket details: %s " % bucket)
