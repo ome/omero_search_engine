@@ -116,13 +116,18 @@ bookmark, total_results = call_omero_searchengine_return_results(
     submit_query_url, data=query_data_json
 )
 
+logging.info(
+    "page: %s, / %s received results: %s / %s"
+    % (page, total_pages, len(received_results), total_results)
+)
+
 while len(received_results) < total_results:
 
     page += 1
     query_data_ = {"query_details": {"and_filters": and_filters}, "bookmark": bookmark}
     query_data_json_ = json.dumps(query_data_)
 
-    bookmark, total_results = call_omero_searchengine_return_results(
+    next_bookmark, total_results = call_omero_searchengine_return_results(
         submit_query_url, data=query_data_json_
     )
 
@@ -130,3 +135,4 @@ while len(received_results) < total_results:
         "bookmark: %s, page: %s, / %s received results: %s / %s"
         % (bookmark, page, total_pages, len(received_results), total_results)
     )
+    bookmark=next_bookmark

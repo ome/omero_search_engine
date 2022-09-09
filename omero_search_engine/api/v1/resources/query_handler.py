@@ -158,6 +158,7 @@ class QueryRunner(
         or_query_group,
         case_sensitive,
         bookmark,
+        pagination_dict,
         raw_elasticsearch_query,
         columns_def,
         return_columns,
@@ -167,6 +168,7 @@ class QueryRunner(
         self.and_query_group = and_query_group
         self.case_sensitive = case_sensitive
         self.bookmark = bookmark
+        self.pagination_dict=pagination_dict
         self.columns_def = columns_def
         self.raw_elasticsearch_query = raw_elasticsearch_query
         self.image_query = {}
@@ -333,8 +335,10 @@ class QueryRunner(
         #    return {"Error": "Your query returns no results"}
         if resource == "image":
             bookmark = self.bookmark
+            pagination_dict=self.pagination_dict
         else:
             bookmark = None
+            pagination_dict=None
 
         # res = search_query(query, resource, bookmark,
         #                    self.raw_elasticsearch_query,
@@ -344,13 +348,14 @@ class QueryRunner(
                 query,
                 resource,
                 bookmark,
+                pagination_dict,
                 self.raw_elasticsearch_query,
                 main_attributes,
                 return_containers=self.return_containers,
             )
         else:
             res = search_query(
-                query, resource, bookmark, self.raw_elasticsearch_query, main_attributes
+                query, resource, bookmark,pagination_dict, self.raw_elasticsearch_query, main_attributes
             )
 
         if resource != "image":
@@ -365,6 +370,7 @@ def search_query(
     query,
     resource,
     bookmark,
+    pagination_dict,
     raw_elasticsearch_query,
     main_attributes=None,
     return_containers=False,
@@ -386,14 +392,16 @@ def search_query(
     else:
         q_data = {"query": {"query_details": query, "main_attributes": main_attributes}}
     try:
-        if bookmark:
+        if bookmark or pagination_dict:
             q_data["bookmark"] = bookmark
+            q_data["pagination"] = pagination_dict
             q_data["raw_elasticsearch_query"] = raw_elasticsearch_query
             ress = search_resource_annotation(
                 resource,
                 q_data.get("query"),
                 raw_elasticsearch_query=raw_elasticsearch_query,
                 bookmark=bookmark,
+                pagination_dict=pagination_dict,
                 return_containers=return_containers,
             )
         else:
@@ -551,6 +559,7 @@ def determine_search_results_(query_, return_columns=False, return_containers=Fa
         case_sensitive = False
 
     bookmark = query_.get("bookmark")
+    pagination_dict = query_.get("pagination")
     raw_elasticsearch_query = query_.get("raw_elasticsearch_query")
     and_filters = query_.get("query_details").get("and_filters")
     or_filters = query_.get("query_details").get("or_filters")
@@ -604,6 +613,7 @@ def determine_search_results_(query_, return_columns=False, return_containers=Fa
         or_query_groups,
         case_sensitive,
         bookmark,
+        pagination_dict,
         raw_elasticsearch_query,
         columns_def,
         return_columns,
