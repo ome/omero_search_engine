@@ -79,9 +79,7 @@ data = {
 }
 
 resp = requests.post(submit_query_url, data=json.dumps(data))
-ss=resp.text
 returned_results = json.loads(resp.text)
-print (returned_results)
 if returned_results.get("results"):
     if len(returned_results.get("results").get("results")) == 0:
         logging.info("No results is found")

@@ -33,20 +33,21 @@ received_results = []
 page = 1
 ids = []
 total_pages = 0
-pagination_dict=None
-next_page=None
+pagination_dict = None
+next_page = None
+
 
 def get_current_page_bookmark(pagination_dict):
-    current_page=pagination_dict["current_page"]
-    bookmark=None
+    current_page = pagination_dict["current_page"]
+    bookmark = None
     for page_rcd in pagination_dict["page_records"]:
-        if page_rcd["page"]==current_page:
-            bookmark= page_rcd["bookmark"]
+        if page_rcd["page"] == current_page:
+            bookmark = page_rcd["bookmark"]
     return current_page, bookmark
 
 
 def call_omero_searchengine_return_results(url, data=None, method="post"):
-    global page, total_pages,pagination_dict, next_page
+    global page, total_pages, pagination_dict, next_page
     if method == "post":
         resp = requests.post(url, data=data)
     else:
@@ -63,11 +64,11 @@ def call_omero_searchengine_return_results(url, data=None, method="post"):
         # get the bookmark which will be used to call
         # the next page of the results
         pagination_dict = returned_results["results"].get("pagination")
-        page, bookmark=get_current_page_bookmark(pagination_dict)
-        page=pagination_dict.get("current_page")
+        page, bookmark = get_current_page_bookmark(pagination_dict)
+        page = pagination_dict.get("current_page")
         # get the size of the total results
         total_pages = pagination_dict.get("total_pages")
-        next_page= pagination_dict.get("next_page")
+        next_page = pagination_dict.get("next_page")
 
         total_results = returned_results["results"]["size"]
 
@@ -129,8 +130,11 @@ logging.info(
     % (page, total_pages, len(received_results), total_results)
 )
 
-while next_page:#len(received_results) < total_results:
-    query_data_ = {"query_details": {"and_filters": and_filters}, "pagination": pagination_dict}
+while next_page:  # len(received_results) < total_results:
+    query_data_ = {
+        "query_details": {"and_filters": and_filters},
+        "pagination": pagination_dict,
+    }
     query_data_json_ = json.dumps(query_data_)
 
     bookmark, total_results = call_omero_searchengine_return_results(

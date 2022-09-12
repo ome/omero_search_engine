@@ -135,4 +135,4 @@ while len(received_results) < total_results:
         "bookmark: %s, page: %s, / %s received results: %s / %s"
         % (bookmark, page, total_pages, len(received_results), total_results)
     )
-    bookmark=next_bookmark
+    bookmark = next_bookmark

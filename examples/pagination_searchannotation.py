@@ -31,11 +31,13 @@ base_url = "http://127.0.0.1:5577/api/v1/"
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
+
 def get_bookmark(pagination_dict):
-    next_page=pagination_dict["next_page"]
+    next_page = pagination_dict["next_page"]
     for page_rcd in pagination_dict["page_records"]:
-        if page_rcd["page"]==next_page:
+        if page_rcd["page"] == next_page:
             return page_rcd["bookmark"]
+
 
 def find_all_the_results(query, main_attributes):
     received_results_data = []
@@ -81,19 +83,19 @@ def find_all_the_results(query, main_attributes):
     logging.info(
         "page: %s, received results: %s"
         % (
-             (str(page) + "/" + str(total_pages)),
+            (str(page) + "/" + str(total_pages)),
             (str(received_results) + "/" + str(total_results)),
         )
     )
-    #it is not used in the request, it is used to comapre requests using
-    #pagination and bookmark
+    # it is not used in the request, it is used to comapre requests using
+    # pagination and bookmark
     bookmark = get_bookmark(pagination_dict)
-    page=pagination_dict["next_page"]
-    ids=[]
+    page = pagination_dict["next_page"]
+    ids = []
     while page:
         query_data = {
             "query": {"query_details": returned_results["query_details"]},
-            "pagination": pagination_dict
+            "pagination": pagination_dict,
         }
         query_data_json = json.dumps(query_data)
         resp = requests.post(
@@ -106,15 +108,15 @@ def find_all_the_results(query, main_attributes):
             logging.info("%s, Error: %s" % (resp.text, e))
             return
 
-        #bookmark = returned_results["results"].get("bookmark")
+        # bookmark = returned_results["results"].get("bookmark")
         pagination_dict = returned_results["results"].get("pagination")
 
         received_results = received_results + len(
             returned_results["results"]["results"]
         )
         for res in returned_results["results"]["results"]:
-            if res['id'] in ids:
-                raise Exception ("Image id %s is added before."%res["id"])
+            if res["id"] in ids:
+                raise Exception("Image id %s is added before." % res["id"])
             ids.append(res["id"])
             received_results_data.append(res)
 
@@ -127,11 +129,10 @@ def find_all_the_results(query, main_attributes):
             )
         )
         page = pagination_dict.get("next_page")
-        bookmark=get_bookmark(pagination_dict)
+        bookmark = get_bookmark(pagination_dict)
 
     logging.info("Total received results: %s" % len(received_results_data))
     return received_results_data
-
 
 
 # Find images of cells where a specific gene was targeted

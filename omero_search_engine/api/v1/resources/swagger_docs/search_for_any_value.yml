@@ -14,6 +14,11 @@ parameters:
     in: query
     type: string
     required: true
+  - name: bookmark
+    description: search term (should not be used with "all"), a comma-delimited string, e.g. 4,9, 44a90c1a-3271-448a-ba60-c391f885bc34
+    in: query
+    type: string
+    required: false
   - name: key
     description: search term
     in: query

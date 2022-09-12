@@ -168,7 +168,7 @@ class QueryRunner(
         self.and_query_group = and_query_group
         self.case_sensitive = case_sensitive
         self.bookmark = bookmark
-        self.pagination_dict=pagination_dict
+        self.pagination_dict = pagination_dict
         self.columns_def = columns_def
         self.raw_elasticsearch_query = raw_elasticsearch_query
         self.image_query = {}
@@ -335,10 +335,10 @@ class QueryRunner(
         #    return {"Error": "Your query returns no results"}
         if resource == "image":
             bookmark = self.bookmark
-            pagination_dict=self.pagination_dict
+            pagination_dict = self.pagination_dict
         else:
             bookmark = None
-            pagination_dict=None
+            pagination_dict = None
 
         # res = search_query(query, resource, bookmark,
         #                    self.raw_elasticsearch_query,
@@ -355,7 +355,12 @@ class QueryRunner(
             )
         else:
             res = search_query(
-                query, resource, bookmark,pagination_dict, self.raw_elasticsearch_query, main_attributes
+                query,
+                resource,
+                bookmark,
+                pagination_dict,
+                self.raw_elasticsearch_query,
+                main_attributes,
             )
 
         if resource != "image":

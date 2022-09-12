@@ -747,7 +747,8 @@ def search_index_scrol(index_name, query):
 
 def get_bookmark(pagination_dict):
     """
-    get book mark from the pagination section if the the request does not contain bookmark
+    get book mark from the pagination section
+    if the the request does not contain bookmark
     """
     bookmark = None
     if pagination_dict:
@@ -760,7 +761,7 @@ def get_bookmark(pagination_dict):
     return bookmark
 
 
-def set_pagination(total_pages, next_bookmark, pagination_dict):
+def get_pagination(total_pages, next_bookmark, pagination_dict):
     """
     This keeps track of pages, it can be used to track and lood pages (next by default)
 
@@ -827,6 +828,10 @@ def search_index_using_search_after(
     e_index, query, bookmark_, pagination_dict, return_containers, ret_type=None
 ):
     returned_results = []
+    if bookmark_ and not pagination_dict:
+        add_paination = False
+    else:
+        add_paination = True
 
     es = search_omero_app.config.get("es_connector")
     if return_containers:
@@ -877,14 +882,16 @@ def search_index_using_search_after(
             search_omero_app.logger.info("No result is found")
             return returned_results
         bookmark = [res["hits"]["hits"][-1]["sort"][0]]
-    pagination_dict = set_pagination(no_of_pages, bookmark, pagination_dict)
-    return {
+    results_dict = {
         "results": returned_results,
         "total_pages": no_of_pages,
         "bookmark": bookmark,
         "size": size,
-        "pagination": pagination_dict,
     }
+    if add_paination:
+        pagination_dict = get_pagination(no_of_pages, bookmark, pagination_dict)
+        results_dict["pagination"] = pagination_dict
+    return results_dict
 
 
 def handle_query(table_, query):
