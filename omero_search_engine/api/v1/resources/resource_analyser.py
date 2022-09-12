@@ -336,16 +336,18 @@ def prepare_search_results(results, size=0):
         "total_number_of_%s" % (resource): total_number,
         "total_number_of_buckets": number_of_buckets,
     }
-
     if size > 0:
-        results_dict["total_number_of_all_buckets "] = size
+        results_dict["total_number_of_all_buckets"] = size
         if number_of_buckets < size:
             # this should be later to get the next page
-            results_dict["bookmark"] = [
-                int(results["hits"]["hits"][-1]["sort"][0]),
-                int(results["hits"]["hits"][-1]["sort"][1]),
-                results["hits"]["hits"][-1]["sort"][2],
-            ]
+            if len(results["hits"]["hits"]) > 0:
+                results_dict["bookmark"] = [
+                    int(results["hits"]["hits"][-1]["sort"][0]),
+                    int(results["hits"]["hits"][-1]["sort"][1]),
+                    results["hits"]["hits"][-1]["sort"][2],
+                ]
+            else:
+                results_dict["bookmark"] = None
     return results_dict
 
 
