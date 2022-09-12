@@ -227,14 +227,21 @@ class Validator(object):
                     item["id"]
                     for item in searchengine_results["results"]["results"]  # noqa
                 ]
+                idsp = [
+                    item["id"]
+                    for item in searchengine_results["results"]["results"]  # noqa
+                ]
             else:
                 size = 0
                 ids = []
+                idsp=[]
 
                 # get all the results if the total number is bigger
                 # than the page size
             if size >= search_omero_app.config["PAGE_SIZE"] and self.deep_check:
                 bookmark = searchengine_results["results"]["bookmark"]
+                pagination_dict= searchengine_results["results"]["pagination"]
+                ##check getting the results using bookmark
                 while len(ids) < size:
                     search_omero_app.logger.info(
                         "Received %s/%s" % (len(ids), size)
@@ -249,11 +256,32 @@ class Validator(object):
                     ]
                     ids = ids + ids_
                     bookmark = searchengine_results_["results"]["bookmark"]
-            self.searchengine_results = {"size": size, "ids": ids}
+                #check the results using pagination
+                query_data_ = {"query_details": query, "bookmark": None}
+                next_page=pagination_dict.get("next_page")
+                while next_page:
+                    query_data_ = {"query_details": query, "pagination": pagination_dict}
+                    searchengine_results_ = determine_search_results_(
+                        query_data_
+                    )  # noqa
+                    ids_ = [
+                        item["id"]
+                        for item in searchengine_results_["results"]["results"]
+                    ]
+                    idsp = idsp+ ids_
+                    pagination_dict = searchengine_results["results"]["pagination"]
+                    next_page = pagination_dict.get("next_page")
+                if len(ids)!=len(idsp):
+                    search_omero_app.logger.info("The results using bookmark (%s)  and the results using pagination (%s) are not equal"%(len(ids),len(idsp)))
+
+            self.searchengine_results = {"size": size, "ids": ids, "idsp": idsp}
+
             search_omero_app.logger.info(
-                "no of received results from searchengine  : %s"
-                % self.searchengine_results.get("size")
+            "no of received results from searchengine  : %s"
+            % self.searchengine_results.get("size")
             )
+
+
         else:
             search_omero_app.logger.info("The query is not valid")
 
@@ -365,19 +393,25 @@ class Validator(object):
             ids_in = True
             is_it_repated = []
             serach_ids = [id for id in self.searchengine_results.get("ids")]
+            serach_idsp = [id for id in self.searchengine_results.get("idsp")]
             if self.deep_check:
                 if sorted(serach_ids) != sorted(self.postgres_results):
                     ids_in = False
+                if sorted(serach_idsp) != sorted(serach_ids):
+                    ids_in = False
             else:
-                for id in serach_ids:
-                    if id in is_it_repated:
-                        ids_in = False
-                        break
-                    else:
-                        is_it_repated.append(id)
-                    if id not in self.postgres_results:
-                        ids_in = False
-                        break
+                if sorted(serach_idsp) != sorted(serach_ids):
+                    ids_in = False
+                else:
+                    for id in serach_ids:
+                        if id in is_it_repated:
+                            ids_in = False
+                            break
+                        else:
+                            is_it_repated.append(id)
+                        if id not in self.postgres_results:
+                            ids_in = False
+                            break
             if ids_in:
                 search_omero_app.logger.info(
                     "No of the retuned results are similar ..."
@@ -391,12 +425,22 @@ class Validator(object):
             searchengine_no = self.searchengine_results.get("size")
         else:
             searchengine_no = self.searchengine_results
-        return (
-            "not equal, database no of the results from server is: %s and\
-             the number of results from searchengine is %s?,\
-             \ndatabase server query time= %s, searchengine query time= %s"
-            % (len(self.postgres_results), searchengine_no, sql_time, searchengine_time)
-        )
+        if not self.deep_check:
+            return (
+                "not equal, database no of the results from server is: %s and\
+                 the number of results from searchengine (bookmark) is %s?,\
+                 \ndatabase server query time= %s, searchengine query time= %s"
+                % (len(self.postgres_results), searchengine_no, sql_time, searchengine_time)
+            )
+        else:
+            return (
+                    "not equal, database no of the results from server is: %s and\
+                     the number of results from searchengine (bookmark) is %s?,\
+                    the number of results from searchengine (pagination) is %s?,\
+                     \ndatabase server query time= %s, searchengine query time= %s"
+                    % (len(self.postgres_results), searchengine_no,len(serach_idsp) ,sql_time, searchengine_time)
+            )
+
 
 
 def validate_queries(json_file, deep_check):

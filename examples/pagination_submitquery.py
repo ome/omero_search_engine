@@ -113,7 +113,7 @@ and_filters = [
     {
         "name": "Pathology",
         "value": "Normal tissue, NOS",
-        "operator": "not_equals",
+        "operator": "equals",
         "resource": "image",
     },
 ]
