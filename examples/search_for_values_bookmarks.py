@@ -23,7 +23,6 @@ import requests
 import sys
 import math
 
-
 # url to send the query
 image_value_search = "/resources/image/searchvalues/"
 # searchengine url
@@ -34,11 +33,11 @@ logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 If the user needs to search for a value whose attribute is not known e.g.
 search to find if diabetes is a part of any attribute values:
 """
-value="pr"
+value = "pr"
 search_url = "%S/%s%value=diabetes"
 search_url = "{base_url}{image_value_search}?value={value}".format(
     base_url=base_url, image_value_search=image_value_search, value=value
-)#!/usr/bin/env python
+)
 
 # url to send the query
 image_value_search = "/resources/image/searchvalues/"
@@ -47,8 +46,9 @@ base_url = "http://127.0.0.1:5577/api/v1/"
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 """
-If the user needs to search for a value whose attribute is not known e.g.
-search to find if p is a part of any attribute values and return all the possible matches:
+If the user needs to search for a value whose attribute is not known
+e.g. search to find if p is a part of any attribute values and return
+all the possible matches:
 """
 search_url = "{base_url}{image_value_search}?value={value}".format(
     base_url=base_url, image_value_search=image_value_search, value=value
@@ -58,38 +58,45 @@ res = json.loads(resp.text)
 # total number of buckets
 # data
 data = res.get("data")
-buckets=[]
+buckets = []
 total_number_of_images = 0
-recieved_bukets=0
-buckets=buckets+data
+recieved_bukets = 0
+buckets = buckets + data
 
 resp = requests.get(url=search_url)
 res = json.loads(resp.text)
 # total number of buckets
 # data
-page=1
-no_pages=math.ceil(res.get("total_number_of_all_buckets")/9999)
+page = 1
+no_pages = math.ceil(res.get("total_number_of_all_buckets") / 9999)
 
 logging.info("Total number of images: %s" % res.get("total_number_of_image"))
-logging.info("Total number of returned buckets: %s" % res.get("total_number_of_buckets"))
+logging.info(
+    "Total number of returned buckets: %s" % res.get("total_number_of_buckets")
+)
 logging.info("Total number of all buckets: %s" % res.get("total_number_of_all_buckets"))
 
-bookmark=res.get("bookmark")
+bookmark = res.get("bookmark")
 if bookmark:
     while True:
-        page+=1
+        page += 1
 
-        bookmark=[str(item) for item in bookmark]
-        bookmark=','.join(bookmark)
-        search_url = "{base_url}{image_value_search}?value={value}&bookmark={bookmark}".format(
-            base_url=base_url, image_value_search=image_value_search, value=value, bookmark=bookmark
+        bookmark = [str(item) for item in bookmark]
+        bookmark = ",".join(bookmark)
+        search_url = (
+            "{base_url}{image_value_search}?value={value}&bookmark={bookmark}".format(
+                base_url=base_url,
+                image_value_search=image_value_search,
+                value=value,
+                bookmark=bookmark,
+            )
         )
         resp = requests.get(url=search_url)
         try:
-            ss=resp.text
+            ss = resp.text
             res = json.loads(ss)
         except Exception as e:
-            logging.info("Error %s"%str(e))
+            logging.info("Error %s" % str(e))
             break
         bookmark = res.get("bookmark")
         if not bookmark:
