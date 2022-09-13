@@ -192,7 +192,10 @@ def get_values_using_value(resource_table):
     key = request.args.get("key")
     if key:
         # If the key is provided it will restrict the search to the provided key.
-        return query_cashed_bucket_part_value_keys(key, value, resource_table)
+        if (key !="name" and key !="Name (IDR number)") and resource_table not in ["all", "project", "screen"]:
+            return jsonify(query_cashed_bucket_part_value_keys(key, value, resource_table))
+        else:
+            return jsonify(get_resource_names(resource_table, value))
     else:
         return jsonify(search_value_for_resource(resource_table, value))
 
