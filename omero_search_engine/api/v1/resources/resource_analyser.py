@@ -730,7 +730,7 @@ def get_resource_attribute_values(
     return returned_results
 
 
-def get_resource_names(resource, name=None,es_index="key_values_resource_cach"):
+def get_resource_names(resource, name=None, es_index="key_values_resource_cach"):
     """
     return resources names attributes
     It works for projects and screens.
@@ -738,7 +738,9 @@ def get_resource_names(resource, name=None,es_index="key_values_resource_cach"):
     if not name:
         query = key_values_buckets_template_2.substitute(resource=resource)
     else:
-        query = key_values_buckets_template_search_name.substitute(resource=resource, name=name)
+        query = key_values_buckets_template_search_name.substitute(
+            resource=resource, name=name
+        )
     if resource != "all":
         returned_results = []
         results_ = connect_elasticsearch(
@@ -747,7 +749,9 @@ def get_resource_names(resource, name=None,es_index="key_values_resource_cach"):
         hits = results_["hits"]["hits"]
         if len(hits) > 0:
             if name:
-                returned_results = [item for item in hits[0]["_source"]["resourcename"] if name in item]
+                returned_results = [
+                    item for item in hits[0]["_source"]["resourcename"] if name in item
+                ]
             else:
                 returned_results = hits[0]["_source"]["resourcename"]
     else:
@@ -761,8 +765,12 @@ def get_resource_names(resource, name=None,es_index="key_values_resource_cach"):
             hits = results_["hits"]["hits"]
             if len(hits) > 0:
                 if not name:
-                    returned_results[res]= hits[0]["_source"]["resourcename"]
+                    returned_results[res] = hits[0]["_source"]["resourcename"]
                 else:
-                    returned_results[res]= [item for item in hits[0]["_source"]["resourcename"] if name in item]
+                    returned_results[res] = [
+                        item
+                        for item in hits[0]["_source"]["resourcename"]
+                        if name in item
+                    ]
 
     return returned_results
