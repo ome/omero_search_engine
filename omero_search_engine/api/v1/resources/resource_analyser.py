@@ -736,7 +736,7 @@ def get_resource_attribute_values(
 def get_resource_names(resource, name=None, es_index="key_values_resource_cach"):
     """
     return resources names attributes
-    It works for projects and screens.
+    It works for projects and screens but can be extended.
     """
     if not name:
         query = key_values_buckets_template_2.substitute(resource=resource)
