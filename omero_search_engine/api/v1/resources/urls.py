@@ -191,17 +191,9 @@ def get_values_using_value(resource_table):
     # print (value, resource_table)
     key = request.args.get("key")
     if key:
-        # If the key is provided it will restrict the search to the provided key.
-        if (key != "name" and key != "Name (IDR number)") and resource_table not in [
-            "all",
-            "project",
-            "screen",
-        ]:
-            return jsonify(
-                query_cashed_bucket_part_value_keys(key, value, resource_table)
-            )
-        else:
-            return jsonify(get_resource_names(resource_table, value))
+
+        return jsonify(query_cashed_bucket_part_value_keys(key, value, resource_table))
+
     else:
         return jsonify(search_value_for_resource(resource_table, value))
 
@@ -276,8 +268,8 @@ def get_resource_names_(resource_table):
         response.mimetype = "text/plain"
         return response
 
-    names = get_resource_names(resource_table)
-    return jsonify(names)
+    value = request.args.get("value")
+    return jsonify(get_resource_names(resource_table, value))
 
 
 @resources.route("/submitquery/containers/", methods=["POST"])

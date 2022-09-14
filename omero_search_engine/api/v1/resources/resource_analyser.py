@@ -442,6 +442,9 @@ def query_cashed_bucket_part_value_keys(
         # search all resources for all possible matches
         returned_results = {}
         for table in resource_elasticsearchindex:
+            # exclude image1 as it is used for testing
+            if table == "image1":
+                continue
             query = key_part_values_buckets_template.substitute(
                 name=name, value=value, resource=table
             )
