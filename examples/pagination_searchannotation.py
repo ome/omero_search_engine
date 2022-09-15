@@ -21,13 +21,14 @@ import json
 import logging
 import requests
 import sys
+from utils import base_url
 
 # url to send the query
 image_ext = "/resources/image/searchannotation/"
 # url to get the next page for a query, bookmark is needed
 image_page_ext = "/resources/image/searchannotation_page/"
 # search engine url
-base_url = "http://127.0.0.1:5577/api/v1/"
+
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 

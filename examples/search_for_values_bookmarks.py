@@ -22,11 +22,11 @@ import json
 import requests
 import sys
 import math
+from utils import base_url
 
 # url to send the query
 image_value_search = "/resources/image/searchvalues/"
 # searchengine url
-base_url = "http://127.0.0.1:5577/api/v1/"
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 """
@@ -35,10 +35,6 @@ search to find if diabetes is a part of any attribute values:
 """
 value = "pr"
 
-search_url = "{base_url}{image_value_search}?value={value}".format(
-    base_url=base_url, image_value_search=image_value_search, value=value
-)
-
 # url to send the query
 image_value_search = "/resources/image/searchvalues/"
 # searchengine url
@@ -46,7 +42,7 @@ logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 """
 If the user needs to search for a value whose attribute is not known
-e.g. search to find if p is a part of any attribute values and return
+e.g. search to find if pr is a part of any attribute values and return
 all the possible matches:
 """
 search_url = "{base_url}{image_value_search}?value={value}".format(

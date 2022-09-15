@@ -22,13 +22,12 @@ import json
 import requests
 import sys
 import datetime
+from utils import base_url
 
 # url to send the query
 image_ext = "/resources/image/searchannotation/"
 # url to get the next page for a query, bookmark is needed
 image_page_ext = "/resources/image/searchannotation_page/"
-base_url = "http://127.0.0.1:5577/api/v1/"
-
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 received_results = []

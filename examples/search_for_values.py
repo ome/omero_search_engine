@@ -21,11 +21,10 @@ import logging
 import json
 import requests
 import sys
+from utils import base_url
 
 # url to send the query
 image_value_search = "/resources/image/searchvalues/"
-# searchengine url
-base_url = "http://127.0.0.1:5577/api/v1/"
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 """
