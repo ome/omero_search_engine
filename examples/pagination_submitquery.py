@@ -25,7 +25,7 @@ import sys
 
 # search engine url
 base_url = "http://127.0.0.1:5577/api/v1/"
-submit_query_url = "http://127.0.0.1:5577/api/v1/resources/submitquery"  # noqa
+submit_query_url = f"{base_url}resources/submitquery/"  # noqa
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 

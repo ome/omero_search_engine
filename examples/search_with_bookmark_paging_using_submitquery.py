@@ -23,13 +23,10 @@ import json
 import requests
 import sys
 
-# url to send the query
-image_ext = "/resources/image/searchannotation/"
-# url to get the next page for a query, bookmark is needed
-image_page_ext = "/resources/image/searchannotation_page/"
-# search engine url
+# search engine base url
 base_url = "http://127.0.0.1:5577/api/v1/"
-submit_query_url = "http://127.0.0.1:5577/api/v1/resources/submitquery"  # noqa
+
+submit_query_url = f"{base_url}resources/submitquery/"  # noqa
 
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
