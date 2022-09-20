@@ -745,12 +745,94 @@ def search_index_scrol(index_name, query):
     return results
 
 
+def get_bookmark(pagination_dict):
+    """
+    get book mark from the pagination section
+    if the the request does not contain bookmark
+    """
+    bookmark = None
+    if pagination_dict:
+        next_page = pagination_dict["next_page"]
+        bookmark = None
+        for page_rcd in pagination_dict["page_records"]:
+            if page_rcd["page"] == next_page:
+                bookmark = page_rcd["bookmark"]
+                break
+    return bookmark
+
+
+def get_pagination(total_pages, next_bookmark, pagination_dict):
+    """
+    This keeps track of pages, it can be used to track and lood pages (next by default)
+
+    {
+       "current_page":4,
+       "next_page":5,
+       "page_records":[
+          {
+             "bookmark":[
+                304586
+             ],
+             "page":2
+          },
+          {
+             "bookmark":[
+                643303
+             ],
+             "page":3
+          },
+          {
+             "bookmark":[
+                1362671
+             ],
+             "page":4
+          },
+          {
+             "bookmark":[
+                1459210
+             ],
+             "page":5
+          }
+       ],
+       "total_pages":13
+        }
+    """
+    if not pagination_dict:
+        pagination_dict = {}
+        pagination_dict["total_pages"] = total_pages
+        page_rcds = []
+        pagination_dict["page_records"] = page_rcds
+        pagination_dict["current_page"] = 1
+        if total_pages > 1:
+            pagination_dict["next_page"] = 2
+        else:
+            pagination_dict["next_page"] = None
+        page_rcds.append({"page": 2, "bookmark": next_bookmark})
+        return pagination_dict
+    pagination_dict["current_page"] = pagination_dict["next_page"]
+    if pagination_dict["current_page"] == total_pages:
+        pagination_dict["next_page"] = None
+        return pagination_dict
+    pagination_dict["next_page"] = pagination_dict["next_page"] + 1
+    if not get_bookmark(pagination_dict):
+        next_page_record = {
+            "page": pagination_dict["current_page"] + 1,
+            "bookmark": next_bookmark,
+        }
+        page_records = pagination_dict.get("page_records")
+        page_records.append(next_page_record)
+    return pagination_dict
+
+
 def search_index_using_search_after(
-    e_index, query, page, bookmark_, return_containers, ret_type=None
+    e_index, query, bookmark_, pagination_dict, return_containers, ret_type=None
 ):
     returned_results = []
-    if not page:
-        page = 1
+    if bookmark_ and not pagination_dict:
+        add_paination = False
+    else:
+        add_paination = True
+
     es = search_omero_app.config.get("es_connector")
     if return_containers:
         res = es.search(index=e_index, body=query)
@@ -778,6 +860,8 @@ def search_index_using_search_after(
     no_of_pages = (int)(size / page_size) + add_to_page
     search_omero_app.logger.info("No of pages: %s" % no_of_pages)
     query["sort"] = [{"id": "asc"}]
+    if not bookmark_ and pagination_dict:
+        bookmark_ = get_bookmark(pagination_dict)
     if not bookmark_:
         result = es.search(index=e_index, body=query)
         if len(result["hits"]["hits"]) == 0:
@@ -798,14 +882,16 @@ def search_index_using_search_after(
             search_omero_app.logger.info("No result is found")
             return returned_results
         bookmark = [res["hits"]["hits"][-1]["sort"][0]]
-        page += 1
-    return {
+    results_dict = {
         "results": returned_results,
         "total_pages": no_of_pages,
         "bookmark": bookmark,
         "size": size,
-        "page": page,
     }
+    if add_paination:
+        pagination_dict = get_pagination(no_of_pages, bookmark, pagination_dict)
+        results_dict["pagination"] = pagination_dict
+    return results_dict
 
 
 def handle_query(table_, query):
@@ -822,8 +908,8 @@ def search_resource_annotation(
     table_,
     query,
     raw_elasticsearch_query=None,
-    page=None,
     bookmark=None,
+    pagination_dict=None,
     return_containers=False,
 ):
     """
@@ -887,21 +973,26 @@ def search_resource_annotation(
             )
             query["_source"] = {"includes": [""]}
             res = search_index_using_search_after(
-                res_index, query, page, bookmark, return_containers, "project"
+                res_index,
+                query,
+                bookmark,
+                pagination_dict,
+                return_containers,
+                "project",
             )
             query["aggs"] = json.loads(
                 count_attr_template.substitute(field="screen_name.keyvalue")
             )
 
             res_2 = search_index_using_search_after(
-                res_index, query, page, bookmark, return_containers, "screen"
+                res_index, query, bookmark, pagination_dict, return_containers, "screen"
             )
             # Combines the containers results
             studies = res + res_2
             res = {"results": studies}
         else:
             res = search_index_using_search_after(
-                res_index, query, page, bookmark, return_containers
+                res_index, query, bookmark, pagination_dict, return_containers
             )
         notice = ""
         end_time = time.time()

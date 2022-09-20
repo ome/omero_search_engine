@@ -26,7 +26,8 @@ Example:
     }
 
 
-The maximum number of returned results is 1000, so if the number of results is bigger than that, a bookmark should be added to the query to call the next page. bookmark is returned with each page of results and should be used to call the next page.
+The maximum number of returned results is 1000, so if the number of results is bigger than that, a `bookmark` should be added to the query to call the next page.
+`bookmark` is returned with each page of results and should be used to call the next page.
 Example of using bookmark:
 
   {
@@ -50,6 +51,45 @@ Example of using bookmark:
   [107448]
 
   }
+
+There is a dict (`pagination`)  is returned with results.
+It can be sent back with the query when calling the next page.
+Then the server will update it and send it again along with the results to the client.
+Example of using pagination:
+
+{
+"resource":"image",
+"query_details":{
+"and_filters":[
+{
+"name":"Cell Line",
+"operator":"equals",
+"query_type":"keyvalue",
+"resource":"image",
+"value":"hela"
+}
+],
+"case_sensitive":false,
+"or_filters":[
+
+]
+},
+"pagination": {
+      "current_page": 1,
+      "next_page": 2,
+      "page_records": [
+        {
+          "bookmark": [
+            107448
+          ],
+          "page": 2
+        }
+      ],
+      "total_pages": 1578
+    }
+
+}
+
 ---
 tags:
  - Mixed Complex query

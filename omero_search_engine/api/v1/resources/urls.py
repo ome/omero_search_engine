@@ -76,9 +76,9 @@ def search_resource_page(resource_table):
         query = data["query"]
         validation_results = query_validator(query)
         if validation_results == "OK":
-            page = data.get("page")
             bookmark = data.get("bookmark")
             raw_elasticsearch_query = data.get("raw_elasticsearch_query")
+            pagination_dict = data.get("pagination")
             return_containers = data.get("return_containers")
             if return_containers:
                 return_containers = json.loads(return_containers.lower())
@@ -87,8 +87,8 @@ def search_resource_page(resource_table):
                 resource_table,
                 query,
                 raw_elasticsearch_query=raw_elasticsearch_query,
-                page=page,
                 bookmark=bookmark,
+                pagination_dict=pagination_dict,
                 return_containers=return_containers,
             )
             return jsonify(resource_list)
@@ -193,8 +193,37 @@ def get_values_using_value(resource_table):
     if key:
         # If the key is provided it will restrict the search to the provided key.
         return query_cashed_bucket_part_value_keys(key, value, resource_table)
-    else:
-        return jsonify(search_value_for_resource(resource_table, value))
+    bookmark = request.args.get("bookmark")
+    if bookmark:
+        bookmark = bookmark.split(",")
+        if bookmark and resource_table == "all":
+            return jsonify(
+                build_error_message(
+                    "{error}".format(
+                        error="Boomark is not supported 'all', "
+                        "it should be used with individual resources"
+                    )
+                )
+            )
+
+        if len(bookmark) != 3:
+            return jsonify(
+                build_error_message(
+                    "{error}".format(
+                        error="Bookmark should be a comma-delimited string, "
+                        "e.g. 4,9,44a90c1a-3271-448a-ba60-c391f885bc34"
+                    )
+                )
+            )
+        if not bookmark[0].isdigit() or not bookmark[1].isdigit():
+            return jsonify(
+                build_error_message(
+                    "{error}".format(
+                        error="The first two items in the bookmark should be intgers"
+                    )
+                )
+            )
+    return jsonify(search_value_for_resource(resource_table, value, bookmark))
 
 
 @resources.route("/<resource_table>/searchvaluesusingkey/", methods=["GET"])
