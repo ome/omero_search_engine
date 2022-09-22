@@ -41,6 +41,7 @@ query_methods = {
     "screen_name": query_images_screen_name,
     "query_image_or": query_image_in,
     "in_clause": query_image_in,
+    "not_in_clause": query_image_in,
 }
 
 
@@ -89,7 +90,15 @@ class Validator(object):
         names = "'%s'" % clauses[0].lower()
         cases = [c.lower() for c in clauses[1]]
         values = "'" + "','".join(cases) + "'"
-        sql = query_methods[name].substitute(names=names, values=values)
+        if name == "in_clause":
+            sql = query_methods[name].substitute(
+                names=names, values=values, operator="in"
+            )
+        elif name == "not_in_clause":
+            sql = query_methods[name].substitute(
+                names=names, values=values, operator="not in"
+            )
+        #sql = query_methods[name].substitute(names=names, values=values)
         conn = search_omero_app.config["database_connector"]
         postgres_results = conn.execute_query(sql)
         results = [item["id"] for item in postgres_results]
@@ -108,7 +117,8 @@ class Validator(object):
             else:
                 names = "'%s'" % claus[0].lower()
                 values = "'%s'" % claus[1].lower()
-        sql = query_methods[name].substitute(names=names, values=values)
+        #sql = query_methods[name].substitute(names=names, values=values)
+        sql = query_methods[name].substitute(names=names, values=values, operator="in")
         conn = search_omero_app.config["database_connector"]
         postgres_results = conn.execute_query(sql)
         results = [item["id"] for item in postgres_results]
@@ -144,6 +154,9 @@ class Validator(object):
         search_omero_app.logger.info("Getting results from postgres")
         if self.type == "in_clause":
             self.postgres_results = self.get_in_sql(self.clauses)
+            return
+        elif self.type == "not_in_clause":
+            self.postgres_results = self.get_in_sql(self.clauses, self.type)
             return
         elif self.type == "complex":
             if self.name == "query_image_or":
@@ -186,6 +199,18 @@ class Validator(object):
                     "name": self.clauses[0],
                     "value": self.clauses[1],
                     "operator": "in",
+                    "resource": self.resource,
+                }
+            )
+            query = {"and_filters": filters, "or_filters": []}
+
+        elif self.type == "not_in_clause":
+            filters = []
+            filters.append(
+                {
+                    "name": self.clauses[0],
+                    "value": self.clauses[1],
+                    "operator": "not_in",
                     "resource": self.resource,
                 }
             )
@@ -352,7 +377,7 @@ def validate_queries(json_file, deep_check):
     # Setthe number pf returend results in one call to 10000
     search_omero_app.config["PAGE_SIZE"] = 10000
 
-    test_cases = test_data.get("test_cases")
+    test_cases =test_data.get("test_cases")
     complex_test_cases = test_data.get("complex_test_cases")
     query_in = test_data.get("query_in")
     messages = []
@@ -407,7 +432,25 @@ def validate_queries(json_file, deep_check):
                 res,
             )
         )
-        search_omero_app.logger.info("Total time=%s" % str(datetime.now() - start_time))
+        end_in = datetime.now()
+        search_omero_app.logger.info("Total time=%s" % str(end_in - start_time))
+        # test the same but chang the operator to not in
+        search_omero_app.logger.info("Total time=%s" % str(end_in - start_time))
+        validator_not_in = Validator(deep_check)
+        validator_not_in.set_in_query(cases, resource, type="not_in_clause")
+        res = validator_not_in.compare_results()
+        messages.append(
+            "Results for 'not in' form PostgreSQL and search engine for %s name: "
+            "%s and value in [%s] are %s"
+            % (
+                validator_not_in.resource,
+                validator_not_in.clauses[0],
+                ",".join(validator_not_in.clauses[1]),
+                res,
+            )
+        )
+        search_omero_app.logger.info("Total time=%s" % str(datetime.now() - end_in))
+
 
     search_omero_app.logger.info(
         "############################################## Check Report ##############################################"  # noqa

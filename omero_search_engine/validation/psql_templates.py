@@ -77,7 +77,7 @@ on image.id =imageannotationlink.parent
 inner join annotation_mapvalue
 on annotation_mapvalue.annotation_id=imageannotationlink.child
 where lower(annotation_mapvalue.name) in ($names)
-and lower(annotation_mapvalue.value) in ($values)"""
+and lower(annotation_mapvalue.value) $operator ($values)"""
 )
 
 # Get the images which satisfy screen key-value query
