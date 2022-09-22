@@ -279,7 +279,7 @@ def elasticsearch_query_builder(
             try:
                 key = filter["name"].strip()
                 operator = filter["operator"].strip()
-                if operator == "in":
+                if operator == "in" or operator == "not_in":
                     if isinstance(filter["value"], list):
                         value_ = filter["value"]
                     else:
@@ -361,6 +361,41 @@ def elasticsearch_query_builder(
                         nested=",".join(_nested_must_part)
                     )
                 )
+
+            if operator == "not_in":
+                if case_sensitive:
+                    nested_must_not_part.append(
+                        nested_keyvalue_pair_query_template.substitute(
+                            nested=case_sensitive_must_in_value_condition_template.substitute(  # noqa
+                                value=value
+                            )
+                        )
+                    )
+
+                    nested_must_part.append(
+                        nested_keyvalue_pair_query_template.substitute(
+                            nested=case_sensitive_must_name_condition_template.substitute(  # noqa
+                                name=key
+                            )
+                        )
+                    )  # noqa
+
+                else:
+                    nested_must_not_part.append(
+                        nested_keyvalue_pair_query_template.substitute(
+                            nested=case_insensitive_must_in_value_condition_template.substitute(  # noqa
+                                value=value
+                            )
+                        )
+                    )
+
+                    nested_must_part.append(
+                        nested_keyvalue_pair_query_template.substitute(
+                            nested=case_insensitive_must_name_condition_template.substitute(  # noqa
+                                name=key
+                            )
+                        )
+                    )  # noqa
 
             if operator == "contains":
                 value = "*{value}*".format(value=value)
