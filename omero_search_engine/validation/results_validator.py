@@ -418,38 +418,39 @@ def validate_queries(json_file, deep_check):
             )
 
     for resource, cases in query_in.items():
-        start_time = datetime.now()
-        validator_in = Validator(deep_check)
-        validator_in.set_in_query(cases, resource)
-        res = validator_in.compare_results()
-        messages.append(
-            "Results form PostgreSQL and search engine\
-            for %s name: %s and value in [%s] are %s"
-            % (
-                validator_in.resource,
-                validator_in.clauses[0],
-                ",".join(validator_in.clauses[1]),
-                res,
+        for case in cases:
+            start_time = datetime.now()
+            validator_in = Validator(deep_check)
+            validator_in.set_in_query(case, resource)
+            res = validator_in.compare_results()
+            messages.append(
+                "Results for 'in' form PostgreSQL and search engine\
+                for %s name: %s and value in [%s] are %s"
+                % (
+                    validator_in.resource,
+                    validator_in.clauses[0],
+                    ",".join(validator_in.clauses[1]),
+                    res,
+                )
             )
-        )
-        end_in = datetime.now()
-        search_omero_app.logger.info("Total time=%s" % str(end_in - start_time))
-        # test the same but chang the operator to not in
-        search_omero_app.logger.info("Total time=%s" % str(end_in - start_time))
-        validator_not_in = Validator(deep_check)
-        validator_not_in.set_in_query(cases, resource, type="not_in_clause")
-        res = validator_not_in.compare_results()
-        messages.append(
-            "Results for 'not in' form PostgreSQL and search engine for %s name: "
-            "%s and value in [%s] are %s"
-            % (
-                validator_not_in.resource,
-                validator_not_in.clauses[0],
-                ",".join(validator_not_in.clauses[1]),
-                res,
+            end_in = datetime.now()
+            search_omero_app.logger.info("Total time=%s" % str(end_in - start_time))
+            # test the same but chang the operator to not in
+            search_omero_app.logger.info("Total time=%s" % str(end_in - start_time))
+            validator_not_in = Validator(deep_check)
+            validator_not_in.set_in_query(case, resource, type="not_in_clause")
+            res = validator_not_in.compare_results()
+            messages.append(
+                "Results for 'not in' form PostgreSQL and search engine for %s name: "
+                "%s and value in [%s] are %s"
+                % (
+                    validator_not_in.resource,
+                    validator_not_in.clauses[0],
+                    ",".join(validator_not_in.clauses[1]),
+                    res,
+                )
             )
-        )
-        search_omero_app.logger.info("Total time=%s" % str(datetime.now() - end_in))
+            search_omero_app.logger.info("Total time=%s" % str(datetime.now() - end_in))
 
 
     search_omero_app.logger.info(
