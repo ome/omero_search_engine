@@ -132,6 +132,8 @@ class Validator(object):
         co = 0
         for claus in clauses:
             sql = query_methods["image"].substitute(
+                #toz
+                operator="=",
                 name=claus[0].lower(), value=claus[1].lower()
             )
             conn = search_omero_app.config["database_connector"]
@@ -147,7 +149,7 @@ class Validator(object):
             co += 1
         return results
 
-    def get_results_postgres(self):
+    def get_results_postgres(self, operator=None):
         """
         Query the postgresql
         """
@@ -175,9 +177,18 @@ class Validator(object):
             return
         else:
             if self.name != "name":
-                sql = self.sql_statement.substitute(
-                    name=self.name.lower(), value=self.value.lower()
-                )
+                if not operator:
+                    sql = self.sql_statement.substitute(
+                        #toz
+                        operator="=",
+                        name=self.name.lower(), value=self.value.lower()
+                    )
+                else:
+                    sql = self.sql_statement.substitute(
+                        # toz
+                        operator=operator,
+                        name=self.name.lower(), value=self.value.lower()
+                    )
             else:
                 sql = self.sql_statement.substitute(name=self.value)
         # search_omero_app.logger.info ("sql: %s"%sql)
@@ -188,7 +199,7 @@ class Validator(object):
             "results received %s" % len(self.postgres_results)
         )  # noqa
 
-    def get_results_searchengine(self):
+    def get_results_searchengine(self, operator=None):
         """
         Query the results from the serachengine
         """
@@ -254,14 +265,24 @@ class Validator(object):
 
         else:
             if self.name != "name":
-                and_filters = [
-                    {
-                        "name": self.name.lower(),
-                        "value": self.value.lower(),
-                        "operator": "equals",
-                        "resource": self.resource,
-                    }
-                ]
+                if not operator:
+                    and_filters = [
+                        {
+                            "name": self.name.lower(),
+                            "value": self.value.lower(),
+                            "operator": "equals",
+                            "resource": self.resource,
+                        }
+                       ]
+                else:
+                    and_filters = [
+                        {
+                            "name": self.name.lower(),
+                            "value": self.value.lower(),
+                            "operator": "not_equals",
+                            "resource": self.resource,
+                        }
+                    ]
             else:
                 and_filters = [
                     {
@@ -314,14 +335,14 @@ class Validator(object):
         else:
             search_omero_app.logger.info("The query is not valid")
 
-    def compare_results(self):
+    def compare_results(self, operator=None):
         """
         call the results
         """
         st_time = datetime.now()
-        self.get_results_postgres()
+        self.get_results_postgres(operator)
         st2_time = datetime.now()
-        self.get_results_searchengine()
+        self.get_results_searchengine(operator)
         st3_time = datetime.now()
         sql_time = st2_time - st_time
         searchengine_time = st3_time - st2_time
@@ -389,14 +410,32 @@ def validate_queries(json_file, deep_check):
             name = case[0]
             value = case[1]
             search_omero_app.logger.info(
-                "Testing %s for name: %s, key: %s" % (resource, name, value)
+                "Testing (equals) %s for name: %s, key: %s" % (resource, name, value)
             )
             validator = Validator(deep_check)
             validator.set_simple_query(resource, name, value)
             res = validator.compare_results()
             elabsed_time = str(datetime.now() - start_time)
             messages.append(
-                "Results form  PostgreSQL and search engine\
+                "Results form (equals) PostgreSQL and search engine\
+                 for name: %s , value: %s are: %s"
+                % (validator.name, validator.value, res)
+            )
+            search_omero_app.logger.info("Total time=%s" % elabsed_time)
+
+            ##Not equals
+            start_time = datetime.now()
+            name = case[0]
+            value = case[1]
+            search_omero_app.logger.info(
+                "Testing (not equals) %s for name: %s, key: %s" % (resource, name, value)
+            )
+            validator = Validator(deep_check)
+            validator.set_simple_query(resource, name, value)
+            res = validator.compare_results("!=")
+            elabsed_time = str(datetime.now() - start_time)
+            messages.append(
+                "Results (not_equals) form PostgreSQL and search engine\
                  for name: %s , value: %s are: %s"
                 % (validator.name, validator.value, res)
             )

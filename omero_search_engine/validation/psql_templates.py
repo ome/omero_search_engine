@@ -49,7 +49,7 @@ inner join imageannotationlink on image.id =imageannotationlink.parent
 inner join annotation_mapvalue on
 annotation_mapvalue.annotation_id=imageannotationlink.child
 where lower(annotation_mapvalue.name)='$name' and
-lower(annotation_mapvalue.value)='$value'"""
+lower(annotation_mapvalue.value)$operator '$value'"""
 )
 
 # Get number of images which satisfy project key-value query

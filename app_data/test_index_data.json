@@ -62,7 +62,11 @@
          [
             "organism",
             "escherichia coli"
-         ]
+         ],
+            [
+               "Gene Symbol",
+               "Cxcr2"
+            ]
       ],
       "project":[
          [
