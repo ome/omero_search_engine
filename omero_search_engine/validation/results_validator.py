@@ -98,7 +98,7 @@ class Validator(object):
             sql = query_methods[name].substitute(
                 names=names, values=values, operator="not in"
             )
-        #sql = query_methods[name].substitute(names=names, values=values)
+        # sql = query_methods[name].substitute(names=names, values=values)
         conn = search_omero_app.config["database_connector"]
         postgres_results = conn.execute_query(sql)
         results = [item["id"] for item in postgres_results]
@@ -117,7 +117,7 @@ class Validator(object):
             else:
                 names = "'%s'" % claus[0].lower()
                 values = "'%s'" % claus[1].lower()
-        #sql = query_methods[name].substitute(names=names, values=values)
+        # sql = query_methods[name].substitute(names=names, values=values)
         sql = query_methods[name].substitute(names=names, values=values, operator="in")
         conn = search_omero_app.config["database_connector"]
         postgres_results = conn.execute_query(sql)
@@ -132,9 +132,10 @@ class Validator(object):
         co = 0
         for claus in clauses:
             sql = query_methods["image"].substitute(
-                #toz
+                # toz
                 operator="=",
-                name=claus[0].lower(), value=claus[1].lower()
+                name=claus[0].lower(),
+                value=claus[1].lower(),
             )
             conn = search_omero_app.config["database_connector"]
             postgres_results = conn.execute_query(sql)
@@ -179,15 +180,17 @@ class Validator(object):
             if self.name != "name":
                 if not operator:
                     sql = self.sql_statement.substitute(
-                        #toz
+                        # toz
                         operator="=",
-                        name=self.name.lower(), value=self.value.lower()
+                        name=self.name.lower(),
+                        value=self.value.lower(),
                     )
                 else:
                     sql = self.sql_statement.substitute(
                         # toz
                         operator=operator,
-                        name=self.name.lower(), value=self.value.lower()
+                        name=self.name.lower(),
+                        value=self.value.lower(),
                     )
             else:
                 sql = self.sql_statement.substitute(name=self.value)
@@ -273,7 +276,7 @@ class Validator(object):
                             "operator": "equals",
                             "resource": self.resource,
                         }
-                       ]
+                    ]
                 else:
                     and_filters = [
                         {
@@ -398,7 +401,7 @@ def validate_queries(json_file, deep_check):
     # Setthe number pf returend results in one call to 10000
     search_omero_app.config["PAGE_SIZE"] = 10000
 
-    test_cases =test_data.get("test_cases")
+    test_cases = test_data.get("test_cases")
     complex_test_cases = test_data.get("complex_test_cases")
     query_in = test_data.get("query_in")
     messages = []
@@ -423,12 +426,13 @@ def validate_queries(json_file, deep_check):
             )
             search_omero_app.logger.info("Total time=%s" % elabsed_time)
 
-            ##Not equals
+            # Not equals
             start_time = datetime.now()
             name = case[0]
             value = case[1]
             search_omero_app.logger.info(
-                "Testing (not equals) %s for name: %s, key: %s" % (resource, name, value)
+                "Testing (not equals) %s for name: %s, key: %s"
+                % (resource, name, value)
             )
             validator = Validator(deep_check)
             validator.set_simple_query(resource, name, value)
@@ -490,7 +494,6 @@ def validate_queries(json_file, deep_check):
                 )
             )
             search_omero_app.logger.info("Total time=%s" % str(datetime.now() - end_in))
-
 
     search_omero_app.logger.info(
         "############################################## Check Report ##############################################"  # noqa

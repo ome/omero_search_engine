@@ -25,15 +25,20 @@ from utils import query_the_search_ending, logging
 # it will only use a single condition.
 
 # The following example will search for the images which have mpt any of the 'Organism'
-# values in this list ["homo sapiens","mus musculus","mus musculus x mus spretus","human adenovirus 2"]
+# values in this list ["homo sapiens","mus musculus",
+# "mus musculus x mus spretus","human adenovirus 2"]
 
 # and filters
 
 logging.info("Example of using not_in operator")
 
 
-
-values_not_in = ["homo sapiens","mus musculus","mus musculus x mus spretus","human adenovirus 2"]
+values_not_in = [
+    "homo sapiens",
+    "mus musculus",
+    "mus musculus x mus spretus",
+    "human adenovirus 2",
+]
 logging.info(
     "Searching for 'Organism' which its values in [%s]" % (",".join(values_not_in))
 )
