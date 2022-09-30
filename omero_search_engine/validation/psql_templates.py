@@ -50,7 +50,6 @@ inner join annotation_mapvalue on
 annotation_mapvalue.annotation_id=imageannotationlink.child
 where lower(annotation_mapvalue.name)='$name' and
 lower(annotation_mapvalue.value)$operator lower('$value')"""
-
 )
 
 # Get number of images which satisfy project key-value query
@@ -67,7 +66,6 @@ inner join annotation_mapvalue
 on annotation_mapvalue.annotation_id=projectannotationlink.child
 where lower(annotation_mapvalue.name)=lower('$name')
 and lower(annotation_mapvalue.value)$operator lower('$value')"""
-
 )
 
 # Get the  number of images using "in"
@@ -120,7 +118,6 @@ inner join dataset on datasetimagelink.parent=dataset.id
 inner join projectdatasetlink on dataset.id=projectdatasetlink.child
 inner join project on project.id=projectdatasetlink.parent
 where lower (project.name) $operator lower ('$name')"""
-
 )
 
 # get images in a screen using id

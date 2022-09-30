@@ -125,6 +125,12 @@ case_sensitive_must_value_condition_template = Template(
 {"match": {"key_values.value.keyvalue":"$value"}}"""
 )
 
+nested_query_template_must_must_not = Template(
+    """
+{"nested": {"path": "key_values",
+"query":{"bool": {"must":[$must_part], "must_not":[$must_not_part]}}}}"""
+)
+
 # in opeartor
 case_sensitive_must_in_value_condition_template = Template(
     """
@@ -384,38 +390,28 @@ def elasticsearch_query_builder(
 
             if operator == "not_in":
                 if case_sensitive:
-                    nested_must_not_part.append(
-                        nested_keyvalue_pair_query_template.substitute(
-                            nested=case_sensitive_must_in_value_condition_template.substitute(  # noqa
+                    nested_must_part.append(
+                        nested_query_template_must_must_not.substitute(
+                            must_not_part=case_sensitive_must_in_value_condition_template.substitute(  # noqa
                                 value=value
-                            )
+                            ),
+                            must_part=case_sensitive_must_name_condition_template.substitute(  # noqa
+                                name=key
+                            ),
                         )
                     )
-
-                    nested_must_part.append(
-                        nested_keyvalue_pair_query_template.substitute(
-                            nested=case_sensitive_must_name_condition_template.substitute(  # noqa
-                                name=key
-                            )
-                        )
-                    )  # noqa
 
                 else:
-                    nested_must_not_part.append(
-                        nested_keyvalue_pair_query_template.substitute(
-                            nested=case_insensitive_must_in_value_condition_template.substitute(  # noqa
+                    nested_must_part.append(
+                        nested_query_template_must_must_not.substitute(
+                            must_not_part=case_insensitive_must_in_value_condition_template.substitute(  # noqa
                                 value=value
-                            )
+                            ),
+                            must_part=case_insensitive_must_name_condition_template.substitute(  # noqa
+                                name=key
+                            ),
                         )
                     )
-
-                    nested_must_part.append(
-                        nested_keyvalue_pair_query_template.substitute(
-                            nested=case_insensitive_must_name_condition_template.substitute(  # noqa
-                                name=key
-                            )
-                        )
-                    )  # noqa
 
             if operator == "contains":
                 value = "*{value}*".format(value=adjust_value(value))
@@ -455,64 +451,50 @@ def elasticsearch_query_builder(
                     value = "*{value}*".format(value=adjust_value(value))
                     if case_sensitive:
                         nested_must_part.append(
-                            nested_keyvalue_pair_query_template.substitute(
-                                nested=case_sensitive_must_name_condition_template.substitute(  # noqa
-                                    name=key
-                                )
-                            )
-                        )
-                        nested_must_not_part.append(
-                            nested_keyvalue_pair_query_template.substitute(
-                                nested=case_sensitive_wildcard_value_condition_template.substitute(  # noqa
+                            nested_query_template_must_must_not.substitute(
+                                must_not_part=case_sensitive_wildcard_value_condition_template.substitute(  # noqa
                                     wild_card_value=value
-                                )
+                                ),
+                                must_part=case_sensitive_must_name_condition_template.substitute(  # noqa
+                                    name=key
+                                ),
                             )
                         )
+
                     else:
                         nested_must_part.append(
-                            nested_keyvalue_pair_query_template.substitute(
-                                nested=case_insensitive_must_name_condition_template.substitute(  # noqa
-                                    name=key
-                                )
-                            )
-                        )
-                        nested_must_not_part.append(
-                            nested_keyvalue_pair_query_template.substitute(
-                                nested=case_insensitive_wildcard_value_condition_template.substitute(  # noqa
+                            nested_query_template_must_must_not.substitute(
+                                must_not_part=case_insensitive_wildcard_value_condition_template.substitute(  # noqa
                                     wild_card_value=value
-                                )
+                                ),
+                                must_part=case_insensitive_must_name_condition_template.substitute(  # noqa
+                                    name=key
+                                ),
                             )
                         )
 
                 else:
                     if case_sensitive:
                         nested_must_part.append(
-                            nested_keyvalue_pair_query_template.substitute(
-                                nested=case_sensitive_must_name_condition_template.substitute(  # noqa
-                                    name=key
-                                )
-                            )
-                        )
-                        nested_must_not_part.append(
-                            nested_keyvalue_pair_query_template.substitute(
-                                nested=case_sensitive_must_value_condition_template.substitute(  # noqa
+                            nested_query_template_must_must_not.substitute(
+                                must_not_part=case_sensitive_must_value_condition_template.substitute(  # noqa
                                     value=value
-                                )
+                                ),
+                                must_part=case_sensitive_must_name_condition_template.substitute(  # noqa
+                                    name=key
+                                ),
                             )
                         )
+
                     else:
                         nested_must_part.append(
-                            nested_keyvalue_pair_query_template.substitute(
-                                nested=case_insensitive_must_name_condition_template.substitute(  # noqa
-                                    name=key
-                                )
-                            )
-                        )
-                        nested_must_not_part.append(
-                            nested_keyvalue_pair_query_template.substitute(
-                                nested=case_insensitive_must_value_condition_template.substitute(  # noqa
+                            nested_query_template_must_must_not.substitute(
+                                must_not_part=case_insensitive_must_value_condition_template.substitute(  # noqa
                                     value=value
-                                )
+                                ),
+                                must_part=case_insensitive_must_name_condition_template.substitute(  # noqa
+                                    name=key
+                                ),
                             )
                         )
 
@@ -702,7 +684,6 @@ def elasticsearch_query_builder(
                     ff = nested_query_template_must_not.substitute(must_not_value=ss)
                     should_part_list_or.append(ff)
     all_terms = ""
-
     for should_part_list_ in all_should_part_list:
         if isinstance(should_part_list_, dict):
             should_part_list = should_part_list_.get("main")
