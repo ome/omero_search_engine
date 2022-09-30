@@ -49,7 +49,8 @@ inner join imageannotationlink on image.id =imageannotationlink.parent
 inner join annotation_mapvalue on
 annotation_mapvalue.annotation_id=imageannotationlink.child
 where lower(annotation_mapvalue.name)='$name' and
-lower(annotation_mapvalue.value)=lower('$value')"""
+lower(annotation_mapvalue.value)$operator lower('$value')"""
+
 )
 
 # Get number of images which satisfy project key-value query
@@ -65,11 +66,12 @@ on project.id =projectannotationlink.parent
 inner join annotation_mapvalue
 on annotation_mapvalue.annotation_id=projectannotationlink.child
 where lower(annotation_mapvalue.name)=lower('$name')
-and lower(annotation_mapvalue.value)=lower('$value')"""
+and lower(annotation_mapvalue.value)$operator lower('$value')"""
+
 )
 
 # Get the  number of images using "in"
-query_image_or = Template(
+query_image_in = Template(
     """
 Select DISTINCT image.id from image
 inner join imageannotationlink
@@ -77,7 +79,7 @@ on image.id =imageannotationlink.parent
 inner join annotation_mapvalue
 on annotation_mapvalue.annotation_id=imageannotationlink.child
 where lower(annotation_mapvalue.name) in ($names)
-and lower(annotation_mapvalue.value) in ($values)"""
+and lower(annotation_mapvalue.value) $operator ($values)"""
 )
 
 # Get the images which satisfy screen key-value query
@@ -93,8 +95,8 @@ inner join screenannotationlink
 on screen.id =screenannotationlink.parent
 inner join annotation_mapvalue
 on annotation_mapvalue.annotation_id=screenannotationlink.child
-where lower(annotation_mapvalue.name)='$name'
-and lower(annotation_mapvalue.value)=lower('$value')"""
+where lower(annotation_mapvalue.name)= lower('$name')
+and lower(annotation_mapvalue.value)$operator lower('$value')"""
 )
 
 
@@ -117,7 +119,8 @@ inner join datasetimagelink on datasetimagelink.child=image.id
 inner join dataset on datasetimagelink.parent=dataset.id
 inner join projectdatasetlink on dataset.id=projectdatasetlink.child
 inner join project on project.id=projectdatasetlink.parent
-where lower(project.name)=lower('$name')"""
+where lower (project.name) $operator lower ('$name')"""
+
 )
 
 # get images in a screen using id
@@ -141,7 +144,7 @@ inner join well on wellsample.well= well.id
 inner join plate on well.plate=plate.id
 inner join screenplatelink on plate.id=screenplatelink.child
 inner join screen on screen.id=screenplatelink.parent
-where lower(screen.name)=lower('$name')"""
+where lower(screen.name)$operator lower('$name')"""
 )
 
 # get resource id using its name
