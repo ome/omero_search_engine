@@ -96,5 +96,16 @@
             "validation screen"
          ]
       ]
-   }
+   },
+    "query_in": {
+       "image": [
+          "Gene Symbol",
+          [
+             "Duoxa2",
+             "Bach2",
+             "Cxcr2",
+             "Mysm1"
+          ]
+       ]
+    }
 }
