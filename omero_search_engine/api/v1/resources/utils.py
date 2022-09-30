@@ -113,10 +113,25 @@ case_insensitive_must_value_condition_template = Template(
     """
 {"match": {"key_values.value.keyvaluenormalize":"$value"}}"""
 )
+
+# in operator
+case_insensitive_must_in_value_condition_template = Template(
+    """
+{"terms": {"key_values.value.keyvaluenormalize":$value}}"""
+)
+
 case_sensitive_must_value_condition_template = Template(
     """
 {"match": {"key_values.value.keyvalue":"$value"}}"""
 )
+
+# in opeartor
+case_sensitive_must_in_value_condition_template = Template(
+    """
+{"terms": {"key_values.value.keyvalue":$value}}"""
+)
+
+
 nested_keyvalue_pair_query_template = Template(
     """
 {"nested": {"path": "key_values",
@@ -283,8 +298,20 @@ def elasticsearch_query_builder(
             search_omero_app.logger.info("FILTER %s" % filter)
             try:
                 key = filter["name"].strip()
-                value = filter["value"].strip()
                 operator = filter["operator"].strip()
+                if operator == "in":
+                    if isinstance(filter["value"], list):
+                        value_ = filter["value"]
+                    else:
+                        # in case of providing it with single query, the values should
+                        # be provided as a string seprated the array items by ','
+                        value_ = filter["value"].split(",")
+                    value = [val.strip() for val in value_]
+                    value = json.dumps(value)
+
+                else:
+                    value = filter["value"].strip()
+
             except Exception as e:
                 search_omero_app.logger.info(str(e))
                 return build_error_message(
@@ -325,6 +352,36 @@ def elasticsearch_query_builder(
                         nested=",".join(_nested_must_part)
                     )
                 )
+
+            if operator == "in":
+                if case_sensitive:
+                    _nested_must_part.append(
+                        case_sensitive_must_in_value_condition_template.substitute(  # noqa
+                            value=value
+                        )
+                    )
+                    _nested_must_part.append(
+                        case_sensitive_must_name_condition_template.substitute(name=key)
+                    )  # noqa
+
+                else:
+                    _nested_must_part.append(
+                        case_insensitive_must_in_value_condition_template.substitute(  # noqa
+                            value=value
+                        )
+                    )
+                    _nested_must_part.append(
+                        case_insensitive_must_name_condition_template.substitute(  # noqa
+                            name=key
+                        )
+                    )
+
+                nested_must_part.append(
+                    nested_keyvalue_pair_query_template.substitute(
+                        nested=",".join(_nested_must_part)
+                    )
+                )
+
             if operator == "contains":
                 value = "*{value}*".format(value=adjust_value(value))
                 # _nested_must_part.append(must_name_condition_template.substitute(name=key)) # noqa

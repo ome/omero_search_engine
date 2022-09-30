@@ -88,5 +88,9 @@ while len(received_results) < total_results:
         % (len(received_results), total_results, page, total_pages, bookmark)
     )
 
-# 2000 /11686633, page: 1/11687, bookmark: 109600
-# 2000 /12225067, page: 1/12226, bookmark:  109600
+# another example using in operators and send items inside value as a string,
+# Items inside in the list are seprated by ','
+logging.info("Using in operator")
+url = "%s%s?key=Gene Symbol&value=Pdgfc,Rnase10&operator=in" % (base_url, image_search)
+bookmark, total_results, total_pages = call_omero_return_results(url, method="get")
+logging.info("%s,%s" % (total_results, total_pages))
