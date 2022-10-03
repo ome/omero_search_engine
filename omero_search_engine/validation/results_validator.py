@@ -30,7 +30,7 @@ from omero_search_engine.validation.psql_templates import (
     query_images_screen_key_value,
     query_images_in_project_name,
     query_images_screen_name,
-    query_image_or,
+    query_image_in,
     screens_count,
     projects_count,
 )
@@ -42,7 +42,9 @@ query_methods = {
     "screen": query_images_screen_key_value,
     "project_name": query_images_in_project_name,
     "screen_name": query_images_screen_name,
-    "query_image_or": query_image_or,
+    "query_image_or": query_image_in,
+    "in_clause": query_image_in,
+    "not_in_clause": query_image_in,
     "screens_count": screens_count,
     "projects_count": projects_count,
 }
@@ -69,6 +71,14 @@ class Validator(object):
         self.sql_statement = query_methods[resource]
         self.searchengine_results = {}
 
+    def set_in_query(self, clauses, resource="image", type="in_clause"):
+        """
+        in list query
+        """
+        self.type = type
+        self.clauses = clauses
+        self.resource = resource
+
     def set_complex_query(self, name, clauses, resource="image", type="complex"):
         """
         complex query
@@ -81,6 +91,27 @@ class Validator(object):
         self.postgres_results = []
         self.searchengine_results = {}
 
+    def get_in_sql(self, clauses, name="in_clause"):
+        names = "'%s'" % clauses[0].lower()
+        cases = [c.lower() for c in clauses[1]]
+        values = "'" + "','".join(cases) + "'"
+        if name == "in_clause":
+            sql = query_methods[name].substitute(
+                names=names, values=values, operator="in"
+            )
+        elif name == "not_in_clause":
+            sql = query_methods[name].substitute(
+                names=names, values=values, operator="not in"
+            )
+        # sql = query_methods[name].substitute(names=names, values=values)
+        conn = search_omero_app.config["database_connector"]
+        postgres_results = conn.execute_query(sql)
+        results = [item["id"] for item in postgres_results]
+        search_omero_app.logger.info(
+            "results for or received %s" % len(results)
+        )  # noqa
+        return results
+
     def get_or_sql(self, clauses, name="query_image_or"):
         names = ""
         values = ""
@@ -91,7 +122,8 @@ class Validator(object):
             else:
                 names = "'%s'" % claus[0].lower()
                 values = "'%s'" % claus[1].lower()
-        sql = query_methods[name].substitute(names=names, values=values)
+        # sql = query_methods[name].substitute(names=names, values=values)
+        sql = query_methods[name].substitute(names=names, values=values, operator="in")
         conn = search_omero_app.config["database_connector"]
         postgres_results = conn.execute_query(sql)
         results = [item["id"] for item in postgres_results]
@@ -105,7 +137,10 @@ class Validator(object):
         co = 0
         for claus in clauses:
             sql = query_methods["image"].substitute(
-                name=claus[0].lower(), value=claus[1].lower()
+                # toz
+                operator="=",
+                name=claus[0].lower(),
+                value=claus[1].lower(),
             )
             conn = search_omero_app.config["database_connector"]
             postgres_results = conn.execute_query(sql)
@@ -120,12 +155,18 @@ class Validator(object):
             co += 1
         return results
 
-    def get_results_postgres(self):
+    def get_results_postgres(self, operator=None):
         """
         Query the postgresql
         """
         search_omero_app.logger.info("Getting results from postgres")
-        if self.type == "complex":
+        if self.type == "in_clause":
+            self.postgres_results = self.get_in_sql(self.clauses)
+            return
+        elif self.type == "not_in_clause":
+            self.postgres_results = self.get_in_sql(self.clauses, self.type)
+            return
+        elif self.type == "complex":
             if self.name == "query_image_or":
                 self.postgres_results = self.get_or_sql(self.clauses)
             elif self.name == "query_image_and":
@@ -141,12 +182,19 @@ class Validator(object):
                 )
             return
         else:
+            if not operator or operator == "equals":
+                operator = "="
+            else:
+                operator = "!="
             if self.name != "name":
                 sql = self.sql_statement.substitute(
-                    name=self.name.lower(), value=self.value.lower()
+                    # toz
+                    operator=operator,
+                    name=self.name.lower(),
+                    value=self.value.lower(),
                 )
             else:
-                sql = self.sql_statement.substitute(name=self.value)
+                sql = self.sql_statement.substitute(name=self.value, operator=operator)
         # search_omero_app.logger.info ("sql: %s"%sql)
         conn = search_omero_app.config["database_connector"]
         postgres_results = conn.execute_query(sql)
@@ -155,11 +203,35 @@ class Validator(object):
             "results received %s" % len(self.postgres_results)
         )  # noqa
 
-    def get_results_searchengine(self):
+    def get_results_searchengine(self, operator=None):
         """
         Query the results from the serachengine
         """
-        if self.type == "complex":
+        if self.type == "in_clause":
+            filters = []
+            filters.append(
+                {
+                    "name": self.clauses[0],
+                    "value": self.clauses[1],
+                    "operator": "in",
+                    "resource": self.resource,
+                }
+            )
+            query = {"and_filters": filters, "or_filters": []}
+
+        elif self.type == "not_in_clause":
+            filters = []
+            filters.append(
+                {
+                    "name": self.clauses[0],
+                    "value": self.clauses[1],
+                    "operator": "not_in",
+                    "resource": self.resource,
+                }
+            )
+            query = {"and_filters": filters, "or_filters": []}
+
+        elif self.type == "complex":
             filters = []
             if self.name != "query_image_and_or":
                 for claus in self.clauses:
@@ -196,12 +268,14 @@ class Validator(object):
                         )
 
         else:
+            if not operator:
+                operator = "equals"
             if self.name != "name":
                 and_filters = [
                     {
                         "name": self.name.lower(),
                         "value": self.value.lower(),
-                        "operator": "equals",
+                        "operator": operator,
                         "resource": self.resource,
                     }
                 ]
@@ -211,7 +285,7 @@ class Validator(object):
                         "name": "name",
                         "value": self.value,
                         "resource": "project",
-                        "operator": "equals",
+                        "operator": operator,
                     }
                 ]
             query = {"and_filters": and_filters, "or_filters": []}
@@ -381,14 +455,15 @@ class Validator(object):
             search_omero_app.logger.info(mes)
         return mess
 
-    def compare_results(self):
+    def compare_results(self, operator=None):
+
         """
         call the results
         """
         st_time = datetime.now()
-        self.get_results_postgres()
+        self.get_results_postgres(operator)
         st2_time = datetime.now()
-        self.get_results_searchengine()
+        self.get_results_searchengine(operator)
         st3_time = datetime.now()
         sql_time = st2_time - st_time
         searchengine_time = st3_time - st2_time
@@ -429,32 +504,12 @@ class Validator(object):
             searchengine_no = self.searchengine_results.get("size")
         else:
             searchengine_no = self.searchengine_results
-        if not self.deep_check:
-            return (
-                "not equal, database no of the results from server is: %s and\
-                 the number of results from searchengine (bookmark) is %s?,\
-                 \ndatabase server query time= %s, searchengine query time= %s"
-                % (
-                    len(self.postgres_results),
-                    searchengine_no,
-                    sql_time,
-                    searchengine_time,
-                )
-            )
-        else:
-            return (
-                "not equal, database no of the results from server is: %s and\
-                     the number of results from searchengine (bookmark) is %s?,\
-                    the number of results from searchengine (pagination) is %s?,\
-                     \ndatabase server query time= %s, searchengine query time= %s"
-                % (
-                    len(self.postgres_results),
-                    searchengine_no,
-                    len(serach_idsp),
-                    sql_time,
-                    searchengine_time,
-                )
-            )
+        return (
+            "not equal, database no of the results from database server is: %s and"
+             "the number of results from searchengine is %s?,"
+             "\ndatabase server query time= %s, searchengine query time= %s"
+            % (len(self.postgres_results), searchengine_no, sql_time, searchengine_time)
+        )
 
 
 def validate_queries(json_file, deep_check):
@@ -472,6 +527,7 @@ def validate_queries(json_file, deep_check):
 
     test_cases = test_data.get("test_cases")
     complex_test_cases = test_data.get("complex_test_cases")
+    query_in = test_data.get("query_in")
     messages = []
     from datetime import datetime
 
@@ -481,22 +537,39 @@ def validate_queries(json_file, deep_check):
             name = case[0]
             value = case[1]
             search_omero_app.logger.info(
-                "Testing %s for name: %s, key: %s" % (resource, name, value)
+                "Testing (equals) %s for name: %s, key: %s" % (resource, name, value)
             )
             validator = Validator(deep_check)
             validator.set_simple_query(resource, name, value)
             if resource == "image":
                 mess = validator.get_containers_test_cases()
                 messages = messages + mess
-
-            res = validator.compare_results()
+            res = validator.compare_results("equals")
             elabsed_time = str(datetime.now() - start_time)
             messages.append(
-                "Results from PostgreSQL and search engine for "
-                "name '%s', value '%s', are: %s"
+                "Results form (equals) PostgreSQL and search engine"
+                 "for name: %s , value: %s are: %s"
                 % (validator.name, validator.value, res)
             )
             search_omero_app.logger.info("Total time=%s" % elabsed_time)
+
+            # Not equals
+            start_time = datetime.now()
+            search_omero_app.logger.info(
+                "Testing (not equals) %s for name: %s, key: %s"
+                % (resource, name, value)
+            )
+            if resource == "image":
+                not_equls_validator = Validator(deep_check)
+                not_equls_validator.set_simple_query(resource, name, value)
+                res = not_equls_validator.compare_results("not_equals")
+                elabsed_time = str(datetime.now() - start_time)
+                messages.append(
+                    "Results (not_equals) form PostgreSQL and search engine"
+                     "for name: %s , value: %s are: %s"
+                    % (not_equls_validator.name, not_equls_validator.value, res)
+                )
+                search_omero_app.logger.info("Total time=%s" % elabsed_time)
 
     for name, cases_ in complex_test_cases.items():
         for cases in cases_:
@@ -512,6 +585,42 @@ def validate_queries(json_file, deep_check):
             search_omero_app.logger.info(
                 "Total time=%s" % str(datetime.now() - start_time)
             )
+
+    for resource, cases in query_in.items():
+        for case in cases:
+            start_time = datetime.now()
+            validator_in = Validator(deep_check)
+            validator_in.set_in_query(case, resource)
+            res = validator_in.compare_results()
+            messages.append(
+                "Results for 'in' form PostgreSQL and search engine"
+                "for %s name: %s and value in [%s] are %s"
+                % (
+                    validator_in.resource,
+                    validator_in.clauses[0],
+                    ",".join(validator_in.clauses[1]),
+                    res,
+                )
+            )
+            end_in = datetime.now()
+            search_omero_app.logger.info("Total time=%s" % str(end_in - start_time))
+            # test the same but chang the operator to not in
+            search_omero_app.logger.info("Total time=%s" % str(end_in - start_time))
+            validator_not_in = Validator(deep_check)
+            validator_not_in.set_in_query(case, resource, type="not_in_clause")
+            res = validator_not_in.compare_results()
+            messages.append(
+                "Results for 'not in' form PostgreSQL and search engine for %s name: "
+                "%s and value in [%s] are %s"
+                % (
+                    validator_not_in.resource,
+                    validator_not_in.clauses[0],
+                    ",".join(validator_not_in.clauses[1]),
+                    res,
+                )
+            )
+            search_omero_app.logger.info("Total time=%s" % str(datetime.now() - end_in))
+
     search_omero_app.logger.info(
         "############################################## Check Report ##############################################"  # noqa
     )
