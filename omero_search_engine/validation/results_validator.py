@@ -506,8 +506,8 @@ class Validator(object):
             searchengine_no = self.searchengine_results
         return (
             "not equal, database no of the results from database server is: %s and"
-             "the number of results from searchengine is %s?,"
-             "\ndatabase server query time= %s, searchengine query time= %s"
+            "the number of results from searchengine is %s?,"
+            "\ndatabase server query time= %s, searchengine query time= %s"
             % (len(self.postgres_results), searchengine_no, sql_time, searchengine_time)
         )
 
@@ -548,7 +548,7 @@ def validate_queries(json_file, deep_check):
             elabsed_time = str(datetime.now() - start_time)
             messages.append(
                 "Results form (equals) PostgreSQL and search engine"
-                 "for name: %s , value: %s are: %s"
+                "for name: %s , value: %s are: %s"
                 % (validator.name, validator.value, res)
             )
             search_omero_app.logger.info("Total time=%s" % elabsed_time)
@@ -566,7 +566,7 @@ def validate_queries(json_file, deep_check):
                 elabsed_time = str(datetime.now() - start_time)
                 messages.append(
                     "Results (not_equals) form PostgreSQL and search engine"
-                     "for name: %s , value: %s are: %s"
+                    "for name: %s , value: %s are: %s"
                     % (not_equls_validator.name, not_equls_validator.value, res)
                 )
                 search_omero_app.logger.info("Total time=%s" % elabsed_time)
