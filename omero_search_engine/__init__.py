@@ -73,7 +73,7 @@ def create_app(config_name="development"):
     search_omero_app.app_context()
     search_omero_app.app_context().push()
     es_connector = Elasticsearch(
-        app_config.ELASTICSEARCH_URL,
+        app_config.ELASTICSEARCH_URL.split(","),
         timeout=130,
         max_retries=20,
         retry_on_timeout=True,
