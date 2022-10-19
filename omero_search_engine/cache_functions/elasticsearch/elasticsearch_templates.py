@@ -178,7 +178,7 @@ key_values_resource_cache_template = {
             "fields": {"keyresource": {"type": "keyword"}},
         },  # noqa
         "name": {"type": "text", "fields": {"keyname": {"type": "keyword"}}},
-    }
+    },
 }
 
 key_value_buckets_info_template = {
