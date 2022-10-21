@@ -199,6 +199,15 @@ def set_cache_folder(cache_folder=None):
 
 
 @manager.command
+@manager.option("-b", "--backup_folder", help="path to elasticsearch backup folder")
+def set_elasticsearch_backup_folder(backup_folder=None):
+    if backup_folder:
+        update_config_file({"ELASTICSEARCH_BACKUP_FOLDER": backup_folder})
+    else:
+        search_omero_app.logger.info("No elasticsearch backup folder is provided")
+
+
+@manager.command
 @manager.option("-i", "--idr_url", help="URL for idr test file")
 def set_idr_test_file(idr_url=None):
     if idr_url:
@@ -297,6 +306,24 @@ def test_indexing_search_query(
     if check_studies:
         test_no_images()
     get_omero_stats()
+
+
+@manager.command
+def backup_data():
+    from omero_search_engine.cache_functions.elasticsearch.backup_restores import (
+        backup_indices_data,
+    )
+
+    backup_indices_data()
+
+
+@manager.command
+def restore_data():
+    from omero_search_engine.cache_functions.elasticsearch.backup_restores import (
+        restore_indices_data,
+    )
+
+    restore_indices_data()
 
 
 if __name__ == "__main__":
