@@ -147,9 +147,9 @@ def get_index_data_from_database(resource="all"):
         # validat ethe indexing
         try:
             test_indexing_search_query(deep_check=True, check_studies=True)
-        except:
+        except Exception:
             pass
-    ##backup the index data
+    # backup the index data
     backup_data()
 
 
