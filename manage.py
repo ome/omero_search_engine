@@ -145,7 +145,12 @@ def get_index_data_from_database(resource="all"):
             resource_table_=None, re_create_index=True, only_values=False
         )
         # validat ethe indexing
-        test_indexing_search_query(deep_check=True, check_studies=True)
+        try:
+            test_indexing_search_query(deep_check=True, check_studies=True)
+        except:
+            pass
+    ##backup the index data
+    backup_data()
 
 
 # set configurations
