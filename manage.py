@@ -146,11 +146,11 @@ def get_index_data_from_database(resource="all"):
         )
         # validat ethe indexing
         try:
-            test_indexing_search_query(deep_check=True, check_studies=True)
+            test_indexing_search_query(deep_check=False, check_studies=True)
         except Exception:
             pass
     # backup the index data
-    backup_data()
+    backup_elasticsearch_data()
 
 
 # set configurations
@@ -314,7 +314,7 @@ def test_indexing_search_query(
 
 
 @manager.command
-def backup_data():
+def backup_elasticsearch_data():
     from omero_search_engine.cache_functions.elasticsearch.backup_restores import (
         backup_indices_data,
     )
@@ -323,7 +323,7 @@ def backup_data():
 
 
 @manager.command
-def restore_data():
+def restore_elasticsearch_data():
     from omero_search_engine.cache_functions.elasticsearch.backup_restores import (
         restore_indices_data,
     )
