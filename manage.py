@@ -145,10 +145,8 @@ def get_index_data_from_database(resource="all"):
             resource_table_=None, re_create_index=True, only_values=False
         )
         # validat ethe indexing
-        try:
-            test_indexing_search_query(deep_check=False, check_studies=True)
-        except Exception:
-            pass
+        test_indexing_search_query(deep_check=False, check_studies=True)
+
     # backup the index data
     backup_elasticsearch_data()
 
