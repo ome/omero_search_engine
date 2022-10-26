@@ -32,7 +32,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python 3.9
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: 3.9
       #test the app before bulding the image
@@ -57,9 +57,9 @@ jobs:
         id: getprefix
         run: |
           if [ ! -z ${{ env.name }} ]; then
-            echo "::set-output name=prefix::${{ env.name }}:"
+            echo "name=prefix=${{ env.name }}:" >> $GITHUB_OUTPUT
           else
-            echo "::set-output name=prefix::${{ github.repository }}:"
+            echo "prefix=${{ github.repository }}:" >> $GITHUB_OUTPUT
           fi
       - name: Get other tags
         id: gettags
