@@ -52,3 +52,44 @@ not_valid_or_filters = []
 #                             "operator": "equals", "resource": "image"}]}}
 
 query = {"query_details": {"and_filters": []}}
+
+query_image_and = [
+    [["Phenotype Annotation Level", "protein"], ["organism", "homo sapiens"]]
+]
+
+query_image_or = [[["Gene Symbol", "CDK5RAP2"], ["Gene Symbol", "cep120"]]]
+
+query_image_and_or = [
+    {
+        "query_image_and": [
+            ["Organism", "homo sapiens"],
+            ["Targeted Protein", "CDK5RAP2"],
+            ["Phenotype Term Accession", "CMPO_0000425"],
+        ],
+        "query_image_or": [
+            ["Phenotype", "protein localized to centrosome"],
+            ["Gene Symbol", "http://www.ebi.ac.uk/cmpo/CMPO_0000425"],
+        ],
+    }
+]
+
+simple_queries = {
+    "image": [
+        ["cell line", "Hela"],
+        ["PBS", "10Mm"],
+        ["Gene Symbol", "CDK5RAP2"],
+        ["organism", "homo sapiens"],
+        ["temperature", "37"],
+    ]
+}
+
+query_in = {
+    "image": [
+        ["Gene Symbol", ["pcnt", "cenpj", "cep120", "cdk5rap2"]],
+        ["temperature", ["23 c", "37 c"]],
+    ]
+}
+
+images_keys = ["cell line", "ene symbol"]
+
+images_value_parts = ["he", "pr"]

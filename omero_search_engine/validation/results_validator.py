@@ -18,12 +18,19 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from omero_search_engine import search_omero_app
+import json
 from datetime import datetime
 from omero_search_engine.api.v1.resources.query_handler import (
     determine_search_results_,
     query_validator,
     simple_search,
 )
+
+from omero_search_engine.api.v1.resources.resource_analyser import (
+    search_value_for_resource,
+    get_key_values_return_contents,
+)
+
 from omero_search_engine.validation.psql_templates import (
     query_images_key_value,
     query_image_project_meta_data,
@@ -33,6 +40,8 @@ from omero_search_engine.validation.psql_templates import (
     query_image_in,
     screens_count,
     projects_count,
+    query_images_aviable_values_for_key,
+    query_images_any_value,
 )
 import os
 
@@ -47,6 +56,8 @@ query_methods = {
     "not_in_clause": query_image_in,
     "screens_count": screens_count,
     "projects_count": projects_count,
+    "aviable_values_for_key": query_images_aviable_values_for_key,
+    "search_any_value": query_images_any_value,
 }
 
 
@@ -56,7 +67,7 @@ class Validator(object):
     and from the searchengine
     """
 
-    def __init__(self, deep_check):
+    def __init__(self, deep_check=False):
         self.deep_check = deep_check
 
     def set_simple_query(self, resource, name, value, type="keyvalue"):
@@ -160,6 +171,16 @@ class Validator(object):
         Query the postgresql
         """
         search_omero_app.logger.info("Getting results from postgres")
+        if self.type == "buckets":
+            if self.name:
+                sql = query_methods["aviable_values_for_key"].substitute(name=self.name)
+                conn = search_omero_app.config["database_connector"]
+                self.postgres_results = conn.execute_query(sql)
+            elif self.value:
+                sql = query_methods["search_any_value"].substitute(val_part=self.value)
+                conn = search_omero_app.config["database_connector"]
+                self.postgres_results = conn.execute_query(sql)
+            return
         if self.type == "in_clause":
             self.postgres_results = self.get_in_sql(self.clauses)
             return
@@ -207,6 +228,16 @@ class Validator(object):
         """
         Query the results from the serachengine
         """
+        if self.type == "buckets":
+            if self.name:
+                res = get_key_values_return_contents(self.name, "image", False)
+                self.searchengine_results = json.loads(res.data)
+            elif self.value:
+                self.searchengine_results = search_value_for_resource(
+                    "image", self.value
+                )
+            return
+
         if self.type == "in_clause":
             filters = []
             filters.append(
@@ -397,7 +428,12 @@ class Validator(object):
             None,
             return_containers=True,
         )
-        if search_engine_results["results"].get("results"):
+        # print(search_engine_results["results"])
+        print("======================")
+        if search_engine_results.get("results") and search_engine_results[
+            "results"
+        ].get("results"):
+
             for item in search_engine_results["results"].get("results"):
                 if item["type"] == "screen":
                     if item["name"] in screens_results_idr:
@@ -467,6 +503,8 @@ class Validator(object):
         st3_time = datetime.now()
         sql_time = st2_time - st_time
         searchengine_time = st3_time - st2_time
+        if self.type == "bucket":
+            return
 
         if len(self.postgres_results) == self.searchengine_results.get("size"):
             ids_in = True
@@ -650,6 +688,8 @@ def validate_queries(json_file, deep_check):
 
 def test_no_images():
     idr_url = search_omero_app.config.get("IDR_TEST_FILE_URL")
+    if not idr_url:
+        return
     if not idr_url:
         search_omero_app.logger.info("No idr test file is found")
 

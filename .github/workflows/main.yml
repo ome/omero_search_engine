@@ -44,6 +44,12 @@ jobs:
           python manage.py set_database_configuration -u localhost -s  ${{ job.services.postgres.ports[5432] }} -n postgress -p passwprd
           # configure elasticsearch
           python manage.py set_elasticsearch_configuration -e localhost:${{ job.services.elasticsearch.ports[9200] }}
+          #restore the database backup file to omero.pgdump
+          cat app_data/backup_parts/backupa? > app_data/omero.pgdump
+          #run  restore omero database
+          python manage.py restore_postgresql_database
+          #run indexing indexing
+          python manage.py get_index_data_from_database
           # run tests
           python -m unittest discover -s unit_tests
   upload:
@@ -84,5 +90,3 @@ jobs:
           file: deployment/docker/centos/Dockerfile
           push: true
           tags: ${{ join(fromJson(steps.gettags.outputs.tags)) }}
-
-
