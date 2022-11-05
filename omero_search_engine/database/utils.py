@@ -62,8 +62,9 @@ def restore_database():
         search_omero_app.config.get("DATABASE_NAME"),
         dat_file_name,
     )
-    restore_command = "psql --username khaled --host %s -d %s -f  %s" % (
+    restore_command = "psql --username khaled --host %s --port %s -d %s -f  %s" % (
         search_omero_app.config.get("DATABASE_SERVER_URI"),
+        search_omero_app.config.get("DATABASE_PORT"),
         search_omero_app.config.get("DATABASE_NAME"),
         dat_file_name,
     )
