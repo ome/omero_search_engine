@@ -115,6 +115,13 @@ def sql_results_to_panda():
 
 
 @manager.command
+def restore_postgresql_database():
+    from omero_search_engine.database.utils import restore_database
+
+    restore_database()
+
+
+@manager.command
 @manager.option(
     "-r",
     "--resource",
@@ -331,6 +338,34 @@ def restore_elasticsearch_data():
     # first delete the current indices
     delete_es_index("all")
     restore_indices_data()
+
+
+@manager.command
+@manager.option("-s", "--screen_name", help="Screen name, or part of it")
+@manager.option("-p", "--project_name", help="Project name, or part of it")
+def data_validator(screen_name=None, project_name=None):
+    from datetime import datetime
+
+    if screen_name and project_name:
+        print("Either screen name or project name is allowed")
+
+    from omero_search_engine.validation.omero_keyvalue_data_validator import (
+        check_for_head_space,
+        check_for_tail_space,
+        check_duplicated_keyvalue_pairs,
+    )
+
+    start = datetime.now()
+    check_for_tail_space(screen_name, project_name)
+    start1 = datetime.now()
+    check_for_head_space(screen_name, project_name)
+    start2 = datetime.now()
+    check_duplicated_keyvalue_pairs(screen_name, project_name)
+    end = datetime.now()
+    print(start)
+    print(start1)
+    print(start2)
+    print(end)
 
 
 if __name__ == "__main__":
