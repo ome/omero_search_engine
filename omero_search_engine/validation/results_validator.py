@@ -42,6 +42,7 @@ from omero_search_engine.validation.psql_templates import (
     projects_count,
     query_images_aviable_values_for_key,
     query_images_any_value,
+    query_images_contians_not_contains,
 )
 import os
 
@@ -58,6 +59,7 @@ query_methods = {
     "projects_count": projects_count,
     "aviable_values_for_key": query_images_aviable_values_for_key,
     "search_any_value": query_images_any_value,
+    "image_conatins_not_contains": query_images_contians_not_contains,
 }
 
 
@@ -80,6 +82,18 @@ class Validator(object):
         self.value = value
         self.postgres_results = []
         self.sql_statement = query_methods[resource]
+        self.searchengine_results = {}
+
+    def set_conatins_not_contains_query(self, resource, name, value, type="keyvalue"):
+        """
+        simple query
+        """
+        self.resource = resource
+        self.type = type
+        self.name = name
+        self.value = value
+        self.postgres_results = []
+        self.sql_statement = query_methods["image_conatins_not_contains"]
         self.searchengine_results = {}
 
     def set_in_query(self, clauses, resource="image", type="in_clause"):
@@ -205,8 +219,13 @@ class Validator(object):
         else:
             if not operator or operator == "equals":
                 operator = "="
-            else:
+            elif operator == "not_equals":
                 operator = "!="
+            elif operator == "contains":
+                operator = "like"
+            elif operator == "not_contains":
+                operator = "not like"
+
             if self.name != "name":
                 sql = self.sql_statement.substitute(
                     # toz
@@ -297,7 +316,6 @@ class Validator(object):
                                 "resource": self.resource,
                             }
                         )
-
         else:
             if not operator:
                 operator = "equals"
@@ -429,7 +447,6 @@ class Validator(object):
             return_containers=True,
         )
         # print(search_engine_results["results"])
-        print("======================")
         if search_engine_results.get("results") and search_engine_results[
             "results"
         ].get("results"):
