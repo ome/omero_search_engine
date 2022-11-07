@@ -167,7 +167,7 @@ class BasicTestCase(unittest.TestCase):
             for case in cases:
                 name = case[0]
                 value = case[1]
-                validator = Validator(False)
+                validator = Validator(True)
                 validator.set_simple_query(resource, name, value)
                 validator.get_results_postgres("equals")
                 validator.get_results_searchengine("equals")
@@ -181,28 +181,31 @@ class BasicTestCase(unittest.TestCase):
                     len(validator.postgres_results),
                     validator.searchengine_results.get("size"),
                 )
+                self.assertTrue(validator.identical)
 
     def test_and_query(self):
         name = "query_image_and"
         for cases in query_image_and:
-            validator = Validator(False)
+            validator = Validator(True)
             validator.set_complex_query(name, cases)
             validator.compare_results()
             self.assertEqual(
                 len(validator.postgres_results),
                 validator.searchengine_results.get("size"),
             )
+            self.assertTrue(validator.identical)
 
     def test_or_query(self):
         name = "query_image_or"
         for cases in query_image_or:
-            validator = Validator(False)
+            validator = Validator(True)
             validator.set_complex_query(name, cases)
             validator.compare_results()
             self.assertEqual(
                 len(validator.postgres_results),
                 validator.searchengine_results.get("size"),
             )
+            self.assertTrue(validator.identical)
 
     def test_multi_or_quries(self):
         pass
@@ -210,24 +213,26 @@ class BasicTestCase(unittest.TestCase):
     def test_complex_query(self):
         name = "query_image_and_or"
         for cases in query_image_and_or:
-            validator = Validator(False)
+            validator = Validator(True)
             validator.set_complex_query(name, cases)
             validator.compare_results()
             self.assertEqual(
                 len(validator.postgres_results),
                 validator.searchengine_results.get("size"),
             )
+            self.assertTrue(validator.identical)
 
     def test_in_query(self):
         for resource, cases in query_in.items():
             for case in cases:
-                validator = Validator(False)
+                validator = Validator(True)
                 validator.set_in_query(case, resource)
                 validator.compare_results()
                 self.assertEqual(
                     len(validator.postgres_results),
                     validator.searchengine_results.get("size"),
                 )
+                self.assertTrue(validator.identical)
 
     def test_not_in_query(self):
         for resource, cases in query_in.items():
@@ -239,6 +244,7 @@ class BasicTestCase(unittest.TestCase):
                     len(validator.postgres_results),
                     validator.searchengine_results.get("size"),
                 )
+                self.assertTrue(validator.identical)
 
     def test_seach_for_any_value(self):
         for part in images_value_parts:
@@ -249,6 +255,7 @@ class BasicTestCase(unittest.TestCase):
                 len(validator.postgres_results),
                 validator.searchengine_results.get("total_number_of_buckets"),
             )
+            self.assertTrue(validator.identical)
 
     def test_available_values_for_key(self):
         for image_key in images_keys:
@@ -259,13 +266,14 @@ class BasicTestCase(unittest.TestCase):
                 len(validator.postgres_results),
                 validator.searchengine_results.get("total_number_of_buckets"),
             )
+            self.assertTrue(validator.identical)
 
     def test_contains_not_contains_quries(self):
         for resource, cases in contains_not_contains_quries.items():
             for case in cases:
                 name = case[0]
                 value = case[1]
-                validator = Validator(False)
+                validator = Validator(True)
                 validator.set_conatins_not_contains_query(resource, name, value)
                 validator.get_results_postgres("contains")
                 validator.get_results_searchengine("contains")
@@ -279,6 +287,7 @@ class BasicTestCase(unittest.TestCase):
                     len(validator.postgres_results),
                     validator.searchengine_results.get("size"),
                 )
+                self.assertTrue(validator.identical)
 
     # def test_add_delete_es_index(self):
     #    '''

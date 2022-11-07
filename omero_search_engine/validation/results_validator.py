@@ -71,6 +71,7 @@ class Validator(object):
 
     def __init__(self, deep_check=False):
         self.deep_check = deep_check
+        self.identical = True
 
     def set_simple_query(self, resource, name, value, type="keyvalue"):
         """
@@ -524,29 +525,28 @@ class Validator(object):
             return
 
         if len(self.postgres_results) == self.searchengine_results.get("size"):
-            ids_in = True
             is_it_repated = []
             serach_ids = [id for id in self.searchengine_results.get("ids")]
             serach_idsp = [id for id in self.searchengine_results.get("idsp")]
             if self.deep_check:
                 if sorted(serach_ids) != sorted(self.postgres_results):
-                    ids_in = False
+                    self.identical = False
                 if sorted(serach_idsp) != sorted(serach_ids):
-                    ids_in = False
+                    self.identical = False
             else:
                 if sorted(serach_idsp) != sorted(serach_ids):
-                    ids_in = False
+                    self.identical = False
                 else:
                     for id in serach_ids:
                         if id in is_it_repated:
-                            ids_in = False
+                            self.identical = False
                             break
                         else:
                             is_it_repated.append(id)
                         if id not in self.postgres_results:
-                            ids_in = False
+                            self.identical = False
                             break
-            if ids_in:
+            if self.identical:
                 search_omero_app.logger.info(
                     "No of the retuned results are similar ..."
                 )
