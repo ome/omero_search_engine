@@ -83,6 +83,8 @@ simple_queries = {
     ]
 }
 
+contains_not_contains_quries = {"image": [["cell line", "hel"], ["gene symbol", "cep"]]}
+
 query_in = {
     "image": [
         ["Gene Symbol", ["pcnt", "cenpj", "cep120", "cdk5rap2"]],

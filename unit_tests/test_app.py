@@ -54,6 +54,7 @@ from test_data import (
     query_in,
     images_keys,
     images_value_parts,
+    contains_not_contains_quries,
 )
 
 from omero_search_engine import search_omero_app, create_app
@@ -258,6 +259,26 @@ class BasicTestCase(unittest.TestCase):
                 len(validator.postgres_results),
                 validator.searchengine_results.get("total_number_of_buckets"),
             )
+
+    def test_contains_not_contains_quries(self):
+        for resource, cases in contains_not_contains_quries.items():
+            for case in cases:
+                name = case[0]
+                value = case[1]
+                validator = Validator(False)
+                validator.set_conatins_not_contains_query(resource, name, value)
+                validator.get_results_postgres("contains")
+                validator.get_results_searchengine("contains")
+                self.assertEqual(
+                    len(validator.postgres_results),
+                    validator.searchengine_results.get("size"),
+                )
+                validator.get_results_postgres("not_contains")
+                validator.get_results_searchengine("not_contains")
+                self.assertEqual(
+                    len(validator.postgres_results),
+                    validator.searchengine_results.get("size"),
+                )
 
     # def test_add_delete_es_index(self):
     #    '''

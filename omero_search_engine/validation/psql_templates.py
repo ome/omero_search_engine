@@ -61,6 +61,17 @@ annotation_mapvalue.annotation_id=imageannotationlink.child
 where lower(annotation_mapvalue.value) like '%$val_part%' """
 )
 
+# get any values for an image keys
+query_images_contians_not_contains = Template(
+    """
+Select DISTINCT image.id, annotation_mapvalue.name, annotation_mapvalue.value from image
+inner join imageannotationlink on image.id =imageannotationlink.parent
+inner join annotation_mapvalue on
+annotation_mapvalue.annotation_id=imageannotationlink.child
+where lower(annotation_mapvalue.name)='$name'
+and lower(annotation_mapvalue.value) $operator ('%$value%') """
+)
+
 
 # get images satisfy image key-value query
 query_images_key_value = Template(
@@ -86,7 +97,7 @@ on project.id =projectannotationlink.parent
 inner join annotation_mapvalue
 on annotation_mapvalue.annotation_id=projectannotationlink.child
 where lower(annotation_mapvalue.name)=lower('$name')
-and lower(annotation_mapvalue.value)$operator lower('$value')"""
+and lower(annotation_mapvalue.value) $operator lower('$value')"""
 )
 
 # Get the  number of images using "in"
