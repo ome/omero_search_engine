@@ -55,6 +55,9 @@ from test_data import (
     images_keys,
     images_value_parts,
     contains_not_contains_quries,
+    image_owner,
+    image_group,
+    image_owner_group,
 )
 
 from omero_search_engine import search_omero_app, create_app
@@ -237,7 +240,7 @@ class BasicTestCase(unittest.TestCase):
     def test_not_in_query(self):
         for resource, cases in query_in.items():
             for case in cases:
-                validator = Validator(False)
+                validator = Validator(True)
                 validator.set_in_query(case, resource, type="not_in_clause")
                 validator.compare_results()
                 self.assertEqual(
@@ -255,7 +258,6 @@ class BasicTestCase(unittest.TestCase):
                 len(validator.postgres_results),
                 validator.searchengine_results.get("total_number_of_buckets"),
             )
-            self.assertTrue(validator.identical)
 
     def test_available_values_for_key(self):
         for image_key in images_keys:
@@ -266,7 +268,6 @@ class BasicTestCase(unittest.TestCase):
                 len(validator.postgres_results),
                 validator.searchengine_results.get("total_number_of_buckets"),
             )
-            self.assertTrue(validator.identical)
 
     def test_contains_not_contains_quries(self):
         for resource, cases in contains_not_contains_quries.items():
@@ -288,6 +289,52 @@ class BasicTestCase(unittest.TestCase):
                     validator.searchengine_results.get("size"),
                 )
                 self.assertTrue(validator.identical)
+
+    def test_owner(self):
+        for resource, cases in image_owner.items():
+            for case in cases:
+                name = case[0]
+                value = case[1]
+                owner_id = case[2]
+                validator = Validator(True)
+                validator.set_simple_query(resource, name, value)
+                validator.set_owner_group(owner_id=owner_id)
+                validator.compare_results()
+                self.assertEqual(
+                    len(validator.postgres_results),
+                    validator.searchengine_results.get("size"),
+                )
+
+    def test_group(self):
+        for resource, cases in image_group.items():
+            for case in cases:
+                name = case[0]
+                value = case[1]
+                group_id = case[2]
+                validator = Validator(True)
+                validator.set_simple_query(resource, name, value)
+                validator.set_owner_group(group_id=group_id)
+                validator.compare_results()
+                self.assertEqual(
+                    len(validator.postgres_results),
+                    validator.searchengine_results.get("size"),
+                )
+
+    def test_owner_group(self):
+        for resource, cases in image_owner_group.items():
+            for case in cases:
+                name = case[0]
+                value = case[1]
+                owner_id = case[2]
+                group_id = case[3]
+                validator = Validator(True)
+                validator.set_simple_query(resource, name, value)
+                validator.set_owner_group(owner_id=owner_id, group_id=group_id)
+                validator.compare_results()
+                self.assertEqual(
+                    len(validator.postgres_results),
+                    validator.searchengine_results.get("size"),
+                )
 
     # def test_add_delete_es_index(self):
     #    '''

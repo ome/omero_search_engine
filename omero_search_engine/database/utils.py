@@ -4,11 +4,12 @@ import subprocess
 
 
 def restore_database():
+    """
+    restote the database from a database dump file
+    """
     from omero_search_engine import search_omero_app
 
     main_dir = os.path.abspath(os.path.dirname(__file__))
-    print(main_dir)
-    "/mnt/d/Projects/forks/omero_search_engine/omero_search_engine/database" ""
     mm = main_dir.replace("omero_search_engine/database", "")
     sys.path.append(mm)
     dat_file_name = os.path.join(
@@ -22,9 +23,6 @@ def restore_database():
         dat_file_name,
     )
     try:
-        print("===========================================")
-        print(restore_command)
-        print("===========================================")
         proc = subprocess.Popen(
             restore_command,
             shell=True,

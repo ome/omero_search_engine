@@ -344,21 +344,38 @@ def restore_elasticsearch_data():
 @manager.option("-s", "--screen_name", help="Screen name, or part of it")
 @manager.option("-p", "--project_name", help="Project name, or part of it")
 def data_validator(screen_name=None, project_name=None):
+    """
+    Checking key-value pair for tailing and heading  space
+    it is also check the key-value pair duplication
+    If not attribute is provided it will check all the database
+    it cab be used to check specific project of screenf
+    the outpust is csv files,
+    each check usually generates 3 files:
+    main files which contains image details (e.g image id) and the key and the value
+    file contains screens if any and projects:
+        It will contain screen name,  the key-value which has the issue
+        and the total number of affected images for each row.
+    file contains and projects if any,
+        It will contains project name and the key-value which has the issue
+        and the total number of affected images for each row.
+
+    The files are saved at the same .app_config.yml's folder
+    """
     from datetime import datetime
 
     if screen_name and project_name:
         print("Either screen name or project name is allowed")
 
     from omero_search_engine.validation.omero_keyvalue_data_validator import (
-        check_for_head_space,
-        check_for_tail_space,
+        check_for_heading_space,
+        check_for_tailing_space,
         check_duplicated_keyvalue_pairs,
     )
 
     start = datetime.now()
-    check_for_tail_space(screen_name, project_name)
+    check_for_tailing_space(screen_name, project_name)
     start1 = datetime.now()
-    check_for_head_space(screen_name, project_name)
+    check_for_heading_space(screen_name, project_name)
     start2 = datetime.now()
     check_duplicated_keyvalue_pairs(screen_name, project_name)
     end = datetime.now()
