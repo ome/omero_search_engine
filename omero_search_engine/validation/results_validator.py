@@ -97,6 +97,10 @@ class Validator(object):
         self.sql_statement = query_methods["image_conatins_not_contains"]
         self.searchengine_results = {}
 
+    def set_owner_group(self, owner_id=None, group_id=None):
+        self.owner_id = owner_id
+        self.group_id = group_id
+
     def set_in_query(self, clauses, resource="image", type="in_clause"):
         """
         in list query
@@ -236,6 +240,12 @@ class Validator(object):
                 )
             else:
                 sql = self.sql_statement.substitute(name=self.value, operator=operator)
+
+            if hasattr(self, "owner_id") and self.owner_id:
+                sql = sql + " and %s.owner_id=%s" % (self.resource, self.owner_id)
+            if hasattr(self, "group_id") and self.group_id:
+                sql = sql + " and %s.group_id=%s" % (self.resource, self.group_id)
+                print(sql)
         # search_omero_app.logger.info ("sql: %s"%sql)
         conn = search_omero_app.config["database_connector"]
         postgres_results = conn.execute_query(sql)
@@ -339,7 +349,17 @@ class Validator(object):
                     }
                 ]
             query = {"and_filters": and_filters, "or_filters": []}
-        query_data = {"query_details": query}
+        and_main_attributes = []
+        if hasattr(self, "owner_id") and self.owner_id:
+            and_main_attributes.append(
+                {"name": "owner_id", "value": self.owner_id, "operator": "equals"}
+            )
+        if hasattr(self, "group_id") and self.group_id:
+            and_main_attributes.append(
+                {"name": "group_id", "value": self.group_id, "operator": "equals"}
+            )
+        main_attributes = {"and_main_attributes": and_main_attributes}
+        query_data = {"query_details": query, "main_attributes": main_attributes}
         # validate the query syntex
         query_validation_res = query_validator(query_data)
         if query_validation_res == "OK":
@@ -512,7 +532,7 @@ class Validator(object):
     def compare_results(self, operator=None):
 
         """
-        call the results
+        Get and compare the results from the postgresql and the searchengine
         """
         st_time = datetime.now()
         self.get_results_postgres(operator)
@@ -923,3 +943,14 @@ def get_no_images_sql_containers():
     report = "\n".join(messages)  # noqa
     with open(report_file, "w") as f:
         f.write(report)
+
+        """
+def set_owner_ship(resource , name, value, owener_id=None, group_id=None):
+    if hasattr(self, 'owener_id'):
+        if hasattr(self, 'group_id'):
+    sql=query_images_key_value.substitute(naem=name, value=value)
+    if owener_id:
+        sql=sql +" %s.%owner_id=%s"%(resource,owener_id)
+    if group_id:
+        sql = sql + " %s.%group_id=%s" % (resource, group_id)
+        """

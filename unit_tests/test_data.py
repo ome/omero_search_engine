@@ -92,6 +92,12 @@ query_in = {
     ]
 }
 
-images_keys = ["cell line", "ene symbol"]
+image_owner = {"image": [["cell line", "Hela", 103]]}
+
+image_group = {"image": [["cell line", "Hela", 5]]}
+
+image_owner_group = {"image": [["gene symbol", "cep120", 702, 5]]}
+
+images_keys = ["cell line", "gene symbol"]
 
 images_value_parts = ["he", "pr"]
