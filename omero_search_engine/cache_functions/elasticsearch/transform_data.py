@@ -160,7 +160,7 @@ def delete_index(resource, es_index=None):
         es_index = resource_elasticsearchindex[resource]
         return delete_es_index(es_index)
     elif resource == "all":
-        all_indcies=get_all_indexes()
+        all_indcies = get_all_indexes()
         for es_index in all_indcies:
             delete_es_index(es_index)
         return True
