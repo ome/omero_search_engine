@@ -164,6 +164,12 @@ OMERO Search Engine
 
 For the configuration and installation instructions, please read the following document `configuration_installation <docs/configuration/configuration_installation.rst>`_
 
+Disclaimer
+----------
+
+* The SearchEngine currently is intended to be used with public data.
+* There is no authenticating or access permission in place yet.
+* All the data in the Elasticsearch indices is exposed publicly.
 
 License
 -------
