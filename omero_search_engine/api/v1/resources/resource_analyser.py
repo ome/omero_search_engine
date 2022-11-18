@@ -739,17 +739,17 @@ def get_resource_names(resource, name=None, description=False):
     It works for projects and screens but can be extended.
     """
     if resource != "all":
-        returned_results = get_the_results(resource, name,description)
+        returned_results = get_the_results(resource, name, description)
     else:
         returned_results = {}
         ress = ["project", "screen"]
         for res in ress:
-            returned_results[res] = get_the_results(res, name,description)
+            returned_results[res] = get_the_results(res, name, description)
 
     return returned_results
 
 
-def get_the_results(resource, name,description, es_index="key_values_resource_cach"):
+def get_the_results(resource, name, description, es_index="key_values_resource_cach"):
     returned_results = {}
     query = key_values_buckets_template_2.substitute(resource=resource)
     results_ = connect_elasticsearch(
@@ -765,10 +765,14 @@ def get_the_results(resource, name,description, es_index="key_values_resource_ca
             ]
         elif name and description:
             returned_results = {
-                item: value for item, value in hits[0]["_source"]["resourcename"].items() if name in item
+                item: value
+                for item, value in hits[0]["_source"]["resourcename"].items()
+                if name in item
             }
             returned_results_1 = {
-                item: value for item, value in hits[0]["_source"]["resourcename"].items() if value and name in value
+                item: value
+                for item, value in hits[0]["_source"]["resourcename"].items()
+                if value and name in value
             }
             for item, value in returned_results_1.items():
                 if item not in returned_results:
