@@ -733,47 +733,47 @@ def get_resource_attribute_values(
     return returned_results
 
 
-def get_resource_names(resource, name=None, es_index="key_values_resource_cach"):
+def get_resource_names(resource, name=None, description=False):
     """
     return resources names attributes
     It works for projects and screens but can be extended.
     """
-    if not name:
-        query = key_values_buckets_template_2.substitute(resource=resource)
-    else:
-        query = key_values_buckets_template_search_name.substitute(
-            resource=resource, name=name
-        )
     if resource != "all":
-        returned_results = []
-        results_ = connect_elasticsearch(
-            es_index, query
-        )  # .search(index=es_index, body=query)
-        hits = results_["hits"]["hits"]
-        if len(hits) > 0:
-            if name:
-                returned_results = [
-                    item for item in hits[0]["_source"]["resourcename"] if name in item
-                ]
-            else:
-                returned_results = hits[0]["_source"]["resourcename"]
+        returned_results = get_the_results(resource, name,description)
     else:
         returned_results = {}
         ress = ["project", "screen"]
         for res in ress:
-            query = key_values_buckets_template_2.substitute(resource=res)
-            results_ = connect_elasticsearch(
-                es_index, query
-            )  # .search(index=es_index, body=query)
-            hits = results_["hits"]["hits"]
-            if len(hits) > 0:
-                if not name:
-                    returned_results[res] = hits[0]["_source"]["resourcename"]
-                else:
-                    returned_results[res] = [
-                        item
-                        for item in hits[0]["_source"]["resourcename"]
-                        if name in item
-                    ]
+            returned_results[res] = get_the_results(res, name,description)
 
+    return returned_results
+
+
+def get_the_results(resource, name,description, es_index="key_values_resource_cach"):
+    returned_results = {}
+    query = key_values_buckets_template_2.substitute(resource=resource)
+    results_ = connect_elasticsearch(
+        es_index, query
+    )  # .search(index=es_index, body=query)
+    hits = results_["hits"]["hits"]
+
+    if len(hits) > 0:
+        # print (hits[0]["_source"])
+        if name and not description:
+            returned_results = [
+                item for item in hits[0]["_source"]["resourcename"] if name in item
+            ]
+        elif name and description:
+            returned_results = {
+                item: value for item, value in hits[0]["_source"]["resourcename"].items() if name in item
+            }
+            returned_results_1 = {
+                item: value for item, value in hits[0]["_source"]["resourcename"].items() if value and name in value
+            }
+            for item, value in returned_results_1.items():
+                if item not in returned_results:
+                    returned_results[item] = value
+
+        else:
+            returned_results = list(hits[0]["_source"]["resourcename"].keys())
     return returned_results

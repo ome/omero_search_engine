@@ -269,7 +269,15 @@ def get_resource_names_(resource_table):
         return response
 
     value = request.args.get("value")
-    return jsonify(get_resource_names(resource_table, value))
+    description=request.args.get("use_description")
+    if description:
+        if description.lower() in ["true", "false"]:
+            description=json.loads(description.lower())
+        elif description=='1':
+            description = True
+        else:
+            description=False
+    return jsonify(get_resource_names(resource_table, value, description))
 
 
 @resources.route("/submitquery/containers/", methods=["POST"])
