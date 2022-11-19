@@ -336,16 +336,18 @@ def prepare_search_results(results, size=0):
         "total_number_of_%s" % (resource): total_number,
         "total_number_of_buckets": number_of_buckets,
     }
-
     if size > 0:
-        results_dict["total_number_of_all_buckets "] = size
+        results_dict["total_number_of_all_buckets"] = size
         if number_of_buckets < size:
             # this should be later to get the next page
-            results_dict["bookmark"] = [
-                int(results["hits"]["hits"][-1]["sort"][0]),
-                int(results["hits"]["hits"][-1]["sort"][1]),
-                results["hits"]["hits"][-1]["sort"][2],
-            ]
+            if len(results["hits"]["hits"]) > 0:
+                results_dict["bookmark"] = [
+                    int(results["hits"]["hits"][-1]["sort"][0]),
+                    int(results["hits"]["hits"][-1]["sort"][1]),
+                    results["hits"]["hits"][-1]["sort"][2],
+                ]
+            else:
+                results_dict["bookmark"] = None
     return results_dict
 
 
@@ -478,7 +480,9 @@ def query_cashed_bucket_value(value, es_index="key_value_buckets_information"):
     return prepare_search_results(res)
 
 
-def search_value_for_resource(table_, value, es_index="key_value_buckets_information"):
+def search_value_for_resource(
+    table_, value, bookmarks=None, es_index="key_value_buckets_information"
+):
     """
     send the request to elasticsearch and format the results
     It support wildcard operations only
@@ -495,12 +499,14 @@ def search_value_for_resource(table_, value, es_index="key_value_buckets_informa
         # Get the total number of the results.
         res = search_index_for_value(es_index, size_query, True)
         size = res["count"]
+        # use bookmark is it is provided
+        if bookmarks:
+            query = json.loads(query)
+            query["search_after"] = bookmarks
+
         res = search_index_for_value(es_index, query)
         return prepare_search_results(res, size)
     else:
-        # If the user does not specify anything,
-        # it will add * at the start and at the end to
-        # return all the values which contain the search term
         returned_results = {}
         for table in resource_elasticsearchindex:
             # ignore image1 as it is used for testing
@@ -510,9 +516,14 @@ def search_value_for_resource(table_, value, es_index="key_value_buckets_informa
             query = resource_key_values_buckets_template.substitute(
                 value=value, resource=table
             )
-
+            size_query = resource_key_values_buckets_size_template.substitute(
+                value=value, resource=table_
+            )
+            # Get the total number of the results.
+            res = search_index_for_value(es_index, size_query, True)
+            size = res["count"]
             res = search_index_for_value(es_index, query)
-            returned_results[table] = prepare_search_results(res)
+            returned_results[table] = prepare_search_results(res, size)
         return returned_results
 
 

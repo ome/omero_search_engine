@@ -21,15 +21,10 @@ import logging
 import json
 import requests
 import sys
+from utils import base_url
 
 # url to send the query
-# search engine url
-submit_query_url = (
-    "http://127.0.0.1:5577/api/v1/resources/submitquery_returnstudies/"  # noqa
-)
-
-# base_url ="https://idr-testing.openmicroscopy.org/searchengineapi/api/v1/"
-
+submit_query_url = f"{base_url}resources/submitquery/containers/"
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 """
@@ -84,4 +79,4 @@ if returned_results.get("results"):
     if len(returned_results.get("results").get("results")) == 0:
         logging.info("No results is found")
     for item in returned_results.get("results").get("results"):
-        logging.info("Study: %s" % item.get("Name (IDR number)"))
+        logging.info("Study: %s" % item.get("name"))

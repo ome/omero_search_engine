@@ -21,11 +21,10 @@ import logging
 import requests
 import json
 import sys
+from utils import base_url
 
 # url to send the query
 image_value_search = "/resources/image/searchvalues/"
-# search engine url
-base_url = "http://127.0.0.1:5577/api/v1/"
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 # Get the available attributes for a resource, e.g. image
 image_attributes = "/resources/image/keys/"
@@ -60,4 +59,5 @@ res = json.loads(resp.text)
 buckets = res.get("data")
 logging.info("Number of available buckets for attribute %s is %s" % (key, len(buckets)))
 # The first bucket
-logging.info("First bucket: %s " % buckets[0])
+for bucket in buckets:
+    logging.info("Bucket details: %s " % bucket)
