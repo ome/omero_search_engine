@@ -103,9 +103,10 @@ def get_all_indexes():
     ]
 
 
-# es = search_omero_app.config.get("es_connector")
-# all_indexes = es.indices.get("*")
-# return all_indexes
+def get_all_indexes_from_elasticsearch():
+    es = search_omero_app.config.get("es_connector")
+    all_indexes = es.indices.get("*")
+    return all_indexes
 
 
 def rename_index(old_index, new_index):
@@ -126,7 +127,7 @@ def rename_index(old_index, new_index):
 
 def delete_es_index(es_index):
     es = search_omero_app.config.get("es_connector")
-    saved_incies = get_all_indexes()
+    saved_incies = get_all_indexes_from_elasticsearch()
     if es_index in saved_incies:
         response = es.indices.delete(index=es_index)
         if "acknowledged" in response:

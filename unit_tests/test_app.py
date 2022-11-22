@@ -37,7 +37,7 @@ from omero_search_engine.cache_functions.elasticsearch.elasticsearch_templates i
 from omero_search_engine.cache_functions.elasticsearch.transform_data import (
     delete_es_index,
     create_index,
-    get_all_indexes,
+    get_all_indexes_from_elasticsearch,
 )
 from test_data import (
     sql,
@@ -130,13 +130,14 @@ class BasicTestCase(unittest.TestCase):
         es_index = "image_keyvalue_pair_metadata_1"
         es_index_2 = "key_values_resource_cach"
         create_es_index_2 = True
-        all_all_indices = get_all_indexes()
+        all_all_indices = get_all_indexes_from_elasticsearch()
         print(all_all_indices)
         print(all_all_indices.keys())
         if es_index_2 in all_all_indices.keys():
             create_es_index_2 = False
 
-        self.assertTrue(create_index(es_index, image_template))
+        if es_index not in all_all_indices.keys():
+            self.assertTrue(create_index(es_index, image_template))
         if create_es_index_2:
             self.assertTrue(
                 create_index(es_index_2, key_values_resource_cache_template)
