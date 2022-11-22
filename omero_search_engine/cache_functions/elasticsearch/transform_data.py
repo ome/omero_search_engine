@@ -656,13 +656,13 @@ def save_key_value_buckets(
         resource_keys = get_keys(resource_table)
         name_results = None
         if resource_table in ["project", "screen"]:
-            sql = "select name,description  from {resource}".format(
+            sql = "select id, name,description  from {resource}".format(
                 resource=resource_table
             )
             conn = search_omero_app.config["database_connector"]
             name_result = conn.execute_query(sql)
             # name_results = [res["name"] for res in name_results]
-            name_results = {res["name"]: res["description"] for res in name_result}
+            name_results = {res["id"]: {"description":res["description"], "name":res["name"]} for res in name_result}
 
         push_keys_cache_index(resource_keys, resource_table, es_index_2, name_results)
         if only_values:
