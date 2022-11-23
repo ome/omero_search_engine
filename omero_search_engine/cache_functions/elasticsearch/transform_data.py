@@ -662,7 +662,7 @@ def save_key_value_buckets(
             conn = search_omero_app.config["database_connector"]
             name_result = conn.execute_query(sql)
             # name_results = [res["name"] for res in name_results]
-            name_results = {res["id"]: {"description":res["description"], "name":res["name"]} for res in name_result}
+            name_results = [{"id":res["id"],"description":res["description"], "name":res["name"]} for res in name_result]
 
         push_keys_cache_index(resource_keys, resource_table, es_index_2, name_results)
         if only_values:
