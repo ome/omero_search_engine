@@ -774,14 +774,17 @@ def get_the_results(resource, name, description, es_index="key_values_resource_c
             returned_results = [
                 item
                 for item in hits[0]["_source"]["resourcename"]
-                if name.lower() in item.get("name").lower()
+                if item.get("name") and name.lower() in item.get("name").lower()
             ]
         elif name and description:
             returned_results = [
                 item
                 for item in hits[0]["_source"]["resourcename"]
-                if name.lower() in item.get("name").lower()
-                or name.lower() in item.get("description").lower()
+                if (item.get("name") and name.lower() in item.get("name").lower())
+                or (
+                    item.get("description")
+                    and name.lower() in item.get("description").lower()
+                )
             ]
         else:
             returned_results = [item for item in hits[0]["_source"]["resourcename"]]
