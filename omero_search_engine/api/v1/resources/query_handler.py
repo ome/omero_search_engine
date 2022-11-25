@@ -202,7 +202,9 @@ class QueryRunner(
                     return {"Error": "Your query returns no results"}
         # check or_filters
         for or_it in self.or_query_group:
+            checked_list = []
             for resource, or_query in or_it.resources_query.items():
+                checked_list.append(resource)
                 if resource == "image":
                     image_or_queries.append(or_query)
                 else:
@@ -225,7 +227,11 @@ class QueryRunner(
                         # main_or_attribute.append(new_cond)
                         # self.additional_image_conds.append(new_cond)
                     else:
-                        return {"Error": "Your query returns no results"}
+                        # check if all the conditions have been checked
+                        if len(main_or_attribute.keys()) == 0 and len(
+                            checked_list
+                        ) == len(or_it.resources_query):
+                            return {"Error": "Your query returns no results"}
         # check and main attributes
         for and_it in self.and_query_group:
             for resource, main in and_it.main_attribute.items():

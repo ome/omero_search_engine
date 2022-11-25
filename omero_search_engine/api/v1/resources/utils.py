@@ -1034,3 +1034,46 @@ def get_studies_titles(idr_name, resource):
                 del value["name"]
         study_title["key_values"] = item_.get("key_values")
     return study_title
+
+
+def get_filter_list(filter):
+    import copy
+
+    new_or_filter = []
+    f1 = copy.deepcopy(filter)
+    f1["resource"] = "project"
+    new_or_filter.append(f1)
+    f2 = copy.deepcopy(filter)
+    f2["resource"] = "screen"
+    new_or_filter.append(f2)
+    return new_or_filter
+
+
+def adjust_query_for_container(query):
+    query_details = query.get("query_details")
+    new_or_filters = []
+    to_delete_and_filter = []
+    to_delete_or_filter = []
+    if query_details:
+        and_filters = query_details.get("and_filters")
+        if and_filters:
+            for filter in and_filters:
+                if filter.get("resource") == "container":
+                    new_or_filters.append(get_filter_list(filter))
+                    to_delete_and_filter.append(filter)
+
+        or_filters = query_details.get("or_filters")
+        if or_filters:
+            for filter in or_filters:
+                if filter.get("resource") == "container":
+                    new_or_filters.append(get_filter_list(filter))
+                    to_delete_or_filter.append(filter)
+
+        for filter in to_delete_or_filter:
+            or_filters.remove(filter)
+
+        for filter in to_delete_and_filter:
+            and_filters.remove(filter)
+
+        for filter in new_or_filters:
+            or_filters.append(filter)
