@@ -41,7 +41,11 @@ def check_get_names(idr_):
         idr_ = idr_.strip()
     resource = "project"
     pr_names = get_resource_names("project")
-    act_name = [name["name"] for name in pr_names if idr_ in name["name"]]
+    act_name = [
+        name["name"]
+        for name in pr_names
+        if name["name"] and idr_.lower() in name["name"].lower()
+    ]
     if len(act_name) == 0:
         pr_names = get_resource_names("screen")
         act_name = [name for name in pr_names if idr_ in name]
