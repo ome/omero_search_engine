@@ -84,13 +84,18 @@ class QueryItem(object):
         # to use the actual attribute name
         if mapping_names.get(self.resource):
             if mapping_names[self.resource].get(self.name):
-                ac_value, act_res = check_get_names(self.value)
-                if len(ac_value) == 1:
-                    self.value = ac_value[0]
-                elif len(ac_value) > 1:
-                    self.value = ac_value
-                self.resource = act_res
                 self.name = "name"
+                if self.operator == "contains" or self.operator == "not_contains":
+                    ac_value, act_res = check_get_names(self.value)
+                    if len(ac_value) == 1:
+                        self.value = ac_value[0]
+                    elif len(ac_value) > 1:
+                        self.value = ac_value
+                    self.resource = act_res
+                    if self.operator == "contains":
+                        self.operator = "equals"
+                    else:
+                        self.operator = "not_equals"
                 """
                 pr_names = get_resource_names(self.resource)
                 if not self.value in pr_names:
