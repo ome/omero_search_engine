@@ -55,7 +55,6 @@ data = {
     "query_details": {
         "and_filters": [
             {
-
                 "name": "Imaging Method",
                 "value": "light sheet fluorescence microscopy, spim",
                 "operator": "equals",
@@ -71,10 +70,9 @@ data_1 = {
     "resource": "image",
     "query_details": {
         "and_filters": [
-
             {
                 "name": "Publication Title",
-                "value":"Parallel compound screen for infection modulators identifies re-purposing candidates against common viral infections",
+                "value": "Parallel compound screen for infection modulators identifies re-purposing candidates against common viral infections",
                 "operator": "equals",
                 "resource": "container",
             },
@@ -91,7 +89,10 @@ if returned_results.get("results"):
         logging.info("No results is found")
     for item in returned_results.get("results").get("results"):
         logging.info("Study: %s" % item.get("name"))
-    logging.info("Total number of containers: %s"% len(returned_results.get("results").get("results")))
+    logging.info(
+        "Total number of containers: %s"
+        % len(returned_results.get("results").get("results"))
+    )
 
 resp = requests.post(submit_query_url, data=json.dumps(data_1))
 returned_results = json.loads(resp.text)
@@ -100,4 +101,7 @@ if returned_results.get("results"):
         logging.info("No results is found")
     for item in returned_results.get("results").get("results"):
         logging.info("Study: %s" % item.get("name"))
-    logging.info("Total number of containers: %s"% len(returned_results.get("results").get("results")))
+    logging.info(
+        "Total number of containers: %s"
+        % len(returned_results.get("results").get("results"))
+    )
