@@ -35,22 +35,26 @@ mapping_names = {
 }
 
 
-def check_get_names(idr_):
+def check_get_names(idr_,resource):
     # check the idr name and return the resource and possible values
     if idr_:
         idr_ = idr_.strip()
-    resource = "project"
-    pr_names = get_resource_names("project")
-    act_name = [
-        name["name"]
-        for name in pr_names
-        if name["name"] and idr_.lower() in name["name"].lower()
-    ]
-    if len(act_name) == 0:
+    if resource == "project":
+        pr_names = get_resource_names("project")
+        act_name = [
+            name["name"]
+            for name in pr_names
+            if name["name"] and idr_.lower() in name["name"].lower()
+        ]
+    elif resource == "screen" :
         pr_names = get_resource_names("screen")
-        act_name = [name for name in pr_names if idr_ in name]
-        resource = "screen"
-    return act_name, resource
+        act_name = [
+            name["name"]
+            for name in pr_names
+            if name["name"] and idr_.lower() in name["name"].lower()
+        ]
+
+    return act_name
 
 
 class QueryItem(object):
@@ -86,12 +90,11 @@ class QueryItem(object):
             if mapping_names[self.resource].get(self.name):
                 self.name = "name"
                 if self.operator == "contains" or self.operator == "not_contains":
-                    ac_value, act_res = check_get_names(self.value)
+                    ac_value = check_get_names(self.value, self.resource)
                     if len(ac_value) == 1:
                         self.value = ac_value[0]
                     elif len(ac_value) > 1:
                         self.value = ac_value
-                    self.resource = act_res
                     if self.operator == "contains":
                         self.operator = "equals"
                     else:
@@ -618,7 +621,26 @@ def determine_search_results_(query_, return_columns=False, return_containers=Fa
             if isinstance(filters_, list):
                 for filter in filters_:
                     q_item = QueryItem(filter)
-                    or_query_group.add_query((q_item))
+                    if (
+                            q_item.query_type == "main_attribute"
+                            and isinstance(q_item.value, list)
+                            and filter["name"] == "Name (IDR number)"
+                    ):
+                        new_or_filter = []
+                        if not or_filters:
+                            or_filters = []
+                        or_filters.append(new_or_filter)
+                        for val in q_item.value:
+                            new_fil = {}
+                            new_fil["value"] = val
+                            new_fil["name"] = q_item.name
+                            new_fil["resource"] = q_item.resource
+                            new_fil["operator"] = filter["operator"]
+                            new_fil["set_query_type"] = True
+                            new_fil["query_type"] = q_item.query_type
+                            new_or_filter.append(new_fil)
+                    else:
+                        or_query_group.add_query((q_item))
             or_query_group.divide_filter()
             or_query_group.adjust_query_main_attributes()
 

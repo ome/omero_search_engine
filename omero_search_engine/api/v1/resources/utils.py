@@ -264,16 +264,18 @@ def elasticsearch_query_builder(
                             attribute=attribute["name"].strip(),
                             value=str(attribute["value"]).strip(),
                         )
+
                     else:
                         main_dd = main_attribute_query_template.substitute(
                             attribute=attribute["name"].strip(),
                             value=str(attribute["value"]).strip(),
                         )
+                    sh.append(main_dd)
 
-                    if attribute["operator"].strip() == "equals":
-                        sh.append(main_dd)
-                    elif attribute["operator"].strip() == "not_equals":
-                        sh.append(main_dd)
+                    #if attribute["operator"].strip() == "equals":
+                    #    sh.append(main_dd)
+                    #elif attribute["operator"].strip() == "not_equals":
+                    #    sh.append(main_dd)
 
             # if len(should_part_list)>0:
             #    minimum_should_match=len(should_part_list)
