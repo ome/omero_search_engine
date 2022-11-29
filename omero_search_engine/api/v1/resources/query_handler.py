@@ -35,7 +35,7 @@ mapping_names = {
 }
 
 
-def check_get_names(idr_,resource):
+def check_get_names(idr_, resource):
     # check the idr name and return the resource and possible values
     if idr_:
         idr_ = idr_.strip()
@@ -46,7 +46,7 @@ def check_get_names(idr_,resource):
             for name in pr_names
             if name["name"] and idr_.lower() in name["name"].lower()
         ]
-    elif resource == "screen" :
+    elif resource == "screen":
         pr_names = get_resource_names("screen")
         act_name = [
             name["name"]
@@ -622,9 +622,9 @@ def determine_search_results_(query_, return_columns=False, return_containers=Fa
                 for filter in filters_:
                     q_item = QueryItem(filter)
                     if (
-                            q_item.query_type == "main_attribute"
-                            and isinstance(q_item.value, list)
-                            and filter["name"] == "Name (IDR number)"
+                        q_item.query_type == "main_attribute"
+                        and isinstance(q_item.value, list)
+                        and filter["name"] == "Name (IDR number)"
                     ):
                         new_or_filter = []
                         if not or_filters:

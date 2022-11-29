@@ -272,9 +272,9 @@ def elasticsearch_query_builder(
                         )
                     sh.append(main_dd)
 
-                    #if attribute["operator"].strip() == "equals":
+                    # if attribute["operator"].strip() == "equals":
                     #    sh.append(main_dd)
-                    #elif attribute["operator"].strip() == "not_equals":
+                    # elif attribute["operator"].strip() == "not_equals":
                     #    sh.append(main_dd)
 
             # if len(should_part_list)>0:
