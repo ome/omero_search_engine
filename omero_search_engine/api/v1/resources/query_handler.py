@@ -186,7 +186,9 @@ class QueryRunner(
         # then run and add the results (in term of clauses)
         # to the main image query
         for or_it in self.or_query_group:
+            checked_list = []
             for resource, main in or_it.main_attribute.items():
+                checked_list.append(resource)
                 query = {}
                 query["main_attribute"] = main
                 res = self.run_query(query, resource)
@@ -198,8 +200,10 @@ class QueryRunner(
                         main_or_attribute[resource] = (
                             main_or_attribute[resource] + new_cond
                         )
-                else:
-                    return {"Error": "Your query returns no results"}
+                elif len(main_or_attribute.keys()) == 0 and len(
+                            checked_list
+                        ) == len(or_it.resources_query):
+                            return {"Error": "Your query returns no results"}
         # check or_filters
         for or_it in self.or_query_group:
             checked_list = []
