@@ -1048,8 +1048,7 @@ def get_filter_list(filter):
     new_or_filter.append(f2)
     return new_or_filter
 
-
-def adjust_query_for_container(query):
+\def adjust_query_for_container(query):
     query_details = query.get("query_details")
     new_or_filters = []
     to_delete_and_filter = []
@@ -1065,12 +1064,23 @@ def adjust_query_for_container(query):
         or_filters = query_details.get("or_filters")
         if or_filters:
             for filter in or_filters:
-                if filter.get("resource") == "container":
-                    new_or_filters.append(get_filter_list(filter))
-                    to_delete_or_filter.append(filter)
-
+                if isinstance(filter, list):
+                    for filter_ in filter:
+                        if filter_.get("resource") == "container":
+                            new_or_filters.append(get_filter_list(filter_))
+                            to_delete_or_filter.append(filter_)
+                else:
+                    if filter.get("resource") == "container":
+                        new_or_filters.append(get_filter_list(filter))
+                        to_delete_or_filter.append(filter)
         for filter in to_delete_or_filter:
-            or_filters.remove(filter)
+            if filter in or_filters:
+                or_filters.remove(filter)
+            else:
+                for _filter in or_filters:
+                    if isinstance(_filter, list):
+                        if filter in _filter:
+                            _filter.remove(filter)
 
         for filter in to_delete_and_filter:
             and_filters.remove(filter)
