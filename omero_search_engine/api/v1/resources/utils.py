@@ -1048,7 +1048,8 @@ def get_filter_list(filter):
     new_or_filter.append(f2)
     return new_or_filter
 
-\def adjust_query_for_container(query):
+
+def adjust_query_for_container(query):
     query_details = query.get("query_details")
     new_or_filters = []
     to_delete_and_filter = []

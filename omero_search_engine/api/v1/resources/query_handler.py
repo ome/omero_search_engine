@@ -200,10 +200,10 @@ class QueryRunner(
                         main_or_attribute[resource] = (
                             main_or_attribute[resource] + new_cond
                         )
-                elif len(main_or_attribute.keys()) == 0 and len(
-                            checked_list
-                        ) == len(or_it.resources_query):
-                            return {"Error": "Your query returns no results"}
+                elif len(main_or_attribute.keys()) == 0 and len(checked_list) == len(
+                    or_it.resources_query
+                ):
+                    return {"Error": "Your query returns no results"}
         # check or_filters
         for or_it in self.or_query_group:
             checked_list = []

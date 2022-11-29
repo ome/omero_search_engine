@@ -72,7 +72,8 @@ data_1 = {
         "and_filters": [
             {
                 "name": "Publication Title",
-                "value": "Parallel compound screen for infection modulators identifies re-purposing candidates against common viral infections",
+                "value": "Parallel compound screen for infection modulators identifies "
+                "re-purposing candidates against common viral infections",
                 "operator": "equals",
                 "resource": "container",
             },
