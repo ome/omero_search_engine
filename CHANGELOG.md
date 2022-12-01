@@ -1,3 +1,7 @@
+0.4.0 (December 2022:
+---------------------
+- Support working with multiple Elasticsearch nodes [#61](https://github.com/ome/omero_search_engine/pull/61).
+
 0.3.0 (September 2022)
 ----------------------
 - Add pagination section to the query results [#56](https://github.com/ome/omero_search_engine/pull/56).
