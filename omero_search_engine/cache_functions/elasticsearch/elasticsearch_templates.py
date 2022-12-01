@@ -29,7 +29,9 @@ non_image_template = {
             "normalizer": {
                 "valuesnormalizer": {"type": "custom", "filter": ["lowercase"]}
             }
-        }
+        },
+        # "number_of_replicas": 1
+        "index.auto_expand_replicas": "0-all",
     },
     "mappings": {
         "properties": {
@@ -88,7 +90,9 @@ image_template = {
             "normalizer": {
                 "valuesnormalizer": {"type": "custom", "filter": ["lowercase"]}  # noqa
             }
-        }
+        },
+        # "number_of_replicas": 1
+        "index.auto_expand_replicas": "0-all",
     },
     "mappings": {
         "properties": {
@@ -163,6 +167,10 @@ Template represents a bucket in a resource, i.e. key and value
 and the total number of values (number of images)
 """
 key_values_resource_cache_template = {
+    "settings": {
+        "index.auto_expand_replicas": "0-all"
+        # "number_of_r:w\qeplicas": 1
+    },
     "mappings": {
         "properties": {"doc_type": {"type": "keyword"}},
         "resource": {
@@ -170,7 +178,7 @@ key_values_resource_cache_template = {
             "fields": {"keyresource": {"type": "keyword"}},
         },  # noqa
         "name": {"type": "text", "fields": {"keyname": {"type": "keyword"}}},
-    }
+    },
 }
 
 key_value_buckets_info_template = {
@@ -179,7 +187,9 @@ key_value_buckets_info_template = {
             "normalizer": {
                 "valuesnormalizer": {"type": "custom", "filter": ["lowercase"]}
             }
-        }
+        },
+        # "number_of_replicas": 1
+        "index.auto_expand_replicas": "0-all",
     },
     "mappings": {
         "properties": {
@@ -229,6 +239,10 @@ key_value_buckets_info_template = {
 Template contains list of attributes for each resource"""
 
 key_values_resource_cache_template = {
+    "settings": {
+        "index.auto_expand_replicas": "0-all"
+        # "number_of_r:w\qeplicas": 1
+    },
     "mappings": {
         "properties": {
             "doc_type": {"type": "keyword"},
@@ -245,5 +259,5 @@ key_values_resource_cache_template = {
                 "fields": {"keyresourcename": {"type": "keyword"}},
             },
         }
-    }
+    },
 }

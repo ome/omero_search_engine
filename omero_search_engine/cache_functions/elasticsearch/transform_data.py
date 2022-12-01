@@ -92,6 +92,18 @@ def create_omero_indexes(resource):
 
 
 def get_all_indexes():
+    return [
+        "project_keyvalue_pair_metadata",
+        "screen_keyvalue_pair_metadata",
+        "plate_keyvalue_pair_metadata",
+        "well_keyvalue_pair_metadata",
+        "image_keyvalue_pair_metadata",
+        "key_value_buckets_information",
+        "key_values_resource_cach",
+    ]
+
+
+def get_all_indexes_from_elasticsearch():
     es = search_omero_app.config.get("es_connector")
     all_indexes = es.indices.get("*")
     return all_indexes
@@ -115,8 +127,8 @@ def rename_index(old_index, new_index):
 
 def delete_es_index(es_index):
     es = search_omero_app.config.get("es_connector")
-    saved_incies = get_all_indexes()
-    if es_index in saved_incies.keys():
+    saved_incies = get_all_indexes_from_elasticsearch()
+    if es_index in saved_incies:
         response = es.indices.delete(index=es_index)
         if "acknowledged" in response:
             if response["acknowledged"] is True:
@@ -160,7 +172,8 @@ def delete_index(resource, es_index=None):
         es_index = resource_elasticsearchindex[resource]
         return delete_es_index(es_index)
     elif resource == "all":
-        for resource_, es_index in resource_elasticsearchindex.items():
+        all_indcies = get_all_indexes()
+        for es_index in all_indcies:
             delete_es_index(es_index)
         return True
     else:
