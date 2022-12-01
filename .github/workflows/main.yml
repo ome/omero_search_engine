@@ -57,7 +57,7 @@ jobs:
         id: getprefix
         run: |
           if [ ! -z ${{ env.name }} ]; then
-            echo "name=prefix=${{ env.name }}:" >> $GITHUB_OUTPUT
+            echo "prefix=${{ env.name }}:" >> $GITHUB_OUTPUT
           else
             echo "prefix=${{ github.repository }}:" >> $GITHUB_OUTPUT
           fi
