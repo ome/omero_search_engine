@@ -1,4 +1,4 @@
-A searchengine endpoint to accept complex query but it will return the containers only (Name (Idr number))
+A searchengine endpoint to accept complex query but it will return the containers only (name)
 API endpoint to search the annotation (key/value pair), the main difference between this endpoint and searchannotation is this one can be used to search different resources and return the images which satisfy the search conditions.
 The query data has a similar format to the query for searchannotation.
 Example:

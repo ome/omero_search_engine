@@ -29,14 +29,15 @@ from pathlib import Path
 import os
 from urllib.parse import urljoin
 
+# "Name (IDR number)"
 mapping_names = {
-    "project": {"Name (IDR number)": "name"},
-    "screen": {"Name (IDR number)": "name"},
+    "project": {"name": "name"},
+    "screen": {"name": "name"},
 }
 
 
 def check_get_names(idr_):
-    # check the idr name and return the resource and possible values
+    # check the name and return the resource and possible values
     if idr_:
         idr_ = idr_.strip()
     resource = "project"
@@ -53,7 +54,7 @@ class QueryItem(object):
     def __init__(self, filter, adjust_res=True):
         """
         define query and adjust resource if it is needed,
-        e.g. idr name is provided
+        e.g. name is provided
         Args:
             resource:
             attribute_name:
@@ -575,14 +576,14 @@ def determine_search_results_(query_, return_columns=False, return_containers=Fa
         and_query_group = QueryGroup("and_filters")
         for filter in and_filters:
             q_item = QueryItem(filter)
-            # Check the idr number value and, if it is a list,
+            # Check the name value and, if it is a list,
             # it will create a new or filter for them and move it
             # Please note it is working for and filter when there is not
-            # identical match for the idr name
+            # identical match for the name
             if (
                 q_item.query_type == "main_attribute"
                 and isinstance(q_item.value, list)
-                and filter["name"] == "Name (IDR number)"
+                and filter["name"] == "name"
             ):
                 new_or_filter = []
                 if not or_filters:
@@ -658,7 +659,7 @@ def simple_search(
     else:
         and_filters.append(
             {
-                "name": "Name (IDR number)",
+                "name": "name",
                 "value": study,
                 "operator": "equals",
                 "resource": "project",
