@@ -594,7 +594,7 @@ def determine_search_results_(query_, return_columns=False, return_containers=Fa
             if (
                 q_item.query_type == "main_attribute"
                 and isinstance(q_item.value, list)
-                and filter["name"] == "Name (IDR number)"
+                and filter["name"] == "name"
             ):
                 new_or_filter = []
                 if not or_filters:
@@ -624,7 +624,7 @@ def determine_search_results_(query_, return_columns=False, return_containers=Fa
                     if (
                         q_item.query_type == "main_attribute"
                         and isinstance(q_item.value, list)
-                        and filter["name"] == "Name (IDR number)"
+                        and filter["name"] == "name"
                     ):
                         new_or_filter = []
                         if not or_filters:
