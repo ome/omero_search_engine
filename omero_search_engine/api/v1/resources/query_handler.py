@@ -626,10 +626,6 @@ def determine_search_results_(query_, return_columns=False, return_containers=Fa
                         and isinstance(q_item.value, list)
                         and filter["name"] == "name"
                     ):
-                        new_or_filter = []
-                        if not or_filters:
-                            or_filters = []
-                        or_filters.append(new_or_filter)
                         for val in q_item.value:
                             new_fil = {}
                             new_fil["value"] = val
@@ -638,9 +634,10 @@ def determine_search_results_(query_, return_columns=False, return_containers=Fa
                             new_fil["operator"] = filter["operator"]
                             new_fil["set_query_type"] = True
                             new_fil["query_type"] = q_item.query_type
-                            new_or_filter.append(new_fil)
+                            _q_item = QueryItem(new_fil)
+                            or_query_group.add_query(_q_item)
                     else:
-                        or_query_group.add_query((q_item))
+                        or_query_group.add_query(q_item)
             or_query_group.divide_filter()
             or_query_group.adjust_query_main_attributes()
 
