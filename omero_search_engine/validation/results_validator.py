@@ -581,20 +581,22 @@ def test_no_images():
         "\n\n\n======================== Test number of images inside each study ============================\n"  # noqa
     ]
     for name, numbers in names.items():
-        or_filters = [[
-            {
-                "name": "name",
-                "value": name,
-                "operator": "equals",
-                "resource": "screen",
-            },
-            {
-                "name": "name",
-                "value": name,
-                "operator": "equals",
-                "resource": "project",
-            }
-        ]]
+        or_filters = [
+            [
+                {
+                    "name": "name",
+                    "value": name,
+                    "operator": "equals",
+                    "resource": "screen",
+                },
+                {
+                    "name": "name",
+                    "value": name,
+                    "operator": "equals",
+                    "resource": "project",
+                },
+            ]
+        ]
         and_filters = []
         query = {"and_filters": and_filters, "or_filters": or_filters}
         query_data = {"query_details": query}
@@ -628,6 +630,7 @@ def test_no_images():
     9 5D Images
     12 Size
     """
+
 
 def get_omero_stats():
     values = ["Attribute", "No. buckets", "Total number", "Resource"]
