@@ -641,22 +641,111 @@ def get_omero_stats():
     data.append(",".join(values))
     for resource, names in terms.items():
         for name in names:
-            if name == "Name (IDR number)":
+            if name == "name":
                 continue
             returned_results = query_cashed_bucket(name, resource)
-            data.append(
-                "%s, %s, %s,%s"
-                % (
-                    name,
-                    returned_results.get("total_number_of_buckets"),
-                    returned_results.get("total_number"),
-                    resource,
+            if resource == "image":
+                data.append(
+                    "%s, %s, %s,%s"
+                    % (
+                        name,
+                        returned_results.get("total_number_of_buckets"),
+                        returned_results.get("total_number_of_image"),
+                        resource,
+                    )
                 )
-            )
+            else:
+                kk = "total_number_of_%s" % resource
+                data.append(
+                    "%s, %s, %s,%s"
+                    % (
+                        name,
+                        returned_results.get("total_number_of_buckets"),
+                        returned_results.get(kk),
+                        resource,
+                    )
+                )
+
             for dat in returned_results.get("data"):
                 if not dat["Value"]:
                     print("Value is empty string", dat["Key"])
     report = "\n".join(data)
 
     with open(stats_file, "w") as f:
+        f.write(report)
+
+
+def get_no_images_sql_containers():
+    """
+    This method tests the number of images inside each container
+     (project or screen) in the searchengine index data
+    and compare them with the number of images inside
+    each container in the postgresql database server
+    """
+    from omero_search_engine.api.v1.resources.urls import (
+        get_resource_names,
+    )
+    from omero_search_engine.api.v1.resources.utils import adjust_query_for_container
+
+    conn = search_omero_app.config["database_connector"]
+
+    all_names = get_resource_names("all")
+    messages = []
+    for resource in all_names:
+        messages.append(
+            "######################## Checking %s ########################\n" % resource
+        )
+        for res_name_ in all_names.get(resource):
+            res_name = res_name_.get("name")
+            message1 = "Checking %s name: %s" % (resource, res_name)
+            messages.append(message1)
+            search_omero_app.logger.info(message1)
+
+            and_filters = [
+                {
+                    "name": "name",
+                    "value": res_name,
+                    "operator": "equals",
+                    "resource": "container",
+                }
+            ]
+            or_filters = []
+            query = {"and_filters": and_filters, "or_filters": or_filters}
+            query_data = {"query_details": query}
+            adjust_query_for_container(query_data)
+            returned_results = determine_search_results_(query_data)
+            if returned_results.get("results"):
+                if returned_results.get("results").get("size"):
+                    seachengine_results = returned_results["results"]["size"]
+            else:
+                seachengine_results = 0
+            message2 = (
+                "No of images returned from searchengine: %s" % seachengine_results
+            )
+            search_omero_app.logger.info(message2)
+            messages.append(message2)
+            sql = query_methods["%s_name" % resource].substitute(name=res_name)
+            results = conn.execute_query(sql)
+            postgres_results = len(results)
+            message3 = "No of images returned from postgresql: %s" % seachengine_results
+            messages.append(message3)
+            search_omero_app.logger.info(message3)
+            if seachengine_results != postgres_results:
+                message4 = "ERROR: Not equal results"
+                messages.append(message4)
+                search_omero_app.logger.info(message4)
+            else:
+                message5 = "equal results"
+                messages.append(message5)
+                search_omero_app.logger.info(message5)
+            messages.append(
+                "\n-----------------------------------------------------------------------------\n"  # noqa
+            )
+    base_folder = "/etc/searchengine/"
+    if not os.path.isdir(base_folder):
+        base_folder = os.path.expanduser("~")
+
+    report_file = os.path.join(base_folder, "check_containers_report.txt")
+    report = "\n".join(messages)  # noqa
+    with open(report_file, "w") as f:
         f.write(report)

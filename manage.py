@@ -291,12 +291,14 @@ def test_indexing_search_query(
         validate_queries,
         test_no_images,
         get_omero_stats,
+        get_no_images_sql_containers,
     )
 
     validate_queries(json_file, deep_check)
     if check_studies:
         test_no_images()
     get_omero_stats()
+    get_no_images_sql_containers()
 
 
 if __name__ == "__main__":
