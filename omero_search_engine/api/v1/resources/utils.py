@@ -960,9 +960,9 @@ def search_resource_annotation(
             if isinstance(query_string, dict):
                 return query_string
 
-            search_omero_app.logger.info("Query %s" % query_string)
+            search_omero_app.logger.info("Query %s" % query_string, strict=False)
             query = json.loads(query_string)
-            raw_query_to_send_back = json.loads(query_string)
+            raw_query_to_send_back = json.loads(query_string, strict=False)
         else:
             query = raw_elasticsearch_query
             raw_query_to_send_back = copy.copy(raw_elasticsearch_query)

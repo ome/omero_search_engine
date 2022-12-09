@@ -30,31 +30,23 @@ import os
 from urllib.parse import urljoin
 
 mapping_names = {
-    "project": {"Name (IDR number)": "name"},
-    "screen": {"Name (IDR number)": "name"},
+    "project": {"Name (IDR number)": "name", "description": "description"},
+    "screen": {"Name (IDR number)": "name", "description": "description"},
 }
 
 
-def check_get_names(idr_, resource):
+def check_get_names(idr_, resource, attribute):
     # check the idr name and return the resource and possible values
     if idr_:
         idr_ = idr_.strip()
-    if resource == "project":
-        pr_names = get_resource_names("project")
+    pr_names = get_resource_names(resource)
+    if pr_names:
         act_name = [
-            name["name"]
+            name[attribute]
             for name in pr_names
-            if name["name"] and idr_.lower() in name["name"].lower()
+            if name[attribute] and idr_.lower() in name[attribute].lower()
         ]
-    elif resource == "screen":
-        pr_names = get_resource_names("screen")
-        act_name = [
-            name["name"]
-            for name in pr_names
-            if name["name"] and idr_.lower() in name["name"].lower()
-        ]
-
-    return act_name
+        return act_name
 
 
 class QueryItem(object):
@@ -88,9 +80,9 @@ class QueryItem(object):
         # to use the actual attribute name
         if mapping_names.get(self.resource):
             if mapping_names[self.resource].get(self.name):
-                self.name = "name"
+                self.name = mapping_names[self.resource].get(self.name)
                 if self.operator == "contains" or self.operator == "not_contains":
-                    ac_value = check_get_names(self.value, self.resource)
+                    ac_value = check_get_names(self.value, self.resource, self.name)
                     if len(ac_value) == 1:
                         self.value = ac_value[0]
                     elif len(ac_value) > 1:
