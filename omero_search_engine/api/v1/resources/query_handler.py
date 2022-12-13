@@ -35,17 +35,24 @@ mapping_names = {
 }
 
 
-def check_get_names(idr_, resource, attribute):
+def check_get_names(idr_, resource, attribute, return_exact=False):
     # check the idr name and return the resource and possible values
     if idr_:
         idr_ = idr_.strip()
     pr_names = get_resource_names(resource)
     if pr_names:
-        act_name = [
-            name[attribute]
-            for name in pr_names
-            if name[attribute] and idr_.lower() in name[attribute].lower()
-        ]
+        if not return_exact:
+            act_name = [
+                name[attribute]
+                for name in pr_names
+                if name[attribute] and idr_.lower() in name[attribute].lower()
+            ]
+        else:
+            act_name = [
+                name["id"]
+                for name in pr_names
+                if name[attribute] and idr_.lower() == name[attribute].lower()
+            ]
         return act_name
 
 
@@ -91,6 +98,14 @@ class QueryItem(object):
                         self.operator = "equals"
                     else:
                         self.operator = "not_equals"
+                else:
+                    ac_value = check_get_names(
+                        self.value, self.resource, self.name, True
+                    )
+                    if len(ac_value) == 1:
+                        self.value = ac_value[0]
+                    else:
+                        self.value = -1
                 """
                 pr_names = get_resource_names(self.resource)
                 if not self.value in pr_names:
@@ -583,24 +598,26 @@ def determine_search_results_(query_, return_columns=False, return_containers=Fa
             # it will create a new or filter for them and move it
             # Please note it is working for and filter when there is not
             # identical match for the idr name
-            if (
-                q_item.query_type == "main_attribute"
-                and isinstance(q_item.value, list)
-                and filter["name"] == "name"
+            if q_item.query_type == "main_attribute" and (
+                filter["name"] == "name" or filter["name"] == "description"
             ):
-                new_or_filter = []
-                if not or_filters:
-                    or_filters = []
-                or_filters.append(new_or_filter)
-                for val in q_item.value:
-                    new_fil = {}
-                    new_fil["value"] = val
-                    new_fil["name"] = q_item.name
-                    new_fil["resource"] = q_item.resource
-                    new_fil["operator"] = filter["operator"]
-                    new_fil["set_query_type"] = True
-                    new_fil["query_type"] = q_item.query_type
-                    new_or_filter.append(new_fil)
+                if isinstance(q_item.value, list):
+                    new_or_filter = []
+                    if not or_filters:
+                        or_filters = []
+                    or_filters.append(new_or_filter)
+                    for val in q_item.value:
+                        new_fil = {}
+                        new_fil["value"] = val
+                        new_fil["name"] = "id"
+                        new_fil["resource"] = q_item.resource
+                        new_fil["operator"] = filter["operator"]
+                        new_fil["set_query_type"] = True
+                        new_fil["query_type"] = q_item.query_type
+                        new_or_filter.append(new_fil)
+                else:
+                    q_item.name = "id"
+                    and_query_group.add_query(q_item)
             else:
                 and_query_group.add_query(q_item)
         and_query_group.divide_filter()
@@ -613,21 +630,23 @@ def determine_search_results_(query_, return_columns=False, return_containers=Fa
             if isinstance(filters_, list):
                 for filter in filters_:
                     q_item = QueryItem(filter)
-                    if (
-                        q_item.query_type == "main_attribute"
-                        and isinstance(q_item.value, list)
-                        and filter["name"] == "name"
+                    if q_item.query_type == "main_attribute" and (
+                        filter["name"] == "name" or filter["name"] == "description"
                     ):
-                        for val in q_item.value:
-                            new_fil = {}
-                            new_fil["value"] = val
-                            new_fil["name"] = q_item.name
-                            new_fil["resource"] = q_item.resource
-                            new_fil["operator"] = filter["operator"]
-                            new_fil["set_query_type"] = True
-                            new_fil["query_type"] = q_item.query_type
-                            _q_item = QueryItem(new_fil)
-                            or_query_group.add_query(_q_item)
+                        if isinstance(q_item.value, list):
+                            for val in q_item.value:
+                                new_fil = {}
+                                new_fil["value"] = val
+                                new_fil["name"] = "id"
+                                new_fil["resource"] = q_item.resource
+                                new_fil["operator"] = filter["operator"]
+                                new_fil["set_query_type"] = True
+                                new_fil["query_type"] = q_item.query_type
+                                _q_item = QueryItem(new_fil)
+                                or_query_group.add_query(_q_item)
+                        else:
+                            q_item.name = "id"
+                            or_query_group.add_query(q_item)
                     else:
                         or_query_group.add_query(q_item)
             or_query_group.divide_filter()

@@ -195,7 +195,10 @@ def elasticsearch_query_builder(
             for clause in main_attributes.get("and_main_attributes"):
                 if isinstance(clause, list):
                     for attribute in clause:
-                        if attribute["name"].endswith("_id"):
+                        if (
+                            attribute["name"].endswith("_id")
+                            or attribute["name"] == "id"
+                        ):
                             main_dd = (
                                 main_attribute_query_template_id.substitute(  # noqa
                                     attribute=attribute["name"].strip(),
@@ -213,7 +216,7 @@ def elasticsearch_query_builder(
                             nested_must_not_part.append(main_dd)
                 else:
                     attribute = clause
-                    if attribute["name"].endswith("_id"):
+                    if attribute["name"].endswith("_id") or attribute["name"] == "id":
                         main_dd = main_attribute_query_template_id.substitute(
                             attribute=attribute["name"].strip(),
                             value=str(attribute["value"]).strip(),
@@ -239,7 +242,10 @@ def elasticsearch_query_builder(
                 if isinstance(attributes, list):
                     for attribute in attributes:
                         # search using id, e.g. project id
-                        if attribute["name"].endswith("_id"):
+                        if (
+                            attribute["name"].endswith("_id")
+                            or attribute["name"] == "id"
+                        ):
                             main_dd = (
                                 main_attribute_query_template_id.substitute(  # noqa
                                     attribute=attribute["name"].strip(),
@@ -259,7 +265,7 @@ def elasticsearch_query_builder(
                 else:
                     attribute = attributes
                     # search using id, e.g. project id
-                    if attribute["name"].endswith("_id"):
+                    if attribute["name"].endswith("_id") or attribute["name"] == "id":
                         main_dd = main_attribute_query_template_id.substitute(
                             attribute=attribute["name"].strip(),
                             value=str(attribute["value"]).strip(),
