@@ -43,7 +43,7 @@ def check_get_names(idr_, resource, attribute, return_exact=False):
     if pr_names:
         if not return_exact:
             act_name = [
-                name[attribute]
+                name["id"]
                 for name in pr_names
                 if name[attribute] and idr_.lower() in name[attribute].lower()
             ]
