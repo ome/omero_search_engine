@@ -1,1 +1,1 @@
-SEARCHENGINE_IMAGE=openmicroscopy/omero-searchengine::latest
+SEARCHENGINE_IMAGE=openmicroscopy/omero-searchengine:latest
