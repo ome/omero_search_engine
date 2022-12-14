@@ -104,6 +104,10 @@ def create_app(config_name="development"):
 
     search_omero_app.logger.setLevel(logging.INFO)
     search_omero_app.logger.info("app assistant startup")
+    # Copy the script folder to the user machine.
+    from tools.utils import copy_tools_subfolder
+
+    copy_tools_subfolder()
     return search_omero_app
 
 
