@@ -323,8 +323,6 @@ class Validator(object):
             None,
             return_containers=True,
         )
-        print(search_engine_results["results"])
-        print("======================")
         if search_engine_results["results"].get("results"):
             for item in search_engine_results["results"].get("results"):
                 if item["type"] == "screen":
