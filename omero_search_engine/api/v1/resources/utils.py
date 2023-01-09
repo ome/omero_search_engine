@@ -1063,6 +1063,9 @@ def adjust_query_for_container(query):
                     to_delete_and_filter.append(filter)
 
         or_filters = query_details.get("or_filters")
+        if not or_filters:
+            or_filters = []
+            query_details["or_filters"] = or_filters
         if or_filters:
             for filter in or_filters:
                 if isinstance(filter, list):

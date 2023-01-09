@@ -81,7 +81,9 @@ class QueryItem(object):
         if mapping_names.get(self.resource):
             if mapping_names[self.resource].get(self.name):
                 ac_value, act_res = check_get_names(self.value)
-                if len(ac_value) == 1:
+                if len(ac_value) == 0:
+                    self.value = -1
+                elif len(ac_value) == 1:
                     self.value = ac_value[0]
                 elif len(ac_value) > 1:
                     self.value = ac_value
