@@ -1074,6 +1074,9 @@ def adjust_query_for_container(query):
                     if filter.get("resource") == "container":
                         new_or_filters.append(get_filter_list(filter))
                         to_delete_or_filter.append(filter)
+        else:
+            or_filters = []
+            query_details["or_filters"] = or_filters
         for filter in to_delete_or_filter:
             if filter in or_filters:
                 or_filters.remove(filter)
