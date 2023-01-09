@@ -90,7 +90,9 @@ class QueryItem(object):
                 self.name = mapping_names[self.resource].get(self.name)
                 if self.operator == "contains" or self.operator == "not_contains":
                     ac_value = check_get_names(self.value, self.resource, self.name)
-                    if len(ac_value) == 1:
+                    if len(ac_value) == 0:
+                        self.value = -1
+                    elif len(ac_value) == 1:
                         self.value = ac_value[0]
                     elif len(ac_value) > 1:
                         self.value = ac_value
