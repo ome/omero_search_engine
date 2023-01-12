@@ -208,23 +208,38 @@ class QueryRunner(
         # then run and add the results (in term of clauses)
         # to the main image query
         for or_it in self.or_query_group:
+            checked_list = []
+            main_or_attribute_ = {}
             for resource, main in or_it.main_attribute.items():
+                checked_list.append(resource)
                 query = {}
                 query["main_attribute"] = main
                 res = self.run_query(query, resource)
                 new_cond = get_ids(res, resource)
                 if new_cond:
-                    if not main_or_attribute.get(resource):
-                        main_or_attribute[resource] = new_cond
+                    if not main_or_attribute_.get(resource):
+                        main_or_attribute_[resource] = new_cond
                     else:
-                        main_or_attribute[resource] = (
-                            main_or_attribute[resource] + new_cond
+                        main_or_attribute_[resource] = (
+                            main_or_attribute_[resource] + new_cond
                         )
-                else:
+                elif len(main_or_attribute_.keys()) == 0 and len(checked_list) == len(
+                    or_it.resources_query
+                ):
                     return {"Error": "Your query returns no results"}
+            for res, items_ in main_or_attribute_.items():
+                if res not in main_or_attribute:
+                    main_or_attribute[res] = items_
+                else:
+                    main_or_attribute[res] = combine_conds(
+                        main_or_attribute[res], items_, res
+                    )
         # check or_filters
         for or_it in self.or_query_group:
+            checked_list = []
+            main_or_attribute_ = {}
             for resource, or_query in or_it.resources_query.items():
+                checked_list.append(resource)
                 if resource == "image":
                     image_or_queries.append(or_query)
                 else:
@@ -237,17 +252,28 @@ class QueryRunner(
                     res = self.run_query(query, resource)
                     new_cond = get_ids(res, resource)
                     if new_cond:
-                        if not main_or_attribute.get(resource):
-                            main_or_attribute[resource] = new_cond
+                        if not main_or_attribute_.get(resource):
+                            main_or_attribute_[resource] = new_cond
                         else:
-                            main_or_attribute[resource] = (
-                                main_or_attribute[resource] + new_cond
+                            main_or_attribute_[resource] = (
+                                main_or_attribute_[resource] + new_cond
                             )
 
                         # main_or_attribute.append(new_cond)
                         # self.additional_image_conds.append(new_cond)
                     else:
-                        return {"Error": "Your query returns no results"}
+                        # check if all the conditions have been checked
+                        if len(main_or_attribute_.keys()) == 0 and len(
+                            checked_list
+                        ) == len(or_it.resources_query):
+                            return {"Error": "Your query returns no results"}
+            for res, items_ in main_or_attribute_.items():
+                if res not in main_or_attribute:
+                    main_or_attribute[res] = items_
+                else:
+                    main_or_attribute[res] = combine_conds(
+                        main_or_attribute[res], items_, res
+                    )
         # check and main attributes
         for and_it in self.and_query_group:
             for resource, main in and_it.main_attribute.items():

@@ -23,6 +23,7 @@ import json
 from omero_search_engine.api.v1.resources.utils import (
     search_resource_annotation,
     build_error_message,
+    adjust_query_for_container,
 )
 from omero_search_engine.api.v1.resources.resource_analyser import (
     search_value_for_resource,
@@ -320,6 +321,7 @@ def submit_query_return_containers():
         query = None
     if not query:
         return jsonify(build_error_message("No query is provided"))
+    adjust_query_for_container(query)
     return_columns = request.args.get("return_columns")
     if return_columns:
         try:
@@ -346,6 +348,7 @@ def submit_query():
         query = None
     if not query:
         return jsonify(build_error_message("No query is provided"))
+    adjust_query_for_container(query)
     return_columns = request.args.get("return_columns")
     if return_columns:
         try:
