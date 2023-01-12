@@ -208,7 +208,7 @@ class Validator(object):
             else:
                 and_filters = [
                     {
-                        "name": "Name (IDR number)",
+                        "name": "name",
                         "value": self.value,
                         "resource": "project",
                         "operator": "equals",
@@ -581,16 +581,24 @@ def test_no_images():
         "\n\n\n======================== Test number of images inside each study ============================\n"  # noqa
     ]
     for name, numbers in names.items():
-        and_filters = [
-            {
-                "name": "Name (IDR number)",
-                "value": name,
-                "operator": "equals",
-                "resource": "project",
-            }
+        or_filters = [
+            [
+                {
+                    "name": "name",
+                    "value": name,
+                    "operator": "equals",
+                    "resource": "screen",
+                },
+                {
+                    "name": "name",
+                    "value": name,
+                    "operator": "equals",
+                    "resource": "project",
+                },
+            ]
         ]
-        or_filtes = []
-        query = {"and_filters": and_filters, "or_filters": or_filtes}
+        and_filters = []
+        query = {"and_filters": and_filters, "or_filters": or_filters}
         query_data = {"query_details": query}
         returned_results = determine_search_results_(query_data)
         if returned_results.get("results"):
@@ -641,7 +649,7 @@ def get_omero_stats():
     data.append(",".join(values))
     for resource, names in terms.items():
         for name in names:
-            if name == "Name (IDR number)":
+            if name == "name":
                 continue
             returned_results = query_cashed_bucket(name, resource)
             data.append(

@@ -12,7 +12,7 @@ Example:
            "resource": "image"
          },
          {
-           "name": "Name (IDR number)",
+           "name": "name",
            "value": "idr0008-rohn-actinome/screenB",
            "operator": "equals",
            "resource": "project"

@@ -275,7 +275,7 @@ def get_resource_key_value(resource_table):
     key = request.args.get("key")
     if not key:
         return jsonify(build_error_message("No key is provided"))
-    if key != "Name (IDR number)":
+    if key != "name":
         return jsonify(get_resource_attribute_values(resource_table, key))
     else:
         return jsonify(get_resource_names("all"))

@@ -673,7 +673,7 @@ def get_resource_attributes(resource, mode=None, es_index="key_values_resource_c
                     restircted_resources[k] = search_terms
         returned_results = restircted_resources
         if "project" in returned_results:
-            returned_results["project"].append("Name (IDR number)")
+            returned_results["project"].append("name")
 
     return returned_results
 
