@@ -192,6 +192,7 @@ def get_values_using_value(resource_table):
     key = request.args.get("key")
     if key:
         # If the key is provided it will restrict the search to the provided key.
+
         return query_cashed_bucket_part_value_keys(key, value, resource_table)
     bookmark = request.args.get("bookmark")
     if bookmark:
@@ -296,8 +297,16 @@ def get_resource_names_(resource_table):
         response.mimetype = "text/plain"
         return response
 
-    names = get_resource_names(resource_table)
-    return jsonify(names)
+    value = request.args.get("value")
+    description = request.args.get("use_description")
+    if description:
+        if description.lower() in ["true", "false"]:
+            description = json.loads(description.lower())
+        elif description == "1":
+            description = True
+        else:
+            description = False
+    return jsonify(get_resource_names(resource_table, value, description))
 
 
 @resources.route("/submitquery/containers/", methods=["POST"])

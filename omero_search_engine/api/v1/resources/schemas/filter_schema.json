@@ -23,8 +23,7 @@
      ,"resource": {
       "name": "resource",
       "type": "string",
-      "enum": ["image", "screen", "project","study","plate"]
+      "enum": ["image", "screen", "project","plate","well"]
     }
     }
   }
-

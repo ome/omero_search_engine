@@ -254,10 +254,7 @@ key_values_resource_cache_template = {
                 "type": "text",
                 "fields": {"keyname": {"type": "keyword"}},
             },  # noqa
-            "resourcename": {
-                "type": "text",
-                "fields": {"keyresourcename": {"type": "keyword"}},
-            },
+            "resourcename": {"type": "object", "enabled": False},
         }
     },
 }

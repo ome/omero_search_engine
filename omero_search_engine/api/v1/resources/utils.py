@@ -195,7 +195,10 @@ def elasticsearch_query_builder(
             for clause in main_attributes.get("and_main_attributes"):
                 if isinstance(clause, list):
                     for attribute in clause:
-                        if attribute["name"].endswith("_id"):
+                        if (
+                            attribute["name"].endswith("_id")
+                            or attribute["name"] == "id"
+                        ):
                             main_dd = (
                                 main_attribute_query_template_id.substitute(  # noqa
                                     attribute=attribute["name"].strip(),
@@ -213,7 +216,7 @@ def elasticsearch_query_builder(
                             nested_must_not_part.append(main_dd)
                 else:
                     attribute = clause
-                    if attribute["name"].endswith("_id"):
+                    if attribute["name"].endswith("_id") or attribute["name"] == "id":
                         main_dd = main_attribute_query_template_id.substitute(
                             attribute=attribute["name"].strip(),
                             value=str(attribute["value"]).strip(),
@@ -239,7 +242,10 @@ def elasticsearch_query_builder(
                 if isinstance(attributes, list):
                     for attribute in attributes:
                         # search using id, e.g. project id
-                        if attribute["name"].endswith("_id"):
+                        if (
+                            attribute["name"].endswith("_id")
+                            or attribute["name"] == "id"
+                        ):
                             main_dd = (
                                 main_attribute_query_template_id.substitute(  # noqa
                                     attribute=attribute["name"].strip(),
@@ -259,21 +265,23 @@ def elasticsearch_query_builder(
                 else:
                     attribute = attributes
                     # search using id, e.g. project id
-                    if attribute["name"].endswith("_id"):
+                    if attribute["name"].endswith("_id") or attribute["name"] == "id":
                         main_dd = main_attribute_query_template_id.substitute(
                             attribute=attribute["name"].strip(),
                             value=str(attribute["value"]).strip(),
                         )
+
                     else:
                         main_dd = main_attribute_query_template.substitute(
                             attribute=attribute["name"].strip(),
                             value=str(attribute["value"]).strip(),
                         )
+                    sh.append(main_dd)
 
-                    if attribute["operator"].strip() == "equals":
-                        sh.append(main_dd)
-                    elif attribute["operator"].strip() == "not_equals":
-                        sh.append(main_dd)
+                    # if attribute["operator"].strip() == "equals":
+                    #    sh.append(main_dd)
+                    # elif attribute["operator"].strip() == "not_equals":
+                    #    sh.append(main_dd)
 
             # if len(should_part_list)>0:
             #    minimum_should_match=len(should_part_list)
@@ -959,8 +967,8 @@ def search_resource_annotation(
                 return query_string
 
             search_omero_app.logger.info("Query %s" % query_string)
-            query = json.loads(query_string)
-            raw_query_to_send_back = json.loads(query_string)
+            query = json.loads(query_string, strict=False)
+            raw_query_to_send_back = json.loads(query_string, strict=False)
         else:
             query = raw_elasticsearch_query
             raw_query_to_send_back = copy.copy(raw_elasticsearch_query)

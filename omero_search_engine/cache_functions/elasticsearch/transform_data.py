@@ -34,6 +34,11 @@ from omero_search_engine.cache_functions.elasticsearch.elasticsearch_templates i
     key_value_buckets_info_template,
     key_values_resource_cache_template,
 )
+from omero_search_engine.validation.psql_templates import (
+    query_images_in_project_id,
+    query_images_screen_id,
+)
+
 from app_data.data_attrs import annotation_resource_link
 from datetime import datetime
 import multiprocessing
@@ -669,10 +674,31 @@ def save_key_value_buckets(
         resource_keys = get_keys(resource_table)
         name_results = None
         if resource_table in ["project", "screen"]:
-            sql = "select name from {resource}".format(resource=resource_table)
+            sql = "select id, name,description  from {resource}".format(
+                resource=resource_table
+            )
             conn = search_omero_app.config["database_connector"]
-            name_results = conn.execute_query(sql)
-            name_results = [res["name"] for res in name_results]
+            name_result = conn.execute_query(sql)
+            # name_results = [res["name"] for res in name_results]
+            # Determine the number of images for each container
+            for res in name_result:
+                id = res.get("id")
+                if resource_table == "project":
+                    sql_n = query_images_in_project_id.substitute(project_id=id)
+                elif resource_table == "screen":
+                    sql_n = query_images_screen_id.substitute(screen_id=id)
+                no_images_co = conn.execute_query(sql_n)
+                res["no_images"] = len(no_images_co)
+
+            name_results = [
+                {
+                    "id": res["id"],
+                    "description": res["description"],
+                    "name": res["name"],
+                    "no_images": res["no_images"],
+                }
+                for res in name_result
+            ]
 
         push_keys_cache_index(resource_keys, resource_table, es_index_2, name_results)
         if only_values:

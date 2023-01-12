@@ -444,6 +444,9 @@ def query_cashed_bucket_part_value_keys(
         # search all resources for all possible matches
         returned_results = {}
         for table in resource_elasticsearchindex:
+            # exclude image1 as it is used for testing
+            if table == "image1":
+                continue
             query = key_part_values_buckets_template.substitute(
                 name=name, value=value, resource=table
             )
@@ -610,6 +613,13 @@ key_values_buckets_template_2 = Template(
 "resource.keyresource":"$resource"}}}}]}}} """
 )
 
+key_values_buckets_template_search_name = Template(
+    """
+{"query":{"bool":{"must":[{"bool":{"must":{"match":{
+"resource.keyresource":"$resource"}}}},{"bool": {"must":
+{"wildcard": {"resourcename.keyresourcename":"*$name*"}}}}]}}} """
+)
+
 
 def connect_elasticsearch(es_index, query, count=False):
     es = search_omero_app.config.get("es_connector")
@@ -734,30 +744,49 @@ def get_resource_attribute_values(
     return returned_results
 
 
-def get_resource_names(resource, es_index="key_values_resource_cach"):
+def get_resource_names(resource, name=None, description=False):
     """
     return resources names attributes
     It works for projects and screens but can be extended.
     """
-    returned_results = []
     if resource != "all":
-        query = key_values_buckets_template_2.substitute(resource=resource)
-        results_ = connect_elasticsearch(
-            es_index, query
-        )  # .search(index=es_index, body=query)
-        hits = results_["hits"]["hits"]
-        if len(hits) > 0:
-            returned_results = hits[0]["_source"]["resourcename"]
+        returned_results = get_the_results(resource, name, description)
     else:
+        returned_results = {}
         ress = ["project", "screen"]
         for res in ress:
-            query = key_values_buckets_template_2.substitute(resource=res)
-            results_ = connect_elasticsearch(
-                es_index, query
-            )  # .search(index=es_index, body=query)
-            if len(results_["hits"]["hits"]) > 0:
-                returned_results = (
-                    returned_results
-                    + results_["hits"]["hits"][0]["_source"]["resourcename"]
+            returned_results[res] = get_the_results(res, name, description)
+
+    return returned_results
+
+
+def get_the_results(resource, name, description, es_index="key_values_resource_cach"):
+    returned_results = {}
+    query = key_values_buckets_template_2.substitute(resource=resource)
+    results_ = connect_elasticsearch(
+        es_index, query
+    )  # .search(index=es_index, body=query)
+    hits = results_["hits"]["hits"]
+
+    if len(hits) > 0:
+        # print (hits[0]["_source"])
+        if name and not description:
+            returned_results = [
+                item
+                for item in hits[0]["_source"]["resourcename"]
+                if item.get("name") and name.lower() in item.get("name").lower()
+            ]
+        elif name and description:
+            returned_results = [
+                item
+                for item in hits[0]["_source"]["resourcename"]
+                if (item.get("name") and name.lower() in item.get("name").lower())
+                or (
+                    item.get("description")
+                    and name.lower() in item.get("description").lower()
                 )
+            ]
+        else:
+            returned_results = [item for item in hits[0]["_source"]["resourcename"]]
+
     return returned_results
