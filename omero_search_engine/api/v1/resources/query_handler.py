@@ -31,8 +31,8 @@ from urllib.parse import urljoin
 
 # "Name (IDR number)"
 mapping_names = {
-    "project": {"Name (IDR number)": "name", "description": "description"},
-    "screen": {"Name (IDR number)": "name", "description": "description"},
+    "project": {"name": "name", "description": "description"},
+    "screen": {"name": "name", "description": "description"},
 }
 
 
@@ -626,17 +626,9 @@ def determine_search_results_(query_, return_columns=False, return_containers=Fa
             # Check the name value and, if it is a list,
             # it will create a new or filter for them and move it
             # Please note it is working for and filter when there is not
-<<<<<<< HEAD
-            # identical match for the name
-            if (
-                q_item.query_type == "main_attribute"
-                and isinstance(q_item.value, list)
-                and filter["name"] == "name"
-=======
             # identical match for the idr name
             if q_item.query_type == "main_attribute" and (
                 filter["name"] == "name" or filter["name"] == "description"
->>>>>>> search_name_project_screen
             ):
                 if isinstance(q_item.value, list):
                     new_or_filter = []
