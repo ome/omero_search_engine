@@ -801,3 +801,98 @@ def get_the_results(resource, name, description, es_index="key_values_resource_c
         del item["description"]
 
     return returned_results
+
+
+def get_container_values_for_key(table_, container_name, key=None):
+    key_number_search_template
+    retuned_results = []
+    pr_names = get_resource_names("all")
+    for resourse, names in pr_names.items():
+        act_name = [
+            {"id": name["id"], "name": name["name"]}
+            for name in names
+            if name["name"] and container_name.lower() in name["name"].lower()
+        ]
+        if len(act_name) > 0:
+            for id in act_name:
+                if resourse != table_:
+                    res = process_container_query(
+                        table_, resourse + "_id", id["id"], key, table_
+                    )
+                else:
+                    res = process_container_query(table_, "id", id["id"], key, table_)
+                if len(res) > 0:
+                    retuned_results.append(
+                        {"name": id["name"], "type": resourse, "results": res}
+                    )
+    return retuned_results
+
+
+def process_container_query(table_, attribute_name, container_id, key, resourse):
+    from omero_search_engine.api.v1.resources.utils import elasticsearch_query_builder
+
+    res_index = resource_elasticsearchindex.get(table_)
+    main_attributes = {
+        "and_main_attributes": [
+            {"name": attribute_name, "value": container_id, "operator": "equals"}
+        ]
+    }
+    query_ = elasticsearch_query_builder([], [], False, main_attributes=main_attributes)
+    query = json.loads(query_)
+    if key:
+        query["aggs"] = json.loads(
+            container_project_values_key_template.substitute(key=key.strip())
+        )
+    else:
+        query["aggs"] = container_project_keys_template
+    query["_source"] = {"includes": [""]}
+    res = search_index_for_value(res_index, query)
+    if key:
+        buckets = res["aggregations"]["key_values"]["key_filter"]["uniquesTerms"][
+            "buckets"
+        ]
+        for bucket in buckets:
+            bucket["value"] = bucket["key"]
+            bucket["key"] = key
+            bucket["no_" + resourse] = bucket["doc_count"]
+            del bucket["doc_count"]
+        return buckets
+
+    else:
+        buckets = res["aggregations"]["keys_search"]["uniquesTerms"]["buckets"]
+        for bucket in buckets:
+            bucket["no_" + resourse] = bucket["doc_count"]
+            del bucket["doc_count"]
+        return buckets
+
+
+"""'
+get all the values buckets for a key"""
+container_project_values_key_template = Template(
+    """{"key_values":{"nested":{"path":"key_values"},"aggs":{"key_filter":{
+    "filter":{"terms":{"key_values.name.keynamenormalize":["$key"]}
+    },"aggs":{"required_values":{"cardinality":
+    {"field": "key_values.value.keyvalue",
+   "precision_threshold":4000}},"uniquesTerms":
+   {"terms": {"field": "key_values.value.keyvalue","size": 10000}}}}}}}"""
+)
+
+
+"""
+Get all the keys bucket"""
+container_project_keys_template = {
+    "keys_search": {
+        "nested": {"path": "key_values"},
+        "aggs": {
+            "required_values": {
+                "cardinality": {
+                    "field": "key_values.name.keynamenormalize",
+                    "precision_threshold": 4000,
+                },
+            },
+            "uniquesTerms": {
+                "terms": {"field": "key_values.name.keynamenormalize", "size": 10000}
+            },
+        },
+    }
+}

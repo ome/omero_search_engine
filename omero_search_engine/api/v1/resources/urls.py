@@ -387,3 +387,39 @@ def search(resource_table):
         return_containers,
     )
     return jsonify(results)
+
+
+@resources.route("/<resource_table>/container_keyvalues/", methods=["GET"])
+def container_key_values_search(resource_table):
+    """
+    file: swagger_docs/container_keyvalues.yml
+    """
+    from omero_search_engine.api.v1.resources.resource_analyser import (
+        get_container_values_for_key,
+    )
+
+    key = request.args.get("key")
+    container_name = request.args.get("container_name")
+    if not container_name or not key:
+        return build_error_message("Container name and key are required")
+    results = get_container_values_for_key(resource_table, container_name, key)
+    return jsonify(results)
+
+
+@resources.route("/<resource_table>/container_keys/", methods=["GET"])
+def container_keys_search(resource_table):
+    """
+    file: swagger_docs/container_keys.yml
+    """
+    from omero_search_engine.api.v1.resources.resource_analyser import (
+        get_container_values_for_key,
+    )
+
+    container_name = request.args.get("container_name")
+    if not container_name:
+        return build_error_message("Container name is required")
+    results = get_container_values_for_key(
+        resource_table,
+        container_name,
+    )
+    return jsonify(results)

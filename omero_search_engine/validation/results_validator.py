@@ -1034,19 +1034,52 @@ def get_no_images_sql_containers(write_report=True):
         if not os.path.isdir(base_folder):
             base_folder = os.path.expanduser("~")
 
-        report_file = os.path.join(base_folder, "check_containers_report.txt")
-        report = "\n".join(messages)  # noqa
-        with open(report_file, "w") as f:
-            f.write(report)
+
+    report_file = os.path.join(base_folder, "check_containers_report.txt")
+    report = "\n".join(messages)  # noqa
+    with open(report_file, "w") as f:
+        f.write(report)
 
 
-"""
-def set_owner_ship(resource , name, value, owener_id=None, group_id=None):
-    if hasattr(self, 'owener_id'):
-        if hasattr(self, 'group_id'):
-    sql=query_images_key_value.substitute(naem=name, value=value)
-    if owener_id:
-        sql=sql +" %s.%owner_id=%s"%(resource,owener_id)
-    if group_id:
-        sql = sql + " %s.%group_id=%s" % (resource, group_id)
-"""
+def container_keys_vakues():
+    from omero_search_engine.validation.psql_templates import (
+        container_from_name,
+        screen_key_values,
+        project_key_values,
+    )
+    from omero_search_engine.api.v1.resources.resource_analyser import (
+        get_container_values_for_key,
+    )
+
+    container_name = "idr0034"
+    key = "Cell Line"
+    project_sql = container_from_name.substitute(
+        container="project", name=container_name
+    )
+    screen_sql = container_from_name.substitute(container="screen", name=container_name)
+    conn = search_omero_app.config["database_connector"]
+    project_ids_results = conn.execute_query(project_sql)
+    screen_ids_results = conn.execute_query(screen_sql)
+    print(project_ids_results)
+    print(screen_ids_results)
+    if len(screen_ids_results) > 0:
+        for id in screen_ids_results:
+            screen_sql = screen_key_values.substitute(id=id.get("id"), name=key)
+            screen_results = conn.execute_query(screen_sql)
+            scr_searchengine_results = get_container_values_for_key(
+                "image", container_name, key
+            )
+            print(scr_searchengine_results)
+            print(len(screen_results))
+            print(len(screen_results), len(scr_searchengine_results[0].get("results")))
+
+    if len(screen_ids_results) > 0:
+        for id in screen_ids_results:
+            project_sql = project_key_values.substitute(id=id.get("id"), name=key)
+            project_results = conn.execute_query(project_sql)
+            pr_searchengine_results = get_container_values_for_key(
+                "image", container_name, key
+            )
+            print(pr_searchengine_results)
+            print(len(project_results))
+            print(len(project_results), len(pr_searchengine_results[0].get("results")))

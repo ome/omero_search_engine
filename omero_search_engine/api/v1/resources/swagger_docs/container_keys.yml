@@ -1,0 +1,20 @@
+A searchengine endpoint to return the avilable keys for a container
+---
+tags:
+  - Container keys
+parameters:
+  - name: resource_table
+    in: path
+    type: string
+    enum: ['image', 'project', 'screen', 'well', 'plate']
+    required: true
+  - name: container_name
+    description: The container name
+    in: query
+    type: string
+    required: true
+responses:
+  200:
+    description: A JSON contains the search results
+    examples:
+      results: []
