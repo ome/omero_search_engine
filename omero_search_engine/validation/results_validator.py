@@ -1040,7 +1040,6 @@ def get_no_images_sql_containers(write_report=True):
     with open(report_file, "w") as f:
         f.write(report)
 
-
 def check_container_keys_vakues():
     from omero_search_engine.validation.psql_templates import (
         container_from_name,
@@ -1052,7 +1051,9 @@ def check_container_keys_vakues():
     )
 
     container_name = "idr0034"
+
     key = "cell line"
+
     project_sql = container_from_name.substitute(
         container="project", name=container_name
     )
@@ -1060,8 +1061,10 @@ def check_container_keys_vakues():
     conn = search_omero_app.config["database_connector"]
     project_ids_results = conn.execute_query(project_sql)
     screen_ids_results = conn.execute_query(screen_sql)
+
     search_omero_app.logger.info("projects: %s" % project_ids_results)
     search_omero_app.logger.info("screens: %s" % screen_ids_results)
+
     if len(screen_ids_results) > 0:
         for id in screen_ids_results:
             screen_sql = screen_key_values.substitute(id=id.get("id"), name=key)
@@ -1069,11 +1072,12 @@ def check_container_keys_vakues():
             scr_searchengine_results = get_container_values_for_key(
                 "image", container_name, key
             )
+
             search_omero_app.logger.info(
                 "Results from PostgreSQL database: %s" % len(screen_results)
             )
             if len(scr_searchengine_results) > 0 and scr_searchengine_results[0].get(
-                "results"
+                    "results"
             ):
                 search_omero_app.logger.info(
                     "Searchengine results: %s"
@@ -1084,16 +1088,18 @@ def check_container_keys_vakues():
 
     if len(project_ids_results) > 0:
         for id in project_ids_results:
+
             project_sql = project_key_values.substitute(id=id.get("id"), name=key)
             project_results = conn.execute_query(project_sql)
             pr_searchengine_results = get_container_values_for_key(
                 "image", container_name, key
             )
+
             search_omero_app.logger.info(
                 "Results from PostgreSQL database: %s" % len(project_results)
             )
             if len(pr_searchengine_results) > 0 and pr_searchengine_results[0].get(
-                "results"
+                    "results"
             ):
                 search_omero_app.logger.info(
                     "Searchengine results: %s "
