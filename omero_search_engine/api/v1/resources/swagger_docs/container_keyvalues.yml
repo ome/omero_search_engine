@@ -1,0 +1,25 @@
+A searchengine endpoint to return the avialbe values for a key in specific container
+---
+tags:
+  - Avialbe values for a key in specific container
+parameters:
+  - name: resource_table
+    in: path
+    type: string
+    enum: ['image', 'project', 'screen', 'well', 'plate']
+    required: true
+  - name: container_name
+    description: The container name
+    in: query
+    type: string
+    required: true
+  - name: key
+    description: the resource attribute
+    in: query
+    type: string
+    required: true
+responses:
+  200:
+    description: A JSON contains the search results
+    examples:
+      results: []

@@ -50,7 +50,7 @@ Another example:
 
 ---
 tags:
- - Mixed Complex query
+ - Return containers for a Mixed Complex query
 
 parameters:
   - name: return_columns
