@@ -333,5 +333,12 @@ def restore_elasticsearch_data():
     restore_indices_data()
 
 
+@manager.command
+def check_containers():
+    from omero_search_engine.validation.results_validator import container_keys_vakues
+
+    container_keys_vakues()
+
+
 if __name__ == "__main__":
     manager.run()
