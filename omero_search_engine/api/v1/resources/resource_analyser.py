@@ -749,6 +749,11 @@ def get_resource_names(resource, name=None, description=False):
     return resources names attributes
     It works for projects and screens but can be extended.
     """
+    if description:
+        return build_error_message(
+            "This release does not support search by description."
+        )
+
     if resource != "all":
         returned_results = get_the_results(resource, name, description)
     else:
