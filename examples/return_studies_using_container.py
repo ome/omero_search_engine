@@ -32,11 +32,11 @@ The following query will answer this question:
 Get a list of studies which satisfy the following conditions:
 "Organism"="mus musculus"
  and
-"Imaging Method"="light sheet fluorescence microscopy, spim"
+"Imaging Method"="spim"
 """
 logging.info(
     "Get a study list for:  (Organism= mus musculus) and \
-    (Imaging Method=light sheet fluorescence microscopy, spim)"
+    (Imaging Method=spim)"
 )
 
 """
@@ -56,7 +56,7 @@ data = {
         "and_filters": [
             {
                 "name": "Imaging Method",
-                "value": "light sheet fluorescence microscopy, spim",
+                "value": "spim",
                 "operator": "equals",
                 "resource": "container",
             },
