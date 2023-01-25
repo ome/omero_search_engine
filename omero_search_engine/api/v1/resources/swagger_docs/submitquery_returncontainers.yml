@@ -36,7 +36,7 @@ Another example:
         },
         {
           "name": "Imaging Method",
-          "value": "light sheet fluorescence microscopy, spim",
+          "value": "spim",
           "operator": "equals",
           "resource": "project"
         }
