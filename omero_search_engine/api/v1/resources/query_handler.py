@@ -579,6 +579,8 @@ def process_search_results(results, resource, columns_def):
 
 
 def determine_search_results_(query_, return_columns=False, return_containers=False):
+    from omero_search_engine.api.v1.resources.utils import build_error_message
+
     if query_.get("query_details"):
         case_sensitive = query_.get("query_details").get("case_sensitive")
     else:
@@ -601,7 +603,13 @@ def determine_search_results_(query_, return_columns=False, return_containers=Fa
             # Please note it is working for and filter when there is not
             # identical match for the idr name
             if q_item.query_type == "main_attribute" and (
-                filter["name"] == "name" or filter["name"] == "description"
+                filter["name"] == "description"
+            ):
+                return build_error_message(
+                    "This release does not support search by description."
+                )
+            if q_item.query_type == "main_attribute" and (
+                filter["name"] == "name"  # or filter["name"] == "description"
             ):
                 if isinstance(q_item.value, list):
                     new_or_filter = []
@@ -633,7 +641,13 @@ def determine_search_results_(query_, return_columns=False, return_containers=Fa
                 for filter in filters_:
                     q_item = QueryItem(filter)
                     if q_item.query_type == "main_attribute" and (
-                        filter["name"] == "name" or filter["name"] == "description"
+                        filter["name"] == "description"
+                    ):
+                        return build_error_message(
+                            "This release does not support search by description."
+                        )
+                    if q_item.query_type == "main_attribute" and (
+                        filter["name"] == "name"  # or filter["name"] == "description"
                     ):
                         if isinstance(q_item.value, list):
                             for val in q_item.value:
