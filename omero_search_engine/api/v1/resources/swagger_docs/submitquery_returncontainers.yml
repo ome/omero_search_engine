@@ -1,5 +1,6 @@
 A searchengine endpoint to accept complex query but it will return the containers only (name)
-API endpoint to search the annotation (key/value pair), the main difference between this endpoint and searchannotation is this one can be used to search different resources and return the images which satisfy the search conditions.
+API endpoint to search the annotation (key/value pair), the main difference between this endpoint and searchannotation is this one can be used to search different resources and return the container (screen or project) which includes the images which satisfy the search conditions.
+The container can be used as a resource instead of a project or screen if the user is not sure about the container type.
 The query data has a similar format to the query for searchannotation.
 Example:
 
