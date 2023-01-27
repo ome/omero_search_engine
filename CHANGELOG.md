@@ -1,7 +1,7 @@
 0.5.0 (January 2023):
 ---------------------
 - Enable searching by container name [#57](https://github.com/ome/omero_search_engine/pull/57)
-- Allows the use of a container as a resource [#69](https://github.com/ome/omero_search_engine/pull/69)
+- Allow the use of a container as a resource [#69](https://github.com/ome/omero_search_engine/pull/69)
 - Use 'name' for the container instead of 'Name (IDR number)' [#72](https://github.com/ome/omero_search_engine/pull/72)
 
  0.4.1 (December 2022):
