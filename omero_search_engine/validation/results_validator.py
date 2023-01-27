@@ -1040,6 +1040,7 @@ def get_no_images_sql_containers(write_report=True):
     with open(report_file, "w") as f:
         f.write(report)
 
+
 def check_container_keys_vakues():
     from omero_search_engine.validation.psql_templates import (
         container_from_name,
@@ -1077,7 +1078,7 @@ def check_container_keys_vakues():
                 "Results from PostgreSQL database: %s" % len(screen_results)
             )
             if len(scr_searchengine_results) > 0 and scr_searchengine_results[0].get(
-                    "results"
+                "results"
             ):
                 search_omero_app.logger.info(
                     "Searchengine results: %s"
@@ -1099,7 +1100,7 @@ def check_container_keys_vakues():
                 "Results from PostgreSQL database: %s" % len(project_results)
             )
             if len(pr_searchengine_results) > 0 and pr_searchengine_results[0].get(
-                    "results"
+                "results"
             ):
                 search_omero_app.logger.info(
                     "Searchengine results: %s "
