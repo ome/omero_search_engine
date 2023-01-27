@@ -794,4 +794,10 @@ def get_the_results(resource, name, description, es_index="key_values_resource_c
         else:
             returned_results = [item for item in hits[0]["_source"]["resourcename"]]
 
+    # remove container description from the results,
+    # should be added again later after cleaning up the description
+
+    for item in returned_results:
+        del item["description"]
+
     return returned_results
