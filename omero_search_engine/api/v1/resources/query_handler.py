@@ -29,31 +29,39 @@ from pathlib import Path
 import os
 from urllib.parse import urljoin
 
+# "Name (IDR number)"
 mapping_names = {
-    "project": {"Name (IDR number)": "name"},
-    "screen": {"Name (IDR number)": "name"},
+    "project": {"name": "name", "description": "description"},
+    "screen": {"name": "name", "description": "description"},
 }
 
 
-def check_get_names(idr_):
+def check_get_names(idr_, resource, attribute, return_exact=False):
     # check the idr name and return the resource and possible values
     if idr_:
         idr_ = idr_.strip()
-    resource = "project"
-    pr_names = get_resource_names("project")
-    act_name = [name for name in pr_names if idr_ in name]
-    if len(act_name) == 0:
-        pr_names = get_resource_names("screen")
-        act_name = [name for name in pr_names if idr_ in name]
-        resource = "screen"
-    return act_name, resource
+    pr_names = get_resource_names(resource)
+    if pr_names:
+        if not return_exact:
+            act_name = [
+                name["id"]
+                for name in pr_names
+                if name[attribute] and idr_.lower() in name[attribute].lower()
+            ]
+        else:
+            act_name = [
+                name["id"]
+                for name in pr_names
+                if name[attribute] and idr_.lower() == name[attribute].lower()
+            ]
+        return act_name
 
 
 class QueryItem(object):
     def __init__(self, filter, adjust_res=True):
         """
         define query and adjust resource if it is needed,
-        e.g. idr name is provided
+        e.g. name is provided
         Args:
             resource:
             attribute_name:
@@ -80,13 +88,27 @@ class QueryItem(object):
         # to use the actual attribute name
         if mapping_names.get(self.resource):
             if mapping_names[self.resource].get(self.name):
-                ac_value, act_res = check_get_names(self.value)
-                if len(ac_value) == 1:
-                    self.value = ac_value[0]
-                elif len(ac_value) > 1:
-                    self.value = ac_value
-                self.resource = act_res
-                self.name = "name"
+                self.name = mapping_names[self.resource].get(self.name)
+                if self.operator == "contains" or self.operator == "not_contains":
+                    ac_value = check_get_names(self.value, self.resource, self.name)
+                    if len(ac_value) == 0:
+                        self.value = -1
+                    elif len(ac_value) == 1:
+                        self.value = ac_value[0]
+                    elif len(ac_value) > 1:
+                        self.value = ac_value
+                    if self.operator == "contains":
+                        self.operator = "equals"
+                    else:
+                        self.operator = "not_equals"
+                else:
+                    ac_value = check_get_names(
+                        self.value, self.resource, self.name, True
+                    )
+                    if len(ac_value) == 1:
+                        self.value = ac_value[0]
+                    else:
+                        self.value = -1
                 """
                 pr_names = get_resource_names(self.resource)
                 if not self.value in pr_names:
@@ -186,23 +208,38 @@ class QueryRunner(
         # then run and add the results (in term of clauses)
         # to the main image query
         for or_it in self.or_query_group:
+            checked_list = []
+            main_or_attribute_ = {}
             for resource, main in or_it.main_attribute.items():
+                checked_list.append(resource)
                 query = {}
                 query["main_attribute"] = main
                 res = self.run_query(query, resource)
                 new_cond = get_ids(res, resource)
                 if new_cond:
-                    if not main_or_attribute.get(resource):
-                        main_or_attribute[resource] = new_cond
+                    if not main_or_attribute_.get(resource):
+                        main_or_attribute_[resource] = new_cond
                     else:
-                        main_or_attribute[resource] = (
-                            main_or_attribute[resource] + new_cond
+                        main_or_attribute_[resource] = (
+                            main_or_attribute_[resource] + new_cond
                         )
-                else:
+                elif len(main_or_attribute_.keys()) == 0 and len(checked_list) == len(
+                    or_it.resources_query
+                ):
                     return {"Error": "Your query returns no results"}
+            for res, items_ in main_or_attribute_.items():
+                if res not in main_or_attribute:
+                    main_or_attribute[res] = items_
+                else:
+                    main_or_attribute[res] = combine_conds(
+                        main_or_attribute[res], items_, res
+                    )
         # check or_filters
         for or_it in self.or_query_group:
+            checked_list = []
+            main_or_attribute_ = {}
             for resource, or_query in or_it.resources_query.items():
+                checked_list.append(resource)
                 if resource == "image":
                     image_or_queries.append(or_query)
                 else:
@@ -215,17 +252,28 @@ class QueryRunner(
                     res = self.run_query(query, resource)
                     new_cond = get_ids(res, resource)
                     if new_cond:
-                        if not main_or_attribute.get(resource):
-                            main_or_attribute[resource] = new_cond
+                        if not main_or_attribute_.get(resource):
+                            main_or_attribute_[resource] = new_cond
                         else:
-                            main_or_attribute[resource] = (
-                                main_or_attribute[resource] + new_cond
+                            main_or_attribute_[resource] = (
+                                main_or_attribute_[resource] + new_cond
                             )
 
                         # main_or_attribute.append(new_cond)
                         # self.additional_image_conds.append(new_cond)
                     else:
-                        return {"Error": "Your query returns no results"}
+                        # check if all the conditions have been checked
+                        if len(main_or_attribute_.keys()) == 0 and len(
+                            checked_list
+                        ) == len(or_it.resources_query):
+                            return {"Error": "Your query returns no results"}
+            for res, items_ in main_or_attribute_.items():
+                if res not in main_or_attribute:
+                    main_or_attribute[res] = items_
+                else:
+                    main_or_attribute[res] = combine_conds(
+                        main_or_attribute[res], items_, res
+                    )
         # check and main attributes
         for and_it in self.and_query_group:
             for resource, main in and_it.main_attribute.items():
@@ -558,6 +606,8 @@ def process_search_results(results, resource, columns_def):
 
 
 def determine_search_results_(query_, return_columns=False, return_containers=False):
+    from omero_search_engine.api.v1.resources.utils import build_error_message
+
     if query_.get("query_details"):
         case_sensitive = query_.get("query_details").get("case_sensitive")
     else:
@@ -575,28 +625,36 @@ def determine_search_results_(query_, return_columns=False, return_containers=Fa
         and_query_group = QueryGroup("and_filters")
         for filter in and_filters:
             q_item = QueryItem(filter)
-            # Check the idr number value and, if it is a list,
+            # Check the name value and, if it is a list,
             # it will create a new or filter for them and move it
             # Please note it is working for and filter when there is not
             # identical match for the idr name
-            if (
-                q_item.query_type == "main_attribute"
-                and isinstance(q_item.value, list)
-                and filter["name"] == "Name (IDR number)"
+            if q_item.query_type == "main_attribute" and (
+                filter["name"] == "description"
             ):
-                new_or_filter = []
-                if not or_filters:
-                    or_filters = []
-                or_filters.append(new_or_filter)
-                for val in q_item.value:
-                    new_fil = {}
-                    new_fil["value"] = val
-                    new_fil["name"] = q_item.name
-                    new_fil["resource"] = q_item.resource
-                    new_fil["operator"] = filter["operator"]
-                    new_fil["set_query_type"] = True
-                    new_fil["query_type"] = q_item.query_type
-                    new_or_filter.append(new_fil)
+                return build_error_message(
+                    "This release does not support search by description."
+                )
+            if q_item.query_type == "main_attribute" and (
+                filter["name"] == "name"  # or filter["name"] == "description"
+            ):
+                if isinstance(q_item.value, list):
+                    new_or_filter = []
+                    if not or_filters:
+                        or_filters = []
+                    or_filters.append(new_or_filter)
+                    for val in q_item.value:
+                        new_fil = {}
+                        new_fil["value"] = val
+                        new_fil["name"] = "id"
+                        new_fil["resource"] = q_item.resource
+                        new_fil["operator"] = filter["operator"]
+                        new_fil["set_query_type"] = True
+                        new_fil["query_type"] = q_item.query_type
+                        new_or_filter.append(new_fil)
+                else:
+                    q_item.name = "id"
+                    and_query_group.add_query(q_item)
             else:
                 and_query_group.add_query(q_item)
         and_query_group.divide_filter()
@@ -609,7 +667,31 @@ def determine_search_results_(query_, return_columns=False, return_containers=Fa
             if isinstance(filters_, list):
                 for filter in filters_:
                     q_item = QueryItem(filter)
-                    or_query_group.add_query((q_item))
+                    if q_item.query_type == "main_attribute" and (
+                        filter["name"] == "description"
+                    ):
+                        return build_error_message(
+                            "This release does not support search by description."
+                        )
+                    if q_item.query_type == "main_attribute" and (
+                        filter["name"] == "name"  # or filter["name"] == "description"
+                    ):
+                        if isinstance(q_item.value, list):
+                            for val in q_item.value:
+                                new_fil = {}
+                                new_fil["value"] = val
+                                new_fil["name"] = "id"
+                                new_fil["resource"] = q_item.resource
+                                new_fil["operator"] = filter["operator"]
+                                new_fil["set_query_type"] = True
+                                new_fil["query_type"] = q_item.query_type
+                                _q_item = QueryItem(new_fil)
+                                or_query_group.add_query(_q_item)
+                        else:
+                            q_item.name = "id"
+                            or_query_group.add_query(q_item)
+                    else:
+                        or_query_group.add_query(q_item)
             or_query_group.divide_filter()
             or_query_group.adjust_query_main_attributes()
 
@@ -658,7 +740,7 @@ def simple_search(
     else:
         and_filters.append(
             {
-                "name": "Name (IDR number)",
+                "name": "name",
                 "value": study,
                 "operator": "equals",
                 "resource": "project",

@@ -106,7 +106,7 @@ inner join datasetimagelink on datasetimagelink.child=image.id
 inner join dataset on datasetimagelink.parent=dataset.id
 inner join projectdatasetlink on dataset.id=projectdatasetlink.child
 inner join  project on project.id=projectdatasetlink.parent
-where project.id=$project_id)"""
+where project.id=$project_id"""
 )
 
 # get images in a project using project name
