@@ -18,6 +18,12 @@ parameters:
     in: query
     type: string
     required: true
+  - name: csv
+    description: a flag to return a CSV file which is created on the fly instead of JSON
+    in: query
+    type: boolean
+    required: false
+
 responses:
   200:
     description: A JSON contains the search results

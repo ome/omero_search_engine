@@ -28,6 +28,7 @@ from omero_search_engine.api.v1.resources.utils import (
     adjust_value,
 )
 import math
+from flask import jsonify, Response
 
 key_number_search_template = Template(
     """
@@ -375,8 +376,6 @@ def prepare_search_results_buckets(results_):
 
 
 def get_key_values_return_contents(name, resource, csv):
-    from flask import jsonify, Response
-
     resource_keys = query_cashed_bucket(name, resource)
     # if a csv flag is true thenm iut will send a CSV file
     # which contains the results otherwise it will return a JSON file
@@ -803,8 +802,7 @@ def get_the_results(resource, name, description, es_index="key_values_resource_c
     return returned_results
 
 
-def get_container_values_for_key(table_, container_name, key=None):
-    key_number_search_template
+def get_container_values_for_key(table_, container_name, csv, key=None):
     retuned_results = []
     pr_names = get_resource_names("all")
     for resourse, names in pr_names.items():
@@ -825,7 +823,46 @@ def get_container_values_for_key(table_, container_name, key=None):
                     retuned_results.append(
                         {"name": id["name"], "type": resourse, "results": res}
                     )
-    return retuned_results
+    if csv:
+        if key:
+            contanets = [
+                ",".join(["Container", "Type", "Key", "Value", "No of %s" % table_])
+            ]
+        else:
+            contanets = [",".join(["Container", "Type", "Key", "No of %s" % table_])]
+        for r_results in retuned_results:
+            reso = r_results.get("name")
+            type = r_results.get("type")
+            for res in r_results.get("results"):
+                if key:
+                    contanets.append(
+                        ",".join(
+                            [
+                                reso,
+                                type,
+                                res.get("key"),
+                                res.get("value"),
+                                str(res.get("no_%s" % table_)),
+                            ]
+                        )
+                    )
+                else:
+                    contanets.append(
+                        ",".join(
+                            [reso, type, res.get("key"), str(res.get("no_%s" % table_))]
+                        )
+                    )
+        if key:
+            file_name = "container_%s_%s_values.csv" % (container_name, key)
+        else:
+            file_name = "container_%s_keys.csv" % container_name
+
+        return Response(
+            "\n".join(contanets),
+            mimetype="text/csv",
+            headers={"Content-disposition": "attachment; filename=%s" % (file_name)},
+        )
+    return jsonify(retuned_results)
 
 
 def process_container_query(table_, attribute_name, container_id, key, resourse):
