@@ -274,6 +274,13 @@ class QueryRunner(
                     main_or_attribute[res] = combine_conds(
                         main_or_attribute[res], items_, res
                     )
+
+        if len(self.or_query_group) > 0 and len(image_or_queries) == 0:
+            no_conds = 0
+            for res, item in main_or_attribute.items():
+                no_conds += len(item)
+            if no_conds == 0:
+                return {"Error": "Your query returns no results"}
         # check and main attributes
         for and_it in self.and_query_group:
             for resource, main in and_it.main_attribute.items():
@@ -499,8 +506,15 @@ def get_ids(results, resource):
             qur_item["resource"] = resource
             qur_item_ = QueryItem(qur_item)
             ids.append(qur_item_)
-        return ids
-    return None
+    else:
+        qur_item = {}
+        qur_item["name"] = "{resource}_id".format(resource=resource)
+        qur_item["value"] = -1
+        qur_item["operator"] = "equals"
+        qur_item["resource"] = resource
+        qur_item_ = QueryItem(qur_item)
+        ids.append(qur_item_)
+    return ids
 
 
 def process_search_results(results, resource, columns_def):
