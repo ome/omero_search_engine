@@ -5,7 +5,8 @@
       "Publication Title",
       "Publication Authors",
       "Study Type",
-      "License"
+      "License",
+      "Organism"
    ],
    "screen":[
       "Screen Technology Type",
