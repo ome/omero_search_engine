@@ -1,3 +1,8 @@
+0.5.1 (February 2023):
+----------------------
+- Fix the issue of filtering images by the container name [#81](https://github.com/ome/omero_search_engine/pull/81)
+- Add 'Organism' to the project search terms
+
 0.5.0 (January 2023):
 ---------------------
 - Enable searching by container name [#57](https://github.com/ome/omero_search_engine/pull/57)
