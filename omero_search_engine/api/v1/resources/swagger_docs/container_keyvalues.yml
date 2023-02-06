@@ -1,7 +1,7 @@
-A searchengine endpoint to return the avialbe values for a key in specific container
+A searchengine endpoint to return the available values for a key in specific container
 ---
 tags:
-  - Avialbe values for a key in specific container
+  - Available values for a key in specific container
 parameters:
   - name: resource_table
     in: path

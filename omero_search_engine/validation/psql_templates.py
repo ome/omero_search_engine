@@ -277,7 +277,7 @@ Select  image.id as image_id, project.name as project_name, screen.name as scree
 )
 project_key_values = Template(
     """
-Select DISTINCT ( annotation_mapvalue.value)  from image
+Select DISTINCT (annotation_mapvalue.value)  from image
 left join imageannotationlink on image.id =imageannotationlink.parent
 left join annotation_mapvalue on
 annotation_mapvalue.annotation_id=imageannotationlink.child

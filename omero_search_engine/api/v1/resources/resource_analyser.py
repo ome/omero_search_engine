@@ -803,7 +803,7 @@ def get_the_results(resource, name, description, es_index="key_values_resource_c
 
 
 def get_container_values_for_key(table_, container_name, csv, key=None):
-    retuned_results = []
+    returned_results = []
     pr_names = get_resource_names("all")
     for resourse, names in pr_names.items():
         act_name = [
@@ -820,22 +820,22 @@ def get_container_values_for_key(table_, container_name, csv, key=None):
                 else:
                     res = process_container_query(table_, "id", id["id"], key, table_)
                 if len(res) > 0:
-                    retuned_results.append(
+                    returned_results.append(
                         {"name": id["name"], "type": resourse, "results": res}
                     )
     if csv:
         if key:
-            contanets = [
+            containers = [
                 ",".join(["Container", "Type", "Key", "Value", "No of %s" % table_])
             ]
         else:
-            contanets = [",".join(["Container", "Type", "Key", "No of %s" % table_])]
-        for r_results in retuned_results:
+            containers = [",".join(["Container", "Type", "Key", "No of %s" % table_])]
+        for r_results in returned_results:
             reso = r_results.get("name")
             type = r_results.get("type")
             for res in r_results.get("results"):
                 if key:
-                    contanets.append(
+                    containers.append(
                         ",".join(
                             [
                                 reso,
@@ -847,7 +847,7 @@ def get_container_values_for_key(table_, container_name, csv, key=None):
                         )
                     )
                 else:
-                    contanets.append(
+                    containers.append(
                         ",".join(
                             [reso, type, res.get("key"), str(res.get("no_%s" % table_))]
                         )
@@ -858,11 +858,11 @@ def get_container_values_for_key(table_, container_name, csv, key=None):
             file_name = "container_%s_keys.csv" % container_name
 
         return Response(
-            "\n".join(contanets),
+            "\n".join(containers),
             mimetype="text/csv",
             headers={"Content-disposition": "attachment; filename=%s" % (file_name)},
         )
-    return jsonify(retuned_results)
+    return jsonify(returned_results)
 
 
 def process_container_query(table_, attribute_name, container_id, key, resourse):
@@ -903,7 +903,7 @@ def process_container_query(table_, attribute_name, container_id, key, resourse)
         return buckets
 
 
-"""'
+"""
 get all the values buckets for a key"""
 container_project_values_key_template = Template(
     """{"key_values":{"nested":{"path":"key_values"},"aggs":{"key_filter":{
