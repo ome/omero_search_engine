@@ -758,8 +758,8 @@ def get_no_images_sql_containers():
 
 
 def check_container_keys_vakues():
-    # the will be modified and the tesing data will be adjusted and provided
-    # at ruun time
+    # This will be modified and the testing data will be adjusted and provided
+    # at run time
     from omero_search_engine.validation.psql_templates import (
         container_from_name,
         screen_key_values,
