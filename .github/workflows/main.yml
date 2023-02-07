@@ -49,7 +49,7 @@ jobs:
           #run  restore omero database
           python manage.py restore_postgresql_database
           #run indexing indexing
-          python manage.py get_index_data_from_database
+          python manage.py get_index_data_from_database -n True
           # run tests
           python -m unittest discover -s unit_tests
   upload:

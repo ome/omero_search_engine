@@ -127,7 +127,12 @@ def restore_postgresql_database():
     "--resource",
     help="resource name, creating all the indexes for all the resources is the default",  # noqa
 )
-def get_index_data_from_database(resource="all"):
+@manager.option(
+    "-n",
+    "--nobackup",
+    help="if True, backup will be called ",  # noqa
+)
+def get_index_data_from_database(resource="all", nobackup=None):
     """
     insert data in Elasticsearch index for each resource
     It gets the data from postgres database server
@@ -155,7 +160,8 @@ def get_index_data_from_database(resource="all"):
         test_indexing_search_query(deep_check=False, check_studies=True)
 
     # backup the index data
-    backup_elasticsearch_data()
+    if not nobackup:
+        backup_elasticsearch_data()
 
 
 # set configurations
