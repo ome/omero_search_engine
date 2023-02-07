@@ -583,7 +583,6 @@ class Validator(object):
             "not equal, database no of the results from database server is: %s and"
             "the number of results from searchengine is %s?,"
             "\ndatabase server query time= %s, searchengine query time= %s"
-
             % (len(self.postgres_results), searchengine_no, sql_time, searchengine_time)
         )
 
@@ -625,7 +624,6 @@ def validate_queries(json_file, deep_check):
             messages.append(
                 "Results form (equals) PostgreSQL and search engine"
                 "for name: %s , value: %s are: %s"
-
                 % (validator.name, validator.value, res)
             )
             search_omero_app.logger.info("Total time=%s" % elabsed_time)
@@ -918,7 +916,9 @@ def get_no_images_sql_containers():
             )
             search_omero_app.logger.info(message2)
             messages.append(message2)
-            sql = query_methods["%s_name" % resource].substitute(name=res_name)
+            sql = query_methods["%s_name" % resource].substitute(
+                name=res_name, operator="="
+            )
             results = conn.execute_query(sql)
             postgres_results = len(results)
             message3 = "No of images returned from postgresql: %s" % seachengine_results
