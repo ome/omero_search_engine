@@ -626,7 +626,6 @@ def elasticsearch_query_builder(
             should_part_list = should_part_list_
 
         if len(should_part_list) > 0:
-
             should_part_ = ",".join(should_part_list)
             should_part_ = should_term_template.substitute(
                 should_term=should_part_, minimum_should_match=1
@@ -645,7 +644,6 @@ def elasticsearch_query_builder(
             all_terms = nested_must_part_
 
     if len(nested_must_not_part) > 0:
-
         nested_must_not_part_ = ",".join(nested_must_not_part)
         nested_must_not_part_ = must_not_term_template.substitute(
             must_not_term=nested_must_not_part_

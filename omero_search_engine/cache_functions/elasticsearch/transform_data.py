@@ -338,7 +338,7 @@ def get_file_list(path_name):
     from os import walk
 
     f = []
-    for (dirpath, dirnames, filenames) in walk(path_name):
+    for dirpath, dirnames, filenames in walk(path_name):
         f.extend(filenames)
 
     return f
