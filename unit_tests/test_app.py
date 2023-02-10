@@ -34,7 +34,10 @@ from omero_search_engine.cache_functions.elasticsearch.elasticsearch_templates i
     key_values_resource_cache_template,
 )
 
-from omero_search_engine.validation.results_validator import Validator
+from omero_search_engine.validation.results_validator import (
+    Validator,
+    check_no_images_sql_containers_using_ids,
+)
 from omero_search_engine.cache_functions.elasticsearch.transform_data import (
     delete_es_index,
     create_index,
@@ -209,6 +212,10 @@ class BasicTestCase(unittest.TestCase):
                 validator.searchengine_results.get("size"),
             )
             self.assertTrue(validator.identical)
+
+    def test_no_images_containers(self):
+
+        self.assertTrue(check_no_images_sql_containers_using_ids())
 
     def test_multi_or_quries(self):
         pass
