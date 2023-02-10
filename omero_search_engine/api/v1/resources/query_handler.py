@@ -110,8 +110,10 @@ class QueryItem(object):
                     )
                     if len(ac_value) == 1:
                         self.value = ac_value[0]
-                    else:
+                    elif len(ac_value) == 0:
                         self.value = -1
+                    else:
+                        self.value = ac_value
                 """
                 pr_names = get_resource_names(self.resource)
                 if not self.value in pr_names:

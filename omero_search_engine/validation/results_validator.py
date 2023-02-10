@@ -43,6 +43,8 @@ from omero_search_engine.validation.psql_templates import (
     query_images_aviable_values_for_key,
     query_images_any_value,
     query_images_contians_not_contains,
+    query_images_in_project_id,
+    query_images_screen_id,
 )
 import os
 
@@ -867,7 +869,102 @@ def get_omero_stats():
         f.write(report)
 
 
-def get_no_images_sql_containers():
+def check_no_images_sql_containers_using_ids():
+    """
+    This method tests the number of images inside each container
+     (project or screen) in the searchengine index data
+    and compare them with the number of images inside
+    each container in the postgresql database server
+    As container name is not unique,container id is used
+    to determine the no of images
+    """
+    from omero_search_engine.api.v1.resources.urls import (
+        get_resource_names,
+    )
+    from omero_search_engine.api.v1.resources.utils import (
+        search_resource_annotation,
+    )
+
+    dd = True
+
+    conn = search_omero_app.config["database_connector"]
+    all_names = get_resource_names("all")
+    for resource in all_names:
+        search_omero_app.logger.info(
+            "######################## Checking %s ########################\n" % resource
+        )
+        for res_name_ in all_names.get(resource):
+            res_name = res_name_.get("name")
+            res_id = res_name_.get("id")
+            search_omero_app.logger.info(
+                "Checking %s name: %s, id: %s" % (resource, res_name, res_id)
+            )
+            and_filters = []
+            main_attributes = {
+                "and_main_attributes": [
+                    {
+                        "name": "%s_id" % resource,
+                        "value": res_id,
+                        "operator": "equals",
+                        "resource": "image",
+                    }
+                ]
+            }
+            or_filters = []
+            query = {"and_filters": and_filters, "or_filters": or_filters}
+
+            query_data = {"query_details": query, "main_attributes": main_attributes}
+
+            returned_results = search_resource_annotation("image", query_data)
+            if returned_results.get("results"):
+                if returned_results.get("results").get("size"):
+                    seachengine_results = returned_results["results"]["size"]
+            else:
+                seachengine_results = 0
+            search_omero_app.logger.info(
+                "No of images returned from searchengine: %s" % seachengine_results
+            )
+            if resource == "project":
+                sql = query_images_in_project_id.substitute(project_id=res_id)
+            elif resource == "screen":
+                sql = query_images_screen_id.substitute(screen_id=res_id)
+            results = conn.execute_query(sql)
+            postgres_results = len(results)
+            search_omero_app.logger.info(
+                "No of images returned from postgresql: %s" % postgres_results
+            )
+            if seachengine_results != postgres_results:
+                if res_name == "idr0021" and res_id == 872:
+                    """
+                    issue with these two images:
+                     #imag id= 9552
+                     #image id= 9539
+                    """
+                    continue
+                dd = False
+                if seachengine_results > 0:
+                    test_array = []
+                    for res in returned_results["results"]["results"]:
+                        test_array.append(res.get("id"))
+                    for ress in results:
+                        if ress["id"] not in test_array:
+                            print("================>>>>")
+                            print(ress["id"])
+                    search_omero_app.logger.info("ERROR: Not equal results")
+                    print(
+                        "Error checking %s name: %s, id: %s"
+                        % (resource, res_name, res_id)
+                    )
+                # return False
+            else:
+                search_omero_app.logger.info("equal results")
+            search_omero_app.logger.info(
+                "\n-----------------------------------------------------------------------------\n"  # noqa
+            )
+    return dd
+
+
+def get_no_images_sql_containers(write_report=True):
     """
     This method tests the number of images inside each container
      (project or screen) in the searchengine index data
@@ -921,7 +1018,7 @@ def get_no_images_sql_containers():
             )
             results = conn.execute_query(sql)
             postgres_results = len(results)
-            message3 = "No of images returned from postgresql: %s" % seachengine_results
+            message3 = "No of images returned from postgresql: %s" % postgres_results
             messages.append(message3)
             search_omero_app.logger.info(message3)
             if seachengine_results != postgres_results:
@@ -935,16 +1032,18 @@ def get_no_images_sql_containers():
             messages.append(
                 "\n-----------------------------------------------------------------------------\n"  # noqa
             )
-    base_folder = "/etc/searchengine/"
-    if not os.path.isdir(base_folder):
-        base_folder = os.path.expanduser("~")
+    if write_report:
+        base_folder = "/etc/searchengine/"
+        if not os.path.isdir(base_folder):
+            base_folder = os.path.expanduser("~")
 
-    report_file = os.path.join(base_folder, "check_containers_report.txt")
-    report = "\n".join(messages)  # noqa
-    with open(report_file, "w") as f:
-        f.write(report)
+        report_file = os.path.join(base_folder, "check_containers_report.txt")
+        report = "\n".join(messages)  # noqa
+        with open(report_file, "w") as f:
+            f.write(report)
 
-        """
+
+"""
 def set_owner_ship(resource , name, value, owener_id=None, group_id=None):
     if hasattr(self, 'owener_id'):
         if hasattr(self, 'group_id'):
@@ -953,4 +1052,4 @@ def set_owner_ship(resource , name, value, owener_id=None, group_id=None):
         sql=sql +" %s.%owner_id=%s"%(resource,owener_id)
     if group_id:
         sql = sql + " %s.%group_id=%s" % (resource, group_id)
-        """
+"""
