@@ -160,7 +160,7 @@ class Validator(object):
         postgres_results = conn.execute_query(sql)
         results = [item["id"] for item in postgres_results]
         search_omero_app.logger.info(
-            "results for or received %s" % len(results)
+            "results for 'or' received %s" % len(results)
         )  # noqa
         return results
 
@@ -177,9 +177,7 @@ class Validator(object):
             conn = search_omero_app.config["database_connector"]
             postgres_results = conn.execute_query(sql)
             res = [item["id"] for item in postgres_results]
-            search_omero_app.logger.info(
-                "results for and  received recived %s" % len(res)
-            )
+            search_omero_app.logger.info("results for 'and' received %s" % len(res))
             if co == 0:
                 results = res
             else:
@@ -743,7 +741,6 @@ def test_no_images():
 
     headers = lines[0]
     headers = headers.split("\t")
-    print(len(headers))
     for i in range(len(headers) - 1):
         print(i, headers[i])
     names = {}
@@ -935,11 +932,11 @@ def check_no_images_sql_containers_using_ids():
             )
             if seachengine_results != postgres_results:
                 if res_name == "idr0021" and res_id == 872:
-                    """
-                    issue with these two images:
-                     #imag id= 9552
-                     #image id= 9539
-                    """
+                    # """
+                    # issue with these two images:
+                    # as they belongo two differnet data sets
+                    # image ids= 9539, 9552
+                    # """
                     continue
                 dd = False
                 if seachengine_results > 0:

@@ -66,6 +66,8 @@ from test_data import (
 from omero_search_engine import search_omero_app, create_app
 
 create_app("testing")
+# deep_check should be a configuration item
+deep_check = True
 
 
 class BasicTestCase(unittest.TestCase):
@@ -146,8 +148,6 @@ class BasicTestCase(unittest.TestCase):
         es_index_2 = "key_values_resource_cach"
         create_es_index_2 = True
         all_all_indices = get_all_indexes_from_elasticsearch()
-        print(all_all_indices)
-        print(all_all_indices.keys())
         if es_index_2 in all_all_indices.keys():
             create_es_index_2 = False
 
@@ -158,7 +158,6 @@ class BasicTestCase(unittest.TestCase):
                 create_index(es_index_2, key_values_resource_cache_template)
             )
         res = search_resource_annotation(table, query)
-        print(res)
         assert len(res.get("results")) >= 0
         self.assertTrue(delete_es_index(es_index))
         if create_es_index_2:
@@ -173,7 +172,7 @@ class BasicTestCase(unittest.TestCase):
             for case in cases:
                 name = case[0]
                 value = case[1]
-                validator = Validator(True)
+                validator = Validator(deep_check)
                 validator.set_simple_query(resource, name, value)
                 validator.get_results_postgres("equals")
                 validator.get_results_searchengine("equals")
@@ -192,7 +191,7 @@ class BasicTestCase(unittest.TestCase):
     def test_and_query(self):
         name = "query_image_and"
         for cases in query_image_and:
-            validator = Validator(True)
+            validator = Validator(deep_check)
             validator.set_complex_query(name, cases)
             validator.compare_results()
             self.assertEqual(
@@ -204,7 +203,7 @@ class BasicTestCase(unittest.TestCase):
     def test_or_query(self):
         name = "query_image_or"
         for cases in query_image_or:
-            validator = Validator(True)
+            validator = Validator(deep_check)
             validator.set_complex_query(name, cases)
             validator.compare_results()
             self.assertEqual(
@@ -223,7 +222,7 @@ class BasicTestCase(unittest.TestCase):
     def test_complex_query(self):
         name = "query_image_and_or"
         for cases in query_image_and_or:
-            validator = Validator(True)
+            validator = Validator(deep_check)
             validator.set_complex_query(name, cases)
             validator.compare_results()
             self.assertEqual(
@@ -235,7 +234,7 @@ class BasicTestCase(unittest.TestCase):
     def test_in_query(self):
         for resource, cases in query_in.items():
             for case in cases:
-                validator = Validator(True)
+                validator = Validator(deep_check)
                 validator.set_in_query(case, resource)
                 validator.compare_results()
                 self.assertEqual(
@@ -247,7 +246,7 @@ class BasicTestCase(unittest.TestCase):
     def test_not_in_query(self):
         for resource, cases in query_in.items():
             for case in cases:
-                validator = Validator(True)
+                validator = Validator(deep_check)
                 validator.set_in_query(case, resource, type="not_in_clause")
                 validator.compare_results()
                 self.assertEqual(
@@ -258,7 +257,7 @@ class BasicTestCase(unittest.TestCase):
 
     def test_seach_for_any_value(self):
         for part in images_value_parts:
-            validator = Validator()
+            validator = Validator(deep_check)
             validator.set_simple_query("image", None, part, type="buckets")
             validator.compare_results()
             self.assertEqual(
@@ -268,7 +267,7 @@ class BasicTestCase(unittest.TestCase):
 
     def test_available_values_for_key(self):
         for image_key in images_keys:
-            validator = Validator()
+            validator = Validator(deep_check)
             validator.set_simple_query("image", image_key, None, type="buckets")
             validator.compare_results()
             self.assertEqual(
@@ -281,7 +280,7 @@ class BasicTestCase(unittest.TestCase):
             for case in cases:
                 name = case[0]
                 value = case[1]
-                validator = Validator(True)
+                validator = Validator(deep_check)
                 validator.set_conatins_not_contains_query(resource, name, value)
                 validator.get_results_postgres("contains")
                 validator.get_results_searchengine("contains")
@@ -303,7 +302,7 @@ class BasicTestCase(unittest.TestCase):
                 name = case[0]
                 value = case[1]
                 owner_id = case[2]
-                validator = Validator(True)
+                validator = Validator(deep_check)
                 validator.set_simple_query(resource, name, value)
                 validator.set_owner_group(owner_id=owner_id)
                 validator.compare_results()
@@ -318,7 +317,7 @@ class BasicTestCase(unittest.TestCase):
                 name = case[0]
                 value = case[1]
                 group_id = case[2]
-                validator = Validator(True)
+                validator = Validator(deep_check)
                 validator.set_simple_query(resource, name, value)
                 validator.set_owner_group(group_id=group_id)
                 validator.compare_results()
@@ -334,7 +333,7 @@ class BasicTestCase(unittest.TestCase):
                 value = case[1]
                 owner_id = case[2]
                 group_id = case[3]
-                validator = Validator(True)
+                validator = Validator(deep_check)
                 validator.set_simple_query(resource, name, value)
                 validator.set_owner_group(owner_id=owner_id, group_id=group_id)
                 validator.compare_results()

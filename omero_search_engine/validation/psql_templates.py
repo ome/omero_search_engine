@@ -44,7 +44,7 @@ class SqlSearchEngineTemplate(Template):
 # get aviable values for an image key
 query_images_aviable_values_for_key = Template(
     """
-Select DISTINCT annotation_mapvalue.value from image
+Select DISTINCT lower(annotation_mapvalue.value) from image
 inner join imageannotationlink on image.id =imageannotationlink.parent
 inner join annotation_mapvalue on
 annotation_mapvalue.annotation_id=imageannotationlink.child
@@ -54,7 +54,8 @@ where lower(annotation_mapvalue.name)='$name' """
 # get any values for an image keys
 query_images_any_value = Template(
     """
-Select DISTINCT annotation_mapvalue.name, annotation_mapvalue.value from image
+Select DISTINCT lower(annotation_mapvalue.name),
+lower(annotation_mapvalue.value) from image
 inner join imageannotationlink on image.id =imageannotationlink.parent
 inner join annotation_mapvalue on
 annotation_mapvalue.annotation_id=imageannotationlink.child
@@ -64,7 +65,7 @@ where lower(annotation_mapvalue.value) like '%$val_part%' """
 # get any values for an image keys
 query_images_contians_not_contains = Template(
     """
-Select DISTINCT image.id, annotation_mapvalue.name, annotation_mapvalue.value from image
+Select DISTINCT image.id from image
 inner join imageannotationlink on image.id =imageannotationlink.parent
 inner join annotation_mapvalue on
 annotation_mapvalue.annotation_id=imageannotationlink.child
