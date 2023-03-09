@@ -736,9 +736,15 @@ def simple_search(
 ):
     if not operator:
         operator = "equals"
-    and_filters = [
-        {"name": key, "value": value, "operator": operator, "resource": resource}
-    ]
+    if key:
+        and_filters = [
+            {"name": key, "value": value, "operator": operator, "resource": resource}
+        ]
+    else:
+        and_filters = [
+            {"value": value, "operator": operator, "resource": resource}
+        ]
+
     query_details = {"and_filters": and_filters}
     if bookmark:
         bookmark = [bookmark]

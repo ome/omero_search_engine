@@ -13,7 +13,7 @@ parameters:
     description: the resource attribute
     in: query
     type: string
-    required: true
+    required: False
   - name: value
     description: the attribute value
     in: query
