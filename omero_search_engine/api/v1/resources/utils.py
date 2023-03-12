@@ -526,7 +526,7 @@ def elasticsearch_query_builder(
                         )
                         if key:
                             should_values.append(
-                                case_insensitive_must_name_condition_template.substitute(
+                                case_insensitive_must_name_condition_template.substitute(  # noqa
                                     name=key
                                 )
                             )
@@ -552,7 +552,7 @@ def elasticsearch_query_builder(
                         )
                         if key:
                             should_values.append(
-                                case_insensitive_must_name_condition_template.substitute(
+                                case_insensitive_must_name_condition_template.substitute(  # noqa
                                     name=key
                                 )
                             )
@@ -567,7 +567,7 @@ def elasticsearch_query_builder(
                             )
                             if key:
                                 shoud_not_value.append(
-                                    case_sensitive_must_name_condition_template.substitute(
+                                    case_sensitive_must_name_condition_template.substitute(  # noqa
                                         name=key
                                     )
                                 )
@@ -592,7 +592,7 @@ def elasticsearch_query_builder(
                             )
                             if key:
                                 shoud_not_value.append(
-                                    case_sensitive_must_name_condition_template.substitute(
+                                    case_sensitive_must_name_condition_template.substitute(  # noqa
                                         name=key
                                     )
                                 )
