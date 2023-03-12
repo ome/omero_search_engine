@@ -33,6 +33,7 @@ from omero_search_engine.validation.psql_templates import (
     query_image_or,
     screens_count,
     projects_count,
+    query_images_value_only
 )
 import os
 
@@ -755,3 +756,34 @@ def get_no_images_sql_containers():
     report = "\n".join(messages)  # noqa
     with open(report_file, "w") as f:
         f.write(report)
+
+
+def validate_search_by_value():
+    value="cancer"
+    query = {
+        "and_filters": [
+            {"value": value, "operator": "contains", "resource": "image"},
+        ],
+        "or_filters": [
+
+        ]
+    }
+
+    query_data = {"query_details": query}
+    # validate the query syntex
+    size=0
+    query_validation_res = query_validator(query_data)
+    if query_validation_res == "OK":
+        search_omero_app.logger.info("Getting results from search engine")
+        searchengine_results = determine_search_results_(query_data)
+        if searchengine_results.get("results"):
+            size = searchengine_results.get("results").get("size")
+            search_omero_app.logger.info ("Results from the searchengine: %s"%size)
+    search_omero_app.logger.info("Getting results from postgresql databse")
+    conn = search_omero_app.config["database_connector"]
+    postgres_results = conn.execute_query(query_images_value_only.substitute(value=value.lower()))
+    results = [item["id"] for item in postgres_results]
+    search_omero_app.logger.info("Results from the postgresql databse: %s"%(len(results)))
+    if len(results)==size:
+        search_omero_app.logger.info("Results from both searchengine and postgresql are identical")
+        return True
