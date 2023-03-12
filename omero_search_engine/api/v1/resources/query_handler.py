@@ -741,9 +741,7 @@ def simple_search(
             {"name": key, "value": value, "operator": operator, "resource": resource}
         ]
     else:
-        and_filters = [
-            {"value": value, "operator": operator, "resource": resource}
-        ]
+        and_filters = [{"value": value, "operator": operator, "resource": resource}]
 
     query_details = {"and_filters": and_filters}
     if bookmark:

@@ -317,7 +317,7 @@ def elasticsearch_query_builder(
                             case_sensitive_must_name_condition_template.substitute(
                                 name=key
                             )  # noqa
-                    )
+                        )
 
                 else:
                     _nested_must_part.append(
@@ -330,7 +330,7 @@ def elasticsearch_query_builder(
                             case_insensitive_must_name_condition_template.substitute(  # noqa
                                 name=key
                             )
-                    )
+                        )
 
                 nested_must_part.append(
                     nested_keyvalue_pair_query_template.substitute(
@@ -351,7 +351,7 @@ def elasticsearch_query_builder(
                             case_sensitive_must_name_condition_template.substitute(
                                 name=key
                             )  # noqa
-                    )
+                        )
 
                 else:
                     _nested_must_part.append(
@@ -364,7 +364,7 @@ def elasticsearch_query_builder(
                             case_insensitive_must_name_condition_template.substitute(  # noqa
                                 name=key
                             )
-                    )
+                        )
 
                 nested_must_part.append(
                     nested_keyvalue_pair_query_template.substitute(
@@ -691,7 +691,7 @@ def check_single_filter(res_table, filter, names, organism_converter):
         if key:
             key_ = [name for name in names if name.casefold() == key.casefold()]
         else:
-            key_=[]
+            key_ = []
         if len(key_) == 1:
             filter["name"] = key_[0]
             if filter["name"] == "Organism":
