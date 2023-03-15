@@ -37,3 +37,12 @@ query = {
 main_attributes = []
 logging.info("Sending the query:")
 results_1 = query_the_search_ending(query, main_attributes)
+
+and_filters = [
+    {"name": "cell line", "value": "hela", "operator": "equals"},
+    {"value": "kif", "operator": "contains"},
+]
+query = {"and_filters": and_filters, "or_filters": []}
+
+logging.info("Sending the second query:")
+results_2 = query_the_search_ending(query, main_attributes)

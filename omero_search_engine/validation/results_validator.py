@@ -39,6 +39,7 @@ import os
 
 query_methods = {
     "image": query_images_key_value,
+    "image_value_only": query_images_value_only,
     "project": query_image_project_meta_data,
     "screen": query_images_screen_key_value,
     "project_name": query_images_in_project_name,
@@ -101,6 +102,26 @@ class Validator(object):
         )  # noqa
         return results
 
+    def get_sql_value_only(self, clauses):
+        if "or" in self.name:
+            operator = "or"
+        else:
+            operator = "and"
+        conn = search_omero_app.config["database_connector"]
+        all_res = []
+        for val in clauses:
+            sql = query_methods["image_value_only"].substitute(value=val)
+            postgres_results = conn.execute_query(sql)
+            ress = [item["id"] for item in postgres_results]
+            if len(all_res) == 0:
+                all_res = ress
+            else:
+                if operator == "or":
+                    all_res = list(set(ress).union(set(all_res)))
+                elif operator == "and":
+                    all_res = list(set(all_res) & set(ress))
+        return all_res
+
     def get_and_sql(self, clauses):
         results = []
         co = 0
@@ -127,7 +148,9 @@ class Validator(object):
         """
         search_omero_app.logger.info("Getting results from postgres")
         if self.type == "complex":
-            if self.name == "query_image_or":
+            if "_value_only" in self.name:
+                self.postgres_results = self.get_sql_value_only(self.clauses)
+            elif self.name == "query_image_or":
                 self.postgres_results = self.get_or_sql(self.clauses)
             elif self.name == "query_image_and":
                 self.postgres_results = self.get_and_sql(self.clauses)
@@ -162,7 +185,20 @@ class Validator(object):
         """
         if self.type == "complex":
             filters = []
-            if self.name != "query_image_and_or":
+            if "_value_only" in self.name:
+                for claus in self.clauses:
+                    filters.append(
+                        {
+                            "value": claus,
+                            "operator": "contains",
+                            "resource": self.resource,
+                        }
+                    )
+                if "or" in self.name:
+                    query = {"and_filters": [], "or_filters": [filters]}
+                else:
+                    query = {"and_filters": filters, "or_filters": []}
+            elif self.name != "query_image_and_or":
                 for claus in self.clauses:
                     filters.append(
                         {
@@ -758,8 +794,14 @@ def get_no_images_sql_containers():
         f.write(report)
 
 
-def validate_search_by_value():
-    value = "cancer"
+def validate_search_by_value(value=None):
+    """
+    test searching by value
+    compare the results from database server and searchengine
+
+    """
+    if not value:
+        value = "cancer"
     query = {
         "and_filters": [
             {"value": value, "operator": "contains", "resource": "image"},
@@ -791,3 +833,43 @@ def validate_search_by_value():
             "Results from both searchengine and postgresql are identical"
         )
         return True
+
+
+def validate_search_by_value_conds(vals=None, operator=None):
+    """
+    can be used to test more than one conditions
+     for search by values only
+    """
+    if not vals:
+        vals = ["hel", "kif1"]
+    if not operator:
+        operator = "and"
+    conn = search_omero_app.config["database_connector"]
+    all_res = []
+    for val in vals:
+        sql = query_images_value_only.substitute(value=val)
+        postgres_results = conn.execute_query(sql)
+        ress = [item["id"] for item in postgres_results]
+        if len(all_res) == 0:
+            all_res = ress
+        else:
+            if operator == "or":
+                all_res = list(set(ress).union(set(all_res)))
+            elif operator == "and":
+                all_res = list(set(all_res) & set(ress))
+
+    sql_1 = query_images_value_only.substitute(value="he")
+    sql_2 = query_images_value_only.substitute(value="ki")
+    conn = search_omero_app.config["database_connector"]
+    postgres_results2 = conn.execute_query(sql_2)
+    postgres_results1 = conn.execute_query(sql_1)
+    print(len(postgres_results1))
+    print(len(postgres_results2))
+    s1 = [item["id"] for item in postgres_results1]
+    s2 = [item["id"] for item in postgres_results2]
+    postgres_results = list(set(s1) & set(s2))
+
+    z = set(s1).union(set(s2))
+
+    print(len(postgres_results))
+    print(len(z))
