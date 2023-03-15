@@ -24,7 +24,6 @@ import sys
 import logging
 
 
-
 def copy_tools_subfolder():
 
     """
