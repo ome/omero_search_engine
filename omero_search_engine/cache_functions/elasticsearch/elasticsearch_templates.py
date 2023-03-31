@@ -38,7 +38,7 @@ non_image_template = {
             "doc_type": {"type": "keyword"},
             "id": {"type": "long"},
             "is_public": {
-                    "type": "boolean"
+                    "type": "integer"
                   },
             "name": {
                 "type": "text",
@@ -106,7 +106,7 @@ image_template = {
             "doc_type": {"type": "keyword"},
             "id": {"type": "long"},
             "is_public": {
-                "type": "boolean"
+                "type": "integer"
             },
             "experiment": {"type": "long"},
             "owner_id": {"type": "long"},

@@ -234,9 +234,9 @@ def prepare_images_data(data, p_groups, data_source, doc_type):
                     continue
                 if rcd=="group_id":
                     if row[rcd] in p_groups:
-                        row_to_insert["is_public"] = True
+                        row_to_insert["is_public"] = 1
                     else:
-                        row_to_insert["is_public"] = False
+                        row_to_insert["is_public"] = 0
                 row_to_insert[rcd] = row[rcd]
 
             row_to_insert["key_values"] = []
@@ -284,9 +284,9 @@ def prepare_data(data, p_groups, data_source, doc_type):
             for rcd in data_record:
                 if rcd == "group_id":
                     if row[rcd] in p_groups:
-                        row_to_insert["is_public"] = True
+                        row_to_insert["is_public"] = 1
                     else:
-                        row_to_insert["is_public"] = False
+                        row_to_insert["is_public"] = 0
                 if rcd in ["mapvalue_name", "mapvalue_value"]:
                     continue
                 row_to_insert[rcd] = row.get(rcd)

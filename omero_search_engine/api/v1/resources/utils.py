@@ -197,7 +197,7 @@ def elasticsearch_query_builder(
                     for attribute in clause:
                         if (
                             attribute["name"].endswith("_id")
-                            or attribute["name"] == "id"
+                            or attribute["name"] == "id" or attribute["name"] == "is_public"
                         ):
                             main_dd = (
                                 main_attribute_query_template_id.substitute(  # noqa
@@ -216,7 +216,7 @@ def elasticsearch_query_builder(
                             nested_must_not_part.append(main_dd)
                 else:
                     attribute = clause
-                    if attribute["name"].endswith("_id") or attribute["name"] == "id":
+                    if attribute["name"].endswith("_id") or attribute["name"] == "id" or attribute["name"] == "is_public":
                         main_dd = main_attribute_query_template_id.substitute(
                             attribute=attribute["name"].strip(),
                             value=str(attribute["value"]).strip(),
@@ -244,7 +244,7 @@ def elasticsearch_query_builder(
                         # search using id, e.g. project id
                         if (
                             attribute["name"].endswith("_id")
-                            or attribute["name"] == "id"
+                            or attribute["name"] == "id" or attribute["name"] == "is_public"
                         ):
                             main_dd = (
                                 main_attribute_query_template_id.substitute(  # noqa
@@ -265,7 +265,7 @@ def elasticsearch_query_builder(
                 else:
                     attribute = attributes
                     # search using id, e.g. project id
-                    if attribute["name"].endswith("_id") or attribute["name"] == "id":
+                    if attribute["name"].endswith("_id") or attribute["name"] == "id" or attribute["name"] == "is_public":
                         main_dd = main_attribute_query_template_id.substitute(
                             attribute=attribute["name"].strip(),
                             value=str(attribute["value"]).strip(),
