@@ -203,6 +203,14 @@ def set_elasticsearch_configuration(elasticsearch_url=None):
 
 
 @manager.command
+@manager.option("-p", "--public_user", help="ome name for  public user")
+def set_public_user(public_user=None):
+    if public_user:
+        update_config_file({"PUBLIC_USER": public_user})
+    else:
+        search_omero_app.logger.info("No attribute is provided")
+
+@manager.command
 @manager.option("-c", "--cache_folder", help="cache folder path")
 def set_cache_folder(cache_folder=None):
     if cache_folder:
