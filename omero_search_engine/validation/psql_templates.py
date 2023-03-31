@@ -178,3 +178,9 @@ inner join screen on screen.id=screenplatelink.parent
 where lower(annotation_mapvalue.name)=lower('$key')
 and  lower(annotation_mapvalue.value) =lower('$value')"""
 )
+
+published_data_groups= Template('''
+select groupexperimentermap.parent from groupexperimentermap 
+inner join experimenter on experimenter.id=groupexperimentermap.child 
+where experimenter.omename='$public_user'; 
+''')

@@ -37,7 +37,14 @@ non_image_template = {
         "properties": {
             "doc_type": {"type": "keyword"},
             "id": {"type": "long"},
+            "is_public": {
+                    "type": "boolean"
+                  },
             "name": {
+                "type": "text",
+                "fields": {"keyvalue": {"type": "keyword"}},
+            },  # noqa
+            "data_source": {
                 "type": "text",
                 "fields": {"keyvalue": {"type": "keyword"}},
             },  # noqa
@@ -98,6 +105,9 @@ image_template = {
         "properties": {
             "doc_type": {"type": "keyword"},
             "id": {"type": "long"},
+            "is_public": {
+                "type": "boolean"
+            },
             "experiment": {"type": "long"},
             "owner_id": {"type": "long"},
             "group_id": {"type": "long"},
@@ -109,6 +119,10 @@ image_template = {
             "well_id": {"type": "long"},
             "wellsample_id": {"type": "long"},
             "name": {
+                "type": "text",
+                "fields": {"keyvalue": {"type": "keyword"}},
+            },  # noqa
+            "data_source": {
                 "type": "text",
                 "fields": {"keyvalue": {"type": "keyword"}},
             },  # noqa

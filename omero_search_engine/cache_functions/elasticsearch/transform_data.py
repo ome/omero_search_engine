@@ -37,6 +37,7 @@ from omero_search_engine.cache_functions.elasticsearch.elasticsearch_templates i
 from omero_search_engine.validation.psql_templates import (
     query_images_in_project_id,
     query_images_screen_id,
+    published_data_groups
 )
 
 from app_data.data_attrs import annotation_resource_link
@@ -188,7 +189,7 @@ def delete_index(resource, es_index=None):
         return False
 
 
-def prepare_images_data(data, doc_type):
+def prepare_images_data(data, p_groups, data_source, doc_type):
     data_record = [
         "id",
         "owner_id",
@@ -227,9 +228,15 @@ def prepare_images_data(data, doc_type):
         else:
             row_to_insert = {}
             row_to_insert["doc_type"] = doc_type
+            row_to_insert["data_source"] = data_source
             for rcd in data_record:
                 if rcd in ["mapvalue_name", "mapvalue_value"]:
                     continue
+                if rcd=="group_id":
+                    if row[rcd] in p_groups:
+                        row_to_insert["is_public"] = True
+                    else:
+                        row_to_insert["is_public"] = False
                 row_to_insert[rcd] = row[rcd]
 
             row_to_insert["key_values"] = []
@@ -246,7 +253,7 @@ def prepare_images_data(data, doc_type):
     return data_to_be_inserted
 
 
-def prepare_data(data, doc_type):
+def prepare_data(data, p_groups, data_source, doc_type):
     data_record = [
         "id",
         "owner_id",
@@ -268,13 +275,18 @@ def prepare_data(data, doc_type):
                     counter=counter, total=total
                 )
             )
-
         if row["id"] in data_to_be_inserted:
             row_to_insert = data_to_be_inserted[row["id"]]
         else:
             row_to_insert = {}
             row_to_insert["doc_type"] = doc_type
+            row_to_insert["data_source"] = data_source
             for rcd in data_record:
+                if rcd == "group_id":
+                    if row[rcd] in p_groups:
+                        row_to_insert["is_public"] = True
+                    else:
+                        row_to_insert["is_public"] = False
                 if rcd in ["mapvalue_name", "mapvalue_value"]:
                     continue
                 row_to_insert[rcd] = row.get(rcd)
@@ -434,8 +446,19 @@ def insert_resource_data(folder, resource, from_json):
 
 total_process = 0
 
+def get_public_groups():
+    '''
+    Get the groups in which a public user
+    is one of their members
+    '''
+    conn = search_omero_app.config["database_connector"]
+    sql_stat=published_data_groups.substitute(public_user=search_omero_app.config["PUBLIC_USER"])
+    groups=conn.execute_query(sql_stat)
+    p_groups=[gr.get("parent") for gr in groups]
+    return p_groups
 
-def get_insert_data_to_index(sql_st, resource):
+
+def get_insert_data_to_index(sql_st, resource, data_source, public_data_only):
     """
     - Query the postgreSQL database server and get metadata (key-value pair)
     - Process the results data
@@ -445,11 +468,14 @@ def get_insert_data_to_index(sql_st, resource):
     the indexing time by using parallel processing.
     """
     from datetime import datetime
+    if public_data_only:
+        public_data_only = json.loads(public_data_only.lower())
 
     delete_index(resource)
     create_omero_indexes(resource)
     sql_ = "select max (id) from %s" % resource
     res2 = search_omero_app.config["database_connector"].execute_query(sql_)
+    p_groups = get_public_groups()
     max_id = res2[0]["max"]
     page_size = search_omero_app.config["CACHE_ROWS"]
     start_time = datetime.now()
@@ -457,7 +483,7 @@ def get_insert_data_to_index(sql_st, resource):
     vals = []
     # Prepare the multiprocessing data
     while True:
-        vals.append((cur_max_id, (cur_max_id - page_size), resource))
+        vals.append((cur_max_id, (cur_max_id - page_size), resource,  p_groups,data_source, public_data_only))
         if cur_max_id > max_id:
             break
         cur_max_id += page_size
@@ -500,6 +526,9 @@ def processor_work(lock, global_counter, val):
     cur_max_id = val[0]
     range = val[1]
     resource = val[2]
+    p_groups = val[3]
+    data_source = val[4]
+    public_data_only = val[5]
     search_omero_app.logger.info("%s, %s, %s" % (cur_max_id, range, resource))
     from omero_search_engine.cache_functions.elasticsearch.sql_to_csv import (
         sqls_resources,
@@ -517,7 +546,10 @@ def processor_work(lock, global_counter, val):
         resource,
         range,
     )
+    if public_data_only:
+        whereclause="%s and image.group in (%s)"%(whereclause, ','.join([str(i) for i in p_groups]))
     mod_sql = sql_st.substitute(whereclause=whereclause)
+
     st = datetime.now()
     search_omero_app.logger.info(
         "Calling the databas for %s/%s" % (global_counter.value, total_process)
@@ -525,18 +557,18 @@ def processor_work(lock, global_counter, val):
     conn = search_omero_app.config["database_connector"]
     results = conn.execute_query(mod_sql)
     search_omero_app.logger.info("Processing the results...")
-    process_results(results, resource, lock)
+    process_results(results, resource, p_groups,data_source ,lock)
     average_time = (datetime.now() - st) / 2
     search_omero_app.logger.info("Done")
     search_omero_app.logger.info("elpased time:%s" % average_time)
 
 
-def process_results(results, resource, lock=None):
+def process_results(results, resource, p_groups, data_source, lock=None):
     df = pd.DataFrame(results).replace({np.nan: None})
-    insert_resource_data_from_df(df, resource, lock)
+    insert_resource_data_from_df(df, resource, p_groups, data_source, lock)
 
 
-def insert_resource_data_from_df(df, resource, lock=None):
+def insert_resource_data_from_df(df, resource,p_groups, data_source, lock=None):
     if resource == "image":
         is_image = True
     else:
@@ -544,9 +576,9 @@ def insert_resource_data_from_df(df, resource, lock=None):
     es_index = resource_elasticsearchindex.get(resource)
     search_omero_app.logger.info("Prepare the data...")
     if not is_image:
-        data_to_be_inserted = prepare_data(df, es_index)
+        data_to_be_inserted = prepare_data(df, p_groups,data_source, es_index)
     else:
-        data_to_be_inserted = prepare_images_data(df, es_index)
+        data_to_be_inserted = prepare_images_data(df, p_groups,data_source, es_index)
     # print (data_to_be_inserted)
     search_omero_app.logger.info(len(data_to_be_inserted))
 

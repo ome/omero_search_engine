@@ -120,7 +120,17 @@ def sql_results_to_panda():
     "--resource",
     help="resource name, creating all the indexes for all the resources is the default",  # noqa
 )
-def get_index_data_from_database(resource="all"):
+@manager.option(
+    "-p",
+    "--public_only",
+    help="index public data only",  # noqa
+)
+@manager.option(
+    "-s",
+    "--source",
+    help="the data source, e.g. idr",  # noqa
+)
+def get_index_data_from_database(resource="all", public_only=None, source="idr"):
     """
     insert data in Elasticsearch index for each resource
     It gets the data from postgres database server
@@ -137,10 +147,10 @@ def get_index_data_from_database(resource="all"):
         sql_st = sqls_resources.get(resource)
         if not sql_st:
             return
-        get_insert_data_to_index(sql_st, resource)
+        get_insert_data_to_index(sql_st, resource, source, public_only)
     else:
         for res, sql_st in sqls_resources.items():
-            get_insert_data_to_index(sql_st, res)
+            get_insert_data_to_index(sql_st, res, source, public_only)
         save_key_value_buckets(
             resource_table_=None, re_create_index=True, only_values=False
         )
@@ -331,7 +341,6 @@ def restore_elasticsearch_data():
     # first delete the current indices
     delete_es_index("all")
     restore_indices_data()
-
 
 if __name__ == "__main__":
     manager.run()
