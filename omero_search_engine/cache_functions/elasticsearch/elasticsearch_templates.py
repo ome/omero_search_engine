@@ -128,7 +128,7 @@ image_template = {
             },  # noqa
             "description": {
                 "type": "text",
-                "fields": {"keyvalue": {"type": "keyword"}},
+               #: "fields": {"keyvalue": {"type": "keyword"}},
             },  # noqa
             "project_name": {
                 "type": "text",

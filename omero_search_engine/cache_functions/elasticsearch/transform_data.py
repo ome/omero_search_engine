@@ -188,6 +188,50 @@ def delete_index(resource, es_index=None):
         )
         return False
 
+def check_container_data_set(row, data_to_insert, p_groups):
+    '''
+    Support having multiple containers for a resource
+    '''
+    if row.get("group_id") in p_groups:
+        row["is_public"] = 1
+
+    if row.get("project_id") and data_to_insert.get("project_id") and data_to_insert.get("project_id") not in row.get("project_id"):
+        row.get("project_id").append(data_to_insert.get("project_id"))
+        row.get("project_name").append(data_to_insert.get("project_name"))
+
+    if row.get("group_id") and data_to_insert.get("group_id") and data_to_insert.get("group_id") not in row.get("group_id"):
+        row.get("group_id").append(data_to_insert.get("group_id"))
+
+    if row.get("dataset_id") and data_to_insert.get("dataset_id") and data_to_insert.get("dataset_id") not in row.get("dataset_id"):
+        row.get("dataset_id").append(data_to_insert.get("dataset_id"))
+        row.get("dataset_name").append(data_to_insert.get("dataset_name"))
+
+    if row.get("screen_id") and data_to_insert.get("screen_id") and data_to_insert.get("screen_id") not in row.get("screen_id"):
+        row.get("screen_id").append(data_to_insert.get("screen_id"))
+        row.get("screen_name").append(data_to_insert.get("screen_name"))
+
+    if row.get("plate_id") and data_to_insert.get("plate_id") and data_to_insert.get("plate_id") not in row.get("plate_id"):
+        row.get("plate_id").append(data_to_insert.get("plate_id"))
+        row.get("plate_name").append(data_to_insert.get("plate_name"))
+
+    if row.get("well_id") and data_to_insert.get("well_id") and data_to_insert.get("well_id") not in row.get("well_id"):
+        row.get("well_id").append(data_to_insert.get("well_id"))
+
+    if row.get("wellsample_id") and data_to_insert.get("wellsample_id") and data_to_insert.get("wellsample_id") not in row.get("wellsample_id"):
+        row.get("wellsample_id").append(data_to_insert.get("wellsample_id"))
+
+
+
+containers_to_check=["project_name",
+        "project_id",
+        "dataset_name",
+        "dataset_id",
+        "screen_id",
+        "screen_name",
+        "plate_id",
+        "plate_name",
+        "well_id",
+        "wellsample_id"]
 
 def prepare_images_data(data, p_groups, data_source, doc_type):
     data_record = [
@@ -225,6 +269,7 @@ def prepare_images_data(data, p_groups, data_source, doc_type):
 
         if row["id"] in data_to_be_inserted:
             row_to_insert = data_to_be_inserted[row["id"]]
+            check_container_data_set(row_to_insert, data_to_be_inserted, p_groups)
         else:
             row_to_insert = {}
             row_to_insert["doc_type"] = doc_type
@@ -237,7 +282,10 @@ def prepare_images_data(data, p_groups, data_source, doc_type):
                         row_to_insert["is_public"] = 1
                     else:
                         row_to_insert["is_public"] = 0
-                row_to_insert[rcd] = row[rcd]
+                if rcd in containers_to_check:
+                    row_to_insert[rcd] = [row[rcd]]
+                else:
+                    row_to_insert[rcd]=row[rcd]
 
             row_to_insert["key_values"] = []
             data_to_be_inserted[row["id"]] = row_to_insert
@@ -452,13 +500,15 @@ def get_public_groups():
     is one of their members
     '''
     conn = search_omero_app.config["database_connector"]
-    sql_stat=published_data_groups.substitute(public_user=search_omero_app.config["PUBLIC_USER"])
+    sql_stat=published_data_groups.substitute(public_user=search_omero_app.config.get("PUBLIC_USER"))
     groups=conn.execute_query(sql_stat)
     p_groups=[gr.get("parent") for gr in groups]
+    #if 1 in p_groups:
+    #    p_groups.remove(1)
     return p_groups
 
 
-def get_insert_data_to_index(sql_st, resource, data_source, public_data_only):
+def get_insert_data_to_index(sql_st, resource, data_source ):
     """
     - Query the postgreSQL database server and get metadata (key-value pair)
     - Process the results data
@@ -467,10 +517,8 @@ def get_insert_data_to_index(sql_st, resource, data_source, public_data_only):
     These are performed using multiprocessing pool to reduce
     the indexing time by using parallel processing.
     """
+    public_data_only=search_omero_app.config.get("PUBLIC_ONLY")
     from datetime import datetime
-    if public_data_only:
-        public_data_only = json.loads(public_data_only.lower())
-
     delete_index(resource)
     create_omero_indexes(resource)
     sql_ = "select max (id) from %s" % resource
@@ -547,8 +595,9 @@ def processor_work(lock, global_counter, val):
         range,
     )
     if public_data_only:
-        whereclause="%s and image.group in (%s)"%(whereclause, ','.join([str(i) for i in p_groups]))
+        whereclause="%s and image.group_id in (%s)"%(whereclause, ','.join([str(i) for i in p_groups]))
     mod_sql = sql_st.substitute(whereclause=whereclause)
+
 
     st = datetime.now()
     search_omero_app.logger.info(

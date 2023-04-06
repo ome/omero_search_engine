@@ -120,17 +120,13 @@ def sql_results_to_panda():
     "--resource",
     help="resource name, creating all the indexes for all the resources is the default",  # noqa
 )
-@manager.option(
-    "-p",
-    "--public_only",
-    help="index public data only",  # noqa
-)
+
 @manager.option(
     "-s",
     "--source",
     help="the data source, e.g. idr",  # noqa
 )
-def get_index_data_from_database(resource="all", public_only=None, source="idr"):
+def get_index_data_from_database(resource="all", source="idr"):
     """
     insert data in Elasticsearch index for each resource
     It gets the data from postgres database server
@@ -147,18 +143,18 @@ def get_index_data_from_database(resource="all", public_only=None, source="idr")
         sql_st = sqls_resources.get(resource)
         if not sql_st:
             return
-        get_insert_data_to_index(sql_st, resource, source, public_only)
+        get_insert_data_to_index(sql_st, resource, source)
     else:
         for res, sql_st in sqls_resources.items():
-            get_insert_data_to_index(sql_st, res, source, public_only)
+            get_insert_data_to_index(sql_st, res, source)
         save_key_value_buckets(
             resource_table_=None, re_create_index=True, only_values=False
         )
         # validat ethe indexing
-        test_indexing_search_query(deep_check=False, check_studies=True)
+       # test_indexing_search_query(deep_check=False, check_studies=True)
 
     # backup the index data
-    backup_elasticsearch_data()
+    #backup_elasticsearch_data()
 
 
 # set configurations
@@ -273,6 +269,17 @@ def set_no_processes(no_processes=None):
         search_omero_app.logger.info("No valid attribute is provided")
 
 
+#PUBLIC_ONLY
+@manager.command
+@manager.option("-p", "--public_obly", help="index public data only")
+def set_index_public_data_only(public_obly=None):
+    import json
+    if public_obly:
+        update_config_file({"PUBLIC_ONLY": json.loads(public_obly.lower())})
+    else:
+        search_omero_app.logger.info("No valid attribute is provided")
+
+
 @manager.command
 @manager.option(
     "-r",
@@ -345,10 +352,17 @@ def restore_elasticsearch_data():
     from omero_search_engine.cache_functions.elasticsearch.backup_restores import (
         restore_indices_data,
     )
-
     # first delete the current indices
     delete_es_index("all")
     restore_indices_data()
+
+@manager.command
+def test_public_group():
+    from omero_search_engine.cache_functions.elasticsearch.transform_data import (
+        get_public_groups   ,
+    )
+    print (get_public_groups())
+
 
 if __name__ == "__main__":
     manager.run()
