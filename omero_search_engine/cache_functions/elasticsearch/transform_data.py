@@ -199,9 +199,6 @@ def check_container_data_set(row, data_to_insert, p_groups):
         row.get("project_id").append(data_to_insert.get("project_id"))
         row.get("project_name").append(data_to_insert.get("project_name"))
 
-    if row.get("group_id") and data_to_insert.get("group_id") and data_to_insert.get("group_id") not in row.get("group_id"):
-        row.get("group_id").append(data_to_insert.get("group_id"))
-
     if row.get("dataset_id") and data_to_insert.get("dataset_id") and data_to_insert.get("dataset_id") not in row.get("dataset_id"):
         row.get("dataset_id").append(data_to_insert.get("dataset_id"))
         row.get("dataset_name").append(data_to_insert.get("dataset_name"))
@@ -214,13 +211,6 @@ def check_container_data_set(row, data_to_insert, p_groups):
         row.get("plate_id").append(data_to_insert.get("plate_id"))
         row.get("plate_name").append(data_to_insert.get("plate_name"))
 
-    if row.get("well_id") and data_to_insert.get("well_id") and data_to_insert.get("well_id") not in row.get("well_id"):
-        row.get("well_id").append(data_to_insert.get("well_id"))
-
-    if row.get("wellsample_id") and data_to_insert.get("wellsample_id") and data_to_insert.get("wellsample_id") not in row.get("wellsample_id"):
-        row.get("wellsample_id").append(data_to_insert.get("wellsample_id"))
-
-
 
 containers_to_check=["project_name",
         "project_id",
@@ -229,9 +219,7 @@ containers_to_check=["project_name",
         "screen_id",
         "screen_name",
         "plate_id",
-        "plate_name",
-        "well_id",
-        "wellsample_id"]
+        "plate_name" ]
 
 def prepare_images_data(data, p_groups, data_source, doc_type):
     data_record = [
