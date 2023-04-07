@@ -151,10 +151,10 @@ def get_index_data_from_database(resource="all", source="idr"):
             resource_table_=None, re_create_index=True, only_values=False
         )
         # validat ethe indexing
-       # test_indexing_search_query(deep_check=False, check_studies=True)
+        test_indexing_search_query(deep_check=False, check_studies=True)
 
     # backup the index data
-    #backup_elasticsearch_data()
+    backup_elasticsearch_data()
 
 
 # set configurations

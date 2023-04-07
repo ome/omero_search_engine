@@ -35,7 +35,9 @@ from omero_search_engine.validation.psql_templates import (
     projects_count,
 )
 import os
-
+from omero_search_engine.cache_functions.elasticsearch.transform_data import get_public_groups
+public_groups=get_public_groups()
+public_groups=','.join([str(i) for i in public_groups])
 query_methods = {
     "image": query_images_key_value,
     "project": query_image_project_meta_data,
@@ -91,7 +93,7 @@ class Validator(object):
             else:
                 names = "'%s'" % claus[0].lower()
                 values = "'%s'" % claus[1].lower()
-        sql = query_methods[name].substitute(names=names, values=values)
+        sql = query_methods[name].substitute(names=names, values=values, group_list=public_groups)
         conn = search_omero_app.config["database_connector"]
         postgres_results = conn.execute_query(sql)
         results = [item["id"] for item in postgres_results]
@@ -105,7 +107,7 @@ class Validator(object):
         co = 0
         for claus in clauses:
             sql = query_methods["image"].substitute(
-                name=claus[0].lower(), value=claus[1].lower()
+                name=claus[0].lower(), value=claus[1].lower(),group_list=public_groups
             )
             conn = search_omero_app.config["database_connector"]
             postgres_results = conn.execute_query(sql)
@@ -143,10 +145,10 @@ class Validator(object):
         else:
             if self.name != "name":
                 sql = self.sql_statement.substitute(
-                    name=self.name.lower(), value=self.value.lower()
+                    name=self.name.lower(), value=self.value.lower(), group_list=public_groups
                 )
             else:
-                sql = self.sql_statement.substitute(name=self.value)
+                sql = self.sql_statement.substitute(name=self.value, group_list=public_groups)
         # search_omero_app.logger.info ("sql: %s"%sql)
         conn = search_omero_app.config["database_connector"]
         postgres_results = conn.execute_query(sql)
@@ -303,10 +305,10 @@ class Validator(object):
         mess.append(mes)
         search_omero_app.logger.info(mes)
         screens_count_sql = query_methods["screens_count"].substitute(
-            key=self.name, value=self.value
+            key=self.name, value=self.value, group_list=public_groups
         )
         projects_count_sql = query_methods["projects_count"].substitute(
-            key=self.name, value=self.value
+            key=self.name, value=self.value, group_list=public_groups
         )
         conn = search_omero_app.config["database_connector"]
         screens_results = conn.execute_query(screens_count_sql)
@@ -323,7 +325,7 @@ class Validator(object):
             None,
             return_containers=True,
         )
-        if search_engine_results["results"].get("results"):
+        if search_engine_results.get("results") and search_engine_results["results"].get("results"):
             for item in search_engine_results["results"].get("results"):
                 if item["type"] == "screen":
                     if item["name"] in screens_results_idr:
@@ -460,7 +462,6 @@ class Validator(object):
 def validate_queries(json_file, deep_check):
     import json
     import os
-
     if not os.path.isfile(json_file):
         return "file: %s is not exist" % json_file
 
@@ -730,7 +731,7 @@ def get_no_images_sql_containers():
             )
             search_omero_app.logger.info(message2)
             messages.append(message2)
-            sql = query_methods["%s_name" % resource].substitute(name=res_name)
+            sql = query_methods["%s_name" % resource].substitute(name=res_name,group_list=public_groups)
             results = conn.execute_query(sql)
             postgres_results = len(results)
             message3 = "No of images returned from postgresql: %s" % seachengine_results

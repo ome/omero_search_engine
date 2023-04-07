@@ -953,7 +953,7 @@ def search_resource_annotation(
                         main_attributes.get("and_main_attributes").\
                             append(public_search_cond)
                     else:
-                        main_attributes["and_main_attributes"]=public_search_cond
+                        main_attributes["and_main_attributes"]=[public_search_cond]
                 else:
                     main_attributes = {
                         "and_main_attributes": [

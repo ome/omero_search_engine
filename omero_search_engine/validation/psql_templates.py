@@ -49,7 +49,9 @@ inner join imageannotationlink on image.id =imageannotationlink.parent
 inner join annotation_mapvalue on
 annotation_mapvalue.annotation_id=imageannotationlink.child
 where lower(annotation_mapvalue.name)='$name' and
-lower(annotation_mapvalue.value)=lower('$value')"""
+lower(annotation_mapvalue.value)=lower('$value')
+and image.group_id in ($group_list)
+"""
 )
 
 # Get number of images which satisfy project key-value query
@@ -65,7 +67,9 @@ on project.id =projectannotationlink.parent
 inner join annotation_mapvalue
 on annotation_mapvalue.annotation_id=projectannotationlink.child
 where lower(annotation_mapvalue.name)=lower('$name')
-and lower(annotation_mapvalue.value)=lower('$value')"""
+and lower(annotation_mapvalue.value)=lower('$value')
+and image.group_id in ($group_list)
+"""
 )
 
 # Get the  number of images using "in"
@@ -77,7 +81,9 @@ on image.id =imageannotationlink.parent
 inner join annotation_mapvalue
 on annotation_mapvalue.annotation_id=imageannotationlink.child
 where lower(annotation_mapvalue.name) in ($names)
-and lower(annotation_mapvalue.value) in ($values)"""
+and lower(annotation_mapvalue.value) in ($values)
+and image.group_id in ($group_list)
+"""
 )
 
 # Get the images which satisfy screen key-value query
@@ -94,7 +100,8 @@ on screen.id =screenannotationlink.parent
 inner join annotation_mapvalue
 on annotation_mapvalue.annotation_id=screenannotationlink.child
 where lower(annotation_mapvalue.name)='$name'
-and lower(annotation_mapvalue.value)=lower('$value')"""
+and lower(annotation_mapvalue.value)=lower('$value')
+and image.group_id in ($group_list)"""
 )
 
 
@@ -106,7 +113,9 @@ inner join datasetimagelink on datasetimagelink.child=image.id
 inner join dataset on datasetimagelink.parent=dataset.id
 inner join projectdatasetlink on dataset.id=projectdatasetlink.child
 inner join  project on project.id=projectdatasetlink.parent
-where project.id=$project_id"""
+where project.id=$project_id
+and image.group_id in ($group_list)
+"""
 )
 
 # get images in a project using project name
@@ -117,7 +126,9 @@ inner join datasetimagelink on datasetimagelink.child=image.id
 inner join dataset on datasetimagelink.parent=dataset.id
 inner join projectdatasetlink on dataset.id=projectdatasetlink.child
 inner join project on project.id=projectdatasetlink.parent
-where lower(project.name)=lower('$name')"""
+where lower(project.name)=lower('$name')
+and image.group_id in ($group_list)
+"""
 )
 
 # get images in a screen using id
@@ -129,7 +140,10 @@ inner join well on wellsample.well= well.id
 inner join  plate  on well.plate=plate.id
 inner join screenplatelink on plate.id=screenplatelink.child
 inner join screen on screen.id=screenplatelink.parent
-where screen.id=$screen_id"""
+where screen.id=$screen_id
+and image.group_id in ($group_list)
+"""
+
 )
 
 # Get the images in a screen using name
@@ -141,7 +155,9 @@ inner join well on wellsample.well= well.id
 inner join plate on well.plate=plate.id
 inner join screenplatelink on plate.id=screenplatelink.child
 inner join screen on screen.id=screenplatelink.parent
-where lower(screen.name)=lower('$name')"""
+where lower(screen.name)=lower('$name')
+and image.group_id in ($group_list)
+"""
 )
 
 # get resource id using its name
@@ -161,6 +177,7 @@ inner join projectdatasetlink on dataset.id=projectdatasetlink.child
 inner join project on project.id=projectdatasetlink.parent
 where lower(annotation_mapvalue.name)=lower('$key')
 and lower(annotation_mapvalue.value) =lower('$value')
+and project.group_id in ($group_list)
 """
 )
 
@@ -176,7 +193,8 @@ inner join plate on well.plate=plate.id
 inner join screenplatelink on plate.id=screenplatelink.child
 inner join screen on screen.id=screenplatelink.parent
 where lower(annotation_mapvalue.name)=lower('$key')
-and  lower(annotation_mapvalue.value) =lower('$value')"""
+and  lower(annotation_mapvalue.value) =lower('$value') 
+and screen.group_id in ($group_list)"""
 )
 
 published_data_groups= Template('''
