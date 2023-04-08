@@ -37,9 +37,7 @@ non_image_template = {
         "properties": {
             "doc_type": {"type": "keyword"},
             "id": {"type": "long"},
-            "is_public": {
-                    "type": "integer"
-                  },
+            "is_public": {"type": "integer"},
             "name": {
                 "type": "text",
                 "fields": {"keyvalue": {"type": "keyword"}},
@@ -105,9 +103,7 @@ image_template = {
         "properties": {
             "doc_type": {"type": "keyword"},
             "id": {"type": "long"},
-            "is_public": {
-                "type": "integer"
-            },
+            "is_public": {"type": "integer"},
             "experiment": {"type": "long"},
             "owner_id": {"type": "long"},
             "group_id": {"type": "long"},
@@ -128,7 +124,7 @@ image_template = {
             },  # noqa
             "description": {
                 "type": "text",
-               #: "fields": {"keyvalue": {"type": "keyword"}},
+                #: "fields": {"keyvalue": {"type": "keyword"}},
             },  # noqa
             "project_name": {
                 "type": "text",

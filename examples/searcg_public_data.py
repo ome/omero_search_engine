@@ -46,9 +46,7 @@ is_public = 0 for private data
 is_public = 1 for public data
 """
 main_attributes = {
-    "and_main_attributes": [
-        {"name": "is_public", "value": 0, "operator": "equals"}
-    ]
+    "and_main_attributes": [{"name": "is_public", "value": 0, "operator": "equals"}]
 }
 
 query = {"and_filters": and_filters}

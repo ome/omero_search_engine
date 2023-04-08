@@ -143,7 +143,6 @@ inner join screen on screen.id=screenplatelink.parent
 where screen.id=$screen_id
 and image.group_id in ($group_list)
 """
-
 )
 
 # Get the images in a screen using name
@@ -193,12 +192,14 @@ inner join plate on well.plate=plate.id
 inner join screenplatelink on plate.id=screenplatelink.child
 inner join screen on screen.id=screenplatelink.parent
 where lower(annotation_mapvalue.name)=lower('$key')
-and  lower(annotation_mapvalue.value) =lower('$value') 
+and  lower(annotation_mapvalue.value) =lower('$value')
 and screen.group_id in ($group_list)"""
 )
 
-published_data_groups= Template('''
-select groupexperimentermap.parent from groupexperimentermap 
-inner join experimenter on experimenter.id=groupexperimentermap.child 
-where experimenter.omename='$public_user'; 
-''')
+published_data_groups = Template(
+    """
+select groupexperimentermap.parent from groupexperimentermap
+inner join experimenter on experimenter.id=groupexperimentermap.child
+where experimenter.omename='$public_user'
+"""
+)

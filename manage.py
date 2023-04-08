@@ -120,7 +120,6 @@ def sql_results_to_panda():
     "--resource",
     help="resource name, creating all the indexes for all the resources is the default",  # noqa
 )
-
 @manager.option(
     "-s",
     "--source",
@@ -206,6 +205,7 @@ def set_public_user(public_user=None):
     else:
         search_omero_app.logger.info("No attribute is provided")
 
+
 @manager.command
 @manager.option("-c", "--cache_folder", help="cache folder path")
 def set_cache_folder(cache_folder=None):
@@ -269,11 +269,12 @@ def set_no_processes(no_processes=None):
         search_omero_app.logger.info("No valid attribute is provided")
 
 
-#PUBLIC_ONLY
+# PUBLIC_ONLY
 @manager.command
 @manager.option("-p", "--public_obly", help="index public data only")
 def set_index_public_data_only(public_obly=None):
     import json
+
     if public_obly:
         update_config_file({"PUBLIC_ONLY": json.loads(public_obly.lower())})
     else:
@@ -352,16 +353,19 @@ def restore_elasticsearch_data():
     from omero_search_engine.cache_functions.elasticsearch.backup_restores import (
         restore_indices_data,
     )
+
     # first delete the current indices
     delete_es_index("all")
     restore_indices_data()
 
+
 @manager.command
 def test_public_group():
     from omero_search_engine.cache_functions.elasticsearch.transform_data import (
-        get_public_groups   ,
+        get_public_groups,
     )
-    print (get_public_groups())
+
+    print(get_public_groups())
 
 
 if __name__ == "__main__":
