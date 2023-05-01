@@ -114,8 +114,7 @@ inner join dataset on datasetimagelink.parent=dataset.id
 inner join projectdatasetlink on dataset.id=projectdatasetlink.child
 inner join  project on project.id=projectdatasetlink.parent
 where project.id=$project_id
-and image.group_id in ($group_list)
-"""
+ """
 )
 
 # get images in a project using project name
@@ -141,8 +140,7 @@ inner join  plate  on well.plate=plate.id
 inner join screenplatelink on plate.id=screenplatelink.child
 inner join screen on screen.id=screenplatelink.parent
 where screen.id=$screen_id
-and image.group_id in ($group_list)
-"""
+ """
 )
 
 # Get the images in a screen using name
