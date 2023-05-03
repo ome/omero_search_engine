@@ -198,6 +198,7 @@ published_data_groups = Template(
     """
 select groupexperimentermap.parent from groupexperimentermap
 inner join experimenter on experimenter.id=groupexperimentermap.child
-where experimenter.omename='$public_user'
+inner join experimentergroup on experimentergroup.id=groupexperimentermap.parent
+where experimenter.omename='$public_user' and experimentergroup.permissions != -120
 """
 )
