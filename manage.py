@@ -153,11 +153,10 @@ def get_index_data_from_database(resource="all", dry_run=False):
             )
             # validate the indexing
             test_indexing_search_query(deep_check=True, check_studies=True)
-            
+
     if not dry_run:
         # backup the index data
         backup_elasticsearch_data()
-
 
 
 # set configurations
