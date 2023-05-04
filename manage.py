@@ -120,7 +120,13 @@ def sql_results_to_panda():
     "--resource",
     help="resource name, creating all the indexes for all the resources is the default",  # noqa
 )
-def get_index_data_from_database(resource="all"):
+@manager.option(
+    "-d",
+    "--dry-run",
+    action="store_true",
+    help="perform a dry-run by accessing the database but not updating the indexes",  # noqa
+)
+def get_index_data_from_database(resource="all", dry_run=False):
     """
     insert data in Elasticsearch index for each resource
     It gets the data from postgres database server
@@ -137,18 +143,20 @@ def get_index_data_from_database(resource="all"):
         sql_st = sqls_resources.get(resource)
         if not sql_st:
             return
-        get_insert_data_to_index(sql_st, resource)
+        get_insert_data_to_index(sql_st, resource, dry_run)
     else:
         for res, sql_st in sqls_resources.items():
-            get_insert_data_to_index(sql_st, res)
-        save_key_value_buckets(
-            resource_table_=None, re_create_index=True, only_values=False
-        )
-        # validat ethe indexing
-        test_indexing_search_query(deep_check=False, check_studies=True)
+            get_insert_data_to_index(sql_st, res, dry_run)
+        if not dry_run:
+            save_key_value_buckets(
+                resource_table_=None, re_create_index=True, only_values=False
+            )
+            # validate the indexing
+            test_indexing_search_query(deep_check=True, check_studies=True)
 
-    # backup the index data
-    backup_elasticsearch_data()
+    if not dry_run:
+        # backup the index data
+        backup_elasticsearch_data()
 
 
 # set configurations
