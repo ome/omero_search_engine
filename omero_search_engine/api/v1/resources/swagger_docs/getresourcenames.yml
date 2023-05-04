@@ -6,8 +6,12 @@ parameters:
   - name: resource_table
     in: path
     type: string
-    enum: ['project', 'screen']
+    enum: ['all','project', 'screen']
     required: true
+  - name: value
+    in: query
+    type: string
+    required: false
 definitions:
   names:
     type: array

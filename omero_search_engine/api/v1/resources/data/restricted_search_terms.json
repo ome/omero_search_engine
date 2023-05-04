@@ -1,21 +1,20 @@
 {
    "project":[
-      "Name (IDR number)",
+      "name",
       "Imaging Method",
       "Publication Title",
       "Publication Authors",
       "Study Type",
-      "License"
+      "License",
+      "Organism"
    ],
    "screen":[
       "Screen Technology Type",
       "Screen Type"
    ],
    "image":[
-      "Organism",
-      "Organism Part",
       "Cell Line",
-      "Gene Name",
+      "Gene Identifier",
       "Gene Symbol",
       "Compound Name",
       "PubChem CID",

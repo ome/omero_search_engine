@@ -21,22 +21,28 @@ import json
 import logging
 import requests
 import sys
+from utils import base_url
 
 # url to send the query
 image_ext = "/resources/image/searchannotation/"
 # url to get the next page for a query, bookmark is needed
 image_page_ext = "/resources/image/searchannotation_page/"
 # search engine url
-base_url = "http://127.0.0.1:5577/api/v1/"
 
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 
-def query_the_search_ending(query, main_attributes):
+def get_bookmark(pagination_dict):
+    next_page = pagination_dict["next_page"]
+    for page_rcd in pagination_dict["page_records"]:
+        if page_rcd["page"] == next_page:
+            return page_rcd["bookmark"]
+
+
+def find_all_the_results(query, main_attributes):
     received_results_data = []
     query_data = {"query": {"query_details": query, "main_attributes": main_attributes}}
-    query_data_json = json.dumps(query_data)
     resp = requests.post(
         url="%s%s" % (base_url, image_ext), data=json.dumps(query_data)
     )
@@ -69,10 +75,12 @@ def query_the_search_ending(query, main_attributes):
     received_results = len(returned_results["results"]["results"])
     # set the bookmark to used in the next the page,
     # if the number of pages is greater than 1
-    bookmark = returned_results["results"]["bookmark"]
     # get the total number of pages
     total_pages = returned_results["results"]["total_pages"]
-    page = 1
+    pagination_dict = returned_results["results"].get("pagination")
+
+    page = pagination_dict["current_page"]
+
     logging.info(
         "page: %s, received results: %s"
         % (
@@ -80,11 +88,15 @@ def query_the_search_ending(query, main_attributes):
             (str(received_results) + "/" + str(total_results)),
         )
     )
-    while received_results < total_results:
-        page += 1
+    # it is not used in the request, it is used to comapre requests using
+    # pagination and bookmark
+    bookmark = get_bookmark(pagination_dict)
+    page = pagination_dict["next_page"]
+    ids = []
+    while page:
         query_data = {
             "query": {"query_details": returned_results["query_details"]},
-            "bookmark": bookmark,
+            "pagination": pagination_dict,
         }
         query_data_json = json.dumps(query_data)
         resp = requests.post(
@@ -96,10 +108,17 @@ def query_the_search_ending(query, main_attributes):
         except Exception as e:
             logging.info("%s, Error: %s" % (resp.text, e))
             return
+
+        # bookmark = returned_results["results"].get("bookmark")
+        pagination_dict = returned_results["results"].get("pagination")
+
         received_results = received_results + len(
             returned_results["results"]["results"]
         )
         for res in returned_results["results"]["results"]:
+            if res["id"] in ids:
+                raise Exception("Image id %s is added before." % res["id"])
+            ids.append(res["id"])
             received_results_data.append(res)
 
         logging.info(
@@ -110,7 +129,31 @@ def query_the_search_ending(query, main_attributes):
                 (str(received_results) + "/" + str(total_results)),
             )
         )
-        bookmark = returned_results["results"]["bookmark"]
+        page = pagination_dict.get("next_page")
+        bookmark = get_bookmark(pagination_dict)
 
     logging.info("Total received results: %s" % len(received_results_data))
     return received_results_data
+
+
+# Find images of cells where a specific gene was targeted
+# Cell line = "HeLa" and Gene Symbol = "KIF11"
+
+# and filters
+and_filters = [
+    {"name": "Cell Line", "value": "HeLa", "operator": "equals"},
+    {"name": "Gene Symbol", "value": "KIF11", "operator": "equals"},
+]
+main_attributes = []
+query = {"and_filters": and_filters}
+
+received_results_data = find_all_the_results(query, main_attributes)
+
+# Another example: Cell line = "U2OS" and Gene Symbol = "RHEB"
+
+and_filters_2 = [
+    {"name": "Cell Line", "value": "U2OS", "operator": "not_equals"},
+    {"name": "Gene Symbol", "value": "RHEB", "operator": "equals"},
+]
+query_2 = {"and_filters": and_filters_2, "case_sensitive": True}
+received_results_data_2 = find_all_the_results(query_2, main_attributes)

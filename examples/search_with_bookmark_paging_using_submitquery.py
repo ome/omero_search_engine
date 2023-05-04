@@ -22,14 +22,10 @@ import logging
 import json
 import requests
 import sys
+from utils import base_url
 
-# url to send the query
-image_ext = "/resources/image/searchannotation/"
-# url to get the next page for a query, bookmark is needed
-image_page_ext = "/resources/image/searchannotation_page/"
-# search engine url
-base_url = "http://127.0.0.1:5577/api/v1/"
-submit_query_url = "http://127.0.0.1:5577/api/v1/resources/submitquery"  # noqa
+# search url
+submit_query_url = f"{base_url}resources/submitquery/"  # noqa
 
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
@@ -116,13 +112,17 @@ bookmark, total_results = call_omero_searchengine_return_results(
     submit_query_url, data=query_data_json
 )
 
-while len(received_results) < total_results:
+logging.info(
+    "page: %s, / %s received results: %s / %s"
+    % (page, total_pages, len(received_results), total_results)
+)
 
+while len(received_results) < total_results:
     page += 1
     query_data_ = {"query_details": {"and_filters": and_filters}, "bookmark": bookmark}
     query_data_json_ = json.dumps(query_data_)
 
-    bookmark, total_results = call_omero_searchengine_return_results(
+    next_bookmark, total_results = call_omero_searchengine_return_results(
         submit_query_url, data=query_data_json_
     )
 
@@ -130,3 +130,4 @@ while len(received_results) < total_results:
         "bookmark: %s, page: %s, / %s received results: %s / %s"
         % (bookmark, page, total_pages, len(received_results), total_results)
     )
+    bookmark = next_bookmark

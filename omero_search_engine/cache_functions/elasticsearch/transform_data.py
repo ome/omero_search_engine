@@ -34,6 +34,11 @@ from omero_search_engine.cache_functions.elasticsearch.elasticsearch_templates i
     key_value_buckets_info_template,
     key_values_resource_cache_template,
 )
+from omero_search_engine.validation.psql_templates import (
+    query_images_in_project_id,
+    query_images_screen_id,
+)
+
 from app_data.data_attrs import annotation_resource_link
 from datetime import datetime
 import multiprocessing
@@ -92,6 +97,18 @@ def create_omero_indexes(resource):
 
 
 def get_all_indexes():
+    return [
+        "project_keyvalue_pair_metadata",
+        "screen_keyvalue_pair_metadata",
+        "plate_keyvalue_pair_metadata",
+        "well_keyvalue_pair_metadata",
+        "image_keyvalue_pair_metadata",
+        "key_value_buckets_information",
+        "key_values_resource_cach",
+    ]
+
+
+def get_all_indexes_from_elasticsearch():
     es = search_omero_app.config.get("es_connector")
     all_indexes = es.indices.get("*")
     return all_indexes
@@ -115,8 +132,8 @@ def rename_index(old_index, new_index):
 
 def delete_es_index(es_index):
     es = search_omero_app.config.get("es_connector")
-    saved_incies = get_all_indexes()
-    if es_index in saved_incies.keys():
+    saved_incies = get_all_indexes_from_elasticsearch()
+    if es_index in saved_incies:
         response = es.indices.delete(index=es_index)
         if "acknowledged" in response:
             if response["acknowledged"] is True:
@@ -160,7 +177,8 @@ def delete_index(resource, es_index=None):
         es_index = resource_elasticsearchindex[resource]
         return delete_es_index(es_index)
     elif resource == "all":
-        for resource_, es_index in resource_elasticsearchindex.items():
+        all_indcies = get_all_indexes()
+        for es_index in all_indcies:
             delete_es_index(es_index)
         return True
     else:
@@ -177,6 +195,7 @@ def prepare_images_data(data, doc_type):
         "experiment",
         "group_id",
         "name",
+        "description",
         "mapvalue_name",
         "mapvalue_value",
         "project_name",
@@ -233,6 +252,7 @@ def prepare_data(data, doc_type):
         "owner_id",
         "group_id",
         "name",
+        "description",
         "mapvalue_name",
         "mapvalue_value",
     ]
@@ -318,7 +338,7 @@ def get_file_list(path_name):
     from os import walk
 
     f = []
-    for (dirpath, dirnames, filenames) in walk(path_name):
+    for dirpath, dirnames, filenames in walk(path_name):
         f.extend(filenames)
 
     return f
@@ -348,6 +368,7 @@ def insert_resource_data(folder, resource, from_json):
             "experiment",
             "group_id",
             "name",
+            "description",
             "mapvalue_name",
             "mapvalue_value",
             "mapvalue_index",
@@ -379,6 +400,7 @@ def insert_resource_data(folder, resource, from_json):
                 "owner_id",
                 "group_id",
                 "name",
+                "description",
                 "mapvalue_name",
                 "mapvalue_value",
                 "mapvalue_index",
@@ -584,14 +606,30 @@ def insert_resource_data_from_df(df, resource, global_counter, dry_lock, lock=No
 def insert_project_data(folder, project_file):
     file_name = folder + "\\" + project_file
     es_index = "project_keyvalue_pair_metadata"
-    cols = ["id", "owner_id", "group_id", "name", "mapvalue_name", "mapvalue_value"]
+    cols = [
+        "id",
+        "owner_id",
+        "group_id",
+        "name",
+        "description",
+        "mapvalue_name",
+        "mapvalue_value",
+    ]
     handle_file(file_name, es_index, cols)
 
 
 def insert_screen_data(folder, screen_file):
     file_name = folder + "\\" + screen_file
     es_index = "screen_keyvalue_pair_metadata"
-    cols = ["id", "owner_id", "group_id", "name", "mapvalue_name", "mapvalue_value"]
+    cols = [
+        "id",
+        "owner_id",
+        "group_id",
+        "name",
+        "description",
+        "mapvalue_name",
+        "mapvalue_value",
+    ]
     handle_file(file_name, es_index, cols)
 
 
@@ -605,7 +643,15 @@ def insert_well_data(folder, well_file):
 def insert_plate_data(folder, plate_file):
     file_name = folder + "\\" + plate_file
     es_index = "plate_keyvalue_pair_metadata"
-    cols = ["id", "owner_id", "group_id", "name", "mapvalue_name", "mapvalue_value"]
+    cols = [
+        "id",
+        "owner_id",
+        "group_id",
+        "name",
+        "description",
+        "mapvalue_name",
+        "mapvalue_value",
+    ]
     handle_file(file_name, es_index, cols)
 
 
@@ -652,10 +698,31 @@ def save_key_value_buckets(
         resource_keys = get_keys(resource_table)
         name_results = None
         if resource_table in ["project", "screen"]:
-            sql = "select name from {resource}".format(resource=resource_table)
+            sql = "select id, name,description  from {resource}".format(
+                resource=resource_table
+            )
             conn = search_omero_app.config["database_connector"]
-            name_results = conn.execute_query(sql)
-            name_results = [res["name"] for res in name_results]
+            name_result = conn.execute_query(sql)
+            # name_results = [res["name"] for res in name_results]
+            # Determine the number of images for each container
+            for res in name_result:
+                id = res.get("id")
+                if resource_table == "project":
+                    sql_n = query_images_in_project_id.substitute(project_id=id)
+                elif resource_table == "screen":
+                    sql_n = query_images_screen_id.substitute(screen_id=id)
+                no_images_co = conn.execute_query(sql_n)
+                res["no_images"] = len(no_images_co)
+
+            name_results = [
+                {
+                    "id": res["id"],
+                    "description": res["description"],
+                    "name": res["name"],
+                    "no_images": res["no_images"],
+                }
+                for res in name_result
+            ]
 
         push_keys_cache_index(resource_keys, resource_table, es_index_2, name_results)
         if only_values:

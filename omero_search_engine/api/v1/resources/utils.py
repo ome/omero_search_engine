@@ -32,6 +32,18 @@ mm = main_dir.replace("omero_search_engine/api/v2/resources", "")
 sys.path.append(mm)
 
 
+def adjust_value(value):
+    """
+    Adjust the value to search terms which includes * or ?
+    and support search special characters
+    """
+    if value:
+        value = value.strip().strip().lower()
+        value = value.translate({ord(c): "\\\\%s" % c for c in "*?&"})
+        value = value.translate({ord(c): "\\%s" % c for c in '"'})
+    return value
+
+
 def get_resource_annotation_table(resource_table):
     """
     return the related annotation for the resources table
@@ -148,6 +160,19 @@ should_term_template = Template(
 query_template = Template("""{"query": {"bool": {$query}}}""")
 
 
+# This template is added to the query to return the count of an attribute
+count_attr_template = Template(
+    """{"key_count": {"terms": {"field": "$field","size": 10000}}}
+"""
+)
+
+# This template is used to get the study using its idr
+res_raw_query = Template(
+    """{"query": {"bool": {"must": [{"bool": {"must": {"match":
+    {"name.keyvalue": "$idr"}}}}]}}} """
+)
+
+
 def build_error_message(error):
     """
     Build an error respond
@@ -170,7 +195,10 @@ def elasticsearch_query_builder(
             for clause in main_attributes.get("and_main_attributes"):
                 if isinstance(clause, list):
                     for attribute in clause:
-                        if attribute["name"].endswith("_id"):
+                        if (
+                            attribute["name"].endswith("_id")
+                            or attribute["name"] == "id"
+                        ):
                             main_dd = (
                                 main_attribute_query_template_id.substitute(  # noqa
                                     attribute=attribute["name"].strip(),
@@ -188,7 +216,7 @@ def elasticsearch_query_builder(
                             nested_must_not_part.append(main_dd)
                 else:
                     attribute = clause
-                    if attribute["name"].endswith("_id"):
+                    if attribute["name"].endswith("_id") or attribute["name"] == "id":
                         main_dd = main_attribute_query_template_id.substitute(
                             attribute=attribute["name"].strip(),
                             value=str(attribute["value"]).strip(),
@@ -214,7 +242,10 @@ def elasticsearch_query_builder(
                 if isinstance(attributes, list):
                     for attribute in attributes:
                         # search using id, e.g. project id
-                        if attribute["name"].endswith("_id"):
+                        if (
+                            attribute["name"].endswith("_id")
+                            or attribute["name"] == "id"
+                        ):
                             main_dd = (
                                 main_attribute_query_template_id.substitute(  # noqa
                                     attribute=attribute["name"].strip(),
@@ -234,21 +265,23 @@ def elasticsearch_query_builder(
                 else:
                     attribute = attributes
                     # search using id, e.g. project id
-                    if attribute["name"].endswith("_id"):
+                    if attribute["name"].endswith("_id") or attribute["name"] == "id":
                         main_dd = main_attribute_query_template_id.substitute(
                             attribute=attribute["name"].strip(),
                             value=str(attribute["value"]).strip(),
                         )
+
                     else:
                         main_dd = main_attribute_query_template.substitute(
                             attribute=attribute["name"].strip(),
                             value=str(attribute["value"]).strip(),
                         )
+                    sh.append(main_dd)
 
-                    if attribute["operator"].strip() == "equals":
-                        sh.append(main_dd)
-                    elif attribute["operator"].strip() == "not_equals":
-                        sh.append(main_dd)
+                    # if attribute["operator"].strip() == "equals":
+                    #    sh.append(main_dd)
+                    # elif attribute["operator"].strip() == "not_equals":
+                    #    sh.append(main_dd)
 
             # if len(should_part_list)>0:
             #    minimum_should_match=len(should_part_list)
@@ -301,7 +334,7 @@ def elasticsearch_query_builder(
                     )
                 )
             if operator == "contains":
-                value = "*{value}*".format(value=value)
+                value = "*{value}*".format(value=adjust_value(value))
                 # _nested_must_part.append(must_name_condition_template.substitute(name=key)) # noqa
                 if case_sensitive:
                     _nested_must_part.append(
@@ -335,7 +368,7 @@ def elasticsearch_query_builder(
             elif operator in ["not_equals", "not_contains"]:
                 # nested_must_part.append(nested_keyvalue_pair_query_template.substitute(nested=must_name_condition_template.substitute(name=key)))
                 if operator == "not_contains":
-                    value = "*{value}*".format(value=value)
+                    value = "*{value}*".format(value=adjust_value(value))
                     if case_sensitive:
                         nested_must_part.append(
                             nested_keyvalue_pair_query_template.substitute(
@@ -593,7 +626,6 @@ def elasticsearch_query_builder(
             should_part_list = should_part_list_
 
         if len(should_part_list) > 0:
-
             should_part_ = ",".join(should_part_list)
             should_part_ = should_term_template.substitute(
                 should_term=should_part_, minimum_should_match=1
@@ -612,7 +644,6 @@ def elasticsearch_query_builder(
             all_terms = nested_must_part_
 
     if len(nested_must_not_part) > 0:
-
         nested_must_not_part_ = ",".join(nested_must_not_part)
         nested_must_not_part_ = must_not_term_template.substitute(
             must_not_term=nested_must_not_part_
@@ -720,19 +751,109 @@ def search_index_scrol(index_name, query):
     return results
 
 
-def search_index_using_search_after(e_index, query, page, bookmark_, return_containers):
+def get_bookmark(pagination_dict):
+    """
+    get book mark from the pagination section
+    if the the request does not contain bookmark
+    """
+    bookmark = None
+    if pagination_dict:
+        next_page = pagination_dict["next_page"]
+        bookmark = None
+        for page_rcd in pagination_dict["page_records"]:
+            if page_rcd["page"] == next_page:
+                bookmark = page_rcd["bookmark"]
+                break
+    return bookmark
+
+
+def get_pagination(total_pages, next_bookmark, pagination_dict):
+    """
+    This keeps track of pages, it can be used to track and lood pages (next by default)
+
+    {
+       "current_page":4,
+       "next_page":5,
+       "page_records":[
+          {
+             "bookmark":[
+                304586
+             ],
+             "page":2
+          },
+          {
+             "bookmark":[
+                643303
+             ],
+             "page":3
+          },
+          {
+             "bookmark":[
+                1362671
+             ],
+             "page":4
+          },
+          {
+             "bookmark":[
+                1459210
+             ],
+             "page":5
+          }
+       ],
+       "total_pages":13
+        }
+    """
+    if not pagination_dict:
+        pagination_dict = {}
+        pagination_dict["total_pages"] = total_pages
+        page_rcds = []
+        pagination_dict["page_records"] = page_rcds
+        pagination_dict["current_page"] = 1
+        if total_pages > 1:
+            pagination_dict["next_page"] = 2
+        else:
+            pagination_dict["next_page"] = None
+        page_rcds.append({"page": 2, "bookmark": next_bookmark})
+        return pagination_dict
+    pagination_dict["current_page"] = pagination_dict["next_page"]
+    if pagination_dict["current_page"] == total_pages:
+        pagination_dict["next_page"] = None
+        return pagination_dict
+    pagination_dict["next_page"] = pagination_dict["next_page"] + 1
+    if not get_bookmark(pagination_dict):
+        next_page_record = {
+            "page": pagination_dict["current_page"] + 1,
+            "bookmark": next_bookmark,
+        }
+        page_records = pagination_dict.get("page_records")
+        page_records.append(next_page_record)
+    return pagination_dict
+
+
+def search_index_using_search_after(
+    e_index, query, bookmark_, pagination_dict, return_containers, ret_type=None
+):
     returned_results = []
-    if not page:
-        page = 1
+    if bookmark_ and not pagination_dict:
+        add_paination = False
+    else:
+        add_paination = True
+
     es = search_omero_app.config.get("es_connector")
     if return_containers:
         res = es.search(index=e_index, body=query)
-        for el in res["hits"]["hits"]:
-            returned_results.append(el["_source"])
         if len(res["hits"]["hits"]) == 0:
             search_omero_app.logger.info("No result is found")
             return returned_results
-        return {"results": returned_results}
+        keys_counts = res["aggregations"]["key_count"]["buckets"]
+        idrs = []
+        for ek in keys_counts:
+            idrs.append(ek["key"])
+            res_res = get_studies_titles(ek["key"], ret_type)
+            res_res["image count"] = ek["doc_count"]
+            returned_results.append(res_res)
+
+        return returned_results
     page_size = search_omero_app.config.get("PAGE_SIZE")
     res = es.count(index=e_index, body=query)
     size = res["count"]
@@ -745,6 +866,8 @@ def search_index_using_search_after(e_index, query, page, bookmark_, return_cont
     no_of_pages = (int)(size / page_size) + add_to_page
     search_omero_app.logger.info("No of pages: %s" % no_of_pages)
     query["sort"] = [{"id": "asc"}]
+    if not bookmark_ and pagination_dict:
+        bookmark_ = get_bookmark(pagination_dict)
     if not bookmark_:
         result = es.search(index=e_index, body=query)
         if len(result["hits"]["hits"]) == 0:
@@ -765,14 +888,16 @@ def search_index_using_search_after(e_index, query, page, bookmark_, return_cont
             search_omero_app.logger.info("No result is found")
             return returned_results
         bookmark = [res["hits"]["hits"][-1]["sort"][0]]
-        page += 1
-    return {
+    results_dict = {
         "results": returned_results,
         "total_pages": no_of_pages,
         "bookmark": bookmark,
         "size": size,
-        "page": page,
     }
+    if add_paination:
+        pagination_dict = get_pagination(no_of_pages, bookmark, pagination_dict)
+        results_dict["pagination"] = pagination_dict
+    return results_dict
 
 
 def handle_query(table_, query):
@@ -789,8 +914,8 @@ def search_resource_annotation(
     table_,
     query,
     raw_elasticsearch_query=None,
-    page=None,
     bookmark=None,
+    pagination_dict=None,
     return_containers=False,
 ):
     """
@@ -798,7 +923,6 @@ def search_resource_annotation(
     @query: the a dict contains the three filters (or, and and  not) items
     @raw_elasticsearch_query: raw query sending directly to elasticsearch
     """
-    # print ( query)
     try:
         res_index = resource_elasticsearchindex.get(table_)
         if not res_index:
@@ -841,8 +965,8 @@ def search_resource_annotation(
                 return query_string
 
             search_omero_app.logger.info("Query %s" % query_string)
-            query = json.loads(query_string)
-            raw_query_to_send_back = json.loads(query_string)
+            query = json.loads(query_string, strict=False)
+            raw_query_to_send_back = json.loads(query_string, strict=False)
         else:
             query = raw_elasticsearch_query
             raw_query_to_send_back = copy.copy(raw_elasticsearch_query)
@@ -850,32 +974,31 @@ def search_resource_annotation(
             # code to return the containers only
             # It will call the projects container first then
             # search within screens
-            query["collapse"] = {"field": "project_name.keyvalue"}
-            query["_source"] = {"includes": ["screen_name", "project_name"]}
-            res = search_index_using_search_after(
-                res_index, query, page, bookmark, return_containers
+            query["aggs"] = json.loads(
+                count_attr_template.substitute(field="project_name.keyvalue")
             )
-            query["collapse"] = {"field": "screen_name.keyvalue"}
+            query["_source"] = {"includes": [""]}
+            res = search_index_using_search_after(
+                res_index,
+                query,
+                bookmark,
+                pagination_dict,
+                return_containers,
+                "project",
+            )
+            query["aggs"] = json.loads(
+                count_attr_template.substitute(field="screen_name.keyvalue")
+            )
+
             res_2 = search_index_using_search_after(
-                res_index, query, page, bookmark, return_containers
+                res_index, query, bookmark, pagination_dict, return_containers, "screen"
             )
             # Combines the containers results
-            studies = []
-            if len(res) > 0:
-                for item1 in res.get("results"):
-                    pr = item1.get("project_name")
-                    if pr and pr not in studies:
-                        studies.append({"Name (IDR number)": pr})
-            if len(res_2) > 0:
-                for item2 in res_2.get("results"):
-                    sc = item2.get("screen_name")
-                    if sc and sc not in studies:
-                        studies.append({"Name (IDR number)": sc})
+            studies = res + res_2
             res = {"results": studies}
-
         else:
             res = search_index_using_search_after(
-                res_index, query, page, bookmark, return_containers
+                res_index, query, bookmark, pagination_dict, return_containers
             )
         notice = ""
         end_time = time.time()
@@ -894,3 +1017,83 @@ def search_resource_annotation(
         return build_error_message(
             "Something went wrong, please check your query and try again later."
         )
+
+
+def get_studies_titles(idr_name, resource):
+    """
+    use the res_raw_query to return the study title (publication and study)
+    """
+    study_title = {}
+    res_index = resource_elasticsearchindex.get(resource)
+    resource_query = json.loads(res_raw_query.substitute(idr=idr_name))
+    resourse_res = search_index_using_search_after(
+        res_index, resource_query, None, None, None
+    )
+    for item_ in resourse_res["results"]:
+        study_title["id"] = item_.get("id")
+        study_title["name"] = item_.get("name")
+        study_title["type"] = resource
+        # study_title["description"] = item_.get("description")
+        for value in item_.get("key_values"):
+            if value.get("name"):
+                value["key"] = value["name"]
+                del value["name"]
+        study_title["key_values"] = item_.get("key_values")
+    return study_title
+
+
+def get_filter_list(filter):
+    import copy
+
+    new_or_filter = []
+    f1 = copy.deepcopy(filter)
+    f1["resource"] = "project"
+    new_or_filter.append(f1)
+    f2 = copy.deepcopy(filter)
+    f2["resource"] = "screen"
+    new_or_filter.append(f2)
+    return new_or_filter
+
+
+def adjust_query_for_container(query):
+    query_details = query.get("query_details")
+    new_or_filters = []
+    to_delete_and_filter = []
+    to_delete_or_filter = []
+    if query_details:
+        and_filters = query_details.get("and_filters")
+        if and_filters:
+            for filter in and_filters:
+                if filter.get("resource") == "container":
+                    new_or_filters.append(get_filter_list(filter))
+                    to_delete_and_filter.append(filter)
+
+        or_filters = query_details.get("or_filters")
+        if or_filters:
+            for filter in or_filters:
+                if isinstance(filter, list):
+                    for filter_ in filter:
+                        if filter_.get("resource") == "container":
+                            new_or_filters.append(get_filter_list(filter_))
+                            to_delete_or_filter.append(filter_)
+                else:
+                    if filter.get("resource") == "container":
+                        new_or_filters.append(get_filter_list(filter))
+                        to_delete_or_filter.append(filter)
+        else:
+            or_filters = []
+            query_details["or_filters"] = or_filters
+        for filter in to_delete_or_filter:
+            if filter in or_filters:
+                or_filters.remove(filter)
+            else:
+                for _filter in or_filters:
+                    if isinstance(_filter, list):
+                        if filter in _filter:
+                            _filter.remove(filter)
+
+        for filter in to_delete_and_filter:
+            and_filters.remove(filter)
+
+        for filter in new_or_filters:
+            or_filters.append(filter)

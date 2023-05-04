@@ -23,6 +23,7 @@ import json
 from omero_search_engine.api.v1.resources.utils import (
     search_resource_annotation,
     build_error_message,
+    adjust_query_for_container,
 )
 from omero_search_engine.api.v1.resources.resource_analyser import (
     search_value_for_resource,
@@ -76,9 +77,9 @@ def search_resource_page(resource_table):
         query = data["query"]
         validation_results = query_validator(query)
         if validation_results == "OK":
-            page = data.get("page")
             bookmark = data.get("bookmark")
             raw_elasticsearch_query = data.get("raw_elasticsearch_query")
+            pagination_dict = data.get("pagination")
             return_containers = data.get("return_containers")
             if return_containers:
                 return_containers = json.loads(return_containers.lower())
@@ -87,8 +88,8 @@ def search_resource_page(resource_table):
                 resource_table,
                 query,
                 raw_elasticsearch_query=raw_elasticsearch_query,
-                page=page,
                 bookmark=bookmark,
+                pagination_dict=pagination_dict,
                 return_containers=return_containers,
             )
             return jsonify(resource_list)
@@ -192,9 +193,39 @@ def get_values_using_value(resource_table):
     key = request.args.get("key")
     if key:
         # If the key is provided it will restrict the search to the provided key.
+
         return query_cashed_bucket_part_value_keys(key, value, resource_table)
-    else:
-        return jsonify(search_value_for_resource(resource_table, value))
+    bookmark = request.args.get("bookmark")
+    if bookmark:
+        bookmark = bookmark.split(",")
+        if bookmark and resource_table == "all":
+            return jsonify(
+                build_error_message(
+                    "{error}".format(
+                        error="Boomark is not supported 'all', "
+                        "it should be used with individual resources"
+                    )
+                )
+            )
+
+        if len(bookmark) != 3:
+            return jsonify(
+                build_error_message(
+                    "{error}".format(
+                        error="Bookmark should be a comma-delimited string, "
+                        "e.g. 4,9,44a90c1a-3271-448a-ba60-c391f885bc34"
+                    )
+                )
+            )
+        if not bookmark[0].isdigit() or not bookmark[1].isdigit():
+            return jsonify(
+                build_error_message(
+                    "{error}".format(
+                        error="The first two items in the bookmark should be intgers"
+                    )
+                )
+            )
+    return jsonify(search_value_for_resource(resource_table, value, bookmark))
 
 
 @resources.route("/<resource_table>/searchvaluesusingkey/", methods=["GET"])
@@ -246,7 +277,7 @@ def get_resource_key_value(resource_table):
     key = request.args.get("key")
     if not key:
         return jsonify(build_error_message("No key is provided"))
-    if key != "Name (IDR number)":
+    if key != "name":
         return jsonify(get_resource_attribute_values(resource_table, key))
     else:
         return jsonify(get_resource_names("all"))
@@ -267,11 +298,19 @@ def get_resource_names_(resource_table):
         response.mimetype = "text/plain"
         return response
 
-    names = get_resource_names(resource_table)
-    return jsonify(names)
+    value = request.args.get("value")
+    description = request.args.get("use_description")
+    if description:
+        if description.lower() in ["true", "false"]:
+            description = json.loads(description.lower())
+        elif description == "1":
+            description = True
+        else:
+            description = False
+    return jsonify(get_resource_names(resource_table, value, description))
 
 
-@resources.route("/submitquery_returnstudies/", methods=["POST"])
+@resources.route("/submitquery/containers/", methods=["POST"])
 def submit_query_return_containers():
     """
     file: swagger_docs/submitquery_returncontainers.yml
@@ -282,6 +321,7 @@ def submit_query_return_containers():
         query = None
     if not query:
         return jsonify(build_error_message("No query is provided"))
+    adjust_query_for_container(query)
     return_columns = request.args.get("return_columns")
     if return_columns:
         try:
@@ -308,6 +348,7 @@ def submit_query():
         query = None
     if not query:
         return jsonify(build_error_message("No query is provided"))
+    adjust_query_for_container(query)
     return_columns = request.args.get("return_columns")
     if return_columns:
         try:

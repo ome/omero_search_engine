@@ -25,7 +25,7 @@ from string import Template
 
 image_sql = Template(
     """
-select image.id, image.owner_id, image.experiment, image.group_id,
+select image.id, image.description, image.owner_id, image.experiment, image.group_id,
 image.name as name, annotation_mapvalue.name as mapvalue_name,
 annotation_mapvalue.value as mapvalue_value,
 annotation_mapvalue.index as mapvalue_index,
@@ -35,8 +35,8 @@ screen.id as screen_id, screen.name as screen_name,
 plate.id as plate_id, plate.name as plate_name,
 well.id as well_id,wellsample.id as wellsample_id
 from image
-inner join imageannotationlink on image.id =imageannotationlink.parent
-inner join annotation_mapvalue on
+left join imageannotationlink on image.id =imageannotationlink.parent
+left join annotation_mapvalue on
 annotation_mapvalue.annotation_id=imageannotationlink.child
 left join datasetimagelink on datasetimagelink.child=image.id
 left join dataset on datasetimagelink.parent=dataset.id
@@ -64,12 +64,12 @@ images_sql_to_csv = (
 
 plate_sql = Template(
     """
-select plate.id, plate.owner_id, plate.group_id,
+select plate.id, plate.owner_id, plate.group_id,plate.description,
 plate.name as name, annotation_mapvalue.name as mapvalue_name,
 annotation_mapvalue.value as mapvalue_value,
 annotation_mapvalue.index as mapvalue_index from plate
-inner join plateannotationlink on plate.id=plateannotationlink.parent
-inner join annotation_mapvalue on
+left join plateannotationlink on plate.id=plateannotationlink.parent
+left join annotation_mapvalue on
 annotation_mapvalue.annotation_id=plateannotationlink.child
 $whereclause
 GROUP BY plate.id, annotation_mapvalue.index,
@@ -84,13 +84,13 @@ plate_sql_to_csv = (
 
 project_sql = Template(
     """
-select project.id, project.owner_id, project.group_id,
+select project.id, project.owner_id, project.group_id, project.description,
 project.name as name, annotation_mapvalue.name as mapvalue_name,
 annotation_mapvalue.value as mapvalue_value,
 annotation_mapvalue.index as mapvalue_index
 from project
-inner join projectannotationlink on project.id =projectannotationlink.parent
-inner join annotation_mapvalue on
+left join projectannotationlink on project.id =projectannotationlink.parent
+left join annotation_mapvalue on
 annotation_mapvalue.annotation_id=projectannotationlink.child
 $whereclause
 GROUP BY project.id, annotation_mapvalue.index,
@@ -106,12 +106,13 @@ WITH CSV HEADER""".format(
 
 screen_sql = Template(
     """
-select screen.id, screen.owner_id, screen.group_id,  screen.name as name,
+select screen.id, screen.owner_id, screen.group_id,
+screen.name as name,screen.description,
 annotation_mapvalue.name as mapvalue_name,
 annotation_mapvalue.value as mapvalue_value,
 annotation_mapvalue.index as mapvalue_index from screen
-inner join screenannotationlink on screen.id =screenannotationlink.parent
-inner join annotation_mapvalue on
+left join screenannotationlink on screen.id =screenannotationlink.parent
+left join annotation_mapvalue on
 annotation_mapvalue.annotation_id=screenannotationlink.child
 $whereclause
 GROUP BY screen.id, annotation_mapvalue.index,
@@ -131,8 +132,8 @@ select well.id, well.owner_id, well.group_id,
 annotation_mapvalue.name as mapvalue_name,
 annotation_mapvalue.value as mapvalue_value,
 annotation_mapvalue.index as mapvalue_index from well
-inner join wellannotationlink on well.id =wellannotationlink.parent
-inner join annotation_mapvalue on
+left join wellannotationlink on well.id =wellannotationlink.parent
+left join annotation_mapvalue on
 annotation_mapvalue.annotation_id=wellannotationlink.child
 $whereclause
 GROUP BY well.id,  annotation_mapvalue.index,

@@ -153,6 +153,11 @@ def get_index_data_from_database(resource="all", dry_run=False):
             )
             # validate the indexing
             test_indexing_search_query(deep_check=True, check_studies=True)
+            
+    if not dry_run:
+        # backup the index data
+        backup_elasticsearch_data()
+
 
 
 # set configurations
@@ -203,6 +208,15 @@ def set_cache_folder(cache_folder=None):
         update_config_file({"CACHE_FOLDER": cache_folder})
     else:
         search_omero_app.logger.info("No attribute is provided")
+
+
+@manager.command
+@manager.option("-b", "--backup_folder", help="path to elasticsearch backup folder")
+def set_elasticsearch_backup_folder(backup_folder=None):
+    if backup_folder:
+        update_config_file({"ELASTICSEARCH_BACKUP_FOLDER": backup_folder})
+    else:
+        search_omero_app.logger.info("No elasticsearch backup folder is provided")
 
 
 @manager.command
@@ -298,12 +312,34 @@ def test_indexing_search_query(
         validate_queries,
         test_no_images,
         get_omero_stats,
+        get_no_images_sql_containers,
     )
 
     validate_queries(json_file, deep_check)
     if check_studies:
         test_no_images()
     get_omero_stats()
+    get_no_images_sql_containers()
+
+
+@manager.command
+def backup_elasticsearch_data():
+    from omero_search_engine.cache_functions.elasticsearch.backup_restores import (
+        backup_indices_data,
+    )
+
+    backup_indices_data()
+
+
+@manager.command
+def restore_elasticsearch_data():
+    from omero_search_engine.cache_functions.elasticsearch.backup_restores import (
+        restore_indices_data,
+    )
+
+    # first delete the current indices
+    delete_es_index("all")
+    restore_indices_data()
 
 
 if __name__ == "__main__":

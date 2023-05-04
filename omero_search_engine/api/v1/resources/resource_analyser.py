@@ -25,11 +25,9 @@ import os
 from omero_search_engine.api.v1.resources.utils import (
     resource_elasticsearchindex,
     build_error_message,
+    adjust_value,
 )
 import math
-
-
-not_allowed_chars = ['"', "\\"]
 
 key_number_search_template = Template(
     """
@@ -97,7 +95,7 @@ values_for_key_template = Template(
 )
 
 
-def search_index_for_value(e_index, query):
+def search_index_for_value(e_index, query, get_size=False):
     """
     Perform search the elastcisearch using value and
     return all the key values whihch this value has been used,
@@ -106,6 +104,8 @@ def search_index_for_value(e_index, query):
     to the elasticsearcg hosting machine
     """
     es = search_omero_app.config.get("es_connector")
+    if get_size:
+        return es.count(index=e_index, body=query)
     res = es.search(index=e_index, body=query)
     return res
 
@@ -120,9 +120,6 @@ def search_index_for_values_get_all_buckets(e_index, query):
     """
     page_size = 9999
     bookmark = 0
-    print("=========================")
-    print(query)
-    print("=========================")
     query = json.loads(query)
     returened_results = []
     # es = search_omero_app.config.get("es_connector")
@@ -130,7 +127,17 @@ def search_index_for_values_get_all_buckets(e_index, query):
     # res = es.count(index=e_index, body=query)
     size = res["count"]
     query["size"] = page_size
-    query["sort"] = [{"id": "asc"}]
+    query["sort"] = [
+        {
+            "_script": {
+                "script": "doc['Value.keyvaluenormalize'].value.length()",
+                "type": "number",
+                "order": "asc",
+            }
+        },
+        {"items_in_the_bucket": "desc"},
+        {"id": "asc"},
+    ]
     co = 0
     while co < size:
         if co != 0:
@@ -148,8 +155,11 @@ def search_index_for_values_get_all_buckets(e_index, query):
                 % (co, size)
             )
             return returened_results
-        bookmark = [res["hits"]["hits"][-1]["sort"][0]]
-
+        bookmark = [
+            int(res["hits"]["hits"][-1]["sort"][0]),
+            int(res["hits"]["hits"][-1]["sort"][1]),
+            res["hits"]["hits"][-1]["sort"][2],
+        ]
     return returened_results
 
 
@@ -296,39 +306,54 @@ def get_values_for_a_key(table_, key):
     }
 
 
-def prepare_search_results(results):
+def prepare_search_results(results, size=0):
     returned_results = []
-    total = 0
     total_number = 0
-    total_items = 0
     number_of_buckets = 0
     resource = None
-    # print (len(results.get("hits").get("hits")))
     for hit in results["hits"]["hits"]:
+        res = hit["_source"]
+        resource = res.get("resource")
+        # ignore organism key in the results
+        # please see (https://github.com/ome/omero_search_engine/issues/45)
+        # This will be checked later.
+        if (
+            resource == "image"
+            and res["Attribute"]
+            and res["Attribute"].lower() == "organism"
+        ):
+            continue
         row = {}
         returned_results.append(row)
-        res = hit["_source"]
         row["Key"] = res["Attribute"]
         row["Value"] = res["Value"]
-        resource = res.get("resource")
         row["Number of %ss" % resource] = res.get("items_in_the_bucket")
-        total_number = res["total_items_in_saved_buckets"]
-        number_of_buckets = res["total_buckets"]
-        total_items = res["total_items"]
-    return {
+        total_number += res["items_in_the_bucket"]
+        number_of_buckets += 1
+
+    results_dict = {
         "data": returned_results,
-        "total_number": total_number,
-        "total_number_of_%s" % (resource): total,
+        "total_number_of_%s" % (resource): total_number,
         "total_number_of_buckets": number_of_buckets,
-        "total_items": total_items,
     }
+    if size > 0:
+        results_dict["total_number_of_all_buckets"] = size
+        if number_of_buckets < size:
+            # this should be later to get the next page
+            if len(results["hits"]["hits"]) > 0:
+                results_dict["bookmark"] = [
+                    int(results["hits"]["hits"][-1]["sort"][0]),
+                    int(results["hits"]["hits"][-1]["sort"][1]),
+                    results["hits"]["hits"][-1]["sort"][2],
+                ]
+            else:
+                results_dict["bookmark"] = None
+    return results_dict
 
 
 def prepare_search_results_buckets(results_):
     returned_results = []
-    total = 0
     total_number = 0
-    total_items = 0
     number_of_buckets = 0
     resource = None
     for results in results_:
@@ -340,15 +365,12 @@ def prepare_search_results_buckets(results_):
             row["Value"] = res["Value"]
             resource = res.get("resource")
             row["Number of %ss" % resource] = res.get("items_in_the_bucket")
-            total_number = res["total_items_in_saved_buckets"]
-            number_of_buckets = res["total_buckets"]
-            total_items = res["total_items"]
+            total_number += res["items_in_the_bucket"]
+            number_of_buckets += 1
     return {
         "data": returned_results,
-        "total_number": total_number,
-        "total_number_of_%s" % (resource): total,
+        "total_number_of_%s" % (resource): total_number,
         "total_number_of_buckets": number_of_buckets,
-        "total_items": total_items,
     }
 
 
@@ -410,10 +432,7 @@ def query_cashed_bucket_part_value_keys(
     """
     if name:
         name = name.strip()
-    if value:
-        value = value.strip()
-        if "*" not in value and "?" not in value:
-            value = "*%s*" % value
+    value = adjust_value(value)
     if resource != "all":
         query = key_part_values_buckets_template.substitute(
             name=name, value=value, resource=resource
@@ -425,6 +444,9 @@ def query_cashed_bucket_part_value_keys(
         # search all resources for all possible matches
         returned_results = {}
         for table in resource_elasticsearchindex:
+            # exclude image1 as it is used for testing
+            if table == "image1":
+                continue
             query = key_part_values_buckets_template.substitute(
                 name=name, value=value, resource=table
             )
@@ -458,52 +480,50 @@ def query_cashed_bucket_value(value, es_index="key_value_buckets_information"):
     return prepare_search_results(res)
 
 
-def search_value_for_resource(table_, value, es_index="key_value_buckets_information"):
+def search_value_for_resource(
+    table_, value, bookmarks=None, es_index="key_value_buckets_information"
+):
     """
     send the request to elasticsearch and format the results
     It support wildcard operations only
     """
-    if value:
-        value = value.strip().lower()
+    value = adjust_value(value)
 
-    # query=value_all_buckets_template.substitute(value=value)
-    # check the the value, if contains ", it will remove it
-
-    # check thevalue if contains \ it wil replaced it with \\
-
-    # the if the value does not contain *, it will make it
-    # generic wildcard by adding * at the start and at the end
     if table_ != "all":
-        if '"' in value:
-            value = value.replace('"', "")
-        elif "\\" in value:
-            value = value.replace("\\", "\\\\")
-        value = "*{value}*".format(value=value)
         query = resource_key_values_buckets_template.substitute(
             value=value, resource=table_
         )
+        size_query = resource_key_values_buckets_size_template.substitute(
+            value=value, resource=table_
+        )
+        # Get the total number of the results.
+        res = search_index_for_value(es_index, size_query, True)
+        size = res["count"]
+        # use bookmark is it is provided
+        if bookmarks:
+            query = json.loads(query)
+            query["search_after"] = bookmarks
+
         res = search_index_for_value(es_index, query)
-        return prepare_search_results(res)
+        return prepare_search_results(res, size)
     else:
-        for crh in not_allowed_chars:
-            if crh in value:
-                return build_error_message(
-                    " , ".join(not_allowed_chars) + " are not allowed in the query term"
-                )
-        # If the user does not specify anything,
-        # it will add * at the start and at the end to
-        # return all the values which contain the search term
-        if "*" not in value and "?" not in value:
-            value = "*{value}*".format(value=value)
         returned_results = {}
         for table in resource_elasticsearchindex:
+            # ignore image1 as it is used for testing
+            if table == "image1":
+                continue
             # res = es.count(index=e_index, body=query)
             query = resource_key_values_buckets_template.substitute(
                 value=value, resource=table
             )
-
+            size_query = resource_key_values_buckets_size_template.substitute(
+                value=value, resource=table_
+            )
+            # Get the total number of the results.
+            res = search_index_for_value(es_index, size_query, True)
+            size = res["count"]
             res = search_index_for_value(es_index, query)
-            returned_results[table] = prepare_search_results(res)
+            returned_results[table] = prepare_search_results(res, size)
         return returned_results
 
 
@@ -525,7 +545,7 @@ key_part_values_buckets_template = Template(
     """
 {"query":{"bool":{"must":[{"bool":{
 "must":[{"match":{"Attribute.keyrnamenormalize":"$name"}},
-{"wildcard":{"Value.keyvaluenormalize":"$value"}}
+{"wildcard":{"Value.keyvaluenormalize":"*$value*"}}
 ]
 }},{
 "bool": {"must": [
@@ -566,21 +586,38 @@ value_all_buckets_template = Template(
 {"Value.keyvaluenormalize":"*$value*"}}}}]}},"size": 9999}"""
 )
 
+resource_key_values_buckets_size_template = Template(
+    """
+{"query":{"bool":{"must":[{"bool":{
+"must":{"wildcard":{"Value.keyvaluenormalize":"*$value*"}}}},{
+"bool": {"must": {"match":
+{"resource.keyresource": "$resource"}}}}]}}}"""
+)
 
 resource_key_values_buckets_template = Template(
     """
 {"query":{"bool":{"must":[{"bool":{
-"must":{"wildcard":{"Value.keyvaluenormalize":"$value"}}}},{
+"must":{"wildcard":{"Value.keyvaluenormalize":"*$value*"}}}},{
 "bool": {"must": {"match":
 {"resource.keyresource": "$resource"}}}}]}},
-"size": 9999}"""
+"size": 9999, "sort":[{ "_script": {
+        "script": "doc['Value.keyvaluenormalize'].value.length()",
+        "type": "number",
+        "order": "asc"
+    }},{"items_in_the_bucket": "desc"}, {"id": "asc"}]}"""
 )
-
 
 key_values_buckets_template_2 = Template(
     """
 {"query":{"bool":{"must":[{"bool":{"must":{"match":{
 "resource.keyresource":"$resource"}}}}]}}} """
+)
+
+key_values_buckets_template_search_name = Template(
+    """
+{"query":{"bool":{"must":[{"bool":{"must":{"match":{
+"resource.keyresource":"$resource"}}}},{"bool": {"must":
+{"wildcard": {"resourcename.keyresourcename":"*$name*"}}}}]}}} """
 )
 
 
@@ -635,6 +672,7 @@ def get_resource_attributes(resource, mode=None, es_index="key_values_resource_c
             hits = res["hits"]["hits"]
             if len(hits) > 0:
                 returned_results[table] = hits[0]["_source"]["name"]
+
     if mode == "searchterms":
         restricted_search_terms = get_restircted_search_terms()
         restircted_resources = {}
@@ -645,7 +683,7 @@ def get_resource_attributes(resource, mode=None, es_index="key_values_resource_c
                     restircted_resources[k] = search_terms
         returned_results = restircted_resources
         if "project" in returned_results:
-            returned_results["project"].append("Name (IDR number)")
+            returned_results["project"].append("name")
 
     return returned_results
 
@@ -706,30 +744,60 @@ def get_resource_attribute_values(
     return returned_results
 
 
-def get_resource_names(resource, es_index="key_values_resource_cach"):
+def get_resource_names(resource, name=None, description=False):
     """
     return resources names attributes
     It works for projects and screens but can be extended.
     """
-    returned_results = []
+    if description:
+        return build_error_message(
+            "This release does not support search by description."
+        )
+
     if resource != "all":
-        query = key_values_buckets_template_2.substitute(resource=resource)
-        results_ = connect_elasticsearch(
-            es_index, query
-        )  # .search(index=es_index, body=query)
-        hits = results_["hits"]["hits"]
-        if len(hits) > 0:
-            returned_results = hits[0]["_source"]["resourcename"]
+        returned_results = get_the_results(resource, name, description)
     else:
+        returned_results = {}
         ress = ["project", "screen"]
         for res in ress:
-            query = key_values_buckets_template_2.substitute(resource=res)
-            results_ = connect_elasticsearch(
-                es_index, query
-            )  # .search(index=es_index, body=query)
-            if len(results_["hits"]["hits"]) > 0:
-                returned_results = (
-                    returned_results
-                    + results_["hits"]["hits"][0]["_source"]["resourcename"]
+            returned_results[res] = get_the_results(res, name, description)
+
+    return returned_results
+
+
+def get_the_results(resource, name, description, es_index="key_values_resource_cach"):
+    returned_results = {}
+    query = key_values_buckets_template_2.substitute(resource=resource)
+    results_ = connect_elasticsearch(
+        es_index, query
+    )  # .search(index=es_index, body=query)
+    hits = results_["hits"]["hits"]
+
+    if len(hits) > 0:
+        # print (hits[0]["_source"])
+        if name and not description:
+            returned_results = [
+                item
+                for item in hits[0]["_source"]["resourcename"]
+                if item.get("name") and name.lower() in item.get("name").lower()
+            ]
+        elif name and description:
+            returned_results = [
+                item
+                for item in hits[0]["_source"]["resourcename"]
+                if (item.get("name") and name.lower() in item.get("name").lower())
+                or (
+                    item.get("description")
+                    and name.lower() in item.get("description").lower()
                 )
+            ]
+        else:
+            returned_results = [item for item in hits[0]["_source"]["resourcename"]]
+
+    # remove container description from the results,
+    # should be added again later after cleaning up the description
+
+    for item in returned_results:
+        del item["description"]
+
     return returned_results

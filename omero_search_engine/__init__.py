@@ -73,7 +73,7 @@ def create_app(config_name="development"):
     search_omero_app.app_context()
     search_omero_app.app_context().push()
     es_connector = Elasticsearch(
-        app_config.ELASTICSEARCH_URL,
+        app_config.ELASTICSEARCH_URL.split(","),
         timeout=130,
         max_retries=20,
         retry_on_timeout=True,
@@ -127,7 +127,6 @@ def after_request(response):
 # added to let the user know the proper extension they should use
 @search_omero_app.errorhandler(404)
 def page_not_found(error):
-
     search_omero_app.logger.info("Error: %s" % error)
     resp_message = (
         "%s, You may use '/searchengine/api/v1/resources/' to test\
