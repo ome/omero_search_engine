@@ -11,92 +11,91 @@ image_page_ext = "/resources/image/searchannotation_page/"
 base_url = "http://idr-testing.openmicroscopy.org/searchengine//api/v1/"
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
-'''
+"""
 **Query 1**
 Organism Part           Small intestine OR Duodenum
 Pathology               Adenocarcinoma (all) ==> contains (adenocarcinoma)
 Gene Symbol             PDX1
 
-'''
-query_1={
+"""
+query_1 = {
     "query_details": {
         "and_filters": [
             {
                 "name": "Gene Symbol",
                 "value": "PDX1",
                 "operator": "equals",
-                "resource": "image"
+                "resource": "image",
             },
             {
                 "name": "Pathology",
                 "value": "adenocarcinoma",
                 "operator": "contains",
-                "resource": "image"
-            }
-        ],
-        "or_filters": [[
-            {
-                "name": "Organism Part",
-                "value": "Duodenum",
-                "operator": "equals",
-                "resource": "image"
+                "resource": "image",
             },
-            {
-                "name": "Organism Part",
-                "value": "Small intestine",
-                "operator": "equals",
-                "resource": "image"
-            }
-
-        ]
-
         ],
-        "case_sensitive": False
+        "or_filters": [
+            [
+                {
+                    "name": "Organism Part",
+                    "value": "Duodenum",
+                    "operator": "equals",
+                    "resource": "image",
+                },
+                {
+                    "name": "Organism Part",
+                    "value": "Small intestine",
+                    "operator": "equals",
+                    "resource": "image",
+                },
+            ]
+        ],
+        "case_sensitive": False,
     }
 }
 
-'''
+"""
 **Query 2**
 Organism Part           Small intestine OR Duodenum
 Pathology               normal nos ==> normal tissue, nos
 Gene Symbol             PDX1
-'''
-query_2={
+"""
+query_2 = {
     "query_details": {
         "and_filters": [
             {
                 "name": "Gene Symbol",
                 "value": "PDX1",
                 "operator": "equals",
-                "resource": "image"
+                "resource": "image",
             },
             {
                 "name": "Pathology",
                 "value": "normal tissue, nos",
                 "operator": "equals",
-                "resource": "image"
-            }
-        ],
-        "or_filters": [[
-            {
-                "name": "Organism Part",
-                "value": "Duodenum",
-                "operator": "equals",
-                "resource": "image"
+                "resource": "image",
             },
-            {
-                "name": "Organism Part",
-                "value": "Small intestine",
-                "operator": "equals",
-                "resource": "image"
-            }
-
-        ]
-
         ],
-        "case_sensitive": False
+        "or_filters": [
+            [
+                {
+                    "name": "Organism Part",
+                    "value": "Duodenum",
+                    "operator": "equals",
+                    "resource": "image",
+                },
+                {
+                    "name": "Organism Part",
+                    "value": "Small intestine",
+                    "operator": "equals",
+                    "resource": "image",
+                },
+            ]
+        ],
+        "case_sensitive": False,
     }
 }
+
 
 def query_the_search_ending(query):
     received_results_data = []
@@ -179,8 +178,9 @@ def query_the_search_ending(query):
     logging.info("Total received results: %s" % len(received_results_data))
     return received_results_data
 
+
 logging.info("Sending the first query:")
-results_1 = query_the_search_ending(query_1 )
+results_1 = query_the_search_ending(query_1)
 logging.info("=========================")
 logging.info("Sending the second query:")
 results_2 = query_the_search_ending(query_2)

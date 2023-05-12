@@ -25,7 +25,6 @@ import logging
 
 
 def copy_tools_subfolder():
-
     """
     Copy the maintenance_scripts folder to the searchengine folder
     """
@@ -98,7 +97,6 @@ def analyse_log_file(file_name, resourses):
 
 def check_filters(conds, resourses):
     for cond in conds:
-
         if cond.get("resource") in resourses:
             names_values = resourses[cond.get("resource")]
         else:
