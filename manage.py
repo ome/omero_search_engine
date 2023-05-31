@@ -120,7 +120,12 @@ def sql_results_to_panda():
     "--resource",
     help="resource name, creating all the indexes for all the resources is the default",  # noqa
 )
-def get_index_data_from_database(resource="all"):
+@manager.option(
+    "-s",
+    "--source",
+    help="the data source, e.g. idr",  # noqa
+)
+def get_index_data_from_database(resource="all", source="idr"):
     """
     insert data in Elasticsearch index for each resource
     It gets the data from postgres database server
@@ -137,10 +142,10 @@ def get_index_data_from_database(resource="all"):
         sql_st = sqls_resources.get(resource)
         if not sql_st:
             return
-        get_insert_data_to_index(sql_st, resource)
+        get_insert_data_to_index(sql_st, resource, source)
     else:
         for res, sql_st in sqls_resources.items():
-            get_insert_data_to_index(sql_st, res)
+            get_insert_data_to_index(sql_st, res, source)
         save_key_value_buckets(
             resource_table_=None, re_create_index=True, only_values=False
         )
@@ -188,6 +193,15 @@ def set_database_configuration(
 def set_elasticsearch_configuration(elasticsearch_url=None):
     if elasticsearch_url:
         update_config_file({"ELASTICSEARCH_URL": elasticsearch_url})
+    else:
+        search_omero_app.logger.info("No attribute is provided")
+
+
+@manager.command
+@manager.option("-p", "--public_user", help="ome name for  public user")
+def set_public_user(public_user=None):
+    if public_user:
+        update_config_file({"PUBLIC_USER": public_user})
     else:
         search_omero_app.logger.info("No attribute is provided")
 
@@ -251,6 +265,18 @@ def set_max_page(page_size=None):
 def set_no_processes(no_processes=None):
     if no_processes and no_processes.isdigit():
         update_config_file({"NO_PROCESSES": int(no_processes)})
+    else:
+        search_omero_app.logger.info("No valid attribute is provided")
+
+
+# PUBLIC_ONLY
+@manager.command
+@manager.option("-p", "--public_obly", help="index public data only")
+def set_index_public_data_only(public_obly=None):
+    import json
+
+    if public_obly:
+        update_config_file({"PUBLIC_ONLY": json.loads(public_obly.lower())})
     else:
         search_omero_app.logger.info("No valid attribute is provided")
 
@@ -331,6 +357,15 @@ def restore_elasticsearch_data():
     # first delete the current indices
     delete_es_index("all")
     restore_indices_data()
+
+
+@manager.command
+def test_public_group():
+    from omero_search_engine.cache_functions.elasticsearch.transform_data import (
+        get_public_groups,
+    )
+
+    print(get_public_groups())
 
 
 if __name__ == "__main__":

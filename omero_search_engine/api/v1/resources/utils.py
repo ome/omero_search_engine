@@ -198,6 +198,7 @@ def elasticsearch_query_builder(
                         if (
                             attribute["name"].endswith("_id")
                             or attribute["name"] == "id"
+                            or attribute["name"] == "is_public"
                         ):
                             main_dd = (
                                 main_attribute_query_template_id.substitute(  # noqa
@@ -216,7 +217,11 @@ def elasticsearch_query_builder(
                             nested_must_not_part.append(main_dd)
                 else:
                     attribute = clause
-                    if attribute["name"].endswith("_id") or attribute["name"] == "id":
+                    if (
+                        attribute["name"].endswith("_id")
+                        or attribute["name"] == "id"
+                        or attribute["name"] == "is_public"
+                    ):
                         main_dd = main_attribute_query_template_id.substitute(
                             attribute=attribute["name"].strip(),
                             value=str(attribute["value"]).strip(),
@@ -245,6 +250,7 @@ def elasticsearch_query_builder(
                         if (
                             attribute["name"].endswith("_id")
                             or attribute["name"] == "id"
+                            or attribute["name"] == "is_public"
                         ):
                             main_dd = (
                                 main_attribute_query_template_id.substitute(  # noqa
@@ -265,7 +271,11 @@ def elasticsearch_query_builder(
                 else:
                     attribute = attributes
                     # search using id, e.g. project id
-                    if attribute["name"].endswith("_id") or attribute["name"] == "id":
+                    if (
+                        attribute["name"].endswith("_id")
+                        or attribute["name"] == "id"
+                        or attribute["name"] == "is_public"
+                    ):
                         main_dd = main_attribute_query_template_id.substitute(
                             attribute=attribute["name"].strip(),
                             value=str(attribute["value"]).strip(),
@@ -917,6 +927,7 @@ def search_resource_annotation(
     bookmark=None,
     pagination_dict=None,
     return_containers=False,
+    user_groups=None,
 ):
     """
     @table_: the resource table, e.g. image. project, etc.
@@ -932,9 +943,35 @@ def search_resource_annotation(
         query_details = query.get("query_details")
 
         start_time = time.time()
+        # Disable using raw elasticsearch query
+        # to ensure using public data in case of no
+        # permission system in place
+        raw_elasticsearch_query = None
         if not raw_elasticsearch_query:
             query_details = query.get("query_details")
             main_attributes = query.get("main_attributes")
+            ##################################################################
+            if not user_groups:
+                """
+                Add return public results only
+                user groups should be provided when
+                the access permission system in place
+                """
+                public_search_cond = {
+                    "name": "is_public",
+                    "value": 1,
+                    "operator": "equals",
+                }
+                if main_attributes:
+                    if main_attributes.get("and_main_attributes"):
+                        main_attributes.get("and_main_attributes").append(
+                            public_search_cond
+                        )
+                    else:
+                        main_attributes["and_main_attributes"] = [public_search_cond]
+                else:
+                    main_attributes = {"and_main_attributes": [public_search_cond]}
+            ##################################################################
             if not query_details and main_attributes and len(main_attributes) > 0:
                 pass
 

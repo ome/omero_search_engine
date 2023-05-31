@@ -26,6 +26,7 @@ from string import Template
 image_sql = Template(
     """
 select image.id, image.description, image.owner_id, image.experiment, image.group_id,
+experimentergroup.permissions,
 image.name as name, annotation_mapvalue.name as mapvalue_name,
 annotation_mapvalue.value as mapvalue_value,
 annotation_mapvalue.index as mapvalue_index,
@@ -47,12 +48,13 @@ left join well on wellsample.well= well.id
 left join plate on well.plate=plate.id
 left join screenplatelink on plate.id=screenplatelink.child
 left join screen on screen.id=screenplatelink.parent
+left join experimentergroup on image.group_id=experimentergroup.id
 $whereclause
 GROUP BY image.id, annotation_mapvalue.index,
 annotation_mapvalue.name, annotation_mapvalue.value,
 annotation_mapvalue.index, project.name, project.id,
 dataset.name, dataset.id, screen.id, screen.name,
-plate.id, plate.name, well.id,wellsample.id"""
+plate.id, plate.name, well.id,wellsample.id,experimentergroup.permissions"""
 )
 
 images_sql_to_csv = (
@@ -65,15 +67,17 @@ images_sql_to_csv = (
 plate_sql = Template(
     """
 select plate.id, plate.owner_id, plate.group_id,plate.description,
+experimentergroup.permissions,
 plate.name as name, annotation_mapvalue.name as mapvalue_name,
 annotation_mapvalue.value as mapvalue_value,
 annotation_mapvalue.index as mapvalue_index from plate
 left join plateannotationlink on plate.id=plateannotationlink.parent
 left join annotation_mapvalue on
 annotation_mapvalue.annotation_id=plateannotationlink.child
+left join experimentergroup on plate.group_id=experimentergroup.id
 $whereclause
 GROUP BY plate.id, annotation_mapvalue.index,
-annotation_mapvalue.name, annotation_mapvalue.value"""
+annotation_mapvalue.name, annotation_mapvalue.value,experimentergroup.permissions"""
 )
 
 plate_sql_to_csv = (
@@ -86,15 +90,17 @@ project_sql = Template(
     """
 select project.id, project.owner_id, project.group_id, project.description,
 project.name as name, annotation_mapvalue.name as mapvalue_name,
+experimentergroup.permissions,
 annotation_mapvalue.value as mapvalue_value,
 annotation_mapvalue.index as mapvalue_index
 from project
 left join projectannotationlink on project.id =projectannotationlink.parent
 left join annotation_mapvalue on
 annotation_mapvalue.annotation_id=projectannotationlink.child
+left join experimentergroup on experimentergroup.id=project.group_id
 $whereclause
 GROUP BY project.id, annotation_mapvalue.index,
-annotation_mapvalue.name, annotation_mapvalue.value"""
+annotation_mapvalue.name, annotation_mapvalue.value,experimentergroup.permissions"""
 )
 
 project_sql_to_csv = """
@@ -108,15 +114,17 @@ screen_sql = Template(
     """
 select screen.id, screen.owner_id, screen.group_id,
 screen.name as name,screen.description,
+experimentergroup.permissions,
 annotation_mapvalue.name as mapvalue_name,
 annotation_mapvalue.value as mapvalue_value,
 annotation_mapvalue.index as mapvalue_index from screen
 left join screenannotationlink on screen.id =screenannotationlink.parent
 left join annotation_mapvalue on
 annotation_mapvalue.annotation_id=screenannotationlink.child
+left join experimentergroup on experimentergroup.id=screen.group_id
 $whereclause
 GROUP BY screen.id, annotation_mapvalue.index,
-annotation_mapvalue.name, annotation_mapvalue.value"""
+annotation_mapvalue.name, annotation_mapvalue.value,experimentergroup.permissions"""
 )
 
 screen_sql_to_csv = """
@@ -130,14 +138,16 @@ well_sql = Template(
     """
 select well.id, well.owner_id, well.group_id,
 annotation_mapvalue.name as mapvalue_name,
+experimentergroup.permissions,
 annotation_mapvalue.value as mapvalue_value,
 annotation_mapvalue.index as mapvalue_index from well
 left join wellannotationlink on well.id =wellannotationlink.parent
 left join annotation_mapvalue on
 annotation_mapvalue.annotation_id=wellannotationlink.child
+left join experimentergroup on experimentergroup.id=well.group_id
 $whereclause
 GROUP BY well.id,  annotation_mapvalue.index,
-annotation_mapvalue.name, annotation_mapvalue.value"""
+annotation_mapvalue.name, annotation_mapvalue.value,experimentergroup.permissions"""
 )
 
 well_sql_to_csv = """
