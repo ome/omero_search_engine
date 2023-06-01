@@ -159,7 +159,6 @@ should_term_template = Template(
 
 query_template = Template("""{"query": {"bool": {$query}}}""")
 
-
 # This template is added to the query to return the count of an attribute
 count_attr_template = Template(
     """{"key_count": {"terms": {"field": "$field","size": 10000}}}
@@ -477,142 +476,163 @@ def elasticsearch_query_builder(
             for or_filter in or_filters_:
                 should_values = []
                 shoud_not_value = []
-                # should_names = []
+                main_should_values = []
+                main_shoud_not_value = []
                 try:
                     key = or_filter["name"].strip()
-                    value = or_filter["value"].strip()
+                    value = str(or_filter["value"]).strip()
                     operator = or_filter["operator"].strip()
-                except Exception:
-                    return build_error_message(
+
+                except Exception as e:
+                    e_message = build_error_message(
                         "Each Filter needs to have,\
-                        name, value and operator keywords."
+                        name, value and operator keywords. Error message: %s"
+                        % str(e)
+                    )
+                    search_omero_app.logger.info(e_message)
+
+                    return e_message
+                # searching using recourse id, e.g. project id
+                if key.endswith("_id") or key == "id":
+                    main_clause = main_attribute_query_template_id.substitute(  # noqa
+                        attribute=key.strip(),
+                        value=value.strip(),
                     )
 
-                if key not in added_keys:
-                    added_keys.append(key)
+                    if or_filter["operator"].strip() == "equals":
+                        main_should_values.append(main_clause)
+                    elif or_filter["operator"].strip() == "not_equals":
+                        main_shoud_not_value.append(main_clause)
+                else:
+                    if key not in added_keys:
+                        added_keys.append(key)
 
-                if operator == "equals":
-                    if case_sensitive:
-                        should_values.append(
-                            case_sensitive_must_value_condition_template.substitute(  # noqa
-                                value=value
-                            )
-                        )
-                        should_values.append(
-                            case_sensitive_must_name_condition_template.substitute(
-                                name=key
-                            )
-                        )
-                    else:
-                        should_values.append(
-                            case_insensitive_must_value_condition_template.substitute(  # noqa
-                                value=value
-                            )
-                        )
-                        should_values.append(
-                            case_insensitive_must_name_condition_template.substitute(
-                                name=key
-                            )
-                        )
-                elif operator == "contains":
-                    value = "*{value}*".format(value=value)
-                    if case_sensitive:
-                        should_values.append(
-                            case_sensitive_wildcard_value_condition_template.substitute(  # noqa
-                                wild_card_value=value
-                            )
-                        )
-                        should_values.append(
-                            case_sensitive_must_name_condition_template.substitute(
-                                name=key
-                            )
-                        )
-                    else:
-                        should_values.append(
-                            case_insensitive_wildcard_value_condition_template.substitute(  # noqa
-                                wild_card_value=value
-                            )
-                        )
-                        should_values.append(
-                            case_insensitive_must_name_condition_template.substitute(
-                                name=key
-                            )
-                        )
-                elif operator in ["not_equals", "not_contains"]:
-                    if operator == "not_contains":
-                        value = "*{value}*".format(value=value)
+                    if operator == "equals":
                         if case_sensitive:
-                            shoud_not_value.append(
-                                case_sensitive_wildcard_value_condition_template.substitute(  # noqa
-                                    wild_card_value=value
-                                )
-                            )
-                            shoud_not_value.append(
-                                case_sensitive_must_name_condition_template.substitute(
-                                    name=key
-                                )
-                            )
-                        else:
-                            shoud_not_value.append(
-                                case_insensitive_wildcard_value_condition_template.substitute(  # noqa
-                                    wild_card_value=value
-                                )
-                            )
-                            shoud_not_value.append(
-                                case_insensitive_must_name_condition_template.substitute(  # noqa
-                                    name=key
-                                )
-                            )
-                    else:
-                        if case_sensitive:
-                            shoud_not_value.append(
+                            should_values.append(
                                 case_sensitive_must_value_condition_template.substitute(  # noqa
                                     value=value
                                 )
                             )
-                            shoud_not_value.append(
+                            should_values.append(
                                 case_sensitive_must_name_condition_template.substitute(
                                     name=key
                                 )
                             )
                         else:
-                            shoud_not_value.append(
+                            should_values.append(
                                 case_insensitive_must_value_condition_template.substitute(  # noqa
                                     value=value
                                 )
                             )
-                            shoud_not_value.append(
+                            should_values.append(
                                 case_insensitive_must_name_condition_template.substitute(  # noqa
                                     name=key
                                 )
                             )
-                elif operator in ["lt", "lte", "gt", "gte"]:
-                    if case_sensitive:
+                    elif operator == "contains":
+                        value = "*{value}*".format(value=value)
+                        if case_sensitive:
+                            should_values.append(
+                                case_sensitive_wildcard_value_condition_template.substitute(  # noqa
+                                    wild_card_value=value
+                                )
+                            )
+                            should_values.append(
+                                case_sensitive_must_name_condition_template.substitute(
+                                    name=key
+                                )
+                            )
+                        else:
+                            should_values.append(
+                                case_insensitive_wildcard_value_condition_template.substitute(  # noqa
+                                    wild_card_value=value
+                                )
+                            )
+                            should_values.append(
+                                case_insensitive_must_name_condition_template.substitute(  # noqa
+                                    name=key
+                                )
+                            )
+                    elif operator in ["not_equals", "not_contains"]:
+                        if operator == "not_contains":
+                            value = "*{value}*".format(value=value)
+                            if case_sensitive:
+                                shoud_not_value.append(
+                                    case_sensitive_wildcard_value_condition_template.substitute(  # noqa
+                                        wild_card_value=value
+                                    )
+                                )
+                                shoud_not_value.append(
+                                    case_sensitive_must_name_condition_template.substitute(  # noqa
+                                        name=key
+                                    )
+                                )
+                            else:
+                                shoud_not_value.append(
+                                    case_insensitive_wildcard_value_condition_template.substitute(  # noqa
+                                        wild_card_value=value
+                                    )
+                                )
+                                shoud_not_value.append(
+                                    case_insensitive_must_name_condition_template.substitute(  # noqa
+                                        name=key
+                                    )
+                                )
+                        else:
+                            if case_sensitive:
+                                shoud_not_value.append(
+                                    case_sensitive_must_value_condition_template.substitute(  # noqa
+                                        value=value
+                                    )
+                                )
+                                shoud_not_value.append(
+                                    case_sensitive_must_name_condition_template.substitute(  # noqa
+                                        name=key
+                                    )
+                                )
+                            else:
+                                shoud_not_value.append(
+                                    case_insensitive_must_value_condition_template.substitute(  # noqa
+                                        value=value
+                                    )
+                                )
+                                shoud_not_value.append(
+                                    case_insensitive_must_name_condition_template.substitute(  # noqa
+                                        name=key
+                                    )
+                                )
+                    elif operator in ["lt", "lte", "gt", "gte"]:
+                        if case_sensitive:
+                            should_values.append(
+                                case_sensitive_range_value_condition_template.substitute(  # noqa
+                                    operator=operator, value=value
+                                )
+                            )
+                            should_values.append(
+                                case_sensitive_must_name_condition_template.substitute(
+                                    name=key
+                                )
+                            )
+                    else:
                         should_values.append(
-                            case_sensitive_range_value_condition_template.substitute(  # noqa
+                            case_insensitive_range_value_condition_template.substitute(  # noqa
                                 operator=operator, value=value
                             )
                         )
                         should_values.append(
-                            case_sensitive_must_name_condition_template.substitute(
+                            case_insensitive_must_name_condition_template.substitute(
                                 name=key
                             )
                         )
-                else:
-                    should_values.append(
-                        case_insensitive_range_value_condition_template.substitute(  # noqa
-                            operator=operator, value=value
-                        )
-                    )
-                    should_values.append(
-                        case_insensitive_must_name_condition_template.substitute(
-                            name=key
-                        )
-                    )
-                    # must_value_condition
-                ss = ",".join(should_values)
-                ff = nested_keyvalue_pair_query_template.substitute(nested=ss)
-                should_part_list_or.append(ff)
+                        # must_value_condition
+                if len(main_should_values) > 0:
+                    ss_ = ",".join(main_should_values)
+                    should_part_list_or.append(ss_)
+                if len(should_values) > 0:
+                    ss = ",".join(should_values)
+                    ff = nested_keyvalue_pair_query_template.substitute(nested=ss)
+                    should_part_list_or.append(ff)
                 if len(shoud_not_value) > 0:
                     ss = ",".join(shoud_not_value)
                     ff = nested_query_template_must_not.substitute(must_not_value=ss)
@@ -1072,17 +1092,23 @@ def adjust_query_for_container(query):
         if or_filters:
             for filter in or_filters:
                 if isinstance(filter, list):
+                    del_list = []
+                    new_or = []
                     for filter_ in filter:
                         if filter_.get("resource") == "container":
-                            new_or_filters.append(get_filter_list(filter_))
-                            to_delete_or_filter.append(filter_)
+                            new_or += get_filter_list(filter_)
+                            del_list.append(filter_)
+                    for ff in del_list:
+                        filter.remove(ff)
+                    filter += new_or
                 else:
                     if filter.get("resource") == "container":
-                        new_or_filters.append(get_filter_list(filter))
-                        to_delete_or_filter.append(filter)
+                        filter = get_filter_list(filter)
+                        # to_delete_or_filter.append(filter)
         else:
             or_filters = []
             query_details["or_filters"] = or_filters
+
         for filter in to_delete_or_filter:
             if filter in or_filters:
                 or_filters.remove(filter)
