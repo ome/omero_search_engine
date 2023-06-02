@@ -493,7 +493,7 @@ def elasticsearch_query_builder(
 
                     return e_message
                 # searching using recourse id, e.g. project id
-                if key.endswith("_id") or key == "id":
+                if key and key.endswith("_id") or key == "id":
                     main_clause = main_attribute_query_template_id.substitute(  # noqa
                         attribute=key.strip(),
                         value=value.strip(),
