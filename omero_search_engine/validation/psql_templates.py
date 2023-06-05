@@ -178,3 +178,38 @@ inner join screen on screen.id=screenplatelink.parent
 where lower(annotation_mapvalue.name)=lower('$key')
 and  lower(annotation_mapvalue.value) =lower('$value')"""
 )
+
+project_key_values = Template(
+    """
+Select DISTINCT (annotation_mapvalue.value)  from image
+left join imageannotationlink on image.id =imageannotationlink.parent
+left join annotation_mapvalue on
+annotation_mapvalue.annotation_id=imageannotationlink.child
+inner join datasetimagelink on datasetimagelink.child=image.id
+inner join dataset on datasetimagelink.parent=dataset.id
+inner join projectdatasetlink on dataset.id=projectdatasetlink.child
+inner join project on project.id=projectdatasetlink.parent
+where project.id= $id and lower (annotation_mapvalue.name) =lower('$name');
+"""
+)
+
+screen_key_values = Template(
+    """
+Select DISTINCT (annotation_mapvalue.value)  from image
+left join imageannotationlink on image.id =imageannotationlink.parent
+left join annotation_mapvalue on
+annotation_mapvalue.annotation_id=imageannotationlink.child
+inner join wellsample on wellsample.image=image.id
+inner join well on wellsample.well= well.id
+inner join plate on well.plate=plate.id
+inner join screenplatelink on plate.id=screenplatelink.child
+inner join screen on screen.id=screenplatelink.parent
+where screen.id =$id and lower (annotation_mapvalue.name) =lower('$name');
+   """
+)
+
+container_from_name = Template(
+    """
+select id from $container where name like '%$name%';
+"""
+)
