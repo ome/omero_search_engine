@@ -1101,7 +1101,6 @@ def check_container_keys_vakues():
                         )
             if len(project_ids_results) > 0:
                 for id in project_ids_results:
-
                     project_sql = project_key_values.substitute(
                         id=id.get("id"), name=key
                     )
