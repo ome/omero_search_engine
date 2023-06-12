@@ -1,7 +1,7 @@
 0.5.2 (June 2023):
 ------------------
 - Return all the available values for a key in a container [#77](https://github.com/ome/omero_search_engine/pull/77)
-- Return the available attributes with a container 
+- Return the available attributes with a container [#77](https://github.com/ome/omero_search_engine/pull/77)
 
 0.5.1 (February 2023):
 ----------------------
