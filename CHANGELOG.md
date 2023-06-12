@@ -1,3 +1,8 @@
+0.5.2 (June 2023):
+------------------
+- Return all the available values for a key in a container [#77](https://github.com/ome/omero_search_engine/pull/77)
+- Return the available attributes with a container 
+
 0.5.1 (February 2023):
 ----------------------
 - Fix the issue of filtering images by the container name [#81](https://github.com/ome/omero_search_engine/pull/81)
