@@ -20,6 +20,7 @@
 import yaml
 from shutil import copyfile
 import os
+import json
 
 
 def load_configuration_variables_from_file(config):
@@ -29,6 +30,18 @@ def load_configuration_variables_from_file(config):
         cofg = yaml.load(f)
     for x, y in cofg.items():
         setattr(config, x, y)
+    if hasattr(config, "verify_certs"):
+        try:
+            verify_certs = json.load(config.verify_certs)
+        except:
+            verify_certs = False
+    else:
+        verify_certs=False
+    config.verify_certs=verify_certs
+    if not verify_certs:
+        import requests
+        from requests.packages.urllib3.exceptions import InsecureRequestWarning
+        requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 
 def set_database_connection_variables(config):
