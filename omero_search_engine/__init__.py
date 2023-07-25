@@ -22,7 +22,7 @@ import os
 import logging
 from elasticsearch import Elasticsearch
 from flasgger import Swagger, LazyString, LazyJSONEncoder
-
+import json
 from omero_search_engine.database.database_connector import DatabaseConnector
 from configurations.configuration import (
     configLooader,
@@ -54,11 +54,9 @@ search_omero_app.config["SWAGGER"] = {
     "version": "0.2.0",
 }
 
-
 swagger = Swagger(search_omero_app, template=template)
 
 app_config = load_configuration_variables_from_file(config_)
-
 
 def create_app(config_name="development"):
     app_config = configLooader.get(config_name)
@@ -72,12 +70,17 @@ def create_app(config_name="development"):
     search_omero_app.app_context().push()
     search_omero_app.app_context()
     search_omero_app.app_context().push()
+    ELASTIC_PASSWORD = app_config.ELASTIC_PASSWORD
+
     es_connector = Elasticsearch(
         app_config.ELASTICSEARCH_URL.split(","),
+        verify_certs=app_config.verify_certs,
         timeout=130,
         max_retries=20,
         retry_on_timeout=True,
         connections_per_node=10,
+        scheme="https",
+        http_auth=("elastic", ELASTIC_PASSWORD),
     )
 
     search_omero_app.config["database_connector"] = database_connector
@@ -103,7 +106,6 @@ def create_app(config_name="development"):
     search_omero_app.logger.info("app assistant startup")
     return search_omero_app
 
-
 create_app()
 
 from omero_search_engine.api.v1.resources import (  # noqa
@@ -113,7 +115,6 @@ from omero_search_engine.api.v1.resources import (  # noqa
 search_omero_app.register_blueprint(
     resources_routers_blueprint_v1, url_prefix="/api/v1/resources"
 )
-
 
 # add it to account for CORS
 @search_omero_app.after_request
