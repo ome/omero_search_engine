@@ -191,6 +191,7 @@ def set_elasticsearch_configuration(elasticsearch_url=None):
     else:
         search_omero_app.logger.info("No attribute is provided")
 
+
 @manager.command
 @manager.option("-e", "--elasticsearch_password", help="set elasticsearch password")
 def set_elasticsearch_password(elasticsearch_password=None):
@@ -198,6 +199,7 @@ def set_elasticsearch_password(elasticsearch_password=None):
         update_config_file({"ELASTIC_PASSWORD": elasticsearch_password})
     else:
         search_omero_app.logger.info("No attribute is provided")
+
 
 @manager.command
 @manager.option("-v", "--verify_certs", help="set elasticsearch password")
