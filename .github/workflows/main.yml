@@ -27,7 +27,11 @@ jobs:
         image: elasticsearch:8.8.1
         ports:
           - 9200/tcp
-        options: -e="discovery.type=single-node" --es_api_basic_auth_username="elastic"  --ELASTIC_PASSWORD="elasticsearch_user_password" --health-cmd="curl -k -u elastic:elasticsearch_user_password  https://localhost:9200/_cluster/health" --health-interval=10s --health-timeout=5s --health-retries=10
+        env:
+          es_api_basic_auth_username: "elastic"
+          ELASTIC_PASSWORD: "elasticsearch_user_password"
+
+        options: -e="discovery.type=single-node" --health-cmd="curl -k -u elastic:elasticsearch_user_password  https://localhost:9200/_cluster/health" --health-interval=10s --health-timeout=5s --health-retries=10
 
     steps:
       - uses: actions/checkout@v2
