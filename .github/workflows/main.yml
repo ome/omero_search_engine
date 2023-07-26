@@ -24,10 +24,10 @@ jobs:
           --health-retries 5
 
       elasticsearch:
-        image: elasticsearch:7.16.2
+        image: elasticsearch:8.8.1
         ports:
           - 9200/tcp
-        options: -e="discovery.type=single-node" --health-cmd="curl http://localhost:9200/_cluster/health" --health-interval=10s --health-timeout=5s --health-retries=10
+        options: -e="discovery.type=single-node"  -e="ELASTIC_PASSWORD=elasticsearch_user_password" --health-cmd="curl http://localhost:9200/_cluster/health" --health-interval=10s --health-timeout=5s --health-retries=10
 
     steps:
       - uses: actions/checkout@v2
@@ -84,5 +84,3 @@ jobs:
           file: deployment/docker/centos/Dockerfile
           push: true
           tags: ${{ join(fromJson(steps.gettags.outputs.tags)) }}
-
-
