@@ -36,11 +36,12 @@ def load_configuration_variables_from_file(config):
         except:
             verify_certs = False
     else:
-        verify_certs=False
-    config.verify_certs=verify_certs
+        verify_certs = False
+    config.verify_certs = verify_certs
     if not verify_certs:
         import requests
         from requests.packages.urllib3.exceptions import InsecureRequestWarning
+
         requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 
