@@ -14,5 +14,5 @@ elif [ -z  "$@" ] || [ "$@" = "run_app" ]; then
   bash start_gunicorn_serch_engine.sh
 else
   echo "$@"
-  python3.9 manage.py "$@"
+  python3 manage.py "$@"
 fi

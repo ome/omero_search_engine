@@ -9,10 +9,10 @@ RUN dnf install wget -y
 RUN dnf groupinstall "Development Tools" -y
 RUN  dnf install openssl-devel -y
 RUN dnf install libffi-devel -y
-RUN wget https://www.python.org/ftp/python/3.9.0/Python-3.9.0.tgz
-RUN tar xvf Python-3.9.0.tgz
-RUN cd Python-3.9.0 && ./configure --enable-optimizations &&  make altinstall
-RUN yum clean all && rm -rf /var/cache/yum
+RUN  dnf install libpq-devel -y
+RUN dnf install python3-pip -y
+RUN dnf install -y   python3-devel.x86_64
+RUN dnf clean all && rm -rf /var/cache/yum
 RUN mkdir /searchengine
 ADD  deployment/docker/rockylinux/start_gunicorn_serch_engine.sh /searchengine
 ADD  deployment/docker/rockylinux/run_app.sh /searchengine
@@ -22,7 +22,7 @@ RUN mkdir /etc/searchengine
 RUN mkdir /etc/searchengine/chachedata
 RUN mkdir /etc/searchengine/logs
 WORKDIR /searchengine
-RUN pip3.9 install -r  requirements.txt
-RUN pip3.9 install gunicorn
+RUN pip3 install -r  requirements.txt
+RUN pip3 install gunicorn
 EXPOSE 5577
 ENTRYPOINT ["bash", "run_app.sh"]
