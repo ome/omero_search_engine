@@ -3,12 +3,7 @@
 FROM rockylinux/rockylinux:9.0
 USER root
 RUN dnf update -y
-RUN dnf install epel-release -y
-RUN dnf install  bzip2-devel -y
-RUN dnf install wget -y
 RUN dnf groupinstall "Development Tools" -y
-RUN  dnf install openssl-devel -y
-RUN dnf install libffi-devel -y
 RUN  dnf install libpq-devel -y
 RUN dnf install python3-pip -y
 RUN dnf install -y   python3-devel.x86_64
