@@ -85,6 +85,6 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
-          file: deployment/docker/centos/Dockerfile
+          file: deployment/docker/rockylinux/Dockerfile
           push: true
           tags: ${{ join(fromJson(steps.gettags.outputs.tags)) }}
