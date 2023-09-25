@@ -14,10 +14,12 @@ The application should have the access attributes (e.g, URL, username, password,
       * ``DATABASE_NAME``
       * ``ELASTICSEARCH__URL``
       * ``PAGE_SIZE``
+      * ``ELASTIC_PASSWORD``
     * Although the user can edit this file to set the values, there are some methods inside :omero_search_engine:`manage.py <manage.py>` which could help to set the configuration e.g.
 
       * ``set_database_configuration``
       * ``set_elasticsearch_configuration``
+      * ``set_elasticsearch_password``
 
 * When the app runs for the first time, it will look for the application configuration file.
 
