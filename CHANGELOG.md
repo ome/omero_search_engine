@@ -1,6 +1,7 @@
 0.5.3 (September 2023):
 -----------------------
-- Secure the connection with the elsticsearch [#92](https://github.com/ome/omero_search_engine/pull/92)
+- Secure the connection with elasticsearch [#92](https://github.com/ome/omero_search_engine/pull/92)
+
 
 0.5.2 (June 2023):
 ------------------
