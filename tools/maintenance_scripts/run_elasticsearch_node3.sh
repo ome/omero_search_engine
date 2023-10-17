@@ -1,26 +1,29 @@
 #!/bin/bash
 source vars.txt
 
-sudo docker run  -d --rm  -v /searchengine_backup:/searchengine_backup \
+sudo docker run  -d --rm \
+  -v /searchengine_backup:/searchengine_backup \
   -v  /data/searchengine/elasticsearch/node3/data:/var/lib/elasticsearch \
   -v  /data/searchengine/elasticsearch/node3/logs:/var/log/elasticsearch \
-   -v $elast_certs_folder:/usr/share/elasticsearch/config/certificates \
-  -p  9203:9200 -p 9303:9300 \
+  -v $elast_certs_folder:/usr/share/elasticsearch/config/certificates \
+  -p  9203:9200 \
+  -p 9303:9300 \
   --network searchengine-net \
-  --ip 10.11.0.2  \
+  --ip 10.11.0.4 \
   -e "path.data=/var/lib/elasticsearch" \
   -e "path.logs=/var/log/elasticsearch" \
   -e "path.repo=/searchengine_backup" \
   -e "ingest.geoip.downloader.enabled=false" \
-  -e  "network.host=0.0.0.0" \
-  -e  "cluster.name=searchengine-cluster" \
+  -e "network.host=0.0.0.0" \
+  -e "cluster.name=searchengine-cluster" \
   -e "discovery.seed_hosts=searchengine_elasticsearch_node1" \
-  -e "http.host=0.0.0.0" -e "ES_JAVA_OPTS=-Xms2g -Xmx2g" \
+  -e "http.host=0.0.0.0" \
+  -e "ES_JAVA_OPTS=-Xms2g -Xmx2g" \
   -e "node.name=searchengine_elasticsearch_node3" \
-  -e "bootstrap.memory_lock=true" \
-  -e "discovery.seed_hosts=searchengine_elasticsearch_node1"
-  -e "cluster.initial_master_nodes=earchengine_elasticsearch_node1,searchengine_elasticsearch_node2,searchengine_elasticsearch_node3"
-  -e  "es_api_basic_auth_username=elastic" \
+  -e "bootstrap.memory_lock=true"  \
+  -e "discovery.seed_hosts=searchengine_elasticsearch_node1" \
+  -e "cluster.initial_master_nodes=earchengine_elasticsearch_node1,searchengine_elasticsearch_node2,searchengine_elasticsearch_node3" \
+  -e "es_api_basic_auth_username=elastic" \
   -e "ELASTIC_PASSWORD=$elastic_password" \
   -e "es_validate_certs=no" \
   -e "es_enable_http_ssl=true" \
@@ -39,5 +42,4 @@ sudo docker run  -d --rm  -v /searchengine_backup:/searchengine_backup \
   -e  "xpack.security.transport.ssl.truststore.password=$keystore_password" \
   --ulimit memlock=-1:-1 \
   --name searchengine_elasticsearch_node3 \
-  --ip 10.11.0.2 \
   $ELASTICSEARCH_IMAGE
