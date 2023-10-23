@@ -18,10 +18,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from . import stats
-from flask import request, jsonify, make_response
-import json
 from tools.utils.logs_analyser import get_search_terms
-from flask import jsonify, Response
+from flask import Response
+
 
 @stats.route("/", methods=["GET"])
 def index():
@@ -31,15 +30,15 @@ def index():
 @stats.route("/<resource>/search_terms", methods=["GET"])
 def search_terms(resource):
     from omero_search_engine import search_omero_app
-    logs_folder=search_omero_app.config.get("SEARCHENGINE_LOGS_FOLDER")
-    content=get_search_terms(logs_folder,resource=resource,return_file_content=True)
+
+    logs_folder = search_omero_app.config.get("SEARCHENGINE_LOGS_FOLDER")
+    content = get_search_terms(logs_folder, resource=resource, return_file_content=True)
 
     return Response(
         content,
         mimetype="text/csv",
         headers={
-            "Content-disposition": "attachment; filename=%s_stats.csv"
-                                   % (resource)
+            "Content-disposition": "attachment; filename=%s_stats.csv" % (resource)
         },
     )
 
