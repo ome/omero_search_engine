@@ -365,8 +365,8 @@ def test_container_key_value():
     "--logs_folder",
     help="Folder contains the log files",  # noqa
 )
-def get_search_terms_from_log(logs_folder=None):
-    from tools.utils__.logs_analyser import get_search_terms
+def get_search_terms_froget_all_indexes_from_elasticsearchm_log(logs_folder=None):
+    from tools.utils.logs_analyser import get_search_terms
 
     get_search_terms(logs_folder)
 

@@ -105,7 +105,7 @@ def create_app(config_name="development"):
     search_omero_app.logger.setLevel(logging.INFO)
     search_omero_app.logger.info("app assistant startup")
     # Copy the script folder to the user machine.
-    from tools.utils import copy_tools_subfolder
+    from tools.utils.util import copy_tools_subfolder
 
     copy_tools_subfolder()
     return search_omero_app
@@ -119,6 +119,14 @@ from omero_search_engine.api.v1.resources import (  # noqa
 
 search_omero_app.register_blueprint(
     resources_routers_blueprint_v1, url_prefix="/api/v1/resources"
+)
+
+from omero_search_engine.api.stats import (  # noqa
+    stats as resources_routers_blueprint_stats,
+)
+
+search_omero_app.register_blueprint(
+    resources_routers_blueprint_stats, url_prefix="/api/stats/"
 )
 
 
