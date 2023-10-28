@@ -19,7 +19,9 @@
 
 from . import stats
 from tools.utils.logs_analyser import get_search_terms
-from flask import Response
+from flask import Response, send_file
+from omero_search_engine import search_omero_app
+import os
 
 
 @stats.route("/", methods=["GET"])
@@ -29,11 +31,8 @@ def index():
 
 @stats.route("/<resource>/search_terms", methods=["GET"])
 def search_terms(resource):
-    from omero_search_engine import search_omero_app
-
     logs_folder = search_omero_app.config.get("SEARCHENGINE_LOGS_FOLDER")
     content = get_search_terms(logs_folder, resource=resource, return_file_content=True)
-
     return Response(
         content,
         mimetype="text/csv",
@@ -41,5 +40,16 @@ def search_terms(resource):
             "Content-disposition": "attachment; filename=%s_stats.csv" % (resource)
         },
     )
-
     return "OMERO search engine (search_terms API)"
+
+
+@stats.route("/metadata", methods=["GET"])
+def get_metadata():
+    base_folder = "/etc/searchengine/"
+    if not os.path.isdir(base_folder):
+        base_folder = os.path.expanduser("~")
+    metadata = os.path.join(base_folder, "metadata.csv")
+    if os.path.isfile(metadata):
+        return send_file(metadata, as_attachment=True)
+    else:
+        return "No metadata is avilable"

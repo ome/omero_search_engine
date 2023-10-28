@@ -635,7 +635,7 @@ def get_omero_stats():
     base_folder = "/etc/searchengine/"
     if not os.path.isdir(base_folder):
         base_folder = os.path.expanduser("~")
-    stats_file = os.path.join(base_folder, "stats.csv")
+    metadata_file = os.path.join(base_folder, "metadata.csv")
 
     from omero_search_engine.api.v1.resources.resource_analyser import (
         get_restircted_search_terms,
@@ -677,7 +677,7 @@ def get_omero_stats():
                     print("Value is empty string", dat["Key"])
     report = "\n".join(data)
 
-    with open(stats_file, "w") as f:
+    with open(metadata_file, "w") as f:
         f.write(report)
 
 
