@@ -630,8 +630,8 @@ def test_no_images():
     """
 
 
-def get_omero_stats():
-    values = ["Attribute", "No. buckets", "Total number", "Resource"]
+def get_omero_stats(return_contents=False):
+    values = ["Resource", "Attribute", "No. buckets", "Total number"]
     base_folder = "/etc/searchengine/"
     if not os.path.isdir(base_folder):
         base_folder = os.path.expanduser("~")
@@ -644,7 +644,6 @@ def get_omero_stats():
 
     data = []
     terms = get_restircted_search_terms()
-    data.append(",".join(values))
     for resource, names in terms.items():
         for name in names:
             if name == "name":
@@ -652,33 +651,36 @@ def get_omero_stats():
             returned_results = query_cashed_bucket(name, resource)
             if resource == "image":
                 data.append(
-                    "%s, %s, %s,%s"
-                    % (
+                    [
+                        resource,
                         name,
                         returned_results.get("total_number_of_buckets"),
                         returned_results.get("total_number_of_image"),
-                        resource,
-                    )
+                    ]
                 )
             else:
                 kk = "total_number_of_%s" % resource
                 data.append(
-                    "%s, %s, %s,%s"
-                    % (
+                    [
+                        resource,
                         name,
                         returned_results.get("total_number_of_buckets"),
                         returned_results.get(kk),
-                        resource,
-                    )
+                    ]
                 )
 
             for dat in returned_results.get("data"):
                 if not dat["Value"]:
                     print("Value is empty string", dat["Key"])
-    report = "\n".join(data)
+    import pandas as pd
 
+    df = pd.DataFrame(data, columns=values)
+    df2 = df.sort_values(by=["Resource", "No. buckets"], ascending=[True, False])
+    report = df2.to_csv()
     with open(metadata_file, "w") as f:
         f.write(report)
+    if return_contents:
+        return report
 
 
 def get_no_images_sql_containers():

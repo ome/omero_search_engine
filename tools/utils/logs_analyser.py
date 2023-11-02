@@ -13,7 +13,7 @@ it analyses the file and produces reports
 
 
 def get_search_terms(folder_name, resource=None, return_file_content=False):
-    logging.info("checking files inisde: %s" % folder_name)
+    logging.info("checking files inside: %s" % folder_name)
     resourses = {}
     for root, dirs, files in os.walk(folder_name):
         logging.info("0....%s,%s,%s" % (root, dirs, files))
@@ -60,7 +60,7 @@ def analyse_log_file(file_name, resourses):
             filters.append(json.loads(ss, strict=False))
             suc = suc + 1
         except Exception as e:
-            print(str(e))
+            logging.info(str(e))
             failes = failes + 1
 
     for filter in filters:
@@ -86,22 +86,27 @@ def check_filters(conds, resourses):
 
 def write_reports(resourses, resource, return_file_content, file_name):
     for res, itms in resourses.items():
-        lines = ["key,total hits,unique hits"]
+        columns = ["key", "total hits", "unique hits"]
+        lines = []
         for name, values in itms.items():
             line = [name]
+            lines.append(line)
             vv = []
             for val in values:
                 if val not in vv:
                     vv.append(val)
-            line.insert(1, str(len(values)))
-            line.insert(2, str(len(vv)))
-            lines.append(",".join(line))
-        contents = "\n".join(lines)
+            line.insert(1, len(values))
+            line.insert(2, len(vv))
+        import pandas as pd
+
+        df = pd.DataFrame(lines, columns=columns)
+        df2 = df.sort_values(by=["total hits", "unique hits"], ascending=[False, False])
+        contents = df2.to_csv()
         if return_file_content:
             if res == resource:
-                print("================================")
-                print(resource, return_file_content)
-                print("================================")
+                logging.info("================================")
+                logging.info("%s, %s" % (resource, return_file_content))
+                logging.info("================================")
                 return contents
         else:
             f = open(file_name.replace(".csv", "_%s.csv" % res), "w")
