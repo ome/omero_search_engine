@@ -2,6 +2,7 @@ import json
 import os
 import sys
 import logging
+import pandas as pd
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
@@ -12,7 +13,7 @@ it analyses the file and produces reports
 """
 
 
-def get_search_terms(folder_name, resource=None, return_file_content=False):
+def get_search_terms(folder_name, return_file_content=False):
     logging.info("checking files inside: %s" % folder_name)
     resourses = {}
     for root, dirs, files in os.walk(folder_name):
@@ -26,7 +27,6 @@ def get_search_terms(folder_name, resource=None, return_file_content=False):
     logging.info("Write the reports")
     contents = write_reports(
         resourses,
-        resource,
         return_file_content,
         os.path.join(folder_name, "report.csv"),
     )
@@ -84,11 +84,15 @@ def check_filters(conds, resourses):
             names_values[name] = [value]
 
 
-def write_reports(resourses, resource, return_file_content, file_name):
-    for res, itms in resourses.items():
-        columns = ["key", "total hits", "unique hits"]
+def write_reports(resourses, return_file_content, file_name):
+    columns = ["key", "total hits", "unique hits"]
+    import io
+
+    out_io = io.BytesIO()
+    writer = pd.ExcelWriter(out_io, engine="xlsxwriter")
+    for res, terms in resourses.items():
         lines = []
-        for name, values in itms.items():
+        for name, values in terms.items():
             line = [name]
             lines.append(line)
             vv = []
@@ -97,18 +101,25 @@ def write_reports(resourses, resource, return_file_content, file_name):
                     vv.append(val)
             line.insert(1, len(values))
             line.insert(2, len(vv))
-        import pandas as pd
 
         df = pd.DataFrame(lines, columns=columns)
         df2 = df.sort_values(by=["total hits", "unique hits"], ascending=[False, False])
-        contents = df2.to_csv()
-        if return_file_content:
-            if res == resource:
-                logging.info("================================")
-                logging.info("%s, %s" % (resource, return_file_content))
-                logging.info("================================")
-                return contents
-        else:
-            f = open(file_name.replace(".csv", "_%s.csv" % res), "w")
-            f.write(contents)
-            f.close()
+        df2.to_excel(writer, index=False, sheet_name=res)
+        adjust_colunms_width(writer.sheets[res], columns, df2)
+
+    writer.save()
+    writer.close()
+    if return_file_content:
+        return out_io
+    with open(file_name, "wb") as out:
+        out.write(out_io.getvalue())
+
+
+def adjust_colunms_width(worksheet, columns, df2):
+    for idx, col in enumerate(df2.columns):
+        series = df2[col]
+        max_width = len(columns[idx])
+        max_width_ = [len(str(s)) for s in series if len(str(s)) > max_width]
+        if len(max_width_) > 0:
+            max_width = max(max_width_)
+        worksheet.set_column(idx, idx, max_width + 1)

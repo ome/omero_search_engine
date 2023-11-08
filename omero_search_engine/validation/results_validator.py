@@ -35,6 +35,7 @@ from omero_search_engine.validation.psql_templates import (
     projects_count,
 )
 import os
+import pandas as pd
 
 query_methods = {
     "image": query_images_key_value,
@@ -630,31 +631,39 @@ def test_no_images():
     """
 
 
-def get_omero_stats(return_contents=False):
-    values = ["Resource", "Attribute", "No. buckets", "Total number"]
+def get_omero_stats(base_url=None):
+    values = ["Resource", "Attribute", "No. buckets", "Buckets' URL", "Total number"]
     base_folder = "/etc/searchengine/"
     if not os.path.isdir(base_folder):
         base_folder = os.path.expanduser("~")
-    metadata_file = os.path.join(base_folder, "metadata.csv")
+    metadata_file = os.path.join(base_folder, "metadata.xlsx")
 
     from omero_search_engine.api.v1.resources.resource_analyser import (
         get_restircted_search_terms,
         query_cashed_bucket,
     )
 
-    data = []
+    all_data = {}
     terms = get_restircted_search_terms()
     for resource, names in terms.items():
+        data = []
+        all_data[resource] = data
         for name in names:
             if name == "name":
                 continue
             returned_results = query_cashed_bucket(name, resource)
+            if base_url:
+                url_ = "%s/%s/searchvaluesusingkey/?key=%s" % (base_url, resource, name)
+                url = '=HYPERLINK("%s")' % url_
+            else:
+                url = ""
             if resource == "image":
                 data.append(
                     [
                         resource,
                         name,
                         returned_results.get("total_number_of_buckets"),
+                        url,
                         returned_results.get("total_number_of_image"),
                     ]
                 )
@@ -665,22 +674,25 @@ def get_omero_stats(return_contents=False):
                         resource,
                         name,
                         returned_results.get("total_number_of_buckets"),
+                        url,
                         returned_results.get(kk),
                     ]
                 )
 
-            for dat in returned_results.get("data"):
-                if not dat["Value"]:
-                    print("Value is empty string", dat["Key"])
-    import pandas as pd
+        # for dat in returned_results.get("data"):
+        #     if not dat["Value"]:
+        #        print("Value is empty string", dat["Key"])
+    writer = pd.ExcelWriter(metadata_file, engine="xlsxwriter")
+    for resource, data_ in sorted(all_data.items(), reverse=False):
+        df = pd.DataFrame(data_, columns=values)
+        df2 = df.sort_values(by=["Resource", "No. buckets"], ascending=[True, False])
+        df2.to_excel(writer, sheet_name=resource, index=False)
+        worksheet = writer.sheets[resource]
+        from tools.utils.logs_analyser import adjust_colunms_width
 
-    df = pd.DataFrame(data, columns=values)
-    df2 = df.sort_values(by=["Resource", "No. buckets"], ascending=[True, False])
-    report = df2.to_csv()
-    with open(metadata_file, "w") as f:
-        f.write(report)
-    if return_contents:
-        return report
+        adjust_colunms_width(worksheet, values, df2)
+
+    writer.save()
 
 
 def get_no_images_sql_containers():

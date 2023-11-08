@@ -19,7 +19,7 @@
 
 from . import stats
 from tools.utils.logs_analyser import get_search_terms
-from flask import Response, send_file
+from flask import Response, send_file, request
 from omero_search_engine import search_omero_app
 import os
 from omero_search_engine.validation.results_validator import (
@@ -32,32 +32,38 @@ def index():
     return "OMERO search engine (stats API)"
 
 
-@stats.route("/<resource>/search_terms", methods=["GET"])
-def search_terms(resource):
+@stats.route("/search_terms", methods=["GET"])
+def search_terms():
+    """
+    Search the logs file to extract the search terms
+    and return them to an excel file containing the
+    search terms and number of hits, unique hits
+    each resource has a sheet inside the excel book
+    """
     logs_folder = search_omero_app.config.get("SEARCHENGINE_LOGS_FOLDER")
-    content = get_search_terms(logs_folder, resource=resource, return_file_content=True)
+    content = get_search_terms(logs_folder, return_file_content=True)
+    headers = {
+        "Content-Disposition": "attachment; filename=searchterms.xlsx",
+        "Content-type": "application/vnd.ms-excel",
+    }
     return Response(
-        content,
-        mimetype="text/csv",
-        headers={
-            "Content-disposition": "attachment; filename=%s_stats.csv" % (resource)
-        },
+        content.getvalue(), mimetype="application/vnd.ms-excel", headers=headers
     )
 
 
 @stats.route("/metadata", methods=["GET"])
 def get_metadata():
+    """
+    Search the database to extract a metadata about each resource
+    for the common terms
+    It returns an Excel book which contains the attribute and
+    its number of buckets in addition to a link to the buckets
+    """
     base_folder = "/etc/searchengine/"
     if not os.path.isdir(base_folder):
         base_folder = os.path.expanduser("~")
-    metadata = os.path.join(base_folder, "metadata.csv")
-
-    if os.path.isfile(metadata):
-        return send_file(metadata, as_attachment=True)
-    else:
-        report = get_omero_stats(return_contents=True)
-        return Response(
-            report,
-            mimetype="text/csv",
-            headers={"Content-disposition": "attachment; filename=metadata.csv"},
-        )
+    metadata = os.path.join(base_folder, "metadata.xlsx")
+    if not os.path.isfile(metadata):
+        base_url = request.url.replace("stats/metadata", "v1/resources/")
+        get_omero_stats(base_url=base_url)
+    return send_file(metadata, as_attachment=True)
