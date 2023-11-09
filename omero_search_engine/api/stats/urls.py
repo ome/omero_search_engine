@@ -32,7 +32,7 @@ def index():
     return "OMERO search engine (stats API)"
 
 
-@stats.route("/search_terms", methods=["GET"])
+@stats.route("/searchterms", methods=["GET"])
 def search_terms():
     """
     Search the logs file to extract the search terms
@@ -65,5 +65,8 @@ def get_metadata():
     metadata = os.path.join(base_folder, "metadata.xlsx")
     if not os.path.isfile(metadata):
         base_url = request.url.replace("stats/metadata", "v1/resources/")
+        if "/searchengine/searchengine" in base_url:
+            base_url = base_url.replace("/searchengine/searchengine", "/searchengine")
         get_omero_stats(base_url=base_url)
+
     return send_file(metadata, as_attachment=True)

@@ -106,6 +106,7 @@ def write_reports(resourses, return_file_content, file_name):
         df2 = df.sort_values(by=["total hits", "unique hits"], ascending=[False, False])
         df2.to_excel(writer, index=False, sheet_name=res)
         adjust_colunms_width(writer.sheets[res], columns, df2)
+        insert_chart(writer, res, df2, len(lines))
 
     writer.save()
     writer.close()
@@ -123,3 +124,18 @@ def adjust_colunms_width(worksheet, columns, df2):
         if len(max_width_) > 0:
             max_width = max(max_width_)
         worksheet.set_column(idx, idx, max_width + 1)
+
+
+def insert_chart(writer, sheet, df, no_points):
+    workbook = writer.book
+    sheet_obj = writer.sheets[sheet]
+    chart = workbook.add_chart({"type": "pie"})
+    (max_row, max_col) = df.shape
+    chart.add_series({"values": [sheet, 1, 1, max_row, 1]})
+    chart.add_series(
+        {
+            "categories": "=%s!A2:A%s" % (sheet, no_points),
+            "values": "=%s!B2:B%s" % (sheet, no_points),
+        }
+    )
+    sheet_obj.insert_chart(2, 5, chart)
