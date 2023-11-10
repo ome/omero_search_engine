@@ -26,7 +26,8 @@ import logging
 
 def copy_tools_subfolder():
     """
-    Copy the maintenance_scripts folder to the searchengine folder
+    Copy the maintenance_scripts folder to the maintenance_scripts
+    inside the searchengine folder
     """
     subfolder = os.path.join(
         os.path.abspath(os.path.dirname(__file__)), "../maintenance_scripts"
@@ -34,9 +35,7 @@ def copy_tools_subfolder():
     destination_folder = "/etc/searchengine/"
     if not os.path.isdir(destination_folder):
         destination_folder = os.path.expanduser("~")
-    destination_folder = os.path.join(
-        destination_folder, "searchengine/maintenance_scripts"
-    )
+    destination_folder = os.path.join(destination_folder, "maintenance_scripts")
 
     if not os.path.isdir(destination_folder):
         shutil.copytree(subfolder, destination_folder)

@@ -41,14 +41,22 @@ def search_terms():
     each resource has a sheet inside the excel book
     """
     logs_folder = search_omero_app.config.get("SEARCHENGINE_LOGS_FOLDER")
-    content = get_search_terms(logs_folder, return_file_content=True)
+    max_top_values = request.args.get("return_values")
+    if not max_top_values:
+        max_top_values = 5
+    elif max_top_values.isdigit():
+        max_top_values = int(max_top_values)
+    else:
+        if max_top_values.lower() != "all":
+            max_top_values = 5
+        else:
+            max_top_values = "all"
+    content = get_search_terms(logs_folder, max_top_values, return_file_content=True)
     headers = {
         "Content-Disposition": "attachment; filename=searchterms.xlsx",
         "Content-type": "application/vnd.ms-excel",
     }
-    return Response(
-        content.getvalue(), mimetype="application/vnd.ms-excel", headers=headers
-    )
+    return Response(content.getvalue(), headers=headers)
 
 
 @stats.route("/metadata", methods=["GET"])
@@ -63,8 +71,8 @@ def get_metadata():
     if not os.path.isdir(base_folder):
         base_folder = os.path.expanduser("~")
     metadata = os.path.join(base_folder, "metadata.xlsx")
+    base_url = request.base_url.replace("stats/metadata", "v1/resources/")
     if not os.path.isfile(metadata):
-        base_url = request.url.replace("stats/metadata", "v1/resources/")
         if "/searchengine/searchengine" in base_url:
             base_url = base_url.replace("/searchengine/searchengine", "/searchengine")
         get_omero_stats(base_url=base_url)

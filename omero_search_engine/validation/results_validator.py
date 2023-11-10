@@ -632,7 +632,7 @@ def test_no_images():
 
 
 def get_omero_stats(base_url=None):
-    values = ["Resource", "Attribute", "No. buckets", "Buckets' URL", "Total number"]
+    columns = ["Resource", "Attribute", "No. of unique values", "Attribute's URL"]
     base_folder = "/etc/searchengine/"
     if not os.path.isdir(base_folder):
         base_folder = os.path.expanduser("~")
@@ -684,14 +684,18 @@ def get_omero_stats(base_url=None):
         #        print("Value is empty string", dat["Key"])
     writer = pd.ExcelWriter(metadata_file, engine="xlsxwriter")
     for resource, data_ in sorted(all_data.items(), reverse=False):
-        df = pd.DataFrame(data_, columns=values)
-        df2 = df.sort_values(by=["Resource", "No. buckets"], ascending=[True, False])
+        if len(columns) == 5:
+            del columns[4]
+        columns.insert(4, "Total number of %s" % resource)
+        df = pd.DataFrame(data_, columns=columns)
+        df2 = df.sort_values(
+            by=["No. of unique values", "Attribute"], ascending=[False, False]
+        )
         df2.to_excel(writer, sheet_name=resource, index=False)
         worksheet = writer.sheets[resource]
         from tools.utils.logs_analyser import adjust_colunms_width
 
-        adjust_colunms_width(worksheet, values, df2)
-
+        adjust_colunms_width(worksheet, columns, df2)
     writer.save()
 
 

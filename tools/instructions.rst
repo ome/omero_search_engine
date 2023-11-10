@@ -12,18 +12,18 @@ The cluster itself is up if at least two nodes are running.
 
 * The searchEngine functions can be tested using the ``check_searchengine_health.sh`` script. The script takes about 15 minutes to run. The script output is saved to a text file check_report.txt in the``/data/searchengine/searchengine/`` folder.
 
-* It is possible to stop an elasticsearch cluster node using this script::
+* Stop an elasticsearch cluster node using this script (replace n with an integer which represents the node number, e.g. 1,2,3)::
 
     bash stop_node.sh n
-    where n is an integer, e.g. 1,2, 3.
+
 * backup_elasticsearch_data.sh script is used to backup the Elasticsearch data.
 
-* It is possible to index or re-index the data using this bash ``scrpt index_data.sh``.
+* Index or re-index the data using the ``scrpt index_data.sh`` script.
 
-* It is possible to restore the Elasticsearch data from the backup (snapshot) using the following command::
+* Restore the Elasticsearch data from the backup (snapshot) using the following command::
 
     bash restore_elasticsearch_data.sh
 
-* It may take up to 15 minutes to restore the data.
+ It may take up to 15 minutes to restore the data.
 
-* The ``check_indexing_process.sh`` script is used to check the indexing data progress.
+* Check the progress of the data indexing using the ``check_indexing_process.sh`` script
