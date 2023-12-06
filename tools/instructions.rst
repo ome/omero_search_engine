@@ -18,7 +18,7 @@ The cluster itself is up if at least two nodes are running.
 
 * backup_elasticsearch_data.sh script is used to backup the Elasticsearch data.
 
-* Index or re-index the data using the ``scrpt index_data.sh`` script.
+* Index or re-index the data using the ``index_data.sh`` script.
 
 * Restore the Elasticsearch data from the backup (snapshot) using the following command::
 
