@@ -213,7 +213,6 @@ class BasicTestCase(unittest.TestCase):
             self.assertTrue(validator.identical)
 
     def test_no_images_containers(self):
-
         self.assertTrue(check_no_images_sql_containers_using_ids())
 
     def test_multi_or_quries(self):
