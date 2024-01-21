@@ -1032,7 +1032,8 @@ def get_no_images_sql_containers(write_report=True):
     if write_report:
         base_folder = "/etc/searchengine/"
         if not os.path.isdir(base_folder):
-            base_folder = os.path.expanduser("~")        report_file = os.path.join(base_folder, "check_containers_report.txt")
+            base_folder = os.path.expanduser("~")
+        report_file = os.path.join(base_folder, "check_containers_report.txt")
         report = "\n".join(messages)  # noqa
         with open(report_file, "w") as f:
             f.write(report)         
