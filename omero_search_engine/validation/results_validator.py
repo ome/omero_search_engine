@@ -471,7 +471,6 @@ class Validator(object):
         if search_engine_results.get("results") and search_engine_results[
             "results"
         ].get("results"):
-
             for item in search_engine_results["results"].get("results"):
                 if item["type"] == "screen":
                     if item["name"] in screens_results_idr:
@@ -530,7 +529,6 @@ class Validator(object):
         return mess
 
     def compare_results(self, operator=None):
-
         """
         Get and compare the results from the postgresql and the searchengine
         """
@@ -1036,7 +1034,8 @@ def get_no_images_sql_containers(write_report=True):
         report_file = os.path.join(base_folder, "check_containers_report.txt")
         report = "\n".join(messages)  # noqa
         with open(report_file, "w") as f:
-            f.write(report)         
+            f.write(report)
+
 
 """
 def set_owner_ship(resource , name, value, owener_id=None, group_id=None):
@@ -1048,6 +1047,7 @@ def set_owner_ship(resource , name, value, owener_id=None, group_id=None):
     if group_id:
         sql = sql + " %s.%group_id=%s" % (resource, group_id)
 """
+
 
 def check_container_keys_vakues():
     # This will be modified and the testing data will be adjusted and provided
