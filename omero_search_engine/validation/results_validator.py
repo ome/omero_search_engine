@@ -1032,13 +1032,10 @@ def get_no_images_sql_containers(write_report=True):
     if write_report:
         base_folder = "/etc/searchengine/"
         if not os.path.isdir(base_folder):
-            base_folder = os.path.expanduser("~")
-
-        report_file = os.path.join(base_folder, "check_containers_report.txt")
+            base_folder = os.path.expanduser("~")        report_file = os.path.join(base_folder, "check_containers_report.txt")
         report = "\n".join(messages)  # noqa
         with open(report_file, "w") as f:
-            f.write(report)
-
+            f.write(report)         
 
 """
 def set_owner_ship(resource , name, value, owener_id=None, group_id=None):
@@ -1050,3 +1047,92 @@ def set_owner_ship(resource , name, value, owener_id=None, group_id=None):
     if group_id:
         sql = sql + " %s.%group_id=%s" % (resource, group_id)
 """
+
+def check_container_keys_vakues():
+    # This will be modified and the testing data will be adjusted and provided
+    # at run time
+    from omero_search_engine.validation.psql_templates import (
+        container_from_name,
+        screen_key_values,
+        project_key_values,
+    )
+    import json
+    from omero_search_engine.api.v1.resources.resource_analyser import (
+        get_container_values_for_key,
+    )
+
+    csv = False
+    container_names = ["idr0034", "idr0114"]
+    keys = ["gene symbol", "cell line"]
+    for container_name in container_names:
+        for key in keys:
+            project_sql = container_from_name.substitute(
+                container="project", name=container_name
+            )
+            screen_sql = container_from_name.substitute(
+                container="screen", name=container_name
+            )
+            conn = search_omero_app.config["database_connector"]
+            project_ids_results = conn.execute_query(project_sql)
+            screen_ids_results = conn.execute_query(screen_sql)
+
+            search_omero_app.logger.info("projects: %s" % project_ids_results)
+            search_omero_app.logger.info("screens: %s" % screen_ids_results)
+
+            if len(screen_ids_results) > 0:
+                for id in screen_ids_results:
+                    screen_sql = screen_key_values.substitute(id=id.get("id"), name=key)
+                    screen_results = conn.execute_query(screen_sql)
+                    scr_searchengine_results = get_container_values_for_key(
+                        "image", container_name, csv, key
+                    )
+                    if len(scr_searchengine_results.response) > 0:
+                        scr_searchengine_results = json.loads(
+                            scr_searchengine_results.response[0]
+                        )
+                    else:
+                        scr_searchengine_results = scr_searchengine_results.response
+                    search_omero_app.logger.info(
+                        "Results from PostgreSQL database: %s" % len(screen_results)
+                    )
+                    if len(scr_searchengine_results) > 0 and scr_searchengine_results[
+                        0
+                    ].get("results"):
+                        search_omero_app.logger.info(
+                            "Searchengine results: %s"
+                            % len(scr_searchengine_results[0].get("results"))
+                        )
+                    else:
+                        search_omero_app.logger.info(
+                            "No results returned from searchengine"
+                        )
+            if len(project_ids_results) > 0:
+                for id in project_ids_results:
+                    project_sql = project_key_values.substitute(
+                        id=id.get("id"), name=key
+                    )
+                    project_results = conn.execute_query(project_sql)
+                    pr_searchengine_results = get_container_values_for_key(
+                        "image", container_name, csv, key
+                    )
+                    if len(pr_searchengine_results.response) > 0:
+                        pr_searchengine_results = json.loads(
+                            pr_searchengine_results.response[0]
+                        )
+                    else:
+                        pr_searchengine_results = pr_searchengine_results.response
+
+                    search_omero_app.logger.info(
+                        "Results from PostgreSQL database: %s" % len(project_results)
+                    )
+                    if len(pr_searchengine_results) > 0 and pr_searchengine_results[
+                        0
+                    ].get("results"):
+                        search_omero_app.logger.info(
+                            "Searchengine results: %s "
+                            % len(pr_searchengine_results[0].get("results"))
+                        )
+                    else:
+                        search_omero_app.logger.info(
+                            "No results returned from searchengine"
+                        )

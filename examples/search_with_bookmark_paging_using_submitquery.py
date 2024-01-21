@@ -118,7 +118,6 @@ logging.info(
 )
 
 while len(received_results) < total_results:
-
     page += 1
     query_data_ = {"query_details": {"and_filters": and_filters}, "bookmark": bookmark}
     query_data_json_ = json.dumps(query_data_)

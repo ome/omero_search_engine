@@ -206,6 +206,24 @@ def set_elasticsearch_configuration(elasticsearch_url=None):
 
 
 @manager.command
+@manager.option("-e", "--elasticsearch_password", help="set elasticsearch password")
+def set_elasticsearch_password(elasticsearch_password=None):
+    if elasticsearch_password:
+        update_config_file({"ELASTIC_PASSWORD": elasticsearch_password})
+    else:
+        search_omero_app.logger.info("No attribute is provided")
+
+
+@manager.command
+@manager.option("-v", "--verify_certs", help="set elasticsearch password")
+def set_verify_certs(verify_certs=None):
+    if verify_certs:
+        update_config_file({"verify_certs": verify_certs})
+    else:
+        search_omero_app.logger.info("No attribute is provided")
+
+
+@manager.command
 @manager.option("-c", "--cache_folder", help="cache folder path")
 def set_cache_folder(cache_folder=None):
     if cache_folder:
@@ -385,6 +403,15 @@ def data_validator(screen_name=None, project_name=None):
     print(start1)
     print(start2)
     print(end)
+
+@manager.command
+def test_container_key_value():
+    from omero_search_engine.validation.results_validator import (
+        check_container_keys_vakues,
+    )
+
+    check_container_keys_vakues()
+
 
 
 if __name__ == "__main__":
