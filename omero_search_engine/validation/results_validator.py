@@ -1034,11 +1034,22 @@ def get_no_images_sql_containers(write_report=True):
         if not os.path.isdir(base_folder):
             base_folder = os.path.expanduser("~")
 
-
     report_file = os.path.join(base_folder, "check_containers_report.txt")
     report = "\n".join(messages)  # noqa
     with open(report_file, "w") as f:
         f.write(report)
+
+
+"""
+def set_owner_ship(resource , name, value, owener_id=None, group_id=None):
+    if hasattr(self, 'owener_id'):
+        if hasattr(self, 'group_id'):
+    sql=query_images_key_value.substitute(naem=name, value=value)
+    if owener_id:
+        sql=sql +" %s.%owner_id=%s"%(resource,owener_id)
+    if group_id:
+        sql = sql + " %s.%group_id=%s" % (resource, group_id)
+"""
 
 
 def check_container_keys_vakues():
