@@ -404,9 +404,9 @@ def data_validator(screen_name=None, project_name=None):
     print(start2)
     print(end)
 
-#def check_containers():
-#    from omero_search_engine.validation.results_validator import container_keys_vakues
 
+
+@manager.command
 def test_container_key_value():
     from omero_search_engine.validation.results_validator import (
         check_container_keys_vakues,
