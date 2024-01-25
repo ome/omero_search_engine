@@ -1,11 +1,9 @@
 #!/bin/sh
 NAME="omero_search_engine"
 USER root
-PYTHONPATH=~/.pyenv/versions/searchengine/bin/
 APPPATH=/searchengine
 SOCKFILE=/etc/searchengine/sock3 #change this to project_dir/sock (new file will be created)
 echo "Starting $NAME as `whoami`"
-export PATH="$PYTHONPATH:$PATH"
 export PATH="$APPPATH:$PATH"
 echo "staring the app"
 # Create the run directory if it doesn't exist
@@ -17,7 +15,6 @@ LOGSDIR=$(dirname $LOGS)
 test -d $LOGSDIR || mkdir -p $LOGSDIR
 user=$USER
 echo "Start Gunicorn ...."
-#exec ls -l  ~/.pyenv/versions/searchengine/bin/ 
 echo "$HOME"
 echo pwd
 cd $APPPATH
