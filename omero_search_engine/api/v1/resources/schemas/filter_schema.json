@@ -13,12 +13,12 @@
     },
      "value": {
       "name":"value",
-      "type": "string"
+      "type": ["array", "string"]
     },
      "operator": {
       "name": "operator",
       "type": "string",
-      "enum": ["equals", "not_equals", "contains","not_contains"]
+      "enum": ["equals", "not_equals", "contains","not_contains","in","not_in"]
     }
      ,"resource": {
       "name": "resource",
