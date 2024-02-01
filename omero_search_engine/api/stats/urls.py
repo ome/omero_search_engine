@@ -20,7 +20,7 @@
 from . import stats
 from tools.utils.logs_analyser import get_search_terms
 from flask import Response, send_file, request
-from omero_search_engine import search_omero_app
+from omero_search_engine import search_omero_app, auth
 import os
 from omero_search_engine.validation.results_validator import (
     get_omero_stats,
@@ -33,6 +33,7 @@ def index():
 
 
 @stats.route("/searchterms", methods=["GET"])
+@auth.login_required
 def search_terms():
     """
     Search the logs file to extract the search terms
@@ -60,6 +61,7 @@ def search_terms():
 
 
 @stats.route("/metadata", methods=["GET"])
+@auth.login_required
 def get_metadata():
     """
     Search the database to extract a metadata about each resource

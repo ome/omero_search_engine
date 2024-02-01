@@ -371,5 +371,23 @@ def get_search_terms_froget_all_indexes_from_elasticsearchm_log(logs_folder=None
     get_search_terms(logs_folder)
 
 
+@manager.command
+@manager.option("-p", "--password", help="username password to be hashed")
+def create_hash_password_for_admin(password):
+    from werkzeug.security import generate_password_hash
+
+    h_pass = generate_password_hash(password)
+    add_admin_hashed_password(h_pass)
+
+
+@manager.command
+@manager.option("-s", "--sh_password", help="hased password")
+def add_admin_hashed_password(sh_password=None):
+    if sh_password:
+        update_config_file({"SEARCHENGINE_ADMIN_PASSWD": sh_password})
+    else:
+        search_omero_app.logger.info("No attribute is provided")
+
+
 if __name__ == "__main__":
     manager.run()
