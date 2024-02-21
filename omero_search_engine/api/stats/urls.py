@@ -42,6 +42,13 @@ def search_terms():
     each resource has a sheet inside the excel book
     """
     logs_folder = search_omero_app.config.get("SEARCHENGINE_LOGS_FOLDER")
+    if not logs_folder or not os.path.isdir(logs_folder):
+        logs_folder = "/etc/searchengine/logs"
+        if not os.path.isdir(logs_folder):
+            logs_folder = os.path.expanduser("~/logs")
+    if not os.path.isdir(logs_folder):
+        return "No logs files are found"
+
     max_top_values = request.args.get("return_values")
     if not max_top_values:
         max_top_values = 5
