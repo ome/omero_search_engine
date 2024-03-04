@@ -1,6 +1,5 @@
 0.5.4 (March 2024):
-
------------------------
+--------------------
 - Support Rocky Linux 9  [#93](https://github.com/ome/omero_search_engine/pull/93)
 
 0.5.3 (September 2023):
