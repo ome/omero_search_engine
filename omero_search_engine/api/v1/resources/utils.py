@@ -159,7 +159,6 @@ should_term_template = Template(
 
 query_template = Template("""{"query": {"bool": {$query}}}""")
 
-
 # This template is added to the query to return the count of an attribute
 count_attr_template = Template(
     """{"key_count": {"terms": {"field": "$field","size": 10000}}}
@@ -1097,3 +1096,24 @@ def adjust_query_for_container(query):
 
         for filter in new_or_filters:
             or_filters.append(filter)
+
+
+def get_containers(container_name=""):
+    query = {
+        "query_details": {},
+        "main_attributes": {
+            "and_main_attributes": [
+                {"name": "name", "value": container_name, "operator": "contains"}
+            ]
+        },
+    }
+    screens_containers = search_resource_annotation("screen", query)
+    projects_containers = search_resource_annotation("project", query)
+    print(screens_containers.keys())
+    print(projects_containers.keys())
+    print(len(screens_containers["results"]["results"]))
+    print(len(projects_containers["results"]["results"]))
+    data = {}
+    data["projects"] = projects_containers["results"]["results"]
+    data["screens"] = projects_containers["results"]["results"]
+    return data

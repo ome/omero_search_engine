@@ -360,5 +360,14 @@ def test_container_key_value():
     check_container_keys_vakues()
 
 
+@manager.command
+def update_container_no_of_images():
+    from omero_search_engine.cache_functions.elasticsearch.transform_data import (  # noqa
+        update_container_no_of_images,
+    )
+
+    update_container_no_of_images()
+
+
 if __name__ == "__main__":
     manager.run()

@@ -362,6 +362,16 @@ def submit_query():
         return jsonify(build_error_message(validation_results))
 
 
+@resources.route("/all_containers/", methods=["GET"])
+def get_containers():
+    """
+    file: swagger_docs/all_containers.yml
+    """
+    from utils import get_containers
+
+    return jsonify(get_containers())
+
+
 @resources.route("/<resource_table>/search/", methods=["GET"])
 def search(resource_table):
     """
