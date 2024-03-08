@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 # Copyright (C) 2022 University of Dundee & Open Microscopy Environment.
@@ -845,3 +844,70 @@ def prepare_bucket_index_data(results, res_table, es_index):
 def determine_cashed_bucket(attribute, resource, es_indrx):
     res = query_cashed_bucket(attribute, resource, es_indrx)
     search_omero_app.logger.info(res)
+
+
+def update_container_no_of_images():
+    # total_container_image": {"type": "long"},
+    from omero_search_engine.api.v1.resources.urls import (
+        get_resource_names,
+    )
+    from omero_search_engine.api.v1.resources.query_handler import (
+        determine_search_results_,
+    )
+
+    from omero_search_engine.api.v1.resources.utils import adjust_query_for_container
+
+    modified = []
+    all_names = get_resource_names("all")
+    messages = []
+    for resource in all_names:
+        messages.append(
+            "######################## Checking %s ########################\n" % resource
+        )
+        for res_name_ in all_names.get(resource):
+            res_name = res_name_.get("name")
+            message1 = "Checking %s name: %s" % (resource, res_name)
+            messages.append(message1)
+            search_omero_app.logger.info(message1)
+
+            and_filters = [
+                {
+                    "name": "name",
+                    "value": res_name,
+                    "operator": "equals",
+                    "resource": "container",
+                }
+            ]
+            or_filters = []
+            query = {"and_filters": and_filters, "or_filters": or_filters}
+            query_data = {"query_details": query}
+            adjust_query_for_container(query_data)
+            returned_results = determine_search_results_(query_data)
+            if returned_results.get("results"):
+                if returned_results.get("results").get("size"):
+                    total_container_image = returned_results["results"]["size"]
+                    es = search_omero_app.config.get("es_connector")
+                    doc = {
+                        "doc": {
+                            "container_total_images": total_container_image,
+                        }
+                    }
+                    if "experiment" in res_name_.get("name").lower():
+                        res_index = resource_elasticsearchindex["project"]
+                        _id = get_document_id(res_name_["id"], res_index, es)
+                        res = es.update(index=res_index, id=_id, body=doc)
+                        modified.append({res_name: total_container_image})
+                    elif "screen" in res_name_.get("name").lower():
+                        res_index = resource_elasticsearchindex["screen"]
+                        _id = get_document_id(res_name_["id"], res_index, es)
+                        res = es.update(index=res_index, id=_id, body=doc)
+                        print(res)
+                        modified.append({res_name: total_container_image})
+    print(modified)
+    print(len(modified))
+
+
+def get_document_id(container_id, index_name, es):
+    query = {"query": {"match": {"id": container_id}}}
+    response = es.search(index=index_name, body=query)
+    return response.get("hits").get("hits")[0].get("_id")

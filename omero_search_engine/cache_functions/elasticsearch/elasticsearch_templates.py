@@ -37,6 +37,7 @@ non_image_template = {
         "properties": {
             "doc_type": {"type": "keyword"},
             "id": {"type": "long"},
+            "container_total_images": {"type": "long"},
             "name": {
                 "type": "text",
                 "fields": {"keyvalue": {"type": "keyword"}},
