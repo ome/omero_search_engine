@@ -1111,9 +1111,7 @@ def get_containers(container_name=""):
     projects_containers = search_resource_annotation("project", query)
     print(screens_containers.keys())
     print(projects_containers.keys())
-    print(len(screens_containers["results"]["results"]))
-    print(len(projects_containers["results"]["results"]))
     data = {}
     data["projects"] = projects_containers["results"]["results"]
-    data["screens"] = projects_containers["results"]["results"]
+    data["screens"] = screens_containers["results"]["results"]
     return data
