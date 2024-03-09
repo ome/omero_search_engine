@@ -41,6 +41,39 @@ class SqlSearchEngineTemplate(Template):
         return super(SqlSearchEngineTemplate, self).substitute(kwargs)
 
 
+# get aviable values for an image key
+query_images_aviable_values_for_key = Template(
+    """
+Select DISTINCT lower(annotation_mapvalue.value) from image
+inner join imageannotationlink on image.id =imageannotationlink.parent
+inner join annotation_mapvalue on
+annotation_mapvalue.annotation_id=imageannotationlink.child
+where lower(annotation_mapvalue.name)='$name' """
+)
+
+# get any values for an image keys
+query_images_any_value = Template(
+    """
+Select DISTINCT lower(annotation_mapvalue.name),
+lower(annotation_mapvalue.value) from image
+inner join imageannotationlink on image.id =imageannotationlink.parent
+inner join annotation_mapvalue on
+annotation_mapvalue.annotation_id=imageannotationlink.child
+where lower(annotation_mapvalue.value) like '%$val_part%' """
+)
+
+# get any values for an image keys
+query_images_contians_not_contains = Template(
+    """
+Select DISTINCT image.id from image
+inner join imageannotationlink on image.id =imageannotationlink.parent
+inner join annotation_mapvalue on
+annotation_mapvalue.annotation_id=imageannotationlink.child
+where lower(annotation_mapvalue.name)='$name'
+and lower(annotation_mapvalue.value) $operator ('%$value%') """
+)
+
+
 # get images satisfy image key-value query
 query_images_key_value = Template(
     """
@@ -49,7 +82,7 @@ inner join imageannotationlink on image.id =imageannotationlink.parent
 inner join annotation_mapvalue on
 annotation_mapvalue.annotation_id=imageannotationlink.child
 where lower(annotation_mapvalue.name)='$name' and
-lower(annotation_mapvalue.value)=lower('$value')"""
+lower(annotation_mapvalue.value)$operator lower('$value')"""
 )
 
 # Get number of images which satisfy project key-value query
@@ -65,11 +98,11 @@ on project.id =projectannotationlink.parent
 inner join annotation_mapvalue
 on annotation_mapvalue.annotation_id=projectannotationlink.child
 where lower(annotation_mapvalue.name)=lower('$name')
-and lower(annotation_mapvalue.value)=lower('$value')"""
+and lower(annotation_mapvalue.value) $operator lower('$value')"""
 )
 
 # Get the  number of images using "in"
-query_image_or = Template(
+query_image_in = Template(
     """
 Select DISTINCT image.id from image
 inner join imageannotationlink
@@ -77,7 +110,7 @@ on image.id =imageannotationlink.parent
 inner join annotation_mapvalue
 on annotation_mapvalue.annotation_id=imageannotationlink.child
 where lower(annotation_mapvalue.name) in ($names)
-and lower(annotation_mapvalue.value) in ($values)"""
+and lower(annotation_mapvalue.value) $operator ($values)"""
 )
 
 # Get the images which satisfy screen key-value query
@@ -93,8 +126,8 @@ inner join screenannotationlink
 on screen.id =screenannotationlink.parent
 inner join annotation_mapvalue
 on annotation_mapvalue.annotation_id=screenannotationlink.child
-where lower(annotation_mapvalue.name)='$name'
-and lower(annotation_mapvalue.value)=lower('$value')"""
+where lower(annotation_mapvalue.name)= lower('$name')
+and lower(annotation_mapvalue.value)$operator lower('$value')"""
 )
 
 
@@ -117,7 +150,7 @@ inner join datasetimagelink on datasetimagelink.child=image.id
 inner join dataset on datasetimagelink.parent=dataset.id
 inner join projectdatasetlink on dataset.id=projectdatasetlink.child
 inner join project on project.id=projectdatasetlink.parent
-where lower(project.name)=lower('$name')"""
+where lower (project.name) $operator lower ('$name')"""
 )
 
 # get images in a screen using id
@@ -141,7 +174,7 @@ inner join well on wellsample.well= well.id
 inner join plate on well.plate=plate.id
 inner join screenplatelink on plate.id=screenplatelink.child
 inner join screen on screen.id=screenplatelink.parent
-where lower(screen.name)=lower('$name')"""
+where lower(screen.name)$operator lower('$name')"""
 )
 
 # get resource id using its name
@@ -178,6 +211,71 @@ inner join screen on screen.id=screenplatelink.parent
 where lower(annotation_mapvalue.name)=lower('$key')
 and  lower(annotation_mapvalue.value) =lower('$value')"""
 )
+
+head_space_query = Template(
+    """
+select image.id as image_id, screen.name as screen_name, project.name as project_name,
+ annotation_mapvalue.name, annotation_mapvalue.value  from image
+ inner join imageannotationlink on image.id =imageannotationlink.parent
+ inner join annotation_mapvalue on
+ annotation_mapvalue.annotation_id=imageannotationlink.child
+ left join datasetimagelink on datasetimagelink.child=image.id
+ left join dataset on datasetimagelink.parent=dataset.id
+ left join projectdatasetlink on dataset.id=projectdatasetlink.child
+ left join project on project.id=projectdatasetlink.parent
+ left join wellsample on wellsample.image=image.id
+ left join well on wellsample.well= well.id  left join plate on well.plate=plate.id
+ left join screenplatelink on plate.id=screenplatelink.child
+ left join screen on screen.id=screenplatelink.parent
+ where annotation_mapvalue.value  like ' %' $condition
+ group by  project_name, screen_name,image.id,
+ annotation_mapvalue.name, annotation_mapvalue.value
+"""
+)
+
+tail_space_query = Template(
+    """
+select image.id as image_id, screen.name as screen_name, project.name as project_name,
+ annotation_mapvalue.name, annotation_mapvalue.value  from image
+ inner join imageannotationlink on image.id =imageannotationlink.parent
+ inner join annotation_mapvalue on
+ annotation_mapvalue.annotation_id=imageannotationlink.child
+ left join datasetimagelink on datasetimagelink.child=image.id
+ left join dataset on datasetimagelink.parent=dataset.id
+ left join projectdatasetlink on dataset.id=projectdatasetlink.child
+ left join project on project.id=projectdatasetlink.parent
+ left join wellsample on wellsample.image=image.id
+ left join well on wellsample.well= well.id
+ left join plate on well.plate=plate.id
+ left join screenplatelink on plate.id=screenplatelink.child
+ left join screen on screen.id=screenplatelink.parent
+ where annotation_mapvalue.value  like '% ' $condition
+ group by project_name, screen_name,image.id, annotation_mapvalue.name,
+ annotation_mapvalue.value
+"""
+)
+
+duplicated_keyvalue_pairs_query = Template(
+    """
+Select  image.id as image_id, project.name as project_name, screen.name as screen_name,
+ annotation_mapvalue.name,  annotation_mapvalue.value, count (*) from image
+ left join datasetimagelink on datasetimagelink.child=image.id
+ left join dataset on datasetimagelink.parent=dataset.id
+ left join projectdatasetlink on dataset.id=projectdatasetlink.child
+ left join project on project.id=projectdatasetlink.parent
+ left join wellsample on wellsample.image=image.id
+ left join well on wellsample.well= well.id  left join plate on well.plate=plate.id
+ left join screenplatelink on plate.id=screenplatelink.child
+ left join screen on screen.id=screenplatelink.parent
+ inner join imageannotationlink on image.id =imageannotationlink.parent
+ inner join annotation_mapvalue on
+ annotation_mapvalue.annotation_id=imageannotationlink.child
+  $condition
+ group by project_name, screen_name,image.id, annotation_mapvalue.name,
+ annotation_mapvalue.value HAVING COUNT(*)>1
+ """
+)
+
 
 project_key_values = Template(
     """
