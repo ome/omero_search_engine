@@ -326,7 +326,7 @@ def handle_file(file_name, es_index, cols, is_image, from_json):
         actions.append(
             {
                 "_index": es_index,
-                "_source": record  # ,
+                "_source": record,  # ,
                 # "_id": record['id']
             }
         )
