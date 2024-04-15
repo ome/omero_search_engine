@@ -369,5 +369,12 @@ def update_container_no_of_images():
     update_container_no_of_images()
 
 
+@manager.command
+def get_containers_images_size():
+    from omero_search_engine.cache_functions.elasticsearch.transform_data import (  # noqa
+    update_container_images_size
+    )
+    update_container_images_size()
+
 if __name__ == "__main__":
     manager.run()
