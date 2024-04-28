@@ -44,11 +44,11 @@ The application should have the access attributes (e.g, URL, username, password,
 Application installation using Docker
 =====================================
 
-Ubuntu and CentOS 7 images are provided.
+Ubuntu, CentOS 7 and Rocky Linux 9 images are provided.
 
 * The user may build the Docker image using the following command::
 
-    $ docker build . -f deployment/docker/centos/Dockerfile -t searchengine
+    $ docker build . -f deployment/docker/$required_docker_file_folder/Dockerfile -t searchengine
 
 * Alternatively, the user can pull the openmicroscopy docker image by using the following command::
     
@@ -78,16 +78,16 @@ Searchengine installation and configuration using Ansible
 
 The ansible playbook :omero_search_engine:`management-searchengine.yml <deployment/ansible/management-searchengine.yml>` has been developed to deploy the apps:
 
-* It will configure and run the search engine, Elasticsearch and the search engine client
-* It will configure and create the required folders
-* It will configure the three apps and run them
+* It contains two groups of tasks each saved in a separate file
+* The first file (`deploy_elasticsearch_cluster.yml <deployment/ansible/deploy_elasticsearch_cluster.yml>`) will create the required folders and configure and run the Elasticsearch cluster
+* the second one, (`deploy_searchengine.yml <deployment/ansible/deploy_searchengine.yml>`) will configure and run the searchengine app
 * There is a variables file :omero_search_engine:`searchengine_vars.yml <deployment/ansible/searchengine_vars.yml>` that the user needs to edit before running the playbook.
   The variable names are self-explanatory and should be customized to the host machine
 * To check that the apps have been installed and run, the user can use ``wget`` or ``curl`` to call:
 
     * for searchengine, http://127.0.0.1:5556/api/v1/resources/
-    * for searchengine client, http://127.0.0.1:5556
     * for Elasticsearch, http://127.0.0.1:9201
+
 * After deploying the apps, the user needs to run the :omero_search_engine:`run_searchengine_index_services.yml <deployment/ansible/run_searchengine_index_services.yml>` playbook for indexing:
 
     * If the PostgreSQL database server is located on the same machine which hosts the searchengine, the user needs to:
