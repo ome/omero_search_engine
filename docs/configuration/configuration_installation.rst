@@ -85,7 +85,7 @@ The ansible playbook :omero_search_engine:`management-searchengine.yml <deployme
   The variable names are self-explanatory and should be customized to the host machine
 * To check that the apps have been installed and run, the user can use ``wget`` or ``curl`` to call:
 
-    * for searchengine, http://127.0.0.1:5556/api/v1/resources/
+    * for searchengine, http://127.0.0.1:5577/api/v1/resources/
     * for Elasticsearch, http://127.0.0.1:9201
 
 * After deploying the apps, the user needs to run the :omero_search_engine:`run_searchengine_index_services.yml <deployment/ansible/run_searchengine_index_services.yml>` playbook for indexing:
