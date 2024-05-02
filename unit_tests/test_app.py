@@ -91,7 +91,8 @@ class BasicTestCase(unittest.TestCase):
         """
         test connection with postgresql database
         """
-        res = search_omero_app.config["database_connector"].execute_query(sql)
+        statement_timeout = search_omero_app.config["STATEMENT_TIMEOUT"]
+        res = search_omero_app.config["database_connector"].execute_query(sql,statement_timeout=statement_timeout)
         self.assertIsNotNone(res)
         self.assertEqual(res[0]["current_database"], "omero")
 
