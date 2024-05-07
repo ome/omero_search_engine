@@ -272,6 +272,7 @@ def set_no_processes(no_processes=None):
     else:
         search_omero_app.logger.info("No valid attribute is provided")
 
+
 @manager.command
 @manager.option("-t", "--time_out", help="database time out in ms")
 def set_database_timeout(time_out=None):
@@ -279,6 +280,7 @@ def set_database_timeout(time_out=None):
         update_config_file({"STATEMENT_TIMEOUT": int(time_out)})
     else:
         search_omero_app.logger.info("No valid attribute is provided")
+
 
 @manager.command
 @manager.option(

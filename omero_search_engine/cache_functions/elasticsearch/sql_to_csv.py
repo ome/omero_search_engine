@@ -178,7 +178,9 @@ def get_images_dataset_project(ids):
         ids=ids
     )
     statement_timeout = search_omero_app.config["STATEMENT_TIMEOUT"]
-    results = search_omero_app.config["database_connector"].execute_query(sql,statement_timeout=statement_timeout)
+    results = search_omero_app.config["database_connector"].execute_query(
+        sql, statement_timeout=statement_timeout
+    )
     return results
 
 
@@ -196,7 +198,9 @@ def get_images_plates_screens(ids):
         ids=ids
     )
     statement_timeout = search_omero_app.config["STATEMENT_TIMEOUT"]
-    results = search_omero_app.config["database_connector"].execute_query(sql,statement_timeout=statement_timeout)
+    results = search_omero_app.config["database_connector"].execute_query(
+        sql, statement_timeout=statement_timeout
+    )
     screens = []
     plates = []
     for res in results:
@@ -213,7 +217,7 @@ def create_csv_for_images(folder):
     """
     conn = search_omero_app.config["database_connector"]
     statement_timeout = search_omero_app.config["STATEMENT_TIMEOUT"]
-    image_data = conn.execute_query(image_sql,statement_timeout=statement_timeout)
+    image_data = conn.execute_query(image_sql, statement_timeout=statement_timeout)
     total_records = len(image_data)
     file_size = 2200000
 
