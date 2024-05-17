@@ -1,0 +1,9 @@
+A searchengine endpoint to return all the containers (screens and projects).
+---
+tags:
+  - Return all containers
+responses:
+  200:
+    description: A JSON contains the search results
+    examples:
+      results: []
