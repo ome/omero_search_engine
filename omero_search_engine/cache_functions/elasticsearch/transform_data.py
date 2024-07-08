@@ -435,29 +435,33 @@ def insert_resource_data(folder, resource, from_json):
 total_process = 0
 
 
-def get_insert_data_to_index(sql_st, resource):
+def get_insert_data_to_index(sql_st, resource, dry_run=False):
     """
     - Query the postgreSQL database server and get metadata (key-value pair)
     - Process the results data
     - Insert them to the elasticsearch
     - Use multiprocessing to reduce the indexing time
+    - If dry_run is true, the data will not be inserted to elasticsearch index
     These are performed using multiprocessing pool to reduce
     the indexing time by using parallel processing.
     """
     from datetime import datetime
 
-    delete_index(resource)
-    create_omero_indexes(resource)
+    if not dry_run:
+        delete_index(resource)
+        create_omero_indexes(resource)
     sql_ = "select max (id) from %s" % resource
     res2 = search_omero_app.config["database_connector"].execute_query(sql_)
-    max_id = res2[0]["max"]
-    page_size = search_omero_app.config["CACHE_ROWS"]
+    max_id = res2[0].get("max", 0)
+    if max_id is None:
+        max_id = 0
+    page_size = search_omero_app.config.get("CACHE_ROWS", 1000)
     start_time = datetime.now()
     cur_max_id = page_size
     vals = []
     # Prepare the multiprocessing data
     while True:
-        vals.append((cur_max_id, (cur_max_id - page_size), resource))
+        vals.append((cur_max_id, (cur_max_id - page_size), resource, dry_run))
         if cur_max_id > max_id:
             break
         cur_max_id += page_size
@@ -466,9 +470,12 @@ def get_insert_data_to_index(sql_st, resource):
     # Determine the number of processes inside the multiprocessing pool,
     # i.e the number of allowed processors to run at the same time
     # It depends on the number of the processors that the hosting machine has
-    no_processors = search_omero_app.config.get("NO_PROCESSES")
-    if not no_processors:
-        no_processors = int(multiprocessing.cpu_count() / 2)
+    if dry_run:
+        no_processors = 1
+    else:
+        no_processors = search_omero_app.config.get("NO_PROCESSES")
+        if not no_processors:
+            no_processors = int(multiprocessing.cpu_count() / 2)
     search_omero_app.logger.info(
         "Number of the allowed parallel\
         processes inside the pool: %s"
@@ -500,6 +507,7 @@ def processor_work(lock, global_counter, val):
     cur_max_id = val[0]
     range = val[1]
     resource = val[2]
+    dry_run = val[3]
     search_omero_app.logger.info("%s, %s, %s" % (cur_max_id, range, resource))
     from omero_search_engine.cache_functions.elasticsearch.sql_to_csv import (
         sqls_resources,
@@ -525,18 +533,18 @@ def processor_work(lock, global_counter, val):
     conn = search_omero_app.config["database_connector"]
     results = conn.execute_query(mod_sql)
     search_omero_app.logger.info("Processing the results...")
-    process_results(results, resource, lock)
+    process_results(results, resource, global_counter, lock, dry_run)
     average_time = (datetime.now() - st) / 2
     search_omero_app.logger.info("Done")
     search_omero_app.logger.info("elpased time:%s" % average_time)
 
 
-def process_results(results, resource, lock=None):
+def process_results(results, resource, global_counter, lock=None, dry_run=False):
     df = pd.DataFrame(results).replace({np.nan: None})
-    insert_resource_data_from_df(df, resource, lock)
+    insert_resource_data_from_df(df, resource, global_counter, dry_run, lock)
 
 
-def insert_resource_data_from_df(df, resource, lock=None):
+def insert_resource_data_from_df(df, resource, global_counter, dry_lock, lock=None):
     if resource == "image":
         is_image = True
     else:
@@ -562,21 +570,37 @@ def insert_resource_data_from_df(df, resource, lock=None):
             )
 
         actions.append({"_index": es_index, "_source": record})  # ,
-    es = search_omero_app.config.get("es_connector")
-    search_omero_app.logger.info("Pushing the data to the Elasticsearch")
-    try:
-        lock.acquire()
-        res = helpers.bulk(es, actions)
-        search_omero_app.logger.info("Pushing results: %s" % str(res))
+    if dry_lock:
+        try:
+            base_folder = "/etc/searchengine/"
+            if not os.path.isdir(base_folder):
+                base_folder = os.path.expanduser("~")
+            json_file_name = "data_{counter}.json".format(counter=global_counter.value)
+            json_file = os.path.join(base_folder, json_file_name)
 
-    except Exception as err:
-        search_omero_app.logger.info("Error: %s" % str(err))
-        raise err
+            data_string = json.dumps(actions, indent=4)
+            with open(json_file, "w") as the_file:
+                the_file.write(data_string)
 
-    finally:
-        lock.release()
+        except Exception as e:
+            search_omero_app.logger.info("Error: %s" % str(e))
+            print(json.dumps(actions, indent=4))
+    else:
+        es = search_omero_app.config.get("es_connector")
+        search_omero_app.logger.info("Pushing the data to the Elasticsearch")
+        try:
+            lock.acquire()
+            res = helpers.bulk(es, actions)
+            search_omero_app.logger.info("Pushing results: %s" % str(res))
 
-    search_omero_app.logger.info("Added to search engine")
+        except Exception as err:
+            search_omero_app.logger.info("Error: %s" % str(err))
+            raise err
+
+        finally:
+            lock.release()
+
+        search_omero_app.logger.info("Added to search engine")
 
 
 def insert_project_data(folder, project_file):
