@@ -193,6 +193,8 @@ res_raw_query = Template(
     {"name.keyvalue": "$idr"}}}}]}}} """
 )
 
+operators_required_list_data_type = ["in", "not_in"]
+
 
 def build_error_message(error):
     """
@@ -313,7 +315,7 @@ def elasticsearch_query_builder(
             try:
                 key = filter["name"].strip()
                 operator = filter["operator"].strip()
-                if operator == "in" or operator == "not_in":
+                if operator in operators_required_list_data_type:
                     if isinstance(filter["value"], list):
                         value_ = filter["value"]
                     else:
