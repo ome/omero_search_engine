@@ -405,7 +405,6 @@ def data_validator(screen_name=None, project_name=None):
     print(end)
 
 
-
 @manager.command
 def test_container_key_value():
     from omero_search_engine.validation.results_validator import (

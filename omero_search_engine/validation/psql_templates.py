@@ -275,6 +275,7 @@ Select  image.id as image_id, project.name as project_name, screen.name as scree
  annotation_mapvalue.value HAVING COUNT(*)>1
  """
 )
+
 project_key_values = Template(
     """
 Select DISTINCT (annotation_mapvalue.value)  from image

@@ -1036,8 +1036,6 @@ def get_no_images_sql_containers(write_report=True):
         with open(report_file, "w") as f:
             f.write(report)
 
-
-
 """
 def set_owner_ship(resource , name, value, owener_id=None, group_id=None):
     if hasattr(self, 'owener_id'):
