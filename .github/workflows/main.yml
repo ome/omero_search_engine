@@ -48,9 +48,8 @@ jobs:
           python manage.py set_database_configuration -u localhost -s  ${{ job.services.postgres.ports[5432] }} -n postgress -p passwprd
           # configure elasticsearch
           python manage.py set_elasticsearch_configuration -e localhost:${{ job.services.elasticsearch.ports[9200] }}
-          #download and extract the database backup file to omero.pgdump
-          #The download link should be updated once it is ready on https://downloads.openmicroscopy.org/images/
-          wget https://github.com/khaledk2/ice-archh-64/releases/download/new_tag/omero_db_searchengine.zip -P app_data
+          #download and extract the database backup file           
+          wget https://downloads.openmicroscopy.org/images/omero_db_searchengine.zip -P app_data
           unzip app_data/omero_db_searchengine.zip -d app_data/
           #cat app_data/backup_parts/backupa? > app_data/omero.pgdump
           #run  restore omero database
