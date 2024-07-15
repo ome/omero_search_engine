@@ -49,7 +49,6 @@ def prepare_the_sql_statement(sql_template, screen_name, project_name, add_where
         return sql_template.substitute(condition="")
 
 
-
 def check_for_trailing_space(screen_name, project_name):
     search_omero_app.logger.info("Checking for trailing space ...")
     sql_statment = prepare_the_sql_statement(

@@ -1013,7 +1013,9 @@ def get_no_images_sql_containers(write_report=True):
             )
             results = conn.execute_query(sql)
             postgres_results = len(results)
-            message3 = "Number of images returned from the database: %s" % postgres_results
+            message3 = (
+                "Number of images returned from the database: %s" % postgres_results
+            )
             messages.append(message3)
             search_omero_app.logger.info(message3)
             if seachengine_results != postgres_results:

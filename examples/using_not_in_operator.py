@@ -39,9 +39,7 @@ values_not_in = [
     "mus musculus x mus spretus",
     "human adenovirus 2",
 ]
-logging.info(
-    "Searching for 'Organism' with values in [%s]" % (",".join(values_not_in))
-)
+logging.info("Searching for 'Organism' with values in [%s]" % (",".join(values_not_in)))
 and_filters = [{"name": "Organism", "value": values_not_in, "operator": "not_in"}]
 
 main_attributes = []

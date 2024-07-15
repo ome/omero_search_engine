@@ -399,7 +399,8 @@ def data_validator(screen_name=None, project_name=None):
     start2 = datetime.now()
     check_duplicated_keyvalue_pairs(screen_name, project_name)
     end = datetime.now()
-    print ("start: %s, start1: %s, start2: %s, end: %s"%(start, start1, start2, end  ))
+    print("start: %s, start1: %s, start2: %s, end: %s" % (start, start1, start2, end))
+
 
 @manager.command
 def test_container_key_value():

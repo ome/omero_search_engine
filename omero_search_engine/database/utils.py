@@ -31,9 +31,7 @@ def restore_database():
     main_dir = os.path.abspath(os.path.dirname(__file__))
     mm = main_dir.replace("omero_search_engine/database", "")
     sys.path.append(mm)
-    dat_file_name = os.path.join(
-        mm, "app_data/omero.pgdump"
-    )  
+    dat_file_name = os.path.join(mm, "app_data/omero.pgdump")
     restore_command = "psql --username %s  --host %s --port %s -d %s -f  %s" % (
         search_omero_app.config.get("DATABASE_USER"),
         search_omero_app.config.get("DATABASE_SERVER_URI"),

@@ -33,9 +33,7 @@ logging.info("Example of using in operator")
 
 
 values_in = ["Duoxa2", "Bach2", "Cxcr2", "Mysm1"]
-logging.info(
-    "Searching for 'Gene Symbol' with values in [%s]" % (",".join(values_in))
-)
+logging.info("Searching for 'Gene Symbol' with values in [%s]" % (",".join(values_in)))
 and_filters = [{"name": "Gene Symbol", "value": values_in, "operator": "in"}]
 
 main_attributes = []
