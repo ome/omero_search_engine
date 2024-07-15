@@ -41,8 +41,8 @@ class SqlSearchEngineTemplate(Template):
         return super(SqlSearchEngineTemplate, self).substitute(kwargs)
 
 
-# get aviable values for an image key
-query_images_aviable_values_for_key = Template(
+# get available values for an image key
+query_images_available_values_for_key = Template(
     """
 Select DISTINCT lower(annotation_mapvalue.value) from image
 inner join imageannotationlink on image.id =imageannotationlink.parent
@@ -63,7 +63,7 @@ where lower(annotation_mapvalue.value) like '%$val_part%' """
 )
 
 # get any values for an image keys
-query_images_contians_not_contains = Template(
+query_images_contains_not_contains = Template(
     """
 Select DISTINCT image.id from image
 inner join imageannotationlink on image.id =imageannotationlink.parent
@@ -154,7 +154,7 @@ where lower (project.name) $operator lower ('$name')"""
 )
 
 # get images in a screen using id
-query_images_screen_id = Template(
+query_images_in_screen_id = Template(
     """
 Select DISTINCT image.id from image
 inner join wellsample on wellsample.image=image.id
@@ -233,7 +233,7 @@ select image.id as image_id, screen.name as screen_name, project.name as project
 """
 )
 
-tail_space_query = Template(
+trail_space_query = Template(
     """
 select image.id as image_id, screen.name as screen_name, project.name as project_name,
  annotation_mapvalue.name, annotation_mapvalue.value  from image

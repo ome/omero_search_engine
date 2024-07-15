@@ -50,11 +50,10 @@ jobs:
           python manage.py set_elasticsearch_configuration -e localhost:${{ job.services.elasticsearch.ports[9200] }}
           #download and extract the database backup file           
           wget https://downloads.openmicroscopy.org/images/omero_db_searchengine.zip -P app_data
-          unzip app_data/omero_db_searchengine.zip -d app_data/
-          #cat app_data/backup_parts/backupa? > app_data/omero.pgdump
-          #run  restore omero database
+          unzip app_data/omero_db_searchengine.zip -d app_data/          
+          # run  restore omero database
           python manage.py restore_postgresql_database
-          #run indexing indexing
+          # run indexing indexing
           python manage.py get_index_data_from_database -n True
           # run tests
           python -m unittest discover -s unit_tests

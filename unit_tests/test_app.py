@@ -36,7 +36,7 @@ from omero_search_engine.cache_functions.elasticsearch.elasticsearch_templates i
 
 from omero_search_engine.validation.results_validator import (
     Validator,
-    check_no_images_sql_containers_using_ids,
+    check_number_images_sql_containers_using_ids,
 )
 from omero_search_engine.cache_functions.elasticsearch.transform_data import (
     delete_es_index,
@@ -166,7 +166,7 @@ class BasicTestCase(unittest.TestCase):
     def test_single_query(self):
         """
         test query the search engine and compare
-        its results with the results from postgres database
+        its results with the results from the database
         """
         for resource, cases in simple_queries.items():
             for case in cases:
@@ -174,13 +174,13 @@ class BasicTestCase(unittest.TestCase):
                 value = case[1]
                 validator = Validator(deep_check)
                 validator.set_simple_query(resource, name, value)
-                validator.get_results_postgres("equals")
+                validator.get_results_db("equals")
                 validator.get_results_searchengine("equals")
                 self.assertEqual(
                     len(validator.postgres_results),
                     validator.searchengine_results.get("size"),
                 )
-                validator.get_results_postgres("not_equals")
+                validator.get_results_db("not_equals")
                 validator.get_results_searchengine("not_equals")
                 self.assertEqual(
                     len(validator.postgres_results),
@@ -213,7 +213,7 @@ class BasicTestCase(unittest.TestCase):
             self.assertTrue(validator.identical)
 
     def test_no_images_containers(self):
-        self.assertTrue(check_no_images_sql_containers_using_ids())
+        self.assertTrue(check_number_images_sql_containers_using_ids())
 
     def test_multi_or_quries(self):
         pass
@@ -280,14 +280,14 @@ class BasicTestCase(unittest.TestCase):
                 name = case[0]
                 value = case[1]
                 validator = Validator(deep_check)
-                validator.set_conatins_not_contains_query(resource, name, value)
-                validator.get_results_postgres("contains")
+                validator.set_contains_not_contains_query(resource, name, value)
+                validator.get_results_db("contains")
                 validator.get_results_searchengine("contains")
                 self.assertEqual(
                     len(validator.postgres_results),
                     validator.searchengine_results.get("size"),
                 )
-                validator.get_results_postgres("not_contains")
+                validator.get_results_db("not_contains")
                 validator.get_results_searchengine("not_contains")
                 self.assertEqual(
                     len(validator.postgres_results),

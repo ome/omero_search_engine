@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2022 University of Dundee & Open Microscopy Environment.
+# Copyright (C) 2024 University of Dundee & Open Microscopy Environment.
 # All rights reserved.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -24,7 +24,7 @@ from utils import query_the_search_ending, logging
 # rather than having multiple 'or' conditions with not_equals operators,
 # it will only use a single condition.
 
-# The following example will search for the images which have mpt any of the 'Organism'
+# The following example will search for the images which have met any of the 'Organism'
 # values in this list
 # ["homo sapiens","mus musculus","mus musculus x mus spretus","human adenovirus 2"]
 
@@ -40,7 +40,7 @@ values_not_in = [
     "human adenovirus 2",
 ]
 logging.info(
-    "Searching for 'Organism' which its values in [%s]" % (",".join(values_not_in))
+    "Searching for 'Organism' with values in [%s]" % (",".join(values_not_in))
 )
 and_filters = [{"name": "Organism", "value": values_not_in, "operator": "not_in"}]
 

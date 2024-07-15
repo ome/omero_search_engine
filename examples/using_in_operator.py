@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2022 University of Dundee & Open Microscopy Environment.
+# Copyright (C) 2024 University of Dundee & Open Microscopy Environment.
 # All rights reserved.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -34,7 +34,7 @@ logging.info("Example of using in operator")
 
 values_in = ["Duoxa2", "Bach2", "Cxcr2", "Mysm1"]
 logging.info(
-    "Searching for 'Gene Symbol' which its values in [%s]" % (",".join(values_in))
+    "Searching for 'Gene Symbol' with values in [%s]" % (",".join(values_in))
 )
 and_filters = [{"name": "Gene Symbol", "value": values_in, "operator": "in"}]
 

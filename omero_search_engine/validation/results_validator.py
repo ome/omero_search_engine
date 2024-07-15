@@ -40,11 +40,11 @@ from omero_search_engine.validation.psql_templates import (
     query_image_in,
     screens_count,
     projects_count,
-    query_images_aviable_values_for_key,
+    query_images_available_values_for_key,
     query_images_any_value,
-    query_images_contians_not_contains,
+    query_images_contains_not_contains,
     query_images_in_project_id,
-    query_images_screen_id,
+    query_images_in_screen_id,
 )
 import os
 
@@ -59,9 +59,9 @@ query_methods = {
     "not_in_clause": query_image_in,
     "screens_count": screens_count,
     "projects_count": projects_count,
-    "aviable_values_for_key": query_images_aviable_values_for_key,
+    "aviable_values_for_key": query_images_available_values_for_key,
     "search_any_value": query_images_any_value,
-    "image_conatins_not_contains": query_images_contians_not_contains,
+    "image_contains_not_contains": query_images_contains_not_contains,
 }
 
 
@@ -87,7 +87,7 @@ class Validator(object):
         self.sql_statement = query_methods[resource]
         self.searchengine_results = {}
 
-    def set_conatins_not_contains_query(self, resource, name, value, type="keyvalue"):
+    def set_contains_not_contains_query(self, resource, name, value, type="keyvalue"):
         """
         simple query
         """
@@ -96,7 +96,7 @@ class Validator(object):
         self.name = name
         self.value = value
         self.postgres_results = []
-        self.sql_statement = query_methods["image_conatins_not_contains"]
+        self.sql_statement = query_methods["image_contains_not_contains"]
         self.searchengine_results = {}
 
     def set_owner_group(self, owner_id=None, group_id=None):
@@ -140,7 +140,7 @@ class Validator(object):
         postgres_results = conn.execute_query(sql)
         results = [item["id"] for item in postgres_results]
         search_omero_app.logger.info(
-            "results for or received %s" % len(results)
+            "results for 'or' received %s" % len(results)
         )  # noqa
         return results
 
@@ -185,7 +185,7 @@ class Validator(object):
             co += 1
         return results
 
-    def get_results_postgres(self, operator=None):
+    def get_results_db(self, operator=None):
         """
         Query the postgresql
         """
@@ -530,10 +530,10 @@ class Validator(object):
 
     def compare_results(self, operator=None):
         """
-        Get and compare the results from the postgresql and the searchengine
+        Get and compare the results between the database and the searchengine
         """
         st_time = datetime.now()
-        self.get_results_postgres(operator)
+        self.get_results_db(operator)
         st2_time = datetime.now()
         self.get_results_searchengine(operator)
         st3_time = datetime.now()
@@ -578,7 +578,7 @@ class Validator(object):
         else:
             searchengine_no = self.searchengine_results
         return (
-            "not equal, database no of the results from database server is: %s and"
+            "not equal, number of the results from the database server is: %s and"
             "the number of results from searchengine is %s?,"
             "\ndatabase server query time= %s, searchengine query time= %s"
             % (len(self.postgres_results), searchengine_no, sql_time, searchengine_time)
@@ -620,7 +620,7 @@ def validate_queries(json_file, deep_check):
             res = validator.compare_results("equals")
             elabsed_time = str(datetime.now() - start_time)
             messages.append(
-                "Results form (equals) PostgreSQL and search engine"
+                "Results form (equals) the database and search engine"
                 "for name: %s , value: %s are: %s"
                 % (validator.name, validator.value, res)
             )
@@ -633,14 +633,14 @@ def validate_queries(json_file, deep_check):
                 % (resource, name, value)
             )
             if resource == "image":
-                not_equls_validator = Validator(deep_check)
-                not_equls_validator.set_simple_query(resource, name, value)
-                res = not_equls_validator.compare_results("not_equals")
+                not_equals_validator = Validator(deep_check)
+                not_equals_validator.set_simple_query(resource, name, value)
+                res = not_equals_validator.compare_results("not_equals")
                 elabsed_time = str(datetime.now() - start_time)
                 messages.append(
                     "Results (not_equals) form PostgreSQL and search engine"
                     "for name: %s , value: %s are: %s"
-                    % (not_equls_validator.name, not_equls_validator.value, res)
+                    % (not_equals_validator.name, not_equals_validator.value, res)
                 )
                 search_omero_app.logger.info("Total time=%s" % elabsed_time)
 
@@ -666,7 +666,7 @@ def validate_queries(json_file, deep_check):
             validator_in.set_in_query(case, resource)
             res = validator_in.compare_results()
             messages.append(
-                "Results for 'in' form PostgreSQL and search engine"
+                "Results for 'in' form the database and search engine"
                 "for %s name: %s and value in [%s] are %s"
                 % (
                     validator_in.resource,
@@ -677,13 +677,13 @@ def validate_queries(json_file, deep_check):
             )
             end_in = datetime.now()
             search_omero_app.logger.info("Total time=%s" % str(end_in - start_time))
-            # test the same but chang the operator to not in
+            # test the same but change the operator to not in
             search_omero_app.logger.info("Total time=%s" % str(end_in - start_time))
             validator_not_in = Validator(deep_check)
             validator_not_in.set_in_query(case, resource, type="not_in_clause")
             res = validator_not_in.compare_results()
             messages.append(
-                "Results for 'not in' form PostgreSQL and search engine for %s name: "
+                "Results for 'not in' form the database and search engine for %s name: "
                 "%s and value in [%s] are %s"
                 % (
                     validator_not_in.resource,
@@ -864,14 +864,14 @@ def get_omero_stats():
         f.write(report)
 
 
-def check_no_images_sql_containers_using_ids():
+def check_number_images_sql_containers_using_ids():
     """
     This method tests the number of images inside each container
      (project or screen) in the searchengine index data
     and compare them with the number of images inside
-    each container in the postgresql database server
+    each container in the database server
     As container name is not unique,container id is used
-    to determine the no of images
+    to determine the number of images
     """
     from omero_search_engine.api.v1.resources.urls import (
         get_resource_names,
@@ -922,7 +922,7 @@ def check_no_images_sql_containers_using_ids():
             if resource == "project":
                 sql = query_images_in_project_id.substitute(project_id=res_id)
             elif resource == "screen":
-                sql = query_images_screen_id.substitute(screen_id=res_id)
+                sql = query_images_in_screen_id.substitute(screen_id=res_id)
             results = conn.execute_query(sql)
             postgres_results = len(results)
             search_omero_app.logger.info(
@@ -932,7 +932,7 @@ def check_no_images_sql_containers_using_ids():
                 if res_name == "idr0021" and res_id == 872:
                     # """
                     # issue with these two images:
-                    # as they belongo two differnet data sets
+                    # as they belong to two different datasets
                     # image ids= 9539, 9552
                     # """
                     continue
@@ -964,7 +964,7 @@ def get_no_images_sql_containers(write_report=True):
     This method tests the number of images inside each container
      (project or screen) in the searchengine index data
     and compare them with the number of images inside
-    each container in the postgresql database server
+    each container in the database server
     """
     from omero_search_engine.api.v1.resources.urls import (
         get_resource_names,
@@ -1013,7 +1013,7 @@ def get_no_images_sql_containers(write_report=True):
             )
             results = conn.execute_query(sql)
             postgres_results = len(results)
-            message3 = "No of images returned from postgresql: %s" % postgres_results
+            message3 = "Number of images returned from the database: %s" % postgres_results
             messages.append(message3)
             search_omero_app.logger.info(message3)
             if seachengine_results != postgres_results:
@@ -1037,12 +1037,12 @@ def get_no_images_sql_containers(write_report=True):
             f.write(report)
 
 """
-def set_owner_ship(resource , name, value, owener_id=None, group_id=None):
+def set_ownership(resource , name, value, owner_id=None, group_id=None):
     if hasattr(self, 'owener_id'):
         if hasattr(self, 'group_id'):
-    sql=query_images_key_value.substitute(naem=name, value=value)
-    if owener_id:
-        sql=sql +" %s.%owner_id=%s"%(resource,owener_id)
+    sql=query_images_key_value.substitute(name=name, value=value)
+    if owner_id:
+        sql=sql +" %s.%owner_id=%s"%(resource,owner_id)
     if group_id:
         sql = sql + " %s.%group_id=%s" % (resource, group_id)
 """
@@ -1093,7 +1093,7 @@ def check_container_keys_vakues():
                     else:
                         scr_searchengine_results = scr_searchengine_results.response
                     search_omero_app.logger.info(
-                        "Results from PostgreSQL database: %s" % len(screen_results)
+                        "Results from the database: %s" % len(screen_results)
                     )
                     if len(scr_searchengine_results) > 0 and scr_searchengine_results[
                         0
@@ -1123,7 +1123,7 @@ def check_container_keys_vakues():
                         pr_searchengine_results = pr_searchengine_results.response
 
                     search_omero_app.logger.info(
-                        "Results from PostgreSQL database: %s" % len(project_results)
+                        "Results from the database: %s" % len(project_results)
                     )
                     if len(pr_searchengine_results) > 0 and pr_searchengine_results[
                         0

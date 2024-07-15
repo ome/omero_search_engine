@@ -373,12 +373,12 @@ def data_validator(screen_name=None, project_name=None):
     It also checks the key-value pair duplication.
     It can check all the projects and screens.
     Also, it can run for a specific project or screen.
-    The output is CSV files; each check usually generates three files:
+    The output is  a collection of CSV files; each check usually generates three files:
     The main file contains image details (e.g. image id)
     in addition to the key and the value.
-    File for screens and one for projects.
+    one file for screens and one for projects.
     Each file contains the screen name (project name),
-      the key-value which has the issue and the total number of affected
+      the key-value pair which has the issue and the total number of affected
       images for each row.
     """
     from datetime import datetime
@@ -388,22 +388,18 @@ def data_validator(screen_name=None, project_name=None):
 
     from omero_search_engine.validation.omero_keyvalue_data_validator import (
         check_for_heading_space,
-        check_for_tailing_space,
+        check_for_trailing_space,
         check_duplicated_keyvalue_pairs,
     )
 
     start = datetime.now()
-    check_for_tailing_space(screen_name, project_name)
+    check_for_trailing_space(screen_name, project_name)
     start1 = datetime.now()
     check_for_heading_space(screen_name, project_name)
     start2 = datetime.now()
     check_duplicated_keyvalue_pairs(screen_name, project_name)
     end = datetime.now()
-    print(start)
-    print(start1)
-    print(start2)
-    print(end)
-
+    print ("start: %s, start1: %s, start2: %s, end: %s"%(start, start1, start2, end  ))
 
 @manager.command
 def test_container_key_value():
