@@ -56,7 +56,7 @@ def check_for_trailing_space(screen_name, project_name):
     )
     tail_space_results = conn.execute_query(sql_statment)
     if len(tail_space_results) == 0:
-        search_omero_app.logger.info("No results is aviable fro trailing space")
+        search_omero_app.logger.info("No results is availlable for trailing space")
         return
     search_omero_app.logger.info("Generate for trailing space ...")
     genrate_reports(tail_space_results, "tailing_space", screen_name, project_name)
@@ -116,7 +116,7 @@ def genrate_reports(results, check_type, screen_name, project_name):
             df.groupby(["screen_name", "name", "value"])
             .size()
             .reset_index()
-            .rename(columns={0: "no of images"})
+            .rename(columns={0: "number of images"})
         )
         with open(screens_file, "w") as text_file:
             text_file.write(df2.to_csv())
@@ -127,7 +127,7 @@ def genrate_reports(results, check_type, screen_name, project_name):
             df.groupby(["project_name", "name", "value"])
             .size()
             .reset_index()
-            .rename(columns={0: "no of images"})
+            .rename(columns={0: "number of images"})
         )
 
         with open(projects_file, "w") as text_file:

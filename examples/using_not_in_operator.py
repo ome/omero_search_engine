@@ -45,4 +45,4 @@ and_filters = [{"name": "Organism", "value": values_not_in, "operator": "not_in"
 main_attributes = []
 query = {"and_filters": and_filters}
 #
-recieved_results_data = query_the_search_ending(query, main_attributes)
+received_results_data = query_the_search_ending(query, main_attributes)

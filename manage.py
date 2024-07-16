@@ -369,11 +369,11 @@ def restore_elasticsearch_data():
 @manager.option("-p", "--project_name", help="Project name, or part of it")
 def data_validator(screen_name=None, project_name=None):
     """
-    Checking key-value pair for tailing and heading space.
+    Checking key-value pair for trailing and heading space.
     It also checks the key-value pair duplication.
     It can check all the projects and screens.
     Also, it can run for a specific project or screen.
-    The output is  a collection of CSV files; each check usually generates three files:
+    The output is a collection of CSV files; each check usually generates three files:
     The main file contains image details (e.g. image id)
     in addition to the key and the value.
     one file for screens and one for projects.
