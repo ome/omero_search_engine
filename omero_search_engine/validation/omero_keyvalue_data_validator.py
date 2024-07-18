@@ -56,10 +56,10 @@ def check_for_trailing_space(screen_name, project_name):
     )
     tail_space_results = conn.execute_query(sql_statment)
     if len(tail_space_results) == 0:
-        search_omero_app.logger.info("No results is availlable for trailing space")
+        search_omero_app.logger.info("No results is available for trailing space")
         return
     search_omero_app.logger.info("Generate for trailing space ...")
-    genrate_reports(tail_space_results, "tailing_space", screen_name, project_name)
+    generate_reports(tail_space_results, "trailing_space", screen_name, project_name)
 
 
 def check_for_heading_space(screen_name, project_name):
@@ -72,22 +72,22 @@ def check_for_heading_space(screen_name, project_name):
         search_omero_app.logger.info("No results available for heading space")
         return
     search_omero_app.logger.info("Generate for head space ...")
-    genrate_reports(head_space_results, "heading_space", screen_name, project_name)
+    generate_reports(head_space_results, "heading_space", screen_name, project_name)
 
 
 def check_duplicated_keyvalue_pairs(screen_name, project_name):
-    search_omero_app.logger.info("Checking for duplicated key-value pairs ...")
+    search_omero_app.logger.info("Checking for duplicated key-value pairs...")
     sql_statment = prepare_the_sql_statement(
         duplicated_keyvalue_pairs_query, screen_name, project_name, "where"
     )
     duplicated_keyvalue_pairs_results = conn.execute_query(sql_statment)
     if len(duplicated_keyvalue_pairs_results) == 0:
         search_omero_app.logger.info(
-            "No results available for duplicated key-value pairs "
+            "No results available for duplicated key-value pairs"
         )
         return
-    search_omero_app.logger.info("Generate reports for duplicated key-value pairs ...")
-    genrate_reports(
+    search_omero_app.logger.info("Generate reports for duplicated key-value pairs...")
+    generate_reports(
         duplicated_keyvalue_pairs_results,
         "duplicated_keyvalue_pairs",
         screen_name,
@@ -95,12 +95,12 @@ def check_duplicated_keyvalue_pairs(screen_name, project_name):
     )
 
 
-def genrate_reports(results, check_type, screen_name, project_name):
+def generate_reports(results, check_type, screen_name, project_name):
     """
     Generate the output CSV files contents and save them
     """
     df = pd.DataFrame(results)
-    base_folder = "/etc/searchengine/"
+    base_folder = search_omero_app.config.get("BASE_FOLDER")
     if not os.path.isdir(base_folder):
         base_folder = os.path.expanduser("~")
 

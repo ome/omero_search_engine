@@ -128,11 +128,11 @@ def restore_postgresql_database():
     help="resource name, creating all the indexes for all the resources is the default",  # noqa
 )
 @manager.option(
-    "-n",
-    "--nobackup",
+    "-b",
+    "--backup",
     help="if True, backup will be called ",  # noqa
 )
-def get_index_data_from_database(resource="all", nobackup=None):
+def get_index_data_from_database(resource="all", backup="True"):
     """
     insert data in Elasticsearch index for each resource
     It gets the data from postgres database server
@@ -144,7 +144,8 @@ def get_index_data_from_database(resource="all", nobackup=None):
         get_insert_data_to_index,
         save_key_value_buckets,
     )
-
+    import json
+    backup=json.loads(backup.lower())
     if resource != "all":
         sql_st = sqls_resources.get(resource)
         if not sql_st:
@@ -160,7 +161,7 @@ def get_index_data_from_database(resource="all", nobackup=None):
         test_indexing_search_query(deep_check=False, check_studies=True)
 
     # backup the index data
-    if not nobackup:
+    if backup:
         backup_elasticsearch_data()
 
 
@@ -412,4 +413,7 @@ def test_container_key_value():
 
 
 if __name__ == "__main__":
+    from flask_script import Command
+
+    Command.capture_all_args = False
     manager.run()

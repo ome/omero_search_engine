@@ -59,7 +59,7 @@ query_methods = {
     "not_in_clause": query_image_in,
     "screens_count": screens_count,
     "projects_count": projects_count,
-    "aviable_values_for_key": query_images_available_values_for_key,
+    "available_values_for_key": query_images_available_values_for_key,
     "search_any_value": query_images_any_value,
     "image_contains_not_contains": query_images_contains_not_contains,
 }
@@ -192,7 +192,7 @@ class Validator(object):
         search_omero_app.logger.info("Getting results from postgres")
         if self.type == "buckets":
             if self.name:
-                sql = query_methods["aviable_values_for_key"].substitute(name=self.name)
+                sql = query_methods["available_values_for_key"].substitute(name=self.name)
                 conn = search_omero_app.config["database_connector"]
                 self.postgres_results = conn.execute_query(sql)
             elif self.value:
@@ -578,7 +578,7 @@ class Validator(object):
         else:
             searchengine_no = self.searchengine_results
         return (
-            "not equal, number of the results from the database server is: %s and"
+            "not equal, the number of results from the database server is: %s and"
             "the number of results from searchengine is %s?,"
             "\ndatabase server query time= %s, searchengine query time= %s"
             % (len(self.postgres_results), searchengine_no, sql_time, searchengine_time)
@@ -666,7 +666,7 @@ def validate_queries(json_file, deep_check):
             validator_in.set_in_query(case, resource)
             res = validator_in.compare_results()
             messages.append(
-                "Results for 'in' form the database and search engine"
+                "Results for 'in' from the database and search engine"
                 "for %s name: %s and value in [%s] are %s"
                 % (
                     validator_in.resource,
@@ -683,7 +683,7 @@ def validate_queries(json_file, deep_check):
             validator_not_in.set_in_query(case, resource, type="not_in_clause")
             res = validator_not_in.compare_results()
             messages.append(
-                "Results for 'not in' form the database and search engine for %s name: "
+                "Results for 'not in' from the database and search engine for %s name: "
                 "%s and value in [%s] are %s"
                 % (
                     validator_not_in.resource,
@@ -706,7 +706,7 @@ def validate_queries(json_file, deep_check):
         "###########################################################################################################"  # noqa
     )
     # save the check report to a text file
-    base_folder = "/etc/searchengine/"
+    base_folder = search_omero_app.config.get("BASE_FOLDER")
     if not os.path.isdir(base_folder):
         base_folder = os.path.expanduser("~")
 
@@ -752,7 +752,7 @@ def test_no_images():
         names[name] = int(study[9])
 
     results = {}
-    base_folder = "/etc/searchengine/"
+    base_folder = search_omero_app.config.get("BASE_FOLDER")
     if not os.path.isdir(base_folder):
         base_folder = os.path.expanduser("~")
 
@@ -815,7 +815,7 @@ def test_no_images():
 
 def get_omero_stats():
     values = ["Attribute", "No. buckets", "Total number", "Resource"]
-    base_folder = "/etc/searchengine/"
+    base_folder = search_omero_app.config.get("BASE_FOLDER")
     if not os.path.isdir(base_folder):
         base_folder = os.path.expanduser("~")
     stats_file = os.path.join(base_folder, "stats.csv")
@@ -869,8 +869,8 @@ def check_number_images_sql_containers_using_ids():
     This method tests the number of images inside each container
      (project or screen) in the searchengine index data
     and compare them with the number of images inside
-    each container in the database server
-    As container name is not unique,container id is used
+    each container in the database server.
+    As container name is not unique, container id is used
     to determine the number of images
     """
     from omero_search_engine.api.v1.resources.urls import (
@@ -913,11 +913,11 @@ def check_number_images_sql_containers_using_ids():
             returned_results = search_resource_annotation("image", query_data)
             if returned_results.get("results"):
                 if returned_results.get("results").get("size"):
-                    seachengine_results = returned_results["results"]["size"]
+                    searchengine_results = returned_results["results"]["size"]
             else:
-                seachengine_results = 0
+                searchengine_results = 0
             search_omero_app.logger.info(
-                "No of images returned from searchengine: %s" % seachengine_results
+                "Number of images returned from searchengine: %s" % searchengine_results
             )
             if resource == "project":
                 sql = query_images_in_project_id.substitute(project_id=res_id)
@@ -926,9 +926,9 @@ def check_number_images_sql_containers_using_ids():
             results = conn.execute_query(sql)
             postgres_results = len(results)
             search_omero_app.logger.info(
-                "No of images returned from postgresql: %s" % postgres_results
+                "Number of images returned from the database: %s" % postgres_results
             )
-            if seachengine_results != postgres_results:
+            if searchengine_results != postgres_results:
                 if res_name == "idr0021" and res_id == 872:
                     # """
                     # issue with these two images:
@@ -937,7 +937,7 @@ def check_number_images_sql_containers_using_ids():
                     # """
                     continue
                 dd = False
-                if seachengine_results > 0:
+                if searchengine_results > 0:
                     test_array = []
                     for res in returned_results["results"]["results"]:
                         test_array.append(res.get("id"))
@@ -1030,7 +1030,7 @@ def get_no_images_sql_containers(write_report=True):
                 "\n-----------------------------------------------------------------------------\n"  # noqa
             )
     if write_report:
-        base_folder = "/etc/searchengine/"
+        base_folder = search_omero_app.config.get("BASE_FOLDER")
         if not os.path.isdir(base_folder):
             base_folder = os.path.expanduser("~")
         report_file = os.path.join(base_folder, "check_containers_report.txt")

@@ -57,7 +57,7 @@ from test_data import (
     query_in,
     images_keys,
     images_value_parts,
-    contains_not_contains_quries,
+    contains_not_contains_queries,
     image_owner,
     image_group,
     image_owner_group,
@@ -274,8 +274,8 @@ class BasicTestCase(unittest.TestCase):
                 validator.searchengine_results.get("total_number_of_buckets"),
             )
 
-    def test_contains_not_contains_quries(self):
-        for resource, cases in contains_not_contains_quries.items():
+    def test_contains_not_contains_queries(self):
+        for resource, cases in contains_not_contains_queries.items():
             for case in cases:
                 name = case[0]
                 value = case[1]
