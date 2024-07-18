@@ -192,7 +192,9 @@ class Validator(object):
         search_omero_app.logger.info("Getting results from postgres")
         if self.type == "buckets":
             if self.name:
-                sql = query_methods["available_values_for_key"].substitute(name=self.name)
+                sql = query_methods["available_values_for_key"].substitute(
+                    name=self.name
+                )
                 conn = search_omero_app.config["database_connector"]
                 self.postgres_results = conn.execute_query(sql)
             elif self.value:

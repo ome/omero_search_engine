@@ -145,7 +145,8 @@ def get_index_data_from_database(resource="all", backup="True"):
         save_key_value_buckets,
     )
     import json
-    backup=json.loads(backup.lower())
+
+    backup = json.loads(backup.lower())
     if resource != "all":
         sql_st = sqls_resources.get(resource)
         if not sql_st:
