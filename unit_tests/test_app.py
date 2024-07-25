@@ -34,6 +34,10 @@ from omero_search_engine.cache_functions.elasticsearch.elasticsearch_templates i
     key_values_resource_cache_template,
 )
 
+from omero_search_engine.validation.results_validator import (
+    Validator,
+    check_number_images_sql_containers_using_ids,
+)
 from omero_search_engine.cache_functions.elasticsearch.transform_data import (
     delete_es_index,
     create_index,
@@ -46,11 +50,24 @@ from test_data import (
     not_valid_and_filters,
     not_valid_or_filters,
     query,
+    query_image_and,
+    query_image_or,
+    query_image_and_or,
+    simple_queries,
+    query_in,
+    images_keys,
+    images_value_parts,
+    contains_not_contains_queries,
+    image_owner,
+    image_group,
+    image_owner_group,
 )
 
 from omero_search_engine import search_omero_app, create_app
 
 create_app("testing")
+# deep_check should be a configuration item
+deep_check = True
 
 
 class BasicTestCase(unittest.TestCase):
@@ -134,8 +151,6 @@ class BasicTestCase(unittest.TestCase):
         es_index_2 = "key_values_resource_cach"
         create_es_index_2 = True
         all_all_indices = get_all_indexes_from_elasticsearch()
-        print(all_all_indices)
-        print(all_all_indices.keys())
         if es_index_2 in all_all_indices.keys():
             create_es_index_2 = False
 
@@ -146,11 +161,188 @@ class BasicTestCase(unittest.TestCase):
                 create_index(es_index_2, key_values_resource_cache_template)
             )
         res = search_resource_annotation(table, query)
-        print(res)
         assert len(res.get("results")) >= 0
         self.assertTrue(delete_es_index(es_index))
         if create_es_index_2:
             self.assertTrue(delete_es_index(es_index_2))
+
+    def test_single_query(self):
+        """
+        test query the search engine and compare
+        its results with the results from the database
+        """
+        for resource, cases in simple_queries.items():
+            for case in cases:
+                name = case[0]
+                value = case[1]
+                validator = Validator(deep_check)
+                validator.set_simple_query(resource, name, value)
+                validator.get_results_db("equals")
+                validator.get_results_searchengine("equals")
+                self.assertEqual(
+                    len(validator.postgres_results),
+                    validator.searchengine_results.get("size"),
+                )
+                validator.get_results_db("not_equals")
+                validator.get_results_searchengine("not_equals")
+                self.assertEqual(
+                    len(validator.postgres_results),
+                    validator.searchengine_results.get("size"),
+                )
+                self.assertTrue(validator.identical)
+
+    def test_and_query(self):
+        name = "query_image_and"
+        for cases in query_image_and:
+            validator = Validator(deep_check)
+            validator.set_complex_query(name, cases)
+            validator.compare_results()
+            self.assertEqual(
+                len(validator.postgres_results),
+                validator.searchengine_results.get("size"),
+            )
+            self.assertTrue(validator.identical)
+
+    def test_or_query(self):
+        name = "query_image_or"
+        for cases in query_image_or:
+            validator = Validator(deep_check)
+            validator.set_complex_query(name, cases)
+            validator.compare_results()
+            self.assertEqual(
+                len(validator.postgres_results),
+                validator.searchengine_results.get("size"),
+            )
+            self.assertTrue(validator.identical)
+
+    def test_no_images_containers(self):
+        self.assertTrue(check_number_images_sql_containers_using_ids())
+
+    def test_multi_or_quries(self):
+        pass
+
+    def test_complex_query(self):
+        name = "query_image_and_or"
+        for cases in query_image_and_or:
+            validator = Validator(deep_check)
+            validator.set_complex_query(name, cases)
+            validator.compare_results()
+            self.assertEqual(
+                len(validator.postgres_results),
+                validator.searchengine_results.get("size"),
+            )
+            self.assertTrue(validator.identical)
+
+    def test_in_query(self):
+        for resource, cases in query_in.items():
+            for case in cases:
+                validator = Validator(deep_check)
+                validator.set_in_query(case, resource)
+                validator.compare_results()
+                self.assertEqual(
+                    len(validator.postgres_results),
+                    validator.searchengine_results.get("size"),
+                )
+                self.assertTrue(validator.identical)
+
+    def test_not_in_query(self):
+        for resource, cases in query_in.items():
+            for case in cases:
+                validator = Validator(deep_check)
+                validator.set_in_query(case, resource, type="not_in_clause")
+                validator.compare_results()
+                self.assertEqual(
+                    len(validator.postgres_results),
+                    validator.searchengine_results.get("size"),
+                )
+                self.assertTrue(validator.identical)
+
+    def test_seach_for_any_value(self):
+        for part in images_value_parts:
+            validator = Validator(deep_check)
+            validator.set_simple_query("image", None, part, type="buckets")
+            validator.compare_results()
+            self.assertEqual(
+                len(validator.postgres_results),
+                validator.searchengine_results.get("total_number_of_buckets"),
+            )
+
+    def test_available_values_for_key(self):
+        for image_key in images_keys:
+            validator = Validator(deep_check)
+            validator.set_simple_query("image", image_key, None, type="buckets")
+            validator.compare_results()
+            self.assertEqual(
+                len(validator.postgres_results),
+                validator.searchengine_results.get("total_number_of_buckets"),
+            )
+
+    def test_contains_not_contains_queries(self):
+        for resource, cases in contains_not_contains_queries.items():
+            for case in cases:
+                name = case[0]
+                value = case[1]
+                validator = Validator(deep_check)
+                validator.set_contains_not_contains_query(resource, name, value)
+                validator.get_results_db("contains")
+                validator.get_results_searchengine("contains")
+                self.assertEqual(
+                    len(validator.postgres_results),
+                    validator.searchengine_results.get("size"),
+                )
+                validator.get_results_db("not_contains")
+                validator.get_results_searchengine("not_contains")
+                self.assertEqual(
+                    len(validator.postgres_results),
+                    validator.searchengine_results.get("size"),
+                )
+                self.assertTrue(validator.identical)
+
+    def test_owner(self):
+        for resource, cases in image_owner.items():
+            for case in cases:
+                name = case[0]
+                value = case[1]
+                owner_id = case[2]
+                validator = Validator(deep_check)
+                validator.set_simple_query(resource, name, value)
+                validator.set_owner_group(owner_id=owner_id)
+                validator.compare_results()
+                self.assertEqual(
+                    len(validator.postgres_results),
+                    validator.searchengine_results.get("size"),
+                )
+
+    def test_group(self):
+        for resource, cases in image_group.items():
+            for case in cases:
+                name = case[0]
+                value = case[1]
+                group_id = case[2]
+                validator = Validator(deep_check)
+                validator.set_simple_query(resource, name, value)
+                validator.set_owner_group(group_id=group_id)
+                validator.compare_results()
+                self.assertEqual(
+                    len(validator.postgres_results),
+                    validator.searchengine_results.get("size"),
+                )
+
+    def test_owner_group(self):
+        for resource, cases in image_owner_group.items():
+            for case in cases:
+                name = case[0]
+                value = case[1]
+                owner_id = case[2]
+                group_id = case[3]
+                validator = Validator(deep_check)
+                validator.set_simple_query(resource, name, value)
+                validator.set_owner_group(owner_id=owner_id, group_id=group_id)
+                validator.compare_results()
+                self.assertEqual(
+                    len(validator.postgres_results),
+                    validator.searchengine_results.get("size"),
+                )
 
     # def test_add_delete_es_index(self):
     #    '''
