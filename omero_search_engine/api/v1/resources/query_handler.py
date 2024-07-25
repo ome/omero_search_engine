@@ -366,7 +366,7 @@ class QueryRunner(
                 for qu in qu_items:
                     if not qu:
                         continue
-                    if type(qu) != list:
+                    if not isinstance(qu, list):
                         ss.append(qu.__dict__)
                     else:
                         bb = []
