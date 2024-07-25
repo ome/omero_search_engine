@@ -1023,7 +1023,8 @@ def get_no_images_sql_containers(write_report=True):
             search_omero_app.logger.info(message2)
             messages.append(message2)
             sql = query_methods["%s_name" % resource].substitute(
-                name=res_name, operator="="            
+                name=res_name, operator="="
+            )
             results = conn.execute_query(sql, statement_timeout=statement_timeout)
             postgres_results = len(results)
             message3 = (
