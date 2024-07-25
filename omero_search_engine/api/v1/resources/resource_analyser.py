@@ -28,6 +28,7 @@ from omero_search_engine.api.v1.resources.utils import (
     adjust_value,
 )
 import math
+from flask import jsonify, Response
 
 key_number_search_template = Template(
     """
@@ -375,8 +376,6 @@ def prepare_search_results_buckets(results_):
 
 
 def get_key_values_return_contents(name, resource, csv):
-    from flask import jsonify, Response
-
     resource_keys = query_cashed_bucket(name, resource)
     # if a csv flag is true thenm iut will send a CSV file
     # which contains the results otherwise it will return a JSON file
@@ -801,3 +800,136 @@ def get_the_results(resource, name, description, es_index="key_values_resource_c
         del item["description"]
 
     return returned_results
+
+
+def get_container_values_for_key(table_, container_name, csv, key=None):
+    returned_results = []
+    pr_names = get_resource_names("all")
+    for resourse, names in pr_names.items():
+        act_name = [
+            {"id": name["id"], "name": name["name"]}
+            for name in names
+            if name["name"] and container_name.lower() in name["name"].lower()
+        ]
+        if len(act_name) > 0:
+            for id in act_name:
+                if resourse != table_:
+                    res = process_container_query(
+                        table_, resourse + "_id", id["id"], key, table_
+                    )
+                else:
+                    res = process_container_query(table_, "id", id["id"], key, table_)
+                if len(res) > 0:
+                    returned_results.append(
+                        {"name": id["name"], "type": resourse, "results": res}
+                    )
+    if csv:
+        if key:
+            containers = [
+                ",".join(["Container", "Type", "Key", "Value", "No of %s" % table_])
+            ]
+        else:
+            containers = [",".join(["Container", "Type", "Key", "No of %s" % table_])]
+        for r_results in returned_results:
+            reso = r_results.get("name")
+            type = r_results.get("type")
+            for res in r_results.get("results"):
+                if key:
+                    containers.append(
+                        ",".join(
+                            [
+                                reso,
+                                type,
+                                res.get("key"),
+                                res.get("value"),
+                                str(res.get("no_%s" % table_)),
+                            ]
+                        )
+                    )
+                else:
+                    containers.append(
+                        ",".join(
+                            [reso, type, res.get("key"), str(res.get("no_%s" % table_))]
+                        )
+                    )
+        if key:
+            file_name = "container_%s_%s_values.csv" % (container_name, key)
+        else:
+            file_name = "container_%s_keys.csv" % container_name
+
+        return Response(
+            "\n".join(containers),
+            mimetype="text/csv",
+            headers={"Content-disposition": "attachment; filename=%s" % (file_name)},
+        )
+    return jsonify(returned_results)
+
+
+def process_container_query(table_, attribute_name, container_id, key, resourse):
+    from omero_search_engine.api.v1.resources.utils import elasticsearch_query_builder
+
+    res_index = resource_elasticsearchindex.get(table_)
+    main_attributes = {
+        "and_main_attributes": [
+            {"name": attribute_name, "value": container_id, "operator": "equals"}
+        ]
+    }
+    query_ = elasticsearch_query_builder([], [], False, main_attributes=main_attributes)
+    query = json.loads(query_)
+    if key:
+        query["aggs"] = json.loads(
+            container_project_values_key_template.substitute(key=key.strip())
+        )
+    else:
+        query["aggs"] = container_project_keys_template
+    query["_source"] = {"includes": [""]}
+    res = search_index_for_value(res_index, query)
+    if key:
+        buckets = res["aggregations"]["key_values"]["key_filter"]["uniquesTerms"][
+            "buckets"
+        ]
+        for bucket in buckets:
+            bucket["value"] = bucket["key"]
+            bucket["key"] = key
+            bucket["no_" + resourse] = bucket["doc_count"]
+            del bucket["doc_count"]
+        return buckets
+
+    else:
+        buckets = res["aggregations"]["keys_search"]["uniquesTerms"]["buckets"]
+        for bucket in buckets:
+            bucket["no_" + resourse] = bucket["doc_count"]
+            del bucket["doc_count"]
+        return buckets
+
+
+"""
+get all the values buckets for a key"""
+container_project_values_key_template = Template(
+    """{"key_values":{"nested":{"path":"key_values"},"aggs":{"key_filter":{
+    "filter":{"terms":{"key_values.name.keynamenormalize":["$key"]}
+    },"aggs":{"required_values":{"cardinality":
+    {"field": "key_values.value.keyvalue",
+   "precision_threshold":4000}},"uniquesTerms":
+   {"terms": {"field": "key_values.value.keyvalue","size": 10000}}}}}}}"""
+)
+
+
+"""
+Get all the keys bucket"""
+container_project_keys_template = {
+    "keys_search": {
+        "nested": {"path": "key_values"},
+        "aggs": {
+            "required_values": {
+                "cardinality": {
+                    "field": "key_values.name.keynamenormalize",
+                    "precision_threshold": 4000,
+                },
+            },
+            "uniquesTerms": {
+                "terms": {"field": "key_values.name.keynamenormalize", "size": 10000}
+            },
+        },
+    }
+}
