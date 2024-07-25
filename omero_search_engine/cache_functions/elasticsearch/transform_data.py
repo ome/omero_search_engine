@@ -691,7 +691,7 @@ def save_key_value_buckets(
                 if resource_table == "project":
                     sql_n = query_images_in_project_id.substitute(project_id=id)
                 elif resource_table == "screen":
-                    sql_n = query_images_in_screen_id.substitute(screen_id=id)                    
+                    sql_n = query_images_in_screen_id.substitute(screen_id=id)
                 no_images_co = conn.execute_query(
                     sql_n, statement_timeout=statement_timeout
                 )
