@@ -115,12 +115,24 @@ def sql_results_to_panda():
 
 
 @manager.command
+def restore_postgresql_database():
+    from omero_search_engine.database.utils import restore_database
+
+    restore_database()
+
+
+@manager.command
 @manager.option(
     "-r",
     "--resource",
     help="resource name, creating all the indexes for all the resources is the default",  # noqa
 )
-def get_index_data_from_database(resource="all"):
+@manager.option(
+    "-b",
+    "--backup",
+    help="if True, backup will be called ",  # noqa
+)
+def get_index_data_from_database(resource="all", backup="True"):
     """
     insert data in Elasticsearch index for each resource
     It gets the data from postgres database server
@@ -132,7 +144,9 @@ def get_index_data_from_database(resource="all"):
         get_insert_data_to_index,
         save_key_value_buckets,
     )
+    import json
 
+    backup = json.loads(backup.lower())
     if resource != "all":
         sql_st = sqls_resources.get(resource)
         if not sql_st:
@@ -148,7 +162,8 @@ def get_index_data_from_database(resource="all"):
         test_indexing_search_query(deep_check=False, check_studies=True)
 
     # backup the index data
-    backup_elasticsearch_data()
+    if backup:
+        backup_elasticsearch_data()
 
 
 # set configurations
@@ -352,6 +367,44 @@ def restore_elasticsearch_data():
 
 
 @manager.command
+@manager.option("-s", "--screen_name", help="Screen name, or part of it")
+@manager.option("-p", "--project_name", help="Project name, or part of it")
+def data_validator(screen_name=None, project_name=None):
+    """
+    Checking key-value pair for trailing and heading space.
+    It also checks the key-value pair duplication.
+    It can check all the projects and screens.
+    Also, it can run for a specific project or screen.
+    The output is a collection of CSV files; each check usually generates three files:
+    The main file contains image details (e.g. image id)
+    in addition to the key and the value.
+    one file for screens and one for projects.
+    Each file contains the screen name (project name),
+      the key-value pair which has the issue and the total number of affected
+      images for each row.
+    """
+    from datetime import datetime
+
+    if screen_name and project_name:
+        print("Either screen name or project name is allowed")
+
+    from omero_search_engine.validation.omero_keyvalue_data_validator import (
+        check_for_heading_space,
+        check_for_trailing_space,
+        check_duplicated_keyvalue_pairs,
+    )
+
+    start = datetime.now()
+    check_for_trailing_space(screen_name, project_name)
+    start1 = datetime.now()
+    check_for_heading_space(screen_name, project_name)
+    start2 = datetime.now()
+    check_duplicated_keyvalue_pairs(screen_name, project_name)
+    end = datetime.now()
+    print("start: %s, start1: %s, start2: %s, end: %s" % (start, start1, start2, end))
+
+
+@manager.command
 def test_container_key_value():
     from omero_search_engine.validation.results_validator import (
         check_container_keys_vakues,
@@ -361,4 +414,7 @@ def test_container_key_value():
 
 
 if __name__ == "__main__":
+    from flask_script import Command
+
+    Command.capture_all_args = False
     manager.run()
