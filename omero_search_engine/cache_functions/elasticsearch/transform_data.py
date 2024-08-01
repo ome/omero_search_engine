@@ -36,7 +36,7 @@ from omero_search_engine.cache_functions.elasticsearch.elasticsearch_templates i
 )
 from omero_search_engine.validation.psql_templates import (
     query_images_in_project_id,
-    query_images_screen_id,
+    query_images_in_screen_id,
 )
 
 from app_data.data_attrs import annotation_resource_link
@@ -326,7 +326,7 @@ def handle_file(file_name, es_index, cols, is_image, from_json):
         actions.append(
             {
                 "_index": es_index,
-                "_source": record  # ,
+                "_source": record,  # ,
                 # "_id": record['id']
             }
         )
@@ -686,7 +686,7 @@ def save_key_value_buckets(
                 if resource_table == "project":
                     sql_n = query_images_in_project_id.substitute(project_id=id)
                 elif resource_table == "screen":
-                    sql_n = query_images_screen_id.substitute(screen_id=id)
+                    sql_n = query_images_in_screen_id.substitute(screen_id=id)
                 no_images_co = conn.execute_query(sql_n)
                 res["no_images"] = len(no_images_co)
 
