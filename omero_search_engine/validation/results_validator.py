@@ -231,8 +231,8 @@ class Validator(object):
             self.postgres_results = self.get_in_sql(self.clauses, self.type)
             return
         elif self.type == "complex":
-           if "_value_only" in self.name:
-                self.postgres_results = self.get_sql_value_only(self.clauses)
+            if "_value_only" in self.name:
+               self.postgres_results = self.get_sql_value_only(self.clauses)
             elif self.name == "query_image_or":
                  self.postgres_results = self.get_or_sql(self.clauses)
             elif self.name == "query_image_and":
@@ -1259,4 +1259,3 @@ def check_container_keys_vakues():
                         search_omero_app.logger.info(
                             "No results returned from searchengine"
                         )
- 
