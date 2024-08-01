@@ -479,7 +479,6 @@ def elasticsearch_query_builder(
                         nested_must_not_part.append(
                             nested_keyvalue_pair_query_template.substitute(
                                 nested=case_sensitive_wildcard_value_condition_template.substitute(  # noqa
- 
                                     wild_card_value=value
                                 ),
                                 must_part=case_sensitive_must_name_condition_template.substitute(  # noqa
@@ -500,7 +499,6 @@ def elasticsearch_query_builder(
                         nested_must_not_part.append(
                             nested_keyvalue_pair_query_template.substitute(
                                 nested=case_insensitive_wildcard_value_condition_template.substitute(  # noqa
- 
                                     wild_card_value=value
                                 ),
                                 must_part=case_insensitive_must_name_condition_template.substitute(  # noqa
@@ -522,7 +520,6 @@ def elasticsearch_query_builder(
                         nested_must_not_part.append(
                             nested_keyvalue_pair_query_template.substitute(
                                 nested=case_sensitive_must_value_condition_template.substitute(  # noqa
- 
                                     value=value
                                 ),
                                 must_part=case_sensitive_must_name_condition_template.substitute(  # noqa
@@ -543,7 +540,6 @@ def elasticsearch_query_builder(
                         nested_must_not_part.append(
                             nested_keyvalue_pair_query_template.substitute(
                                 nested=case_insensitive_must_value_condition_template.substitute(  # noqa
-
                                     value=value
                                 ),
                                 must_part=case_insensitive_must_name_condition_template.substitute(  # noqa
