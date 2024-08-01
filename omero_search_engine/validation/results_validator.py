@@ -232,9 +232,9 @@ class Validator(object):
             return
         elif self.type == "complex":
             if "_value_only" in self.name:
-               self.postgres_results = self.get_sql_value_only(self.clauses)
+                self.postgres_results = self.get_sql_value_only(self.clauses)
             elif self.name == "query_image_or":
-                 self.postgres_results = self.get_or_sql(self.clauses)
+                self.postgres_results = self.get_or_sql(self.clauses)
             elif self.name == "query_image_and":
                 self.postgres_results = self.get_and_sql(self.clauses)
             else:
@@ -1157,7 +1157,7 @@ def validate_search_by_value_conds(vals=None, operator=None):
 
     print(len(postgres_results))
     print(len(z))
- 
+
 
 """
 def set_ownership(resource , name, value, owner_id=None, group_id=None):
