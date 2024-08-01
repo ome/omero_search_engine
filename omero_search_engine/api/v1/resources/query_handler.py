@@ -35,6 +35,9 @@ mapping_names = {
     "screen": {"name": "name", "description": "description"},
 }
 
+res_and_main_attributes = None
+res_or_main_attributes = None
+
 
 def check_get_names(idr_, resource, attribute, return_exact=False):
     # check the idr name and return the resource and possible values
@@ -107,8 +110,10 @@ class QueryItem(object):
                     )
                     if len(ac_value) == 1:
                         self.value = ac_value[0]
-                    else:
+                    elif len(ac_value) == 0:
                         self.value = -1
+                    else:
+                        self.value = ac_value
                 """
                 pr_names = get_resource_names(self.resource)
                 if not self.value in pr_names:
@@ -337,6 +342,7 @@ class QueryRunner(
 
     def run_query(self, query_, resource):
         main_attributes = {}
+
         query = {"and_filters": [], "or_filters": []}
 
         if query_.get("and_filters"):
@@ -366,7 +372,7 @@ class QueryRunner(
                 for qu in qu_items:
                     if not qu:
                         continue
-                    if type(qu) != list:
+                    if not isinstance(qu, list):
                         ss.append(qu.__dict__)
                     else:
                         bb = []
@@ -398,6 +404,11 @@ class QueryRunner(
         # res = search_query(query, resource, bookmark,
         #                    self.raw_elasticsearch_query,
         #                    main_attributes,return_containers=self.return_containers)
+        global res_and_main_attributes, res_or_main_attributes
+        if res_and_main_attributes:
+            main_attributes["and_main_attributes"] = (
+                main_attributes.get("and_main_attributes") + res_and_main_attributes
+            )
         if resource == "image" and self.return_containers:
             res = search_query(
                 query,
@@ -633,6 +644,12 @@ def determine_search_results_(query_, return_columns=False, return_containers=Fa
     and_filters = query_.get("query_details").get("and_filters")
     or_filters = query_.get("query_details").get("or_filters")
     and_query_groups = []
+    main_attributes = query_.get("main_attributes")
+    global res_and_main_attributes, res_or_main_attributes
+    if main_attributes:
+        res_and_main_attributes = main_attributes.get("and_main_attributes")
+        res_or_main_attributes = main_attributes.get("or_main_attributes")
+
     columns_def = query_.get("columns_def")
     or_query_groups = []
     if and_filters and len(and_filters) > 0:
@@ -789,9 +806,9 @@ def add_local_schemas_to(resolver, schema_folder, base_uri, schema_ext=".json"):
 
 
 def query_validator(query):
-    query_schema_file = (
-        "omero_search_engine/api/v1/resources/schemas/query_data.json"  # noqa
-    )
+    print("TRoz", query)
+    main_dir = os.path.abspath(os.path.dirname(__file__))
+    query_schema_file = os.path.join(main_dir, "schemas", "query_data.json")
     base_uri = "file:" + abspath("") + "/"
     with open(query_schema_file, "r") as schema_f:
         query_schema = json.loads(schema_f.read())

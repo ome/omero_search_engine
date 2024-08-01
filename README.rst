@@ -1,6 +1,10 @@
 .. image:: https://github.com/ome/omero_search_engine/workflows/Build/badge.svg
    :target: https://github.com/ome/omero_search_engine/actions
 
+.. image:: https://readthedocs.org/projects/omero-search-engine/badge/?version=latest
+    :target: https://omero-search-engine.readthedocs.io/en/latest/?badge=latest
+    :alt: Documentation Status
+
 OMERO Search Engine
 --------------------
 

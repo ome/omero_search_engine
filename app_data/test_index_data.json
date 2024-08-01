@@ -108,5 +108,27 @@
             "validation screen"
          ]
       ]
-   }
+   },
+    "query_in": {
+       "image": [
+         [
+          "Gene Symbol",
+          [
+             "Duoxa2",
+             "Bach2",
+             "Cxcr2",
+             "Mysm1"
+          ]
+          ],
+          [
+          "Organism",
+          [
+             "homo sapiens",
+             "mus musculus",
+             "mus musculus x mus spretus",
+             "human adenovirus 2"
+          ]
+       ]
+          ]
+    }
 }
