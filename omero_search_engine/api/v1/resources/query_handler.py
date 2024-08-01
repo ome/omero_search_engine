@@ -73,6 +73,8 @@ class QueryItem(object):
         """
         self.resource = filter.get("resource")
         self.name = filter.get("name")
+        if self.name and self.name.lower() == "name":
+            self.name = "name"
         self.value = filter.get("value")
         self.operator = filter.get("operator")
         if filter.get("set_query_type") and filter.get("query_type"):
@@ -243,10 +245,13 @@ class QueryRunner(
         for or_it in self.or_query_group:
             checked_list = []
             main_or_attribute_ = {}
+            ss = []
+            image_or_queries.append(ss)
             for resource, or_query in or_it.resources_query.items():
                 checked_list.append(resource)
                 if resource == "image":
-                    image_or_queries.append(or_query)
+                    ss += or_query
+                    # image_or_queries.append(or_query)
                 else:
                     # non image or filters should be inside the or main
                     # attributes filters
@@ -257,29 +262,15 @@ class QueryRunner(
                     res = self.run_query(query, resource)
                     new_cond = get_ids(res, resource)
                     if new_cond:
-                        if not main_or_attribute_.get(resource):
-                            main_or_attribute_[resource] = new_cond
-                        else:
-                            main_or_attribute_[resource] = (
-                                main_or_attribute_[resource] + new_cond
-                            )
-
-                        # main_or_attribute.append(new_cond)
-                        # self.additional_image_conds.append(new_cond)
+                        for cond in new_cond:
+                            cond.resource = "image"
+                            ss.append(cond)
                     else:
                         # check if all the conditions have been checked
                         if len(main_or_attribute_.keys()) == 0 and len(
                             checked_list
                         ) == len(or_it.resources_query):
                             return {"Error": "Your query returns no results"}
-            for res, items_ in main_or_attribute_.items():
-                if res not in main_or_attribute:
-                    main_or_attribute[res] = items_
-                else:
-                    main_or_attribute[res] = combine_conds(
-                        main_or_attribute[res], items_, res
-                    )
-
         if len(self.or_query_group) > 0 and len(image_or_queries) == 0:
             no_conds = 0
             for res, item in main_or_attribute.items():
@@ -667,7 +658,7 @@ def determine_search_results_(query_, return_columns=False, return_containers=Fa
                     "This release does not support search by description."
                 )
             if q_item.query_type == "main_attribute" and (
-                filter["name"] == "name"  # or filter["name"] == "description"
+                filter["name"].lower() == "name"  # or filter["name"] == "description"
             ):
                 if isinstance(q_item.value, list):
                     new_or_filter = []
@@ -705,7 +696,8 @@ def determine_search_results_(query_, return_columns=False, return_containers=Fa
                             "This release does not support search by description."
                         )
                     if q_item.query_type == "main_attribute" and (
-                        filter["name"] == "name"  # or filter["name"] == "description"
+                        filter["name"].lower()
+                        == "name"  # or filter["name"] == "description"
                     ):
                         if isinstance(q_item.value, list):
                             for val in q_item.value:
