@@ -177,7 +177,10 @@ def get_images_dataset_project(ids):
          datasetimagelink.child in ({ids})".format(
         ids=ids
     )
-    results = search_omero_app.config["database_connector"].execute_query(sql)
+    statement_timeout = search_omero_app.config["STATEMENT_TIMEOUT"]
+    results = search_omero_app.config["database_connector"].execute_query(
+        sql, statement_timeout=statement_timeout
+    )
     return results
 
 
@@ -194,7 +197,10 @@ def get_images_plates_screens(ids):
            where wellsample.image in ({ids})".format(
         ids=ids
     )
-    results = search_omero_app.config["database_connector"].execute_query(sql)
+    statement_timeout = search_omero_app.config["STATEMENT_TIMEOUT"]
+    results = search_omero_app.config["database_connector"].execute_query(
+        sql, statement_timeout=statement_timeout
+    )
     screens = []
     plates = []
     for res in results:
@@ -210,7 +216,8 @@ def create_csv_for_images(folder):
     Query database to get the image data then save them to multiple CSV files
     """
     conn = search_omero_app.config["database_connector"]
-    image_data = conn.execute_query(image_sql)
+    statement_timeout = search_omero_app.config["STATEMENT_TIMEOUT"]
+    image_data = conn.execute_query(image_sql, statement_timeout=statement_timeout)
     total_records = len(image_data)
     file_size = 2200000
 

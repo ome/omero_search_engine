@@ -157,7 +157,9 @@ class Validator(object):
         # sql = query_methods[name].substitute(names=names, values=values)
         sql = query_methods[name].substitute(names=names, values=values, operator="in")
         conn = search_omero_app.config["database_connector"]
-        postgres_results = conn.execute_query(sql)
+        statement_timeout = search_omero_app.config["STATEMENT_TIMEOUT"]
+        postgres_results = conn.execute_query(sql, statement_timeout=statement_timeout)
+
         results = [item["id"] for item in postgres_results]
         search_omero_app.logger.info(
             "results for 'or' received %s" % len(results)
@@ -175,7 +177,10 @@ class Validator(object):
                 value=claus[1].lower(),
             )
             conn = search_omero_app.config["database_connector"]
-            postgres_results = conn.execute_query(sql)
+            statement_timeout = search_omero_app.config["STATEMENT_TIMEOUT"]
+            postgres_results = conn.execute_query(
+                sql, statement_timeout=statement_timeout
+            )
             res = [item["id"] for item in postgres_results]
             search_omero_app.logger.info("results for 'and' received %s" % len(res))
             if co == 0:
@@ -250,7 +255,8 @@ class Validator(object):
                 print(sql)
         # search_omero_app.logger.info ("sql: %s"%sql)
         conn = search_omero_app.config["database_connector"]
-        postgres_results = conn.execute_query(sql)
+        statement_timeout = search_omero_app.config["STATEMENT_TIMEOUT"]
+        postgres_results = conn.execute_query(sql, statement_timeout=statement_timeout)
         self.postgres_results = [item["id"] for item in postgres_results]
         search_omero_app.logger.info(
             "results received %s" % len(self.postgres_results)
@@ -455,8 +461,13 @@ class Validator(object):
             key=self.name, value=self.value
         )
         conn = search_omero_app.config["database_connector"]
-        screens_results = conn.execute_query(screens_count_sql)
-        projects_results = conn.execute_query(projects_count_sql)
+        statement_timeout = search_omero_app.config["STATEMENT_TIMEOUT"]
+        screens_results = conn.execute_query(
+            screens_count_sql, statement_timeout=statement_timeout
+        )
+        projects_results = conn.execute_query(
+            projects_count_sql, statement_timeout=statement_timeout
+        )
         screens_results_idr = [item["name"] for item in screens_results]
         projects_results_idr = [item["name"] for item in projects_results]
         search_engine_results = simple_search(
@@ -974,6 +985,7 @@ def get_no_images_sql_containers(write_report=True):
     from omero_search_engine.api.v1.resources.utils import adjust_query_for_container
 
     conn = search_omero_app.config["database_connector"]
+    statement_timeout = search_omero_app.config["STATEMENT_TIMEOUT"]
 
     all_names = get_resource_names("all")
     messages = []
@@ -1013,7 +1025,7 @@ def get_no_images_sql_containers(write_report=True):
             sql = query_methods["%s_name" % resource].substitute(
                 name=res_name, operator="="
             )
-            results = conn.execute_query(sql)
+            results = conn.execute_query(sql, statement_timeout=statement_timeout)
             postgres_results = len(results)
             message3 = (
                 "Number of images returned from the database: %s" % postgres_results
@@ -1078,8 +1090,13 @@ def check_container_keys_vakues():
                 container="screen", name=container_name
             )
             conn = search_omero_app.config["database_connector"]
-            project_ids_results = conn.execute_query(project_sql)
-            screen_ids_results = conn.execute_query(screen_sql)
+            statement_timeout = search_omero_app.config["STATEMENT_TIMEOUT"]
+            project_ids_results = conn.execute_query(
+                project_sql, statement_timeout=statement_timeout
+            )
+            screen_ids_results = conn.execute_query(
+                screen_sql, statement_timeout=statement_timeout
+            )
 
             search_omero_app.logger.info("projects: %s" % project_ids_results)
             search_omero_app.logger.info("screens: %s" % screen_ids_results)
@@ -1087,7 +1104,9 @@ def check_container_keys_vakues():
             if len(screen_ids_results) > 0:
                 for id in screen_ids_results:
                     screen_sql = screen_key_values.substitute(id=id.get("id"), name=key)
-                    screen_results = conn.execute_query(screen_sql)
+                    screen_results = conn.execute_query(
+                        screen_sql, statement_timeout=statement_timeout
+                    )
                     scr_searchengine_results = get_container_values_for_key(
                         "image", container_name, csv, key
                     )
@@ -1116,7 +1135,9 @@ def check_container_keys_vakues():
                     project_sql = project_key_values.substitute(
                         id=id.get("id"), name=key
                     )
-                    project_results = conn.execute_query(project_sql)
+                    project_results = conn.execute_query(
+                        project_sql, statement_timeout=statement_timeout
+                    )
                     pr_searchengine_results = get_container_values_for_key(
                         "image", container_name, csv, key
                     )

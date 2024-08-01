@@ -449,7 +449,10 @@ def get_insert_data_to_index(sql_st, resource):
     delete_index(resource)
     create_omero_indexes(resource)
     sql_ = "select max (id) from %s" % resource
-    res2 = search_omero_app.config["database_connector"].execute_query(sql_)
+    statement_timeout = search_omero_app.config["STATEMENT_TIMEOUT"]
+    res2 = search_omero_app.config["database_connector"].execute_query(
+        sql_, statement_timeout=statement_timeout
+    )
     max_id = res2[0]["max"]
     page_size = search_omero_app.config["CACHE_ROWS"]
     start_time = datetime.now()
@@ -523,7 +526,8 @@ def processor_work(lock, global_counter, val):
         "Calling the databas for %s/%s" % (global_counter.value, total_process)
     )
     conn = search_omero_app.config["database_connector"]
-    results = conn.execute_query(mod_sql)
+    statement_timeout = search_omero_app.config["STATEMENT_TIMEOUT"]
+    results = conn.execute_query(mod_sql, statement_timeout=statement_timeout)
     search_omero_app.logger.info("Processing the results...")
     process_results(results, resource, lock)
     average_time = (datetime.now() - st) / 2
@@ -678,7 +682,8 @@ def save_key_value_buckets(
                 resource=resource_table
             )
             conn = search_omero_app.config["database_connector"]
-            name_result = conn.execute_query(sql)
+            statement_timeout = search_omero_app.config["STATEMENT_TIMEOUT"]
+            name_result = conn.execute_query(sql, statement_timeout=statement_timeout)
             # name_results = [res["name"] for res in name_results]
             # Determine the number of images for each container
             for res in name_result:
@@ -687,7 +692,9 @@ def save_key_value_buckets(
                     sql_n = query_images_in_project_id.substitute(project_id=id)
                 elif resource_table == "screen":
                     sql_n = query_images_in_screen_id.substitute(screen_id=id)
-                no_images_co = conn.execute_query(sql_n)
+                no_images_co = conn.execute_query(
+                    sql_n, statement_timeout=statement_timeout
+                )
                 res["no_images"] = len(no_images_co)
 
             name_results = [
@@ -792,7 +799,10 @@ def get_keys(res_table):
            annotation_mapvalue.annotation_id".format(
         res_table=res_table
     )
-    results = search_omero_app.config["database_connector"].execute_query(sql)
+    statement_timeout = search_omero_app.config["STATEMENT_TIMEOUT"]
+    results = search_omero_app.config["database_connector"].execute_query(
+        sql, statement_timeout=statement_timeout
+    )
     results = [res["name"] for res in results]
     return results
 
