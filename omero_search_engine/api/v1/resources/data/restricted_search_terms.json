@@ -9,6 +9,13 @@
       "Organism"
    ],
    "screen":[
+      "name",
+      "Imaging Method",
+      "Publication Title",
+      "Publication Authors",
+      "Study Type",
+      "License",
+      "Organism",
       "Screen Technology Type",
       "Screen Type"
    ],

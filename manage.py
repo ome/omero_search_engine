@@ -335,14 +335,14 @@ def test_indexing_search_query(
     from omero_search_engine.validation.results_validator import (
         validate_queries,
         test_no_images,
-        get_omero_stats,
+        # get_omero_stats,
         get_no_images_sql_containers,
     )
 
     validate_queries(json_file, deep_check)
     if check_studies:
         test_no_images()
-    get_omero_stats()
+    # get_omero_stats()
     get_no_images_sql_containers()
 
 
@@ -411,6 +411,49 @@ def test_container_key_value():
     )
 
     check_container_keys_vakues()
+
+
+@manager.option(
+    "-l",
+    "--logs_folder",
+    help="Folder contains the log files",  # noqa
+)
+def get_search_terms_froget_all_indexes_from_elasticsearchm_log(logs_folder=None):
+    from tools.utils.logs_analyser import get_search_terms
+
+    get_search_terms(logs_folder)
+
+
+@manager.command
+@manager.option("-p", "--password", help="username password to be hashed")
+def create_hash_password_for_admin(password=None):
+    from werkzeug.security import generate_password_hash
+
+    if password:
+        h_pass = generate_password_hash(password)
+        print(h_pass)
+        print("==============")
+        add_admin_hashed_password(h_pass)
+    else:
+        search_omero_app.logger.info("No attribute is provided")
+
+
+@manager.command
+@manager.option("-s", "--sh_password", help="hased password")
+def add_admin_hashed_password(sh_password=None):
+    if sh_password:
+        update_config_file({"SEARCHENGINE_ADMIN_PASSWD": sh_password})
+    else:
+        search_omero_app.logger.info("No attribute is provided")
+
+
+@manager.command
+@manager.option("-l", "--logs_folder", help="hased password")
+def set_logs_folder(logs_folder=None):
+    if logs_folder:
+        update_config_file({"SEARCHENGINE_LOGS_FOLDER": logs_folder})
+    else:
+        search_omero_app.logger.info("No attribute is provided")
 
 
 if __name__ == "__main__":
