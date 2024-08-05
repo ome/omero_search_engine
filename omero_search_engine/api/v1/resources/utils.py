@@ -316,7 +316,7 @@ def elasticsearch_query_builder(
                 key = filter.get("name")
                 if key:
                     key = key.strip()
-                #value = filter["value"].strip()
+                # value = filter["value"].strip()
 
                 operator = filter["operator"].strip()
                 if operator in operators_required_list_data_type:
@@ -506,7 +506,6 @@ def elasticsearch_query_builder(
                                 )
                             )
 
-
                     else:
                         if key:
                             nested_must_part.append(
@@ -525,7 +524,7 @@ def elasticsearch_query_builder(
                                     must_not_part=case_insensitive_wildcard_value_condition_template.substitute(  # noqa
                                         wild_card_value=value
                                     ),
-                                    must_part=[]
+                                    must_part=[],
                                 )
                             )
                 else:
@@ -547,7 +546,7 @@ def elasticsearch_query_builder(
                                     must_not_part=case_sensitive_wildcard_value_condition_template.substitute(  # noqa
                                         wild_card_value=value
                                     ),
-                                    must_part=''
+                                    must_part="",
                                 )
                             )
                     else:
@@ -569,7 +568,7 @@ def elasticsearch_query_builder(
                                     must_not_part=case_insensitive_wildcard_value_condition_template.substitute(  # noqa
                                         wild_card_value=value
                                     ),
-                                    must_part=''
+                                    must_part="",
                                 )
                             )
 
@@ -1080,7 +1079,7 @@ def search_resource_annotation(
     @query: the a dict contains the three filters (or, and and  not) items
     @raw_elasticsearch_query: raw query sending directly to elasticsearch
     """
-    #try:
+    # try:
     res_index = resource_elasticsearchindex.get(table_)
     if not res_index:
         return build_error_message(
@@ -1168,7 +1167,7 @@ def search_resource_annotation(
         "raw_elasticsearch_query": raw_query_to_send_back,
         "notice": notice,
     }
-    #except Exception as e:
+    # except Exception as e:
     #    search_omero_app.logger.info("Query %s" % str(query))
     #    search_omero_app.logger.info("==>>>Error: %s" % str(e))
     #    return build_error_message(
