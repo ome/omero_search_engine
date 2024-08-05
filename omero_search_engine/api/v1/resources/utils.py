@@ -161,7 +161,7 @@ case_sensitive_wildcard_value_condition_template = Template(
 # Used for contains and not contains
 case_insensitive_wildcard_value_condition_template = Template(
     """
-{"wildcard": {"key_values.value.keyvaluenormalize":"$wild_card_value"}}"""
+{"wildcard": {"key_values.value.keyvaluenormalize":"$wild_card_value" }}"""
 )
 case_sensitive_range_value_condition_template = Template(
     """
@@ -316,7 +316,7 @@ def elasticsearch_query_builder(
                 key = filter.get("name")
                 if key:
                     key = key.strip()
-                value = filter["value"].strip()
+                #value = filter["value"].strip()
 
                 operator = filter["operator"].strip()
                 if operator in operators_required_list_data_type:
@@ -406,28 +406,46 @@ def elasticsearch_query_builder(
 
             if operator == "not_in":
                 if case_sensitive:
-                    nested_must_part.append(
-                        nested_query_template_must_must_not.substitute(
-                            must_not_part=case_sensitive_must_in_value_condition_template.substitute(  # noqa
-                                value=value
-                            ),
-                            must_part=case_sensitive_must_name_condition_template.substitute(  # noqa
-                                name=key
-                            ),
+                    if key:
+                        nested_must_part.append(
+                            nested_query_template_must_must_not.substitute(
+                                must_not_part=case_sensitive_must_in_value_condition_template.substitute(  # noqa
+                                    value=value
+                                ),
+                                must_part=case_sensitive_must_name_condition_template.substitute(  # noqa
+                                    name=key
+                                ),
+                            )
                         )
-                    )
+                    else:
+                        nested_must_part.append(
+                            nested_query_template_must_must_not.substitute(
+                                must_not_part=case_sensitive_must_in_value_condition_template.substitute(  # noqa
+                                    value=value
+                                ),
+                            )
+                        )
 
                 else:
-                    nested_must_part.append(
-                        nested_query_template_must_must_not.substitute(
-                            must_not_part=case_insensitive_must_in_value_condition_template.substitute(  # noqa
-                                value=value
-                            ),
-                            must_part=case_insensitive_must_name_condition_template.substitute(  # noqa
-                                name=key
-                            ),
+                    if key:
+                        nested_must_part.append(
+                            nested_query_template_must_must_not.substitute(
+                                must_not_part=case_insensitive_must_in_value_condition_template.substitute(  # noqa
+                                    value=value
+                                ),
+                                must_part=case_insensitive_must_name_condition_template.substitute(  # noqa
+                                    name=key
+                                ),
+                            )
                         )
-                    )
+                    else:
+                        nested_must_part.append(
+                            nested_query_template_must_must_not.substitute(
+                                must_not_part=case_insensitive_must_in_value_condition_template.substitute(  # noqa
+                                    value=value
+                                ),
+                            )
+                        )
 
             if operator == "contains":
                 value = "*{value}*".format(value=adjust_value(value))
@@ -471,82 +489,89 @@ def elasticsearch_query_builder(
                         if key:
                             nested_must_part.append(
                                 nested_keyvalue_pair_query_template.substitute(
-                                    nested=case_sensitive_must_name_condition_template.substitute(  # noqa
+                                    nested=case_sensitive_wildcard_value_condition_template.substitute(  # noqa
+                                        wild_card_value=value
+                                    ),
+                                    must_part=case_sensitive_must_name_condition_template.substitute(  # noqa
                                         name=key
-                                    )
+                                    ),
                                 )
                             )
-                        nested_must_not_part.append(
-                            nested_keyvalue_pair_query_template.substitute(
-                                nested=case_sensitive_wildcard_value_condition_template.substitute(  # noqa
-                                    wild_card_value=value
-                                ),
-                                must_part=case_sensitive_must_name_condition_template.substitute(  # noqa
-                                    name=key
-                                ),
+                        else:
+                            nested_must_not_part.append(
+                                nested_keyvalue_pair_query_template.substitute(
+                                    nested=case_sensitive_wildcard_value_condition_template.substitute(  # noqa
+                                        wild_card_value=value
+                                    ),
+                                )
                             )
-                        )
+
 
                     else:
                         if key:
                             nested_must_part.append(
-                                nested_keyvalue_pair_query_template.substitute(
-                                    nested=case_insensitive_must_name_condition_template.substitute(  # noqa
+                                nested_query_template_must_must_not.substitute(
+                                    must_not_part=case_insensitive_wildcard_value_condition_template.substitute(  # noqa
+                                        wild_card_value=value
+                                    ),
+                                    must_part=case_insensitive_must_name_condition_template.substitute(  # noqa
                                         name=key
-                                    )
+                                    ),
                                 )
                             )
-                        nested_must_not_part.append(
-                            nested_keyvalue_pair_query_template.substitute(
-                                nested=case_insensitive_wildcard_value_condition_template.substitute(  # noqa
-                                    wild_card_value=value
-                                ),
-                                must_part=case_insensitive_must_name_condition_template.substitute(  # noqa
-                                    name=key
-                                ),
+                        else:
+                            nested_must_part.append(
+                                nested_query_template_must_must_not.substitute(
+                                    must_not_part=case_insensitive_wildcard_value_condition_template.substitute(  # noqa
+                                        wild_card_value=value
+                                    ),
+                                    must_part=[]
+                                )
                             )
-                        )
-
                 else:
                     if case_sensitive:
                         if key:
                             nested_must_part.append(
-                                nested_keyvalue_pair_query_template.substitute(
-                                    nested=case_sensitive_must_name_condition_template.substitute(  # noqa
+                                nested_query_template_must_must_not.substitute(
+                                    must_not_part=case_sensitive_must_value_condition_template.substitute(  # noqa
+                                        value=value
+                                    ),
+                                    must_part=case_sensitive_must_name_condition_template.substitute(  # noqa
                                         name=key
-                                    )
+                                    ),
                                 )
                             )
-                        nested_must_not_part.append(
-                            nested_keyvalue_pair_query_template.substitute(
-                                nested=case_sensitive_must_value_condition_template.substitute(  # noqa
-                                    value=value
-                                ),
-                                must_part=case_sensitive_must_name_condition_template.substitute(  # noqa
-                                    name=key
-                                ),
+                        else:
+                            nested_must_part.append(
+                                nested_query_template_must_must_not.substitute(
+                                    must_not_part=case_sensitive_wildcard_value_condition_template.substitute(  # noqa
+                                        wild_card_value=value
+                                    ),
+                                    must_part=''
+                                )
                             )
-                        )
-
                     else:
                         if key:
                             nested_must_part.append(
-                                nested_keyvalue_pair_query_template.substitute(
-                                    nested=case_insensitive_must_name_condition_template.substitute(  # noqa
+                                nested_query_template_must_must_not.substitute(
+                                    must_not_part=case_insensitive_must_value_condition_template.substitute(  # noqa
+                                        value=value
+                                    ),
+                                    must_part=case_insensitive_must_name_condition_template.substitute(  # noqa
                                         name=key
-                                    )
+                                    ),
                                 )
                             )
-                        nested_must_not_part.append(
-                            nested_keyvalue_pair_query_template.substitute(
-                                nested=case_insensitive_must_value_condition_template.substitute(  # noqa
-                                    value=value
-                                ),
-                                must_part=case_insensitive_must_name_condition_template.substitute(  # noqa
-                                    name=key
-                                ),
+                        else:
+
+                            nested_must_part.append(
+                                nested_query_template_must_must_not.substitute(
+                                    must_not_part=case_insensitive_wildcard_value_condition_template.substitute(  # noqa
+                                        wild_card_value=value
+                                    ),
+                                    must_part=''
+                                )
                             )
-                        )
 
             elif operator in ["lt", "lte", "gt", "gte"]:
                 # nested_must_part.append(nested_keyvalue_pair_query_template.substitute(nested=must_name_condition_template.substitute(name=key))) # noqa
@@ -1055,100 +1080,100 @@ def search_resource_annotation(
     @query: the a dict contains the three filters (or, and and  not) items
     @raw_elasticsearch_query: raw query sending directly to elasticsearch
     """
-    try:
-        res_index = resource_elasticsearchindex.get(table_)
-        if not res_index:
-            return build_error_message(
-                "{table_} is not a valid resurce".format(table_=table_)
-            )
-        query_details = query.get("query_details")
-
-        start_time = time.time()
-        if not raw_elasticsearch_query:
-            query_details = query.get("query_details")
-            main_attributes = query.get("main_attributes")
-            if not query_details and main_attributes and len(main_attributes) > 0:
-                pass
-
-            elif (
-                not query
-                or len(query) == 0
-                or not query_details
-                or len(query_details) == 0
-                or isinstance(query_details, str)
-            ):
-                print("Error ")
-                return build_error_message(
-                    "{query} is not a valid query".format(query=query)
-                )
-            and_filters = query_details.get("and_filters")
-            or_filters = query_details.get("or_filters")
-            case_sensitive = query_details.get("case_sensitive")
-            # check and fid if possible names and values inside
-            # filters conditions
-            check_filters(table_, [and_filters, or_filters], case_sensitive)
-            query_string = elasticsearch_query_builder(
-                and_filters, or_filters, case_sensitive, main_attributes
-            )
-            # query_string has to be string, if it is a dict,
-            # something went wrong and the message inside the dict
-            # which will be returned to the sender:
-            if isinstance(query_string, dict):
-                return query_string
-
-            search_omero_app.logger.info("Query %s" % query_string)
-            query = json.loads(query_string, strict=False)
-            raw_query_to_send_back = json.loads(query_string, strict=False)
-        else:
-            query = raw_elasticsearch_query
-            raw_query_to_send_back = copy.copy(raw_elasticsearch_query)
-        if return_containers:
-            # code to return the containers only
-            # It will call the projects container first then
-            # search within screens
-            query["aggs"] = json.loads(
-                count_attr_template.substitute(field="project_name.keyvalue")
-            )
-            query["_source"] = {"includes": [""]}
-            res = search_index_using_search_after(
-                res_index,
-                query,
-                bookmark,
-                pagination_dict,
-                return_containers,
-                "project",
-            )
-            query["aggs"] = json.loads(
-                count_attr_template.substitute(field="screen_name.keyvalue")
-            )
-
-            res_2 = search_index_using_search_after(
-                res_index, query, bookmark, pagination_dict, return_containers, "screen"
-            )
-            # Combines the containers results
-            studies = res + res_2
-            res = {"results": studies}
-        else:
-            res = search_index_using_search_after(
-                res_index, query, bookmark, pagination_dict, return_containers
-            )
-        notice = ""
-        end_time = time.time()
-        query_time = "%.2f" % (end_time - start_time)
-        return {
-            "results": res,
-            "query_details": query_details,
-            "resource": table_,
-            "server_query_time": query_time,
-            "raw_elasticsearch_query": raw_query_to_send_back,
-            "notice": notice,
-        }
-    except Exception as e:
-        search_omero_app.logger.info("Query %s" % str(query))
-        search_omero_app.logger.info("==>>>Error: %s" % str(e))
+    #try:
+    res_index = resource_elasticsearchindex.get(table_)
+    if not res_index:
         return build_error_message(
-            "Something went wrong, please check your query and try again later."
+            "{table_} is not a valid resurce".format(table_=table_)
         )
+    query_details = query.get("query_details")
+
+    start_time = time.time()
+    if not raw_elasticsearch_query:
+        query_details = query.get("query_details")
+        main_attributes = query.get("main_attributes")
+        if not query_details and main_attributes and len(main_attributes) > 0:
+            pass
+
+        elif (
+            not query
+            or len(query) == 0
+            or not query_details
+            or len(query_details) == 0
+            or isinstance(query_details, str)
+        ):
+            print("Error ")
+            return build_error_message(
+                "{query} is not a valid query".format(query=query)
+            )
+        and_filters = query_details.get("and_filters")
+        or_filters = query_details.get("or_filters")
+        case_sensitive = query_details.get("case_sensitive")
+        # check and fid if possible names and values inside
+        # filters conditions
+        check_filters(table_, [and_filters, or_filters], case_sensitive)
+        query_string = elasticsearch_query_builder(
+            and_filters, or_filters, case_sensitive, main_attributes
+        )
+        # query_string has to be string, if it is a dict,
+        # something went wrong and the message inside the dict
+        # which will be returned to the sender:
+        if isinstance(query_string, dict):
+            return query_string
+
+        search_omero_app.logger.info("Query %s" % query_string)
+        query = json.loads(query_string, strict=False)
+        raw_query_to_send_back = json.loads(query_string, strict=False)
+    else:
+        query = raw_elasticsearch_query
+        raw_query_to_send_back = copy.copy(raw_elasticsearch_query)
+    if return_containers:
+        # code to return the containers only
+        # It will call the projects container first then
+        # search within screens
+        query["aggs"] = json.loads(
+            count_attr_template.substitute(field="project_name.keyvalue")
+        )
+        query["_source"] = {"includes": [""]}
+        res = search_index_using_search_after(
+            res_index,
+            query,
+            bookmark,
+            pagination_dict,
+            return_containers,
+            "project",
+        )
+        query["aggs"] = json.loads(
+            count_attr_template.substitute(field="screen_name.keyvalue")
+        )
+
+        res_2 = search_index_using_search_after(
+            res_index, query, bookmark, pagination_dict, return_containers, "screen"
+        )
+        # Combines the containers results
+        studies = res + res_2
+        res = {"results": studies}
+    else:
+        res = search_index_using_search_after(
+            res_index, query, bookmark, pagination_dict, return_containers
+        )
+    notice = ""
+    end_time = time.time()
+    query_time = "%.2f" % (end_time - start_time)
+    return {
+        "results": res,
+        "query_details": query_details,
+        "resource": table_,
+        "server_query_time": query_time,
+        "raw_elasticsearch_query": raw_query_to_send_back,
+        "notice": notice,
+    }
+    #except Exception as e:
+    #    search_omero_app.logger.info("Query %s" % str(query))
+    #    search_omero_app.logger.info("==>>>Error: %s" % str(e))
+    #    return build_error_message(
+    #        "Something went wrong, please check your query and try again later."
+    #    )
 
 
 def get_studies_titles(idr_name, resource):
