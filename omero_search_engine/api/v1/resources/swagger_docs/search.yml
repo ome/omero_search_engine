@@ -13,15 +13,15 @@ parameters:
     description: the resource attribute
     in: query
     type: string
-    required: true
+    required: False
   - name: value
     description: the attribute value
     in: query
     type: string
     required: true
   - name: study
-    description: filter by study name
-    in: query
+    description: fi lter by study name
+    in: querygit push
     type: string
     required: False
   - name: operator
