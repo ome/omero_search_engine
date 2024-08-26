@@ -80,7 +80,7 @@ IDR team has developed installation playbooks that can be downloaded, customized
 
 * The first playbook [deploy_elasticsearch_cluster.yml](https://github.com/IDR/deployment/blob/master/ansible/idr-elasticsearch.yml) will create the required folders and configure and run the Elasticsearch cluster
 * The second one, [deploy_searchengine.yml](https://github.com/IDR/deployment/blob/master/ansible/idr-searchengine.yml) will configure and run the searchengine app
-* There is a variables file [searchengine_vars.yml](https://https://github.com/IDR/deployment/blob/master/ansible/group_vars/searchengine-hosts.yml) that the user needs to edit before running the playbook.
+* There is a variables file [searchengine_vars.yml](https://github.com/IDR/deployment/blob/master/ansible/group_vars/searchengine-hosts.yml) that the user needs to edit before running the playbook.
   The variable names are self-explanatory and should be customized to the host machine
 * To check that the apps have been installed and run, the user can use ``wget`` or ``curl`` to call:
 
