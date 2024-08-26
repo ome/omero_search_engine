@@ -44,11 +44,11 @@ The application should have the access attributes (e.g, URL, username, password,
 Application installation using Docker
 =====================================
 
-Ubuntu and CentOS 7 images are provided.
+Ubuntu and Rocky Linux 9 images are provided.
 
 * The user may build the Docker image using the following command::
 
-    $ docker build . -f deployment/docker/centos/Dockerfile -t searchengine
+    $ docker build . -f deployment/docker/$required_docker_file_folder/Dockerfile -t searchengine
 
 * Alternatively, the user can pull the openmicroscopy docker image by using the following command::
     
@@ -61,7 +61,7 @@ Ubuntu and CentOS 7 images are provided.
   * It will be used to save the configuration file so the user can configure his instance
   * Additionally, it will be used to save the logs files and other cached data.
 
-* An example of running the docker run command for a CentOS image which maps the ``etc/searchengine`` folder to the user home folder in order to save the log files as well as mapping the application configuration file ::
+* An example of running the docker run command for a Rocky Linux image which maps the ``etc/searchengine`` folder to the user home folder in order to save the log files as well as mapping the application configuration file ::
 
     $ docker run --rm -p 5577:5577 -d  -v $HOME/:/etc/searchengine/  searchengine
 
@@ -76,24 +76,24 @@ Ubuntu and CentOS 7 images are provided.
 Searchengine installation and configuration using Ansible
 =========================================================
 
-The ansible playbook :omero_search_engine:`management-searchengine.yml <deployment/ansible/management-searchengine.yml>` has been developed to deploy the apps:
+IDR team has developed installation playbooks that can be downloaded, customized and used to install the searchengine.
 
-* It will configure and run the search engine, Elasticsearch and the search engine client
-* It will configure and create the required folders
-* It will configure the three apps and run them
-* There is a variables file :omero_search_engine:`searchengine_vars.yml <deployment/ansible/searchengine_vars.yml>` that the user needs to edit before running the playbook.
+* The first playbook [deploy_elasticsearch_cluster.yml](https://github.com/IDR/deployment/blob/master/ansible/idr-elasticsearch.yml) will create the required folders and configure and run the Elasticsearch cluster
+* The second one, [deploy_searchengine.yml](https://github.com/IDR/deployment/blob/master/ansible/idr-searchengine.yml) will configure and run the searchengine app
+* There is a variables file [searchengine_vars.yml](https://github.com/IDR/deployment/blob/master/ansible/group_vars/searchengine-hosts.yml) that the user needs to edit before running the playbook.
   The variable names are self-explanatory and should be customized to the host machine
 * To check that the apps have been installed and run, the user can use ``wget`` or ``curl`` to call:
 
-    * for searchengine, http://127.0.0.1:5556/api/v1/resources/
-    * for searchengine client, http://127.0.0.1:5556
+    * for searchengine, http://127.0.0.1:5577/api/v1/resources/
     * for Elasticsearch, http://127.0.0.1:9201
-* After deploying the apps, the user needs to run the :omero_search_engine:`run_searchengine_index_services.yml <deployment/ansible/run_searchengine_index_services.yml>` playbook for indexing:
+
+* After deploying the apps, the user needs to run the [run_searchengine_index_services.yml](https://github.com/IDR/deployment/blob/master/ansible/run_searchengine_index_service.yml) playbook for indexing:
 
     * If the PostgreSQL database server is located on the same machine which hosts the searchengine, the user needs to:
 
         * Edit ``pg_hba.conf`` file (one of the postgresql configuration files) and add the client IP (i.e. 10.11.0.11)
         * Reload the configuration, so the PostgreSQL accepts the connection from indexing and caching services.
+
     * As the caching and indexing processes take a long time, there are another two playbooks that enable the user to check if they have finished or not:
 
-        * :omero_search_engine:`check_indexing_service.yml <deployment/ansible/check_indexing_service.yml>`
+        * [check_indexing_service.yml](https://github.com/IDR/deployment/blob/master/ansible/check_indexing_service.yml)
