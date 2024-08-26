@@ -76,7 +76,7 @@ Ubuntu and Rocky Linux 9 images are provided.
 Searchengine installation and configuration using Ansible
 =========================================================
 
-Idr team has developed installation playbooks that can be downloaded, customized and used to install the searchengine.
+IDR team has developed installation playbooks that can be downloaded, customized and used to install the searchengine.
 
 * The first playbook [deploy_elasticsearch_cluster.yml](https://github.com/IDR/deployment/blob/master/ansible/idr-elasticsearch.yml) will create the required folders and configure and run the Elasticsearch cluster
 * The second one, [deploy_searchengine.yml](https://github.com/IDR/deployment/blob/master/ansible/idr-searchengine.yml) will configure and run the searchengine app
