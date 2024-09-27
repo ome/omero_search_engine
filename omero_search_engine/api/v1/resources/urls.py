@@ -93,7 +93,7 @@ def search_resource_page(resource_table):
             return_containers = data.get("return_containers")
             data_source = request.args.get("data_source")
             if data_source:
-                data_source=data_source.strip()
+                data_source = data_source.strip()
             if return_containers:
                 return_containers = json.loads(return_containers.lower())
 
@@ -104,7 +104,7 @@ def search_resource_page(resource_table):
                 bookmark=bookmark,
                 pagination_dict=pagination_dict,
                 return_containers=return_containers,
-                data_source=data_source
+                data_source=data_source,
             )
             return jsonify(resource_list)
         else:
@@ -181,7 +181,10 @@ def search_resource(resource_table):
             return_containers = json.loads(return_containers.lower())
 
         resource_list = search_resource_annotation(
-            resource_table, query, return_containers=return_containers, data_source=data_source
+            resource_table,
+            query,
+            return_containers=return_containers,
+            data_source=data_source,
         )
         return jsonify(resource_list)
     else:
@@ -214,7 +217,9 @@ def get_values_using_value(resource_table):
     if key:
         # If the key is provided it will restrict the search to the provided key.
 
-        return query_cashed_bucket_part_value_keys(key, value,data_source, resource_table)
+        return query_cashed_bucket_part_value_keys(
+            key, value, data_source, resource_table
+        )
     bookmark = request.args.get("bookmark")
     if bookmark:
         bookmark = bookmark.split(",")
@@ -245,7 +250,9 @@ def get_values_using_value(resource_table):
                     )
                 )
             )
-    return jsonify(search_value_for_resource(resource_table, value, data_source, bookmark))
+    return jsonify(
+        search_value_for_resource(resource_table, value, data_source, bookmark)
+    )
 
 
 @resources.route("/<resource_table>/searchvaluesusingkey/", methods=["GET"])
@@ -270,7 +277,7 @@ def search_values_for_a_key(resource_table):
         except Exception:
             csv = False
 
-    return get_key_values_return_contents(key, resource_table,data_source, csv)
+    return get_key_values_return_contents(key, resource_table, data_source, csv)
 
 
 # getannotationkeys==> keys
@@ -287,7 +294,9 @@ def get_resource_keys(resource_table):
     data_source = request.args.get("data_source")
     if data_source:
         data_source = data_source.strip()
-    resource_keys = get_resource_attributes(resource_table, data_source=data_source, mode=mode)
+    resource_keys = get_resource_attributes(
+        resource_table, data_source=data_source, mode=mode
+    )
     return jsonify(resource_keys)
 
 
@@ -327,10 +336,10 @@ def get_resource_names_(resource_table):
     value = request.args.get("value")
     description = request.args.get("use_description")
     data_source = request.args.get("data_source")
-    data_source=check_empty_string(data_source)
+    data_source = check_empty_string(data_source)
     if data_source:
-        data_source=data_source.strip(",")
-        data_source=json.dumps(data_source)
+        data_source = data_source.strip(",")
+        data_source = json.dumps(data_source)
     if description:
         if description.lower() in ["true", "false"]:
             description = json.loads(description.lower())
@@ -365,7 +374,12 @@ def submit_query_return_containers():
     validation_results = query_validator(query)
     if validation_results == "OK":
         return jsonify(
-            determine_search_results_(query, data_source=data_source, return_columns=return_columns, return_containers=True)
+            determine_search_results_(
+                query,
+                data_source=data_source,
+                return_columns=return_columns,
+                return_containers=True,
+            )
         )
     else:
         return jsonify(build_error_message(validation_results))
@@ -395,7 +409,11 @@ def submit_query():
     validation_results = query_validator(query)
     if validation_results == "OK":
 
-        return jsonify(determine_search_results_(query,data_source=data_source, return_columns=return_columns))
+        return jsonify(
+            determine_search_results_(
+                query, data_source=data_source, return_columns=return_columns
+            )
+        )
     else:
         return jsonify(build_error_message(validation_results))
 
@@ -412,7 +430,7 @@ def search(resource_table):
     operator = request.args.get("operator")
     bookmark = request.args.get("bookmark")
     data_source = request.args.get("data_source")
-    data_source=check_empty_string(data_source)
+    data_source = check_empty_string(data_source)
     return_containers = request.args.get("return_containers")
     if return_containers:
         return_containers = json.loads(return_containers.lower())
@@ -450,7 +468,9 @@ def container_key_values_search(resource_table):
             csv = json.loads(csv.lower())
         except Exception:
             csv = False
-    results = get_container_values_for_key(resource_table, container_name, csv, ret_data_source=data_source, key=key)
+    results = get_container_values_for_key(
+        resource_table, container_name, csv, ret_data_source=data_source, key=key
+    )
     return results
 
 
@@ -468,11 +488,13 @@ def container_keys_search(resource_table):
         return build_error_message("Container name is required")
 
     csv = request.args.get("csv")
-    data_source=request.args.get("data_source")
+    data_source = request.args.get("data_source")
     if csv:
         try:
             csv = json.loads(csv.lower())
         except Exception:
             csv = False
-    results = get_container_values_for_key(resource_table, container_name, csv, ret_data_source=data_source)
+    results = get_container_values_for_key(
+        resource_table, container_name, csv, ret_data_source=data_source
+    )
     return results

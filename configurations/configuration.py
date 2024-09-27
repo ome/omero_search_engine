@@ -104,6 +104,7 @@ def update_config_file(updated_configuration, configure_database=False):
         with open(app_config.INSTANCE_CONFIG, "w") as f:
             yaml.dump(configuration, f)
 
+
 def config_database(configuration, updated_configuration):
     for data_source in configuration.get("DATA_SOURCES"):
         changed = False

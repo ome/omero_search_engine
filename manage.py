@@ -123,6 +123,7 @@ def restore_postgresql_database(source="all"):
 
     restore_database(source)
 
+
 @manager.command
 @manager.option(
     "-r",
@@ -181,7 +182,10 @@ def get_index_data_from_database(resource="all", source="all", backup="True"):
             clean_index=clean_index,
             only_values=False,
         )
-        print("!Done for data_source: %s from %s" % (data_source, search_omero_app.config.database_connectors.keys()))
+        print(
+            "!Done for data_source: %s from %s"
+            % (data_source, search_omero_app.config.database_connectors.keys())
+        )
         if clean_index:
             clean_index = False
 
@@ -190,9 +194,9 @@ def get_index_data_from_database(resource="all", source="all", backup="True"):
             source=data_source, deep_check=False, check_studies=True
         )
 
-    #backup the index data
+    # backup the index data
     if backup:
-      backup_elasticsearch_data()
+        backup_elasticsearch_data()
 
 
 # set configurations
@@ -338,7 +342,6 @@ def set_no_processes(no_processes=None):
     "--data_source",
     help="data source name, the default is all",  # noqa
 )
-
 @manager.option(
     "-r",
     "--resource",
@@ -350,7 +353,9 @@ def set_no_processes(no_processes=None):
     help="creating the elastic search index if set to True",  # noqa
 )
 @manager.option("-o", "--only_values", help="creating cached values only ")
-def cache_key_value_index(resource=None, data_source='all',create_index=None, only_values=None):
+def cache_key_value_index(
+    resource=None, data_source="all", create_index=None, only_values=None
+):
     """
     Cache the value bucket for each value for each resource
     """
@@ -358,7 +363,7 @@ def cache_key_value_index(resource=None, data_source='all',create_index=None, on
         save_key_value_buckets,
     )
 
-    save_key_value_buckets(resource,data_source ,create_index, only_values)
+    save_key_value_buckets(resource, data_source, create_index, only_values)
 
 
 @manager.command

@@ -264,7 +264,7 @@ def get_all_values_for_a_key(table_, data_source, key):
     try:
         res = search_index_for_value(res_index, query)
     except Exception as ex:
-        print("Query: %s Error: %s"%(query,str(ex)))
+        print("Query: %s Error: %s" % (query, str(ex)))
         raise ex
     number_of_buckets = (
         res.get("aggregations")
@@ -337,6 +337,7 @@ def get_values_for_a_key(table_, key, data_source):
     start_time = time.time()
     res = search_index_for_value(res_index, query)
     query_time = "%.2f" % (time.time() - start_time)
+    print("Query time: %s" % query_time)
     returned_results = []
     if res.get("aggregations"):
         for bucket in (
@@ -382,7 +383,7 @@ def prepare_search_results(results, size=0):
             continue
         row = {}
         returned_results.append(row)
-        row["Data Source"]=res["data_source"]
+        row["Data Source"] = res["data_source"]
         row["Key"] = res["Attribute"]
         row["Value"] = res["Value"]
         row["Number of %ss" % resource] = res.get("items_in_the_bucket")
@@ -491,13 +492,16 @@ def query_cashed_bucket_part_value_keys(
         name = name.strip()
     value = adjust_value(value)
     if data_source and data_source.strip() and data_source.lower() != "all":
-        data_source = [itm.strip().lower() for itm in data_source.split(',')]
+        data_source = [itm.strip().lower() for itm in data_source.split(",")]
     else:
         data_source = get_data_sources()
 
     if resource != "all":
         query = key_part_values_buckets_template.substitute(
-            name=name, value=value, resource=resource, data_source=json.dumps(data_source)
+            name=name,
+            value=value,
+            resource=resource,
+            data_source=json.dumps(data_source),
         )
         res = search_index_for_values_get_all_buckets(es_index, query)
         returned_results = prepare_search_results_buckets(res)
@@ -510,7 +514,10 @@ def query_cashed_bucket_part_value_keys(
             if table == "image1":
                 continue
             query = key_part_values_buckets_template.substitute(
-                name=name, value=value, resource=table, data_source=json.dumps(data_source)
+                name=name,
+                value=value,
+                resource=table,
+                data_source=json.dumps(data_source),
             )
             res = search_index_for_values_get_all_buckets(es_index, query)
             returned_results[table] = prepare_search_results_buckets(res)
@@ -522,9 +529,9 @@ def query_cashed_bucket(
 ):
     # returns possible matches for a specific resource
     if data_source and data_source.strip() and data_source.lower() != "all":
-        data_source = [itm.strip().lower() for itm in data_source.split(',')]
+        data_source = [itm.strip().lower() for itm in data_source.split(",")]
     else:
-        data_source =get_data_sources()
+        data_source = get_data_sources()
 
     if name:
         name = name.strip()
@@ -564,9 +571,9 @@ def search_value_for_resource(
     value = adjust_value(value)
 
     if data_source and data_source.lower() != "all":
-        data_source = [itm.strip().lower() for itm in data_source.split(',')]
+        data_source = [itm.strip().lower() for itm in data_source.split(",")]
     else:
-        data_source=get_data_sources()
+        data_source = get_data_sources()
 
     if table_ != "all":
         query = resource_key_values_buckets_template.substitute(
@@ -737,7 +744,7 @@ key_values_buckets_template_2 = Template(
 )
 
 key_values_buckets_template_with_data_source = Template(
- """
+    """
 {"query":{"bool":{"must":[{"bool":{"must":{"match":{
 "resource.keyresource":"$resource"}}}},{"bool": {"must":
 {"match": {"data_source.keyvalue":$data_source}}}}]}}} """
@@ -774,7 +781,9 @@ def get_restircted_search_terms():
     return restricted_search_terms
 
 
-def get_resource_attributes(resource, data_source=None, mode=None, es_index="key_values_resource_cach"):
+def get_resource_attributes(
+    resource, data_source=None, mode=None, es_index="key_values_resource_cach"
+):
     """
     return the available attributes for one or all resources
     """
@@ -785,34 +794,35 @@ def get_resource_attributes(resource, data_source=None, mode=None, es_index="key
             you may remove it to return all the keys."
         )
     returned_results = []
-    if data_source and data_source.lower() !="all":
-       data_source = [itm.strip().lower() for itm in data_source.split(',')]
-    all_data_sources=get_data_sources()
+    if data_source and data_source.lower() != "all":
+        data_source = [itm.strip().lower() for itm in data_source.split(",")]
+    all_data_sources = get_data_sources()
     for data_s in all_data_sources:
-        if data_source and data_source !="all" and data_s.lower() not in data_source:
+        if data_source and data_source != "all" and data_s.lower() not in data_source:
             continue
         returned_results_ = {}
         returned_results_["data_source"] = data_s
         returned_results.append(returned_results_)
         if resource != "all":
-            query = key_values_buckets_template_with_data_source.substitute(resource=resource, data_source=json.dumps(data_s))
-            #else:
+            query = key_values_buckets_template_with_data_source.substitute(
+                resource=resource, data_source=json.dumps(data_s)
+            )
+            # else:
             #    query = key_values_buckets_template_2.substitute(resource=resource)
             res = connect_elasticsearch(
                 es_index, query
             )  # es.search(index=es_index, body=query)
 
-
             hits = res["hits"]["hits"]
             if len(hits) > 0:
                 returned_results_[resource] = hits[0]["_source"]["name"]
 
-
         else:
             for table in resource_elasticsearchindex:
-                query = key_values_buckets_template_with_data_source.substitute(resource=table,
-                                                                       data_source=json.dumps(data_s))
-                #else:
+                query = key_values_buckets_template_with_data_source.substitute(
+                    resource=table, data_source=json.dumps(data_s)
+                )
+                # else:
                 #    query = key_values_buckets_template_2.substitute(resource=table)
                 res = connect_elasticsearch(
                     es_index, query
@@ -829,7 +839,7 @@ def get_resource_attributes(resource, data_source=None, mode=None, es_index="key
                 search_terms = list(set(restricted_search_terms[k]) & set(val))
                 if len(search_terms) > 0:
                     restircted_resources[k] = search_terms
-        returned_results.append( restircted_resources)
+        returned_results.append(restircted_resources)
         if "project" in returned_results:
             returned_results_["project"].append("name")
 
@@ -911,10 +921,14 @@ def get_resource_names(resource, name=None, description=False, data_source=None)
     return returned_results
 
 
-def get_the_results(resource, name, description, data_source, es_index="key_values_resource_cach"):
+def get_the_results(
+    resource, name, description, data_source, es_index="key_values_resource_cach"
+):
     returned_results = {}
     if data_source:
-        query = key_values_buckets_template_with_data_source.substitute(resource=resource, data_source=data_source)
+        query = key_values_buckets_template_with_data_source.substitute(
+            resource=resource, data_source=data_source
+        )
     else:
         query = key_values_buckets_template_2.substitute(resource=resource)
     results_ = connect_elasticsearch(
@@ -959,11 +973,13 @@ def get_the_results(resource, name, description, data_source, es_index="key_valu
     return returned_results
 
 
-def get_container_values_for_key(table_, container_name, csv, ret_data_source=None, key=None):
+def get_container_values_for_key(
+    table_, container_name, csv, ret_data_source=None, key=None
+):
     returned_results = []
     pr_names = get_resource_names("all")
     if ret_data_source:
-        ret_data_source = [itm.strip().lower() for itm in ret_data_source.split(',')]
+        ret_data_source = [itm.strip().lower() for itm in ret_data_source.split(",")]
     for resourse, names_ in pr_names.items():
         for data_source, names in names_.items():
             if ret_data_source:

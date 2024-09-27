@@ -36,7 +36,7 @@ from omero_search_engine.cache_functions.elasticsearch.elasticsearch_templates i
 
 from omero_search_engine.validation.results_validator import (
     Validator,
-    check_number_images_sql_containers_using_ids,
+    # check_number_images_sql_containers_using_ids,
 )
 from omero_search_engine.cache_functions.elasticsearch.transform_data import (
     delete_es_index,
@@ -114,15 +114,20 @@ class BasicTestCase(unittest.TestCase):
                 data_source
             ].execute_query(sql)
             self.assertIsNotNone(res)
-            found_db_name=False
+            found_db_name = False
             for source in search_omero_app.config.get("DATA_SOURCES"):
-                if source.get("DATABASE").get("DATABASE_NAME")==res[0]["current_database"]:
-                    found_db_name=True
+                if (
+                    source.get("DATABASE").get("DATABASE_NAME")
+                    == res[0]["current_database"]
+                ):
+                    found_db_name = True
                     break
 
             self.assertTrue(found_db_name)
-            #self.assertEqual(res[0]["current_database"], search_omero_app.config.database_connectors[data_source]["DATABASE_NAME"])
-            #self.assertEqual(res[0]["current_database"], search_omero_app.config.database_connectors[data_source]["DATABASE_NAME"])
+            # self.assertEqual(res[0]["current_database"],
+            # search_omero_app.config.database_connectors[data_source]["DATABASE_NAME"])
+            # self.assertEqual(res[0]["current_database"],
+            # search_omero_app.config.database_connectors[data_source]["DATABASE_NAME"])
 
     def validate_json_syntax(self, json_template):
         try:
@@ -228,9 +233,9 @@ class BasicTestCase(unittest.TestCase):
                 )
                 self.assertTrue(validator.identical)
 
-#    def test_no_images_containers(self):
-#        for data_source in search_omero_app.config.database_connectors.keys():
-#            self.assertTrue(check_number_images_sql_containers_using_ids(data_source))
+    #    def test_no_images_containers(self):
+    #        for data_source in search_omero_app.config.database_connectors.keys():
+    #            self.assertTrue(check_number_images_sql_containers_using_ids(data_source))
 
     def test_multi_or_quries(self):
         pass

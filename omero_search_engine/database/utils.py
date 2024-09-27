@@ -45,13 +45,18 @@ def restore_database(source):
             and data_source["name"].lower() != source.lower()
         ):
             continue
-        backup_filename = os.path.join(mm, "app_data/%s"%data_source.get("DATABASE").get("DATABASE_BACKUP_FILE"))
+        backup_filename = os.path.join(
+            mm, "app_data/%s" % data_source.get("DATABASE").get("DATABASE_BACKUP_FILE")
+        )
 
-        create_database_comand = "psql --username %s --host %s --port %s -c 'create database %s'" % (
-            data_source.get("DATABASE").get("DATABASE_USER"),
-            data_source.get("DATABASE").get("DATABASE_SERVER_URI"),
-            data_source.get("DATABASE").get("DATABASE_PORT"),
-            data_source.get("DATABASE").get("DATABASE_NAME")
+        create_database_comand = (
+            "psql --username %s --host %s --port %s -c 'create database %s'"
+            % (
+                data_source.get("DATABASE").get("DATABASE_USER"),
+                data_source.get("DATABASE").get("DATABASE_SERVER_URI"),
+                data_source.get("DATABASE").get("DATABASE_PORT"),
+                data_source.get("DATABASE").get("DATABASE_NAME"),
+            )
         )
 
         print("create_database_comand: %s" % create_database_comand)
@@ -63,10 +68,9 @@ def restore_database(source):
                     "PGPASSWORD": data_source.get("DATABASE").get("DATABASE_PASSWORD")
                 },
             )
-            stdout, stderr =proc.communicate()
+            stdout, stderr = proc.communicate()
 
-
-            print ("Done for create %s, error %s"%(stdout,stderr))
+            print("Done for create %s, error %s" % (stdout, stderr))
         except Exception as e:
             print("Error: exception happened during create database %s" % (e))
         restore_command = "psql --username %s  --host %s --port %s -d %s -f  %s" % (
@@ -74,7 +78,7 @@ def restore_database(source):
             data_source.get("DATABASE").get("DATABASE_SERVER_URI"),
             data_source.get("DATABASE").get("DATABASE_PORT"),
             data_source.get("DATABASE").get("DATABASE_NAME"),
-            backup_filename
+            backup_filename,
         )
         print("Resore command: %s" % restore_command)
         try:
