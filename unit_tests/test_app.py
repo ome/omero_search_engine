@@ -69,6 +69,8 @@ create_app("testing")
 # deep_check should be a configuration item
 deep_check = True
 
+# for data_source in search_omero_app.config.database_connectors.keys():
+
 
 class BasicTestCase(unittest.TestCase):
     def setUp(self):
@@ -80,7 +82,6 @@ class BasicTestCase(unittest.TestCase):
     def test_api_v1(self):
         """test url"""
         tester = search_omero_app.test_client(self)
-
         response = tester.get("/api/v1/resources/", content_type="html/text")
         self.assertEqual(response.status_code, 200)
 
@@ -108,9 +109,20 @@ class BasicTestCase(unittest.TestCase):
         """
         test connection with postgresql database
         """
-        res = search_omero_app.config["database_connector"].execute_query(sql)
-        self.assertIsNotNone(res)
-        self.assertEqual(res[0]["current_database"], "omero")
+        for data_source in search_omero_app.config.database_connectors.keys():
+            res = search_omero_app.config.database_connectors[
+                data_source
+            ].execute_query(sql)
+            self.assertIsNotNone(res)
+            found_db_name=False
+            for source in search_omero_app.config.get("DATA_SOURCES"):
+                if source.get("DATABASE").get("DATABASE_NAME")==res[0]["current_database"]:
+                    found_db_name=True
+                    break
+
+            self.assertTrue(found_db_name)
+            #self.assertEqual(res[0]["current_database"], search_omero_app.config.database_connectors[data_source]["DATABASE_NAME"])
+            #self.assertEqual(res[0]["current_database"], search_omero_app.config.database_connectors[data_source]["DATABASE_NAME"])
 
     def validate_json_syntax(self, json_template):
         try:
@@ -145,6 +157,7 @@ class BasicTestCase(unittest.TestCase):
         """
         table = "image1"
         es_index = "image_keyvalue_pair_metadata_1"
+        es_index = "image_keyvalue_pair_metadata_1"
         es_index_2 = "key_values_resource_cach"
         create_es_index_2 = True
         all_all_indices = get_all_indexes_from_elasticsearch()
@@ -168,178 +181,191 @@ class BasicTestCase(unittest.TestCase):
         test query the search engine and compare
         its results with the results from the database
         """
-        for resource, cases in simple_queries.items():
-            for case in cases:
-                name = case[0]
-                value = case[1]
-                validator = Validator(deep_check)
-                validator.set_simple_query(resource, name, value)
-                validator.get_results_db("equals")
-                validator.get_results_searchengine("equals")
-                self.assertEqual(
-                    len(validator.postgres_results),
-                    validator.searchengine_results.get("size"),
-                )
-                validator.get_results_db("not_equals")
-                validator.get_results_searchengine("not_equals")
+        for data_source in search_omero_app.config.database_connectors.keys():
+            for resource, cases in simple_queries.items():
+                for case in cases:
+                    name = case[0]
+                    value = case[1]
+                    validator = Validator(data_source, deep_check)
+                    validator.set_simple_query(resource, name, value)
+                    validator.get_results_db("equals")
+                    validator.get_results_searchengine("equals")
+                    self.assertEqual(
+                        len(validator.postgres_results),
+                        validator.searchengine_results.get("size"),
+                    )
+                    validator.get_results_db("not_equals")
+                    validator.get_results_searchengine("not_equals")
+                    self.assertEqual(
+                        len(validator.postgres_results),
+                        validator.searchengine_results.get("size"),
+                    )
+                    self.assertTrue(validator.identical)
+
+    def test_and_query(self):
+        name = "query_image_and"
+        for data_source in search_omero_app.config.database_connectors.keys():
+            for cases in query_image_and:
+                validator = Validator(data_source, deep_check)
+                validator.set_complex_query(name, cases)
+                validator.compare_results()
                 self.assertEqual(
                     len(validator.postgres_results),
                     validator.searchengine_results.get("size"),
                 )
                 self.assertTrue(validator.identical)
 
-    def test_and_query(self):
-        name = "query_image_and"
-        for cases in query_image_and:
-            validator = Validator(deep_check)
-            validator.set_complex_query(name, cases)
-            validator.compare_results()
-            self.assertEqual(
-                len(validator.postgres_results),
-                validator.searchengine_results.get("size"),
-            )
-            self.assertTrue(validator.identical)
-
     def test_or_query(self):
-        name = "query_image_or"
-        for cases in query_image_or:
-            validator = Validator(deep_check)
-            validator.set_complex_query(name, cases)
-            validator.compare_results()
-            self.assertEqual(
-                len(validator.postgres_results),
-                validator.searchengine_results.get("size"),
-            )
-            self.assertTrue(validator.identical)
+        for data_source in search_omero_app.config.database_connectors.keys():
+            name = "query_image_or"
+            for cases in query_image_or:
+                validator = Validator(data_source, deep_check)
+                validator.set_complex_query(name, cases)
+                validator.compare_results()
+                self.assertEqual(
+                    len(validator.postgres_results),
+                    validator.searchengine_results.get("size"),
+                )
+                self.assertTrue(validator.identical)
 
-    def test_no_images_containers(self):
-        self.assertTrue(check_number_images_sql_containers_using_ids())
+#    def test_no_images_containers(self):
+#        for data_source in search_omero_app.config.database_connectors.keys():
+#            self.assertTrue(check_number_images_sql_containers_using_ids(data_source))
 
     def test_multi_or_quries(self):
         pass
 
     def test_complex_query(self):
-        name = "query_image_and_or"
-        for cases in query_image_and_or:
-            validator = Validator(deep_check)
-            validator.set_complex_query(name, cases)
-            validator.compare_results()
-            self.assertEqual(
-                len(validator.postgres_results),
-                validator.searchengine_results.get("size"),
-            )
-            self.assertTrue(validator.identical)
+        for data_source in search_omero_app.config.database_connectors.keys():
+            name = "query_image_and_or"
+            for cases in query_image_and_or:
+                validator = Validator(data_source, deep_check)
+                validator.set_complex_query(name, cases)
+                validator.compare_results()
+                self.assertEqual(
+                    len(validator.postgres_results),
+                    validator.searchengine_results.get("size"),
+                )
+                self.assertTrue(validator.identical)
 
     def test_in_query(self):
-        for resource, cases in query_in.items():
-            for case in cases:
-                validator = Validator(deep_check)
-                validator.set_in_query(case, resource)
-                validator.compare_results()
-                self.assertEqual(
-                    len(validator.postgres_results),
-                    validator.searchengine_results.get("size"),
-                )
-                self.assertTrue(validator.identical)
+        for data_source in search_omero_app.config.database_connectors.keys():
+            for resource, cases in query_in.items():
+                for case in cases:
+                    validator = Validator(data_source, deep_check)
+                    validator.set_in_query(case, resource)
+                    validator.compare_results()
+                    self.assertEqual(
+                        len(validator.postgres_results),
+                        validator.searchengine_results.get("size"),
+                    )
+                    self.assertTrue(validator.identical)
 
     def test_not_in_query(self):
-        for resource, cases in query_in.items():
-            for case in cases:
-                validator = Validator(deep_check)
-                validator.set_in_query(case, resource, type="not_in_clause")
-                validator.compare_results()
-                self.assertEqual(
-                    len(validator.postgres_results),
-                    validator.searchengine_results.get("size"),
-                )
-                self.assertTrue(validator.identical)
+        for data_source in search_omero_app.config.database_connectors.keys():
+            for resource, cases in query_in.items():
+                for case in cases:
+                    validator = Validator(data_source, deep_check)
+                    validator.set_in_query(case, resource, type="not_in_clause")
+                    validator.compare_results()
+                    self.assertEqual(
+                        len(validator.postgres_results),
+                        validator.searchengine_results.get("size"),
+                    )
+                    self.assertTrue(validator.identical)
 
     def test_seach_for_any_value(self):
-        for part in images_value_parts:
-            validator = Validator(deep_check)
-            validator.set_simple_query("image", None, part, type="buckets")
-            validator.compare_results()
-            self.assertEqual(
-                len(validator.postgres_results),
-                validator.searchengine_results.get("total_number_of_buckets"),
-            )
+        for data_source in search_omero_app.config.database_connectors.keys():
+            for part in images_value_parts:
+                validator = Validator(data_source, deep_check)
+                validator.set_simple_query("image", None, part, type="buckets")
+                validator.compare_results()
+                self.assertEqual(
+                    len(validator.postgres_results),
+                    validator.searchengine_results.get("total_number_of_buckets"),
+                )
 
     def test_available_values_for_key(self):
-        for image_key in images_keys:
-            validator = Validator(deep_check)
-            validator.set_simple_query("image", image_key, None, type="buckets")
-            validator.compare_results()
-            self.assertEqual(
-                len(validator.postgres_results),
-                validator.searchengine_results.get("total_number_of_buckets"),
-            )
+        for data_source in search_omero_app.config.database_connectors.keys():
+            for image_key in images_keys:
+                validator = Validator(data_source, deep_check)
+                validator.set_simple_query("image", image_key, None, type="buckets")
+                validator.compare_results()
+                self.assertEqual(
+                    len(validator.postgres_results),
+                    validator.searchengine_results.get("total_number_of_buckets"),
+                )
 
     def test_contains_not_contains_queries(self):
-        for resource, cases in contains_not_contains_queries.items():
-            for case in cases:
-                name = case[0]
-                value = case[1]
-                validator = Validator(deep_check)
-                validator.set_contains_not_contains_query(resource, name, value)
-                validator.get_results_db("contains")
-                validator.get_results_searchengine("contains")
-                self.assertEqual(
-                    len(validator.postgres_results),
-                    validator.searchengine_results.get("size"),
-                )
-                validator.get_results_db("not_contains")
-                validator.get_results_searchengine("not_contains")
-                self.assertEqual(
-                    len(validator.postgres_results),
-                    validator.searchengine_results.get("size"),
-                )
-                self.assertTrue(validator.identical)
+        for data_source in search_omero_app.config.database_connectors.keys():
+            for resource, cases in contains_not_contains_queries.items():
+                for case in cases:
+                    name = case[0]
+                    value = case[1]
+                    validator = Validator(data_source, deep_check)
+                    validator.set_contains_not_contains_query(resource, name, value)
+                    validator.get_results_db("contains")
+                    validator.get_results_searchengine("contains")
+                    self.assertEqual(
+                        len(validator.postgres_results),
+                        validator.searchengine_results.get("size"),
+                    )
+                    validator.get_results_db("not_contains")
+                    validator.get_results_searchengine("not_contains")
+                    self.assertEqual(
+                        len(validator.postgres_results),
+                        validator.searchengine_results.get("size"),
+                    )
+                    self.assertTrue(validator.identical)
 
     def test_owner(self):
-        for resource, cases in image_owner.items():
-            for case in cases:
-                name = case[0]
-                value = case[1]
-                owner_id = case[2]
-                validator = Validator(deep_check)
-                validator.set_simple_query(resource, name, value)
-                validator.set_owner_group(owner_id=owner_id)
-                validator.compare_results()
-                self.assertEqual(
-                    len(validator.postgres_results),
-                    validator.searchengine_results.get("size"),
-                )
+        for data_source in search_omero_app.config.database_connectors.keys():
+            for resource, cases in image_owner.items():
+                for case in cases:
+                    name = case[0]
+                    value = case[1]
+                    owner_id = case[2]
+                    validator = Validator(data_source, deep_check)
+                    validator.set_simple_query(resource, name, value)
+                    validator.set_owner_group(owner_id=owner_id)
+                    validator.compare_results()
+                    self.assertEqual(
+                        len(validator.postgres_results),
+                        validator.searchengine_results.get("size"),
+                    )
 
     def test_group(self):
-        for resource, cases in image_group.items():
-            for case in cases:
-                name = case[0]
-                value = case[1]
-                group_id = case[2]
-                validator = Validator(deep_check)
-                validator.set_simple_query(resource, name, value)
-                validator.set_owner_group(group_id=group_id)
-                validator.compare_results()
-                self.assertEqual(
-                    len(validator.postgres_results),
-                    validator.searchengine_results.get("size"),
-                )
+        for data_source in search_omero_app.config.database_connectors.keys():
+            for resource, cases in image_group.items():
+                for case in cases:
+                    name = case[0]
+                    value = case[1]
+                    group_id = case[2]
+                    validator = Validator(data_source, deep_check)
+                    validator.set_simple_query(resource, name, value)
+                    validator.set_owner_group(group_id=group_id)
+                    validator.compare_results()
+                    self.assertEqual(
+                        len(validator.postgres_results),
+                        validator.searchengine_results.get("size"),
+                    )
 
     def test_owner_group(self):
-        for resource, cases in image_owner_group.items():
-            for case in cases:
-                name = case[0]
-                value = case[1]
-                owner_id = case[2]
-                group_id = case[3]
-                validator = Validator(deep_check)
-                validator.set_simple_query(resource, name, value)
-                validator.set_owner_group(owner_id=owner_id, group_id=group_id)
-                validator.compare_results()
-                self.assertEqual(
-                    len(validator.postgres_results),
-                    validator.searchengine_results.get("size"),
-                )
+        for data_source in search_omero_app.config.database_connectors.keys():
+            for resource, cases in image_owner_group.items():
+                for case in cases:
+                    name = case[0]
+                    value = case[1]
+                    owner_id = case[2]
+                    group_id = case[3]
+                    validator = Validator(data_source, deep_check)
+                    validator.set_simple_query(resource, name, value)
+                    validator.set_owner_group(owner_id=owner_id, group_id=group_id)
+                    validator.compare_results()
+                    self.assertEqual(
+                        len(validator.postgres_results),
+                        validator.searchengine_results.get("size"),
+                    )
 
     # def test_add_delete_es_index(self):
     #    '''

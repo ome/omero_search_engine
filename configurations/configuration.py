@@ -26,15 +26,17 @@ import json
 def load_configuration_variables_from_file(config):
     # loading application configuration variables from a file
     print("Injecting config variables from :%s" % app_config.INSTANCE_CONFIG)
-    with open(app_config.INSTANCE_CONFIG) as f:
-        cofg = yaml.load(f)
+    with open(app_config.INSTANCE_CONFIG, "rt") as f:
+
+        # with open(app_config.INSTANCE_CONFIG) as f:
+        cofg = yaml.safe_load(f.read())
     for x, y in cofg.items():
         setattr(config, x, y)
     if hasattr(config, "verify_certs"):
         try:
             verify_certs = json.load(config.verify_certs)
         except Exception as ex:
-            print(str(ex))
+            print("Error %s" % str(ex))
             verify_certs = False
     else:
         verify_certs = False
@@ -53,42 +55,70 @@ def set_database_connection_variables(config):
     :param database: databse name
     :return:
     """
-    if hasattr(config, "DATABASE_PORT"):
-        address = config.DATABASE_SERVER_URI + ":%s" % app_config.DATABASE_PORT
-    else:
-        address = config.DATABASE_SERVER_URI
-    app_config.database_connector = ""
-    app_config.DATABASE_URI = "postgresql://%s:%s@%s/%s" % (
-        config.DATABASE_USER,
-        config.DATABASE_PASSWORD,
-        address,
-        config.DATABASE_NAME,
-    )
+    from omero_search_engine.database.database_connector import DatabaseConnector
+
+    config.database_connectors = {}
+    for source in config.DATA_SOURCES:
+        if source.get("DATABASE").get("DATABASE_PORT"):
+            address = source.get("DATABASE").get(
+                "DATABASE_SERVER_URI"
+            ) + ":%s" % source.get("DATABASE").get("DATABASE_PORT")
+        else:
+            address = source.get("DATABASE").get("DATABASE_SERVER_URI")
+        DATABASE_URI = "postgresql://%s:%s@%s/%s" % (
+            source.get("DATABASE").get("DATABASE_USER"),
+            source.get("DATABASE").get("DATABASE_PASSWORD"),
+            address,
+            source.get("DATABASE").get("DATABASE_NAME"),
+        )
+        database_connector = DatabaseConnector(
+            source.get("DATABASE").get("DATABASE_NAME"), DATABASE_URI
+        )
+        config.database_connectors[source.get("name")] = database_connector
 
 
-def update_config_file(updated_configuration):
+def update_config_file(updated_configuration, configure_database=False):
     is_changed = False
     with open(app_config.INSTANCE_CONFIG) as f:
         configuration = yaml.load(f)
-    found = []
-    for key, value in updated_configuration.items():
-        if key in configuration:
-            if configuration[key] != value:
-                configuration[key] = value
-                is_changed = True
-                print("%s is Updated, new value is %s " % (key, value))
-            else:
-                found.append(key)
-    if len(found) != len(updated_configuration):
+    if not configure_database:
+        found = []
         for key, value in updated_configuration.items():
-            if key not in found:
-                configuration[key] = value
-                print("%s value is added with value %s " % (key, value))
-                is_changed = True
+            if key in configuration:
+                if configuration[key] != value:
+                    configuration[key] = value
+                    is_changed = True
+                    print("%s is Updated, new value is %s " % (key, value))
+                else:
+                    found.append(key)
+        if len(found) != len(updated_configuration):
+            for key, value in updated_configuration.items():
+                if key not in found:
+                    configuration[key] = value
+                    print("%s value is added with value %s " % (key, value))
+                    is_changed = True
+    else:
+        is_changed = config_database(configuration, updated_configuration)
 
     if is_changed:
         with open(app_config.INSTANCE_CONFIG, "w") as f:
             yaml.dump(configuration, f)
+
+def config_database(configuration, updated_configuration):
+    for data_source in configuration.get("DATA_SOURCES"):
+        changed = False
+        Found = False
+        if data_source["name"].lower() == updated_configuration["name"].lower():
+            Found = True
+            for k, v in updated_configuration["DATABASE"].items():
+                if data_source["DATABASE"][k] != v:
+                    data_source["DATABASE"][k] = v
+                    changed = True
+            break
+    if not Found:
+        configuration.get("DATA_SOURCES").append(updated_configuration)
+        changed = True
+    return changed
 
 
 class app_config(object):

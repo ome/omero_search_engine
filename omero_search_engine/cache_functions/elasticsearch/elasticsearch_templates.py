@@ -37,6 +37,10 @@ non_image_template = {
         "properties": {
             "doc_type": {"type": "keyword"},
             "id": {"type": "long"},
+            "data_source": {
+                "type": "text",
+                "fields": {"keyvalue": {"type": "keyword"}},
+            },
             "name": {
                 "type": "text",
                 "fields": {"keyvalue": {"type": "keyword"}},
@@ -108,6 +112,10 @@ image_template = {
             "plate_id": {"type": "long"},
             "well_id": {"type": "long"},
             "wellsample_id": {"type": "long"},
+            "data_source": {
+                "type": "text",
+                "fields": {"keyvalue": {"type": "keyword"}},
+            },
             "name": {
                 "type": "text",
                 "fields": {"keyvalue": {"type": "keyword"}},
@@ -177,6 +185,10 @@ key_values_resource_cache_template = {
             "type": "text",
             "fields": {"keyresource": {"type": "keyword"}},
         },  # noqa
+        "data_source": {
+            "type": "text",
+            "fields": {"keyvalue": {"type": "keyword"}},
+        },
         "name": {"type": "text", "fields": {"keyname": {"type": "keyword"}}},
     },
 }
@@ -196,6 +208,10 @@ key_value_buckets_info_template = {
             "doc_type": {"type": "keyword"},
             "id": {
                 "type": "keyword",
+            },
+            "data_source": {
+                "type": "text",
+                "fields": {"keyvalue": {"type": "keyword"}},
             },
             "resource": {
                 "type": "text",
@@ -249,6 +265,10 @@ key_values_resource_cache_template = {
             "resource": {
                 "type": "text",
                 "fields": {"keyresource": {"type": "keyword"}},
+            },
+            "data_source": {
+                "type": "text",
+                "fields": {"keyvalue": {"type": "keyword"}},
             },
             "name": {
                 "type": "text",

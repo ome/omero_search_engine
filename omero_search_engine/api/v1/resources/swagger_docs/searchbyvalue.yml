@@ -1,7 +1,7 @@
-A searchengine endpoint to accept simple queries (single query), for example, find all the images which have "Organism" = "Homo sapiens".
+A searchengine endpoint to accept search by value only (no key is provided),for example, find all the images which have value = "Homo sapiens".
 ---
 tags:
- - Single query
+ - Search by value
 
 parameters:
   - name: resource_table
@@ -9,26 +9,21 @@ parameters:
     type: string
     enum: ['image', 'project', 'screen', 'well', 'plate']
     required: true
-  - name: key
-    description: the resource attribute
-    in: query
-    type: string
-    required: False
   - name: value
     description: the attribute value
     in: query
     type: string
     required: true
   - name: study
-    description: fi lter by study name
-    in: querygit push
+    description: filter by study name
+    in: query
     type: string
     required: False
   - name: operator
     description: operator, default equals
     in: query
     type: string
-    enum: ['equals', 'not_equals', 'contains', 'not_contains', 'in', 'not_in']
+    enum: ['equals', 'not_equals', 'contains', 'not_contains']
   - name: case_sensitive
     description: case sensitive query, default False
     in: query
@@ -37,15 +32,15 @@ parameters:
     description: bookmark is used to the call the next page if number of results is bigger than 1000, it returns with each reasult page.
     in: query
     type: integer
-  - name: return_containers
-    in: query
-    type: boolean
-    required: false
   - name: data_source
     in: query
     type: string
     required: false
     description: If it is provided, it will return the search results for a specific data source, otherwise it will return the results from all the data sources
+  - name: return_containers
+    in: query
+    type: boolean
+    required: false
 responses:
   200:
     description: A JSON contains the search results

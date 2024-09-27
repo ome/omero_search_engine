@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import logging
 
 # Copyright (C) 2022 University of Dundee & Open Microscopy Environment.
 # All rights reserved.
@@ -70,6 +71,7 @@ def create_index(es_index, template):
                 es_index=es_index, error=str(ex)
             )
         )
+        raise ex
         return False
 
     return True
@@ -188,9 +190,10 @@ def delete_index(resource, es_index=None):
         return False
 
 
-def prepare_images_data(data, doc_type):
+def prepare_images_data(data, data_source, doc_type):
     data_record = [
         "id",
+        "data_source",
         "owner_id",
         "experiment",
         "group_id",
@@ -230,7 +233,10 @@ def prepare_images_data(data, doc_type):
             for rcd in data_record:
                 if rcd in ["mapvalue_name", "mapvalue_value"]:
                     continue
-                row_to_insert[rcd] = row[rcd]
+                elif rcd == "data_source":
+                    row_to_insert[rcd] = data_source
+                else:
+                    row_to_insert[rcd] = row[rcd]
 
             row_to_insert["key_values"] = []
             data_to_be_inserted[row["id"]] = row_to_insert
@@ -246,9 +252,10 @@ def prepare_images_data(data, doc_type):
     return data_to_be_inserted
 
 
-def prepare_data(data, doc_type):
+def prepare_data(data, data_source, doc_type):
     data_record = [
         "id",
+        "data_source",
         "owner_id",
         "group_id",
         "name",
@@ -277,7 +284,10 @@ def prepare_data(data, doc_type):
             for rcd in data_record:
                 if rcd in ["mapvalue_name", "mapvalue_value"]:
                     continue
-                row_to_insert[rcd] = row.get(rcd)
+                elif rcd == "data_source":
+                    row_to_insert[rcd] = data_source
+                else:
+                    row_to_insert[rcd] = row.get(rcd)
             row_to_insert["key_values"] = []
             data_to_be_inserted[row["id"]] = row_to_insert
         key_value = row_to_insert["key_values"]
@@ -292,7 +302,7 @@ def prepare_data(data, doc_type):
     return data_to_be_inserted
 
 
-def handle_file(file_name, es_index, cols, is_image, from_json):
+def handle_file(file_name, es_index, cols, is_image, data_source, from_json):
     co = 0
     search_omero_app.logger.info("Reading the csv file")
     if not from_json:
@@ -301,9 +311,9 @@ def handle_file(file_name, es_index, cols, is_image, from_json):
         df.columns = cols
         search_omero_app.logger.info("Prepare the data...")
         if not is_image:
-            data_to_be_inserted = prepare_data(df, es_index)
+            data_to_be_inserted = prepare_data(df, data_source, es_index)
         else:
-            data_to_be_inserted = prepare_images_data(df, es_index)
+            data_to_be_inserted = prepare_images_data(df, data_source, es_index)
         # print (data_to_be_inserted)
         search_omero_app.logger.info(len(data_to_be_inserted))
         with open(file_name + ".json", "w") as outfile:
@@ -344,7 +354,7 @@ def get_file_list(path_name):
     return f
 
 
-def insert_resource_data(folder, resource, from_json):
+def insert_resource_data(folder, resource, data_source, from_json):
     search_omero_app.logger.info(
         "Adding data to\
         {} using {}".format(
@@ -364,6 +374,7 @@ def insert_resource_data(folder, resource, from_json):
         is_image = True
         cols = [
             "id",
+            "data_source",
             "owner_id",
             "experiment",
             "group_id",
@@ -388,6 +399,7 @@ def insert_resource_data(folder, resource, from_json):
         if resource == "well":
             cols = [
                 "id",
+                "data_source",
                 "owner_id",
                 "group_id",
                 "mapvalue_name",
@@ -397,6 +409,7 @@ def insert_resource_data(folder, resource, from_json):
         else:
             cols = [
                 "id",
+                "data_source",
                 "owner_id",
                 "group_id",
                 "name",
@@ -422,20 +435,21 @@ def insert_resource_data(folder, resource, from_json):
         n = len(files_list)
         search_omero_app.logger.info("%s==%s == %s" % (f_con, fil, n))
         file_name = os.path.join(folder, fil)
-        handle_file(file_name, es_index, cols, is_image, from_json)
+        handle_file(file_name, es_index, cols, is_image, data_source, from_json)
         search_omero_app.logger.info("File: %s has been processed" % fil)
         try:
             with open(file_name + ".done", "w") as outfile:
                 json.dump(f_con, outfile)
-        except Exception:
+        except Exception as ex:
             search_omero_app.logger.info("Error .... writing Done file ...")
+            raise ex
         f_con += 1
 
 
 total_process = 0
 
 
-def get_insert_data_to_index(sql_st, resource):
+def get_insert_data_to_index(sql_st, resource, data_source, clean_index=True):
     """
     - Query the postgreSQL database server and get metadata (key-value pair)
     - Process the results data
@@ -446,25 +460,29 @@ def get_insert_data_to_index(sql_st, resource):
     """
     from datetime import datetime
 
-    delete_index(resource)
-    create_omero_indexes(resource)
+    if clean_index:
+        delete_index(resource)
+        create_omero_indexes(resource)
     sql_ = "select max (id) from %s" % resource
-    res2 = search_omero_app.config["database_connector"].execute_query(sql_)
+    res2 = search_omero_app.config.database_connectors[data_source].execute_query(sql_)
+    # res2 = search_omero_app.config["database_connector"].execute_query(sql_)
     max_id = res2[0]["max"]
+    if not max_id:
+        return
     page_size = search_omero_app.config["CACHE_ROWS"]
     start_time = datetime.now()
     cur_max_id = page_size
     vals = []
     # Prepare the multiprocessing data
     while True:
-        vals.append((cur_max_id, (cur_max_id - page_size), resource))
+        vals.append((cur_max_id, (cur_max_id - page_size), resource, data_source))
         if cur_max_id > max_id:
             break
         cur_max_id += page_size
     global total_process
     total_process = len(vals)
     # Determine the number of processes inside the multiprocessing pool,
-    # i.e the number of allowed processors to run at the same time
+    # i.e. the number of allowed processors to run at the same time
     # It depends on the number of the processors that the hosting machine has
     no_processors = search_omero_app.config.get("NO_PROCESSES")
     if not no_processors:
@@ -484,11 +502,14 @@ def get_insert_data_to_index(sql_st, resource):
         counter_val = manager.Value("i", 0)
         func = partial(processor_work, lock, counter_val)
         # map the data which will be consumed by the processes inside the pool
-        res = pool.map(func, vals)
+        res = pool.map(func, vals)  # noqa
         search_omero_app.logger.info(cur_max_id)
         delta = str(datetime.now() - start_time)
         search_omero_app.logger.info("Total time=%s" % delta)
-        print(res)
+        # print(res)
+    except Exception as ex:
+        print("Error is : %s" % ex)
+        raise ex
     finally:
         pool.close()
 
@@ -500,6 +521,7 @@ def processor_work(lock, global_counter, val):
     cur_max_id = val[0]
     range = val[1]
     resource = val[2]
+    data_source = val[3]
     search_omero_app.logger.info("%s, %s, %s" % (cur_max_id, range, resource))
     from omero_search_engine.cache_functions.elasticsearch.sql_to_csv import (
         sqls_resources,
@@ -509,6 +531,9 @@ def processor_work(lock, global_counter, val):
     try:
         lock.acquire()
         global_counter.value += 1
+    except Exception as ex:
+        print("Error %s" % ex)
+        raise ex
     finally:
         lock.release()
     whereclause = " where %s.id < %s and %s.id >= %s" % (
@@ -522,21 +547,21 @@ def processor_work(lock, global_counter, val):
     search_omero_app.logger.info(
         "Calling the databas for %s/%s" % (global_counter.value, total_process)
     )
-    conn = search_omero_app.config["database_connector"]
+    conn = search_omero_app.config.database_connectors[data_source]
     results = conn.execute_query(mod_sql)
     search_omero_app.logger.info("Processing the results...")
-    process_results(results, resource, lock)
+    process_results(results, resource, data_source, lock)
     average_time = (datetime.now() - st) / 2
     search_omero_app.logger.info("Done")
     search_omero_app.logger.info("elpased time:%s" % average_time)
 
 
-def process_results(results, resource, lock=None):
+def process_results(results, resource, data_source, lock=None):
     df = pd.DataFrame(results).replace({np.nan: None})
-    insert_resource_data_from_df(df, resource, lock)
+    insert_resource_data_from_df(df, resource, data_source, lock)
 
 
-def insert_resource_data_from_df(df, resource, lock=None):
+def insert_resource_data_from_df(df, resource, data_source, lock=None):
     if resource == "image":
         is_image = True
     else:
@@ -544,9 +569,9 @@ def insert_resource_data_from_df(df, resource, lock=None):
     es_index = resource_elasticsearchindex.get(resource)
     search_omero_app.logger.info("Prepare the data...")
     if not is_image:
-        data_to_be_inserted = prepare_data(df, es_index)
+        data_to_be_inserted = prepare_data(df, data_source, es_index)
     else:
-        data_to_be_inserted = prepare_images_data(df, es_index)
+        data_to_be_inserted = prepare_images_data(df, data_source, es_index)
     # print (data_to_be_inserted)
     search_omero_app.logger.info(len(data_to_be_inserted))
 
@@ -563,6 +588,7 @@ def insert_resource_data_from_df(df, resource, lock=None):
 
         actions.append({"_index": es_index, "_source": record})  # ,
     es = search_omero_app.config.get("es_connector")
+    #logging.getLogger("elasticsearch").setLevel(logging.ERROR)
     search_omero_app.logger.info("Pushing the data to the Elasticsearch")
     try:
         lock.acquire()
@@ -632,7 +658,7 @@ def insert_plate_data(folder, plate_file):
 
 
 def save_key_value_buckets(
-    resource_table_=None, re_create_index=False, only_values=False
+    resource_table_=None, data_source=None, clean_index=False, only_values=False
 ):
     """
     Query the database and get all available keys and values for
@@ -641,10 +667,12 @@ def save_key_value_buckets(
     It will use multiprocessing pool to use parallel processing
 
     """
+    if data_source is None:
+        return "No data source is provided"
     es_index = "key_value_buckets_information"
     es_index_2 = "key_values_resource_cach"
 
-    if re_create_index:
+    if clean_index:
         if not only_values:
             search_omero_app.logger.info(
                 "Try to delete if exist:  %s " % delete_es_index(es_index)
@@ -671,13 +699,13 @@ def save_key_value_buckets(
             %s ......."
             % resource_table
         )
-        resource_keys = get_keys(resource_table)
+        resource_keys = get_keys(resource_table, data_source)
         name_results = None
         if resource_table in ["project", "screen"]:
             sql = "select id, name,description  from {resource}".format(
                 resource=resource_table
             )
-            conn = search_omero_app.config["database_connector"]
+            conn = search_omero_app.config.database_connectors[data_source]
             name_result = conn.execute_query(sql)
             # name_results = [res["name"] for res in name_results]
             # Determine the number of images for each container
@@ -693,6 +721,7 @@ def save_key_value_buckets(
             name_results = [
                 {
                     "id": res["id"],
+                    # "data_source": data_source,
                     "description": res["description"],
                     "name": res["name"],
                     "no_images": res["no_images"],
@@ -700,7 +729,10 @@ def save_key_value_buckets(
                 for res in name_result
             ]
 
-        push_keys_cache_index(resource_keys, resource_table, es_index_2, name_results)
+        push_keys_cache_index(
+            resource_keys, resource_table, data_source, es_index_2, name_results
+        )
+        logging.info(type(resource_keys), type(resource_table), es_index_2, type(name_results))
         if only_values:
             continue
         search_omero_app.logger.info(
@@ -712,7 +744,9 @@ def save_key_value_buckets(
         # prepare the data which will be consumed by the processes
         # inside the multiprocessing Pool
         for key in resource_keys:
-            vals.append((key, resource_table, es_index, len(resource_keys)))
+            vals.append(
+                (key, resource_table, es_index, len(resource_keys), data_source)
+            )
         # determine the number of processes inside the process pool
         no_processors = search_omero_app.config.get("NO_PROCESSES")
         if not no_processors:
@@ -727,7 +761,7 @@ def save_key_value_buckets(
             counter_val = manager.Value("i", 0)
             func = partial(save_key_value_buckets_process, lock, counter_val)
             res = pool.map(func, vals)
-            print(res)
+            search_omero_app.logger.info(res)
         finally:
             pool.close()
 
@@ -741,6 +775,7 @@ def save_key_value_buckets_process(lock, global_counter, vals):
     resource_table = vals[1]
     es_index = vals[2]
     total = vals[3]
+    data_source = vals[4]
     wrong_keys = {}
     try:
         lock.acquire()
@@ -754,7 +789,10 @@ def save_key_value_buckets_process(lock, global_counter, vals):
             % (global_counter.value, total)
         )
         search_omero_app.logger.info("Checking {key}".format(key=key))
-        data_to_be_pushed = get_buckets(key, resource_table, es_index, lock)
+        data_to_be_pushed = get_buckets(
+            key, data_source, resource_table, es_index, lock
+        )
+
         actions = []
         search_omero_app.logger.info(
             "data_to_be_pushed:\
@@ -770,7 +808,8 @@ def save_key_value_buckets_process(lock, global_counter, vals):
             search_omero_app.logger.info(helpers.bulk(es, actions))
         except Exception as e:
             search_omero_app.logger.info("Error:  %s" % str(e))
-            # raise e
+            #raise e
+            raise e
         finally:
             lock.release()
     except Exception as e:
@@ -779,29 +818,36 @@ def save_key_value_buckets_process(lock, global_counter, vals):
             Error:%s "
             % (global_counter.value, str(e))
         )
+        #raise e
         if wrong_keys.get(resource_table):
             wrong_keys[resource_table] = wrong_keys[resource_table].append(key)
         else:
             wrong_keys[resource_table] = [key]
 
 
-def get_keys(res_table):
+def get_keys(res_table, data_source):
     sql = "select  distinct (name) from annotation_mapvalue\
            inner join {res_table}annotationlink on\
            {res_table}annotationlink.child=\
            annotation_mapvalue.annotation_id".format(
         res_table=res_table
     )
-    results = search_omero_app.config["database_connector"].execute_query(sql)
+    results = search_omero_app.config.database_connectors[data_source].execute_query(
+        sql
+    )
+    # results = search_omero_app.config["database_connector"].execute_query(sql)
     results = [res["name"] for res in results]
     return results
 
 
-def push_keys_cache_index(results, resource, es_index, resourcename=None):
+def push_keys_cache_index(
+    results, resource, data_source, es_index, resourcename=None
+):
     row = {}
     row["name"] = results
     row["doc_type"] = es_index
     row["resource"] = resource
+    row["data_source"] = data_source
     if resourcename:
         row["resourcename"] = resourcename
 
@@ -812,20 +858,23 @@ def push_keys_cache_index(results, resource, es_index, resourcename=None):
     search_omero_app.logger.info(helpers.bulk(es, actions))
 
 
-def get_buckets(key, resourcse, es_index, lock=None):
+def get_buckets(key, data_source, resourcse, es_index, lock=None):
     try:
         lock.acquire()
-        res = get_all_values_for_a_key(resourcse, key)
+        res = get_all_values_for_a_key(resourcse, data_source, key)
+    except Exception as ex:
+        print("Error %s" % ex)
+        raise ex
     finally:
         lock.release()
     search_omero_app.logger.info(
         "number of bucket: %s" % res.get("total_number_of_buckets")
     )
-    data_to_be_pushed = prepare_bucket_index_data(res, resourcse, es_index)
+    data_to_be_pushed = prepare_bucket_index_data(res, resourcse, data_source, es_index)
     return data_to_be_pushed
 
 
-def prepare_bucket_index_data(results, res_table, es_index):
+def prepare_bucket_index_data(results, res_table, data_source, es_index):
     data_to_be_inserted = []
     for result in results.get("data"):
         row = {}
@@ -837,6 +886,7 @@ def prepare_bucket_index_data(results, res_table, es_index):
         row["Value"] = result["Value"]
         row["items_in_the_bucket"] = result["Number of %ss" % res_table]
         row["total_buckets"] = results["total_number_of_buckets"]
+        row["data_source"] = data_source
         row["total_items_in_saved_buckets"] = results["total_number"]
         row["total_items"] = results["total_number_of_%s" % res_table]
     return data_to_be_inserted

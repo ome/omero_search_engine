@@ -18,6 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import copy
+import logging
 import os
 import sys
 import json
@@ -90,6 +91,10 @@ should ==> OR
 # It supports not two operators, equals and not_equals
 main_attribute_query_template = Template(
     """{"bool":{"must":{"match":{"$attribute.keyvalue":"$value"}}}}"""
+)
+
+main_attribute_query_in_template = Template(
+    """{"bool":{"must":{"terms":{"$attribute.keyvalue": $value }}}}"""
 )
 # Search main attribute which has long data type
 # ends with "_id" in the image index (template)
@@ -218,7 +223,13 @@ def elasticsearch_query_builder(
             for clause in main_attributes.get("and_main_attributes"):
                 if isinstance(clause, list):
                     for attribute in clause:
-                        if (
+                        if attribute["operator"].strip()=="in":
+                            ## it is assuming that in operator value is a lit
+                            main_dd = main_attribute_query_in_template.substitute(
+                                attribute=attribute["name"].strip(),
+                                value=json.dumps(attribute["value"]),
+                            )
+                        elif (
                             attribute["name"].endswith("_id")
                             or attribute["name"] == "id"
                         ):
@@ -233,13 +244,20 @@ def elasticsearch_query_builder(
                                 attribute=attribute["name"].strip(),
                                 value=str(attribute["value"]).strip(),
                             )
-                        if attribute["operator"].strip() == "equals":
+                        if attribute["operator"].strip() == "equals" or attribute["operator"].strip() == "in":
                             nested_must_part.append(main_dd)
                         elif attribute["operator"].strip() == "not_equals":
                             nested_must_not_part.append(main_dd)
+
                 else:
                     attribute = clause
-                    if attribute["name"].endswith("_id") or attribute["name"] == "id":
+                    if attribute["operator"].strip() == "in":
+                        ## it is assuming that in operator value is a lit
+                        main_dd = main_attribute_query_in_template.substitute(
+                            attribute=attribute["name"].strip(),
+                            value= json.dumps(attribute["value"]),
+                        )
+                    elif attribute["name"].endswith("_id") or attribute["name"] == "id":
                         main_dd = main_attribute_query_template_id.substitute(
                             attribute=attribute["name"].strip(),
                             value=str(attribute["value"]).strip(),
@@ -249,7 +267,7 @@ def elasticsearch_query_builder(
                             attribute=attribute["name"].strip(),
                             value=str(attribute["value"]).strip(),
                         )
-                    if attribute["operator"].strip() == "equals":
+                    if attribute["operator"].strip() == "equals" or  attribute["operator"].strip() == "in" :
                         nested_must_part.append(main_dd)
                     elif attribute["operator"].strip() == "not_equals":
                         nested_must_not_part.append(main_dd)
@@ -279,6 +297,7 @@ def elasticsearch_query_builder(
                             main_dd = main_attribute_query_template.substitute(
                                 attribute=attribute["name"].strip(),
                                 value=str(attribute["value"]).strip(),
+
                             )
 
                         if attribute["operator"].strip() == "equals":
@@ -816,7 +835,8 @@ def check_single_filter(res_table, filter, names, organism_converter):
     operator = filter["operator"]
     if operator != "contains" and operator != "not_contains":
         if key:
-            key_ = [name for name in names if name.casefold() == key.casefold()]
+            for names_ in names:
+                key_ = [name for name in names_ if name.casefold() == key.casefold()]
         else:
             key_ = []
         if len(key_) == 1:
@@ -987,27 +1007,41 @@ def get_pagination(total_pages, next_bookmark, pagination_dict):
 
 
 def search_index_using_search_after(
-    e_index, query, bookmark_, pagination_dict, return_containers, ret_type=None
-):
+    e_index, query,  bookmark_, pagination_dict, return_containers, data_source=None, ret_type=None
+) -> object:
+    #toz  ya
     returned_results = []
     if bookmark_ and not pagination_dict:
         add_paination = False
     else:
         add_paination = True
-
+    if not data_source:
+        data_source = get_data_sources()
     es = search_omero_app.config.get("es_connector")
     if return_containers:
-        res = es.search(index=e_index, body=query)
-        if len(res["hits"]["hits"]) == 0:
-            search_omero_app.logger.info("No result is found")
-            return returned_results
-        keys_counts = res["aggregations"]["key_count"]["buckets"]
-        idrs = []
-        for ek in keys_counts:
-            idrs.append(ek["key"])
-            res_res = get_studies_titles(ek["key"], ret_type)
-            res_res["image count"] = ek["doc_count"]
-            returned_results.append(res_res)
+        #####
+        for data_s in data_source:
+            query2 = copy.deepcopy(query)
+            del query2["query"]["bool"]["must"][0]
+            main_dd = main_attribute_query_in_template.substitute(
+                attribute="data_source",
+                value=json.dumps([data_s]),
+            )
+            #query["query"]["bool"]["must"][0] = json.loads(main_dd)
+            query2["query"]["bool"]["must"].append(json.loads(main_dd))
+            res = es.search(index=e_index, body=query2)
+            if len(res["hits"]["hits"]) == 0:
+                search_omero_app.logger.info("No result is found")
+                continue
+            keys_counts = res["aggregations"]["key_count"]["buckets"]
+            idrs = []
+            for ek in keys_counts:
+                idrs.append(ek["key"])
+                res_res = get_studies_titles(ek["key"], ret_type, data_source)
+                res_res["image count"] = ek["doc_count"]
+                if data_source:
+                    res_res["data_source"] =data_s
+                returned_results.append(res_res)
 
         return returned_results
     page_size = search_omero_app.config.get("PAGE_SIZE")
@@ -1026,6 +1060,7 @@ def search_index_using_search_after(
         bookmark_ = get_bookmark(pagination_dict)
     if not bookmark_:
         result = es.search(index=e_index, body=query)
+        # print (result)
         if len(result["hits"]["hits"]) == 0:
             search_omero_app.logger.info("No result is found")
             return returned_results
@@ -1073,6 +1108,7 @@ def search_resource_annotation(
     bookmark=None,
     pagination_dict=None,
     return_containers=False,
+    data_source=None,
 ):
     """
     @table_: the resource table, e.g. image. project, etc.
@@ -1101,10 +1137,29 @@ def search_resource_annotation(
             or len(query_details) == 0
             or isinstance(query_details, str)
         ):
-            print("Error ")
+            logging.info("Error ")
             return build_error_message(
                 "{query} is not a valid query".format(query=query)
             )
+        if data_source  and data_source.lower() != "all":
+            data_sources=get_data_sources()
+            data_source = [itm.strip() for itm in data_source.split(',')]
+            for data_s in data_source:
+                if data_s and data_s.strip().lower() not in data_sources:
+                    return "'%s' is not a data source"%data_s
+            clause = {}
+            clause["name"] = "data_source"
+            clause["value"] = data_source
+            clause["operator"] = "in"
+            if main_attributes and len(main_attributes) > 0:
+                if main_attributes.get("and_main_attributes"):
+                    main_attributes.get("and_main_attributes").append(clause)
+                else:
+                    main_attributes["and_main_attributes"] = [clause]
+            else:
+                main_attributes = {}
+                main_attributes["and_main_attributes"] = [clause]
+
         and_filters = query_details.get("and_filters")
         or_filters = query_details.get("or_filters")
         case_sensitive = query_details.get("case_sensitive")
@@ -1114,13 +1169,14 @@ def search_resource_annotation(
         query_string = elasticsearch_query_builder(
             and_filters, or_filters, case_sensitive, main_attributes
         )
-        # query_string has to be string, if it is a dict,
+        # query_string has to be a string, if it is a dict,
         # something went wrong and the message inside the dict
         # which will be returned to the sender:
         if isinstance(query_string, dict):
             return query_string
 
-        search_omero_app.logger.info("Query %s" % query_string)
+        #search_omero_app.logger.info("Query %s" % query_string)
+
         query = json.loads(query_string, strict=False)
         raw_query_to_send_back = json.loads(query_string, strict=False)
     else:
@@ -1140,21 +1196,22 @@ def search_resource_annotation(
             bookmark,
             pagination_dict,
             return_containers,
-            "project",
+            data_source=data_source,
+            ret_type="project",
         )
         query["aggs"] = json.loads(
             count_attr_template.substitute(field="screen_name.keyvalue")
         )
 
         res_2 = search_index_using_search_after(
-            res_index, query, bookmark, pagination_dict, return_containers, "screen"
+            res_index, query, bookmark, pagination_dict, return_containers, data_source=data_source, ret_type="screen"
         )
         # Combines the containers results
         studies = res + res_2
         res = {"results": studies}
     else:
         res = search_index_using_search_after(
-            res_index, query, bookmark, pagination_dict, return_containers
+            res_index, query, bookmark, pagination_dict, return_containers, data_source=data_source
         )
     notice = ""
     end_time = time.time()
@@ -1175,7 +1232,7 @@ def search_resource_annotation(
     #    )
 
 
-def get_studies_titles(idr_name, resource):
+def get_studies_titles(idr_name, resource,data_source=None):
     """
     use the res_raw_query to return the study title (publication and study)
     """
@@ -1253,3 +1310,15 @@ def adjust_query_for_container(query):
 
         for filter in new_or_filters:
             or_filters.append(filter)
+
+
+def get_data_sources():
+    data_sources = []
+    for data_source in search_omero_app.config.database_connectors.keys():
+        data_sources.append(data_source)
+    return data_sources
+
+def check_empty_string(string_to_check):
+    if string_to_check:
+        string_to_check=string_to_check.strip()
+    return string_to_check

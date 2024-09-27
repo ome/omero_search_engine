@@ -22,7 +22,8 @@ import os
 import logging
 from elasticsearch import Elasticsearch
 from flasgger import Swagger, LazyString, LazyJSONEncoder
-from omero_search_engine.database.database_connector import DatabaseConnector
+
+# from omero_search_engine.database.database_connector import DatabaseConnector
 from configurations.configuration import (
     configLooader,
     load_configuration_variables_from_file,
@@ -62,16 +63,15 @@ def create_app(config_name="development"):
     app_config = configLooader.get(config_name)
     load_configuration_variables_from_file(app_config)
     set_database_connection_variables(app_config)
-    database_connector = DatabaseConnector(
-        app_config.DATABASE_NAME, app_config.DATABASE_URI
-    )
+    # atabase_connector = DatabaseConnector(
+    #   app_config.DATABASE_NAME, app_config.DATABASE_URI
+    #
     search_omero_app.config.from_object(app_config)
     search_omero_app.app_context()
     search_omero_app.app_context().push()
     search_omero_app.app_context()
     search_omero_app.app_context().push()
     ELASTIC_PASSWORD = app_config.ELASTIC_PASSWORD
-
     es_connector = Elasticsearch(
         app_config.ELASTICSEARCH_URL.split(","),
         verify_certs=app_config.verify_certs,
@@ -83,7 +83,8 @@ def create_app(config_name="development"):
         http_auth=("elastic", ELASTIC_PASSWORD),
     )
 
-    search_omero_app.config["database_connector"] = database_connector
+    search_omero_app.config.database_connectors = app_config.database_connectors
+    print(search_omero_app.config.database_connectors)
     search_omero_app.config["es_connector"] = es_connector
     log_folder = os.path.join(os.path.expanduser("~"), "logs")
     if not os.path.exists(log_folder):
@@ -104,6 +105,7 @@ def create_app(config_name="development"):
 
     search_omero_app.logger.setLevel(logging.INFO)
     search_omero_app.logger.info("app assistant startup")
+
     return search_omero_app
 
 

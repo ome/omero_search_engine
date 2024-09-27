@@ -32,9 +32,7 @@ def show_saved_indices():
     )
 
     all_indexes = get_all_indexes()
-    for index in all_indexes:
-        print("Index: ==>>>", index)
-    # return (all_indexes)
+    return all_indexes
 
 
 @manager.command
@@ -115,11 +113,15 @@ def sql_results_to_panda():
 
 
 @manager.command
-def restore_postgresql_database():
+@manager.option(
+    "-s",
+    "--source",
+    help="data source name, restore all the data sources is the default",  # noqa
+)
+def restore_postgresql_database(source="all"):
     from omero_search_engine.database.utils import restore_database
 
-    restore_database()
-
+    restore_database(source)
 
 @manager.command
 @manager.option(
@@ -128,11 +130,16 @@ def restore_postgresql_database():
     help="resource name, creating all the indexes for all the resources is the default",  # noqa
 )
 @manager.option(
+    "-s",
+    "--source",
+    help="data source name, ndexeing all the data sources is the default",  # noqa
+)
+@manager.option(
     "-b",
     "--backup",
     help="if True, backup will be called ",  # noqa
 )
-def get_index_data_from_database(resource="all", backup="True"):
+def get_index_data_from_database(resource="all", source="all", backup="True"):
     """
     insert data in Elasticsearch index for each resource
     It gets the data from postgres database server
@@ -147,23 +154,45 @@ def get_index_data_from_database(resource="all", backup="True"):
     import json
 
     backup = json.loads(backup.lower())
-    if resource != "all":
-        sql_st = sqls_resources.get(resource)
-        if not sql_st:
-            return
-        get_insert_data_to_index(sql_st, resource)
-    else:
-        for res, sql_st in sqls_resources.items():
-            get_insert_data_to_index(sql_st, res)
-        save_key_value_buckets(
-            resource_table_=None, re_create_index=True, only_values=False
-        )
-        # validat ethe indexing
-        test_indexing_search_query(deep_check=False, check_studies=True)
+    if not source:
+        print("Data source is required to process")
+        return
+    elif source == "all":
+        clean_index = True
 
-    # backup the index data
+    else:
+        clean_index = False
+    for data_source in search_omero_app.config.database_connectors.keys():
+        if source.lower() != "all" and data_source.lower() != source.lower():
+            continue
+        # if resource != "all":
+        #    sql_st = sqls_resources.get(resource)
+        #    if not sql_st:
+        #        return
+        #     get_insert_data_to_index(sql_st, resource)
+        # else:
+        for res, sql_st in sqls_resources.items():
+            if resource.lower() != "all" and resource.lower() != res.lower():
+                continue
+            get_insert_data_to_index(sql_st, res, data_source, clean_index)
+        save_key_value_buckets(
+            resource_table_=None,
+            data_source=data_source,
+            clean_index=clean_index,
+            only_values=False,
+        )
+        print("!Done for data_source: %s from %s" % (data_source, search_omero_app.config.database_connectors.keys()))
+        if clean_index:
+            clean_index = False
+
+        # validat ethe indexing
+        test_indexing_search_query(
+            source=data_source, deep_check=False, check_studies=True
+        )
+
+    #backup the index data
     if backup:
-        backup_elasticsearch_data()
+      backup_elasticsearch_data()
 
 
 # set configurations
@@ -172,24 +201,39 @@ def get_index_data_from_database(resource="all", backup="True"):
 @manager.option("-s", "--server_port_number", help="database port number")
 @manager.option("-d", "--database", help="database name")
 @manager.option("-n", "--name", help="database usernname")
+@manager.option("-b", "--backup_filename", help="database backup filename ")
 @manager.option("-p", "--password", help="database username password")
+@manager.option("-w", "--working_data_source", help="data source")
 def set_database_configuration(
-    url=None, server_port_number=None, database=None, name=None, password=None
+    working_data_source=None,
+    url=None,
+    server_port_number=None,
+    database=None,
+    backup_filename=None,
+    name=None,
+    password=None,
 ):
+    if not working_data_source:
+        print("Data source is required to process")
     database_attrs = {}
-    if url:
-        database_attrs["DATABASE_SERVER_URI"] = url
+    databse_config = {}
+    databse_config["name"] = working_data_source
+    databse_config["DATABASE"] = database_attrs
     if database:
         database_attrs["DATABASE_NAME"] = database
+    if url:
+        database_attrs["DATABASE_SERVER_URI"] = url
     if name:
         database_attrs["DATABASE_USER"] = name
     if password:
         database_attrs["DATABASE_PASSWORD"] = password
     if server_port_number and server_port_number.isdigit():
         database_attrs["DATABASE_PORT"] = server_port_number
+    if backup_filename:
+        database_attrs["DATABASE_BACKUP_FILE"] = backup_filename
 
     if len(database_attrs) > 0:
-        update_config_file(database_attrs)
+        update_config_file(databse_config, configure_database=True)
     else:
         search_omero_app.logger.info(
             "At least one database attribute\
@@ -290,6 +334,12 @@ def set_no_processes(no_processes=None):
 
 @manager.command
 @manager.option(
+    "-d",
+    "--data_source",
+    help="data source name, the default is all",  # noqa
+)
+
+@manager.option(
     "-r",
     "--resource",
     help="resource name, creating all the indexes for all the resources is the default",  # noqa
@@ -300,7 +350,7 @@ def set_no_processes(no_processes=None):
     help="creating the elastic search index if set to True",  # noqa
 )
 @manager.option("-o", "--only_values", help="creating cached values only ")
-def cache_key_value_index(resource=None, create_index=None, only_values=None):
+def cache_key_value_index(resource=None, data_source='all',create_index=None, only_values=None):
     """
     Cache the value bucket for each value for each resource
     """
@@ -308,7 +358,7 @@ def cache_key_value_index(resource=None, create_index=None, only_values=None):
         save_key_value_buckets,
     )
 
-    save_key_value_buckets(resource, create_index, only_values)
+    save_key_value_buckets(resource,data_source ,create_index, only_values)
 
 
 @manager.command
@@ -319,8 +369,16 @@ def cache_key_value_index(resource=None, create_index=None, only_values=None):
     "--deep_check",
     help="compare all the images from both search engine and database server, default is False so it will compare the number of images and the first searchengine page",  # noqa
 )
+@manager.option(
+    "-s",
+    "--source",
+    help="data source name, ndexeing all the data sources is the default",  # noqa
+)
 def test_indexing_search_query(
-    json_file="app_data/test_index_data.json", deep_check=False, check_studies=False
+    json_file="app_data/test_index_data.json",
+    source=None,
+    deep_check=False,
+    check_studies=False,
 ):
     """
     test the indexing and the searchengine query functions
@@ -339,11 +397,15 @@ def test_indexing_search_query(
         get_no_images_sql_containers,
     )
 
-    validate_queries(json_file, deep_check)
+    if not source:
+        print("Data source is required to process ")
+        return
+
+    validate_queries(json_file, source, deep_check)
     if check_studies:
-        test_no_images()
+        test_no_images(source)
     get_omero_stats()
-    get_no_images_sql_containers()
+    get_no_images_sql_containers(data_source=source)
 
 
 @manager.command
