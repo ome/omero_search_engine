@@ -44,13 +44,17 @@ def check_get_names(idr_, resource, attribute, return_exact=False):
     if idr_:
         idr_ = idr_.strip()
     pr_names = get_resource_names(resource)
+    all_act_names=[]
     if pr_names:
         if not return_exact:
-            act_name = [
-                name["id"]
-                for name in pr_names
-                if name[attribute] and idr_.lower() in name[attribute].lower()
-            ]
+            for data_source, pr_names_ in pr_names.items():
+                act_name = [
+                    name["id"]
+                    for name in pr_names_
+                    if name[attribute] and idr_.lower() in name[attribute].lower()
+                ]
+                print (act_name, data_source)
+                all_act_names=all_act_names+act_name
         else:
             # This should be modified to query specific data source specific
             for data_source, pr_names_ in pr_names.items():
@@ -59,7 +63,8 @@ def check_get_names(idr_, resource, attribute, return_exact=False):
                     for name in pr_names_
                     if name[attribute] and idr_.lower() == name[attribute].lower()
                 ]
-        return act_name
+                all_act_names = all_act_names + act_name
+        return all_act_names
 
 
 class QueryItem(object):
@@ -459,13 +464,13 @@ def search_query(
     search_omero_app.logger.info(
         "-------------------------------------------------"
     )  # noqa
-    search_omero_app.logger.info(query)
-    search_omero_app.logger.info(main_attributes)
+    # search_omero_app.logger.info("1. query: %s" % query)
+    search_omero_app.logger.info("2. main_attributes: %s "%main_attributes)
     search_omero_app.logger.info(resource)
     search_omero_app.logger.info(
         "-------------------------------------------------"
     )  # noqa
-    search_omero_app.logger.info(("%s, %s") % (resource, query))
+    search_omero_app.logger.info(("2: resource: %s, 2: query: %s") % (resource, query))
     if not main_attributes:
         q_data = {"query": {"query_details": query}}
     elif resource == "image":
@@ -668,7 +673,6 @@ def determine_search_results_(
     if main_attributes:
         res_and_main_attributes = main_attributes.get("and_main_attributes")
         res_or_main_attributes = main_attributes.get("or_main_attributes")
-
     columns_def = query_.get("columns_def")
     or_query_groups = []
     if and_filters and len(and_filters) > 0:

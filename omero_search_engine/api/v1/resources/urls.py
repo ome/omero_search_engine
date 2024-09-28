@@ -399,8 +399,10 @@ def submit_query():
     adjust_query_for_container(query)
     return_columns = request.args.get("return_columns")
     data_source = request.args.get("data_source")
+    data_source = check_empty_string(data_source)
     if data_source:
         data_source = data_source.strip()
+
     if return_columns:
         try:
             return_columns = json.loads(return_columns.lower())
@@ -408,7 +410,6 @@ def submit_query():
             return_columns = False
     validation_results = query_validator(query)
     if validation_results == "OK":
-
         return jsonify(
             determine_search_results_(
                 query, data_source=data_source, return_columns=return_columns

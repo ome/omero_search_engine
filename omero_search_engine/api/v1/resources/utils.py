@@ -1133,7 +1133,6 @@ def search_resource_annotation(
             "{table_} is not a valid resurce".format(table_=table_)
         )
     query_details = query.get("query_details")
-
     start_time = time.time()
     if not raw_elasticsearch_query:
         query_details = query.get("query_details")
@@ -1171,12 +1170,14 @@ def search_resource_annotation(
                 main_attributes = {}
                 main_attributes["and_main_attributes"] = [clause]
 
+
         and_filters = query_details.get("and_filters")
         or_filters = query_details.get("or_filters")
         case_sensitive = query_details.get("case_sensitive")
         # check and fid if possible names and values inside
         # filters conditions
-        check_filters(table_, [and_filters, or_filters], case_sensitive)
+        #check_filters is cpmmented as it has no actual use and take time to excute
+        # check_filters(table_, [and_filters, or_filters], case_sensitive)
         query_string = elasticsearch_query_builder(
             and_filters, or_filters, case_sensitive, main_attributes
         )

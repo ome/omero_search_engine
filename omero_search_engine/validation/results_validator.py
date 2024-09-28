@@ -1020,10 +1020,10 @@ def check_number_images_sql_containers_using_ids(data_source):
                             if ress["id"] not in test_array:
                                 print(ress["id"])
                         search_omero_app.logger.info("ERROR: Not equal results")
-                        print(sql, query_data)
-                        print("searchengine_results:", searchengine_results)
-                        print("postgres_results: ", postgres_results)
-                        print("==============-=======")
+                        # print(sql, query_data)
+                        # print("searchengine_results:", searchengine_results)
+                        # print("postgres_results: ", postgres_results)
+                        # print("==============-=======")
                         print(
                             "Error checking %s name: %s, id: %s"
                             % (resource, res_name, res_id)

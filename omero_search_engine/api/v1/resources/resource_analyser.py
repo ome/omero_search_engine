@@ -631,51 +631,12 @@ key_values_buckets_template = Template(
 Search using key, part of the value and resource
 """
 key_part_values_buckets_template = Template(
-    """
-{
-   "query":{
-      "bool":{
-         "must":[
-            {
-               "bool":{
-                  "must":[
-                     {
-                        "match":{
-                           "Attribute.keyrnamenormalize":"$name"
-                        }
-                     },
-                     {
-                        "wildcard":{
-                           "Value.keyvaluenormalize":"*$value*"
-                        }
-                     }
-                  ]
-               }
-            },
-            {
-               "bool":{
-                  "must":[
-                     {
-                        "match":{
-                           "resource.keyresource":"$resource"
-                        }
-                     }
-                  ]
-               }
-            },
-            {
-               "bool":{
-                  "must":{
-                     "terms":{
-                        "data_source.keyvalue":$data_source
-                     }
-                  }
-               }
-            }
-         ]
-      }
-   }
-}"""
+"""{"query":{"bool":{"must":[{"bool":{"must":[{
+"match":{"Attribute.keyrnamenormalize":"$name"}},
+{"wildcard":{"Value.keyvaluenormalize":"*$value*"}
+}]}},{"bool":{"must":[{"match":{"resource.keyresource":"$resource"}
+}]}},{"bool":{"must":{"terms":{"data_source.keyvalue":$data_source}}}}]}}}
+"""
 )
 
 
@@ -697,8 +658,7 @@ key_values_search_buckets_template = Template(
     """
 {"query":{"bool":{"must":[{"bool":{
 "must":{"match":{"Value.keyvalue":"$value"}}}},{
-"bool": {"must": {"match":
-{"resource.keyresource": "$resource"}}}}]}},"size": 9999}"""
+"bool": {"must": {"match":{"resource.keyresource": "$resource"}}}}]}},"size": 9999}"""
 )
 
 """
@@ -717,44 +677,31 @@ resource_key_values_buckets_size_template = Template(
 {"query":{"bool":{"must":[{"bool":{
 "must":{"wildcard":{"Value.keyvaluenormalize":"*$value*"}}}},{"bool":{
 "must":{"terms":{"data_source.keyvalue":$data_source}}}},{
-"bool": {"must": {"match":
-{"resource.keyresource": "$resource"}}}}]}}}"""
+"bool": {"must": {"match":{"resource.keyresource": "$resource"}}}}]}}}"""
 )
 
 resource_key_values_buckets_template = Template(
     """
 {"query":{"bool":{"must":[{"bool":{
 "must":{"wildcard":{"Value.keyvaluenormalize":"*$value*"}}}},{
-"bool": {"must": {"match":
-{"resource.keyresource": "$resource"}}}},
-{"bool":{
-"must":{"terms":{ "data_source.keyvalue":$data_source}}}}
-]}},
-"size": 9999, "sort":[{ "_script": {
-        "script": "doc['Value.keyvaluenormalize'].value.length()",
-        "type": "number",
-        "order": "asc"
-    }},{"items_in_the_bucket": "desc"}, {"id": "asc"}]}"""
+"bool": {"must": {"match":{"resource.keyresource": "$resource"}}}},{"bool":{
+"must":{"terms":{ "data_source.keyvalue":$data_source}}}}]}},
+"size": 9999, "sort":[{ "_script": {"script": "doc['Value.keyvaluenormalize'].value.length()","type": "number","order": "asc"}},{"items_in_the_bucket": "desc"}, {"id": "asc"}]}"""
 )
 
 key_values_buckets_template_2 = Template(
     """
-{"query":{"bool":{"must":[{"bool":{"must":{"match":{
-"resource.keyresource":"$resource"}}}}]}}} """
+{"query":{"bool":{"must":[{"bool":{"must":{"match":{"resource.keyresource":"$resource"}}}}]}}} """
 )
 
 key_values_buckets_template_with_data_source = Template(
     """
-{"query":{"bool":{"must":[{"bool":{"must":{"match":{
-"resource.keyresource":"$resource"}}}},{"bool": {"must":
-{"match": {"data_source.keyvalue":$data_source}}}}]}}} """
+{"query":{"bool":{"must":[{"bool":{"must":{"match":{"resource.keyresource":"$resource"}}}},{"bool": {"must":{"match": {"data_source.keyvalue":$data_source}}}}]}}} """
 )
 
 key_values_buckets_template_search_name = Template(
     """
-{"query":{"bool":{"must":[{"bool":{"must":{"match":{
-"resource.keyresource":"$resource"}}}},{"bool": {"must":
-{"wildcard": {"resourcename.keyresourcename":"*$name*"}}}}]}}} """
+{"query":{"bool":{"must":[{"bool":{"must":{"match":{"resource.keyresource":"$resource"}}}},{"bool": {"must":{"wildcard": {"resourcename.keyresourcename":"*$name*"}}}}]}}} """
 )
 
 
