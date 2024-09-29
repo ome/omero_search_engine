@@ -16,7 +16,7 @@ Example:
            "name": "name",
            "value": "idr0008-rohn-actinome/screenB",
            "operator": "equals",
-           "resource": "project"
+           "resource": "container"
          }
        ],
        "or_filters": [
