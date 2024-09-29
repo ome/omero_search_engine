@@ -44,7 +44,7 @@ def check_get_names(idr_, resource, attribute, return_exact=False):
     if idr_:
         idr_ = idr_.strip()
     pr_names = get_resource_names(resource)
-    all_act_names=[]
+    all_act_names = []
     if pr_names:
         if not return_exact:
             for data_source, pr_names_ in pr_names.items():
@@ -53,8 +53,8 @@ def check_get_names(idr_, resource, attribute, return_exact=False):
                     for name in pr_names_
                     if name[attribute] and idr_.lower() in name[attribute].lower()
                 ]
-                print (act_name, data_source)
-                all_act_names=all_act_names+act_name
+                print(act_name, data_source)
+                all_act_names = all_act_names + act_name
         else:
             # This should be modified to query specific data source specific
             for data_source, pr_names_ in pr_names.items():
@@ -465,7 +465,7 @@ def search_query(
         "-------------------------------------------------"
     )  # noqa
     # search_omero_app.logger.info("1. query: %s" % query)
-    search_omero_app.logger.info("2. main_attributes: %s "%main_attributes)
+    search_omero_app.logger.info("2. main_attributes: %s " % main_attributes)
     search_omero_app.logger.info(resource)
     search_omero_app.logger.info(
         "-------------------------------------------------"

@@ -51,8 +51,8 @@ def index():
 @resources.route("/data_resources/", methods=["GET"])
 def return_data_resources():
     """
-     file: swagger_docs/datasources.yml
-     """
+    file: swagger_docs/datasources.yml
+    """
     """
     used to return the available data resources
     """
