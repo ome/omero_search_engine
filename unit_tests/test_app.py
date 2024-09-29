@@ -36,7 +36,7 @@ from omero_search_engine.cache_functions.elasticsearch.elasticsearch_templates i
 
 from omero_search_engine.validation.results_validator import (
     Validator,
-    # check_number_images_sql_containers_using_ids,
+    check_number_images_sql_containers_using_ids,
 )
 from omero_search_engine.cache_functions.elasticsearch.transform_data import (
     delete_es_index,
@@ -161,7 +161,7 @@ class BasicTestCase(unittest.TestCase):
         test submit query and get results
         """
         table = "image1"
-        es_index = "image_keyvalue_pair_metadata_1"
+        table_2 = "image"
         es_index = "image_keyvalue_pair_metadata_1"
         es_index_2 = "key_values_resource_cach"
         create_es_index_2 = True
@@ -175,7 +175,7 @@ class BasicTestCase(unittest.TestCase):
             self.assertTrue(
                 create_index(es_index_2, key_values_resource_cache_template)
             )
-        res = search_resource_annotation(table, query)
+        res = search_resource_annotation(table_2, query)
         assert len(res.get("results")) >= 0
         self.assertTrue(delete_es_index(es_index))
         if create_es_index_2:
@@ -233,9 +233,10 @@ class BasicTestCase(unittest.TestCase):
                 )
                 self.assertTrue(validator.identical)
 
-    #    def test_no_images_containers(self):
-    #        for data_source in search_omero_app.config.database_connectors.keys():
-    #            self.assertTrue(check_number_images_sql_containers_using_ids(data_source))
+    #def test_no_images_containers(self):
+    #    for data_source in search_omero_app.config.database_connectors.keys():
+    #        self.assertTrue(check_number_images_sql_containers_using_ids(data_source))
+
 
     def test_multi_or_quries(self):
         pass
