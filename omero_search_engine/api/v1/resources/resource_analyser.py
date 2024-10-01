@@ -686,27 +686,20 @@ resource_key_values_buckets_template = Template(  # noqa
 "must":{"wildcard":{"Value.keyvaluenormalize":"*$value*"}}}},{
 "bool": {"must": {"match":{"resource.keyresource": "$resource"}}}},{"bool":{
 "must":{"terms":{ "data_source.keyvalue":$data_source}}}}]}},
-"size": 9999, "sort":[{ "_script":
-{"script": "doc['Value.keyvaluenormalize'].value.length()",
-"type": "number","order": "asc"}},
-{"items_in_the_bucket": "desc"}, {"id": "asc"}]}"""
+"size": 9999, "sort":[{ "_script": {"script": "doc['Value.keyvaluenormalize'].value.length()","type": "number","order": "asc"}},{"items_in_the_bucket": "desc"}, {"id": "asc"}]}"""  # noqa
 )
 
 key_values_buckets_template_2 = Template(
-    """
-{"query":{"bool":{"must":[{"bool":
-{"must":{"match":{"resource.keyresource":"$resource"}}}}]}}} """
-)
+    """{"query":{"bool":{"must":[{"bool":{"must":{"match":{"resource.keyresource":"$resource"}}}}]}}} """  # noqa
+)  # noqa
 
 key_values_buckets_template_with_data_source = Template(
     """
-{"query":{"bool":{"must":[{"bool":{"must":{"match":{"resource.keyresource":"$resource"}}}},
-{"bool":{"must":{"match": {"data_source.keyvalue":$data_source}}}}]}}} """
+{"query":{"bool":{"must":[{"bool":{"must":{"match":{"resource.keyresource":"$resource"}}}},{"bool": {"must":{"match": {"data_source.keyvalue":$data_source}}}}]}}} """  # noqa
 )
 key_values_buckets_template_search_name = Template(
     """
-{"query":{"bool":{"must":[{"bool":{"must":{"match":{"resource.keyresource":"$resource"}}}},
-{"bool": {"must":{"wildcard": {"resourcename.keyresourcename":"*$name*"}}}}]}}} """
+{"query":{"bool":{"must":[{"bool":{"must":{"match":{"resource.keyresource":"$resource"}}}},{"bool": {"must":{"wildcard": {"resourcename.keyresourcename":"*$name*"}}}}]}}} """  # noqa
 )  # noqa
 
 
@@ -887,7 +880,6 @@ def get_the_results(
         es_index, query
     )  # .search(index=es_index, body=query)
     hits = results_["hits"]["hits"]
-
     if len(hits) > 0:
         for hit in hits:
             if len(hits) > 0:
@@ -914,8 +906,6 @@ def get_the_results(
                     returned_results[hit["_source"]["data_source"]] = [
                         item for item in hit["_source"]["resourcename"]
                     ]
-                else:
-                    return returned_results
 
     # remove container description from the results,
     # should be added again later after cleaning up the description
