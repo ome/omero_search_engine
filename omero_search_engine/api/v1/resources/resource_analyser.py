@@ -779,9 +779,6 @@ def get_resource_attributes(
     if mode == "searchterms":
         restricted_search_terms = get_restircted_search_terms()
         restircted_resources = {}
-        print("====================================")
-        print(returned_results)
-        print("====================================")
         for returned_result in returned_results:
             for k, val in returned_result.items():
                 if k in restricted_search_terms:
