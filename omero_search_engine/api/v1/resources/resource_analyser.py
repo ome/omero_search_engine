@@ -779,16 +779,25 @@ def get_resource_attributes(
     if mode == "searchterms":
         restricted_search_terms = get_restircted_search_terms()
         restircted_resources = {}
-        for k, val in returned_results.items():
-            if k in restricted_search_terms:
-                search_terms = list(set(restricted_search_terms[k]) & set(val))
-                if len(search_terms) > 0:
-                    restircted_resources[k] = search_terms
+        print("====================================")
+        print (returned_results)
+        print("====================================")
+        for returned_result in returned_results:
+            for k, val in returned_result.items():
+                if k in restricted_search_terms:
+                    search_terms = list(set(restricted_search_terms[k]) & set(val))
+                    if len(search_terms) > 0:
+                        if k not in restircted_resources:
+                            restircted_resources[k] = search_terms
+                        else:
+                            for term in search_terms:
+                                if term not in restircted_resources[k]:
+                                     restircted_resources[k].append(term)
+                            #restircted_resources[k] = restircted_resources[k] + search_terms
         returned_results.append(restircted_resources)
         if "project" in returned_results:
             returned_results_["project"].append("name")
-
-    return returned_results
+    return restircted_resources
 
 
 attribute_search_values_template = Template(
