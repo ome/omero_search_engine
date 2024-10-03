@@ -790,7 +790,7 @@ def get_resource_attributes(
                             for term in search_terms:
                                 if term not in restircted_resources[k]:
                                     restircted_resources[k].append(term)
-                            # restircted_resources[k] = restircted_resources[k] + search_terms
+        # restircted_resources[k] = restircted_resources[k] + search_terms
         returned_results.append(restircted_resources)
         if "project" in returned_results:
             returned_results_["project"].append("name")
