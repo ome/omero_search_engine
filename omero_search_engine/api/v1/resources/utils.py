@@ -1338,6 +1338,8 @@ def get_data_sources():
     data_sources = []
     for data_source in search_omero_app.config.database_connectors.keys():
         data_sources.append(data_source)
+    for data_source in search_omero_app.config.get("FILES").keys():
+        data_sources.append(data_source)
     return data_sources
 
 
@@ -1345,3 +1347,51 @@ def check_empty_string(string_to_check):
     if string_to_check:
         string_to_check = string_to_check.strip()
     return string_to_check
+
+
+def get_all_index_data(res_table, data_source):
+    query_return_all_data = {"query_details": {"and_filters": [], "or_filters": [], "case_sensitive": False}}
+    res=search_resource_annotation(
+        res_table,
+        query_return_all_data,
+        return_containers=False,
+        data_source=data_source,
+    )
+    return res
+
+##################
+def get_number_image_inside_container(resource, res_id, data_source):
+    and_filters = []
+    main_attributes = {
+    "and_main_attributes": [
+    {
+        "name": "%s_id" % resource,
+        "value": res_id,
+        "operator": "equals",
+        "resource": "image",
+    },
+    {
+        "name": "data_source",
+        "value": data_source,
+        "operator": "equals",
+        "resource": "image",
+    },
+    ]
+    }
+    or_filters = []
+    query = {"and_filters": and_filters, "or_filters": or_filters}
+
+    query_data = {
+    "query_details": query,
+    "main_attributes": main_attributes,
+    }
+
+    returned_results = search_resource_annotation("image", query_data)
+    if returned_results.get("results"):
+        if returned_results.get("results").get("size"):
+            searchengine_results = returned_results["results"]["size"]
+    else:
+        searchengine_results = 0
+    return searchengine_results
+
+#####################

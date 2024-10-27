@@ -41,44 +41,11 @@ key_number_search_template_ = Template(
 }}}}}}}}"""
 )
 key_number_search_template = Template(
-    r"""
-{
-   "size":0,
-    "query":{ "bool" : {"must": {
-               "match":{
-                  "data_source.keyvalue":"$data_source"
-               }
-               }
-               }
-   },
-   "aggs":{
-      "value_search":{
-         "nested":{
-            "path":"key_values"
-         },
-         "aggs":{
-            "value_filter":{
-               "filter":{
-                  "terms":{
-                     "key_values.name.keyword":[
-                        "$key"
-                     ]
-                  }
-               },
-               "aggs":{
-                  "required_values":{
-                     "cardinality":{
-                        "field":"key_values.value.keyvalue",
-                        "precision_threshold":4000
-                     }
-                  }
-               }
-            }
-         }
-      }
-   }
-}
-"""
+    """
+{"size":0,"query":{ "bool": {"must": {"match":{"data_source.keyvalue":"$data_source"}}}},
+"aggs":{"value_search":{"nested":{"path":"key_values"},"aggs":{"value_filter":{"filter":{"terms":{
+"key_values.name.keyword":["$key"]}},"aggs":{"required_values":{"cardinality":{
+"field":"key_values.value.keyvalue","precision_threshold":4000}}}}}}}}"""
 )
 
 search_by_value_only = Template(
@@ -535,8 +502,8 @@ def query_cashed_bucket(
 
     if name:
         name = name.strip()
-    if resource != "all":
 
+    if resource != "all":
         query = key_values_buckets_template.substitute(
             name=name, resource=resource, data_source=json.dumps(data_source)
         )
@@ -886,6 +853,8 @@ def get_the_results(
         es_index, query
     )  # .search(index=es_index, body=query)
     hits = results_["hits"]["hits"]
+    print ("===>>> Hist %s"%hits)
+
     if len(hits) > 0:
         for hit in hits:
             if len(hits) > 0:
@@ -912,6 +881,8 @@ def get_the_results(
                     returned_results[hit["_source"]["data_source"]] = [
                         item for item in hit["_source"]["resourcename"]
                     ]
+                else:
+                    return returned_results
 
     # remove container description from the results,
     # should be added again later after cleaning up the description
@@ -919,6 +890,7 @@ def get_the_results(
     for k, item in returned_results.items():
         del item[0]["description"]
     return returned_results
+
 
 
 def get_container_values_for_key(
@@ -1053,22 +1025,50 @@ container_project_values_key_template = Template(
    {"terms": {"field": "key_values.value.keyvalue","size": 10000}}}}}}}"""
 )
 
-
 """
 Get all the keys bucket"""
-container_project_keys_template = {
-    "keys_search": {
-        "nested": {"path": "key_values"},
-        "aggs": {
-            "required_values": {
-                "cardinality": {
-                    "field": "key_values.name.keynamenormalize",
-                    "precision_threshold": 4000,
-                },
-            },
-            "uniquesTerms": {
-                "terms": {"field": "key_values.name.keynamenormalize", "size": 10000}
-            },
-        },
-    }
+container_project_keys_template =  Template(
+    """
+{"keys_search": {"nested": {"path": "key_values"},
+"aggs": {"required_values": {"cardinality": {"field": "key_values.name.keynamenormalize","precision_threshold": 4000,
+},},"uniquesTerms": {"terms": {"field": "key_values.name.keynamenormalize", "size": 10000}},},}}
+"""
+)
+resource_keys_template= Template(
+    '''
+    {
+   "size":0,
+    "query":{ "bool" : {"must": {
+               "match":{
+                  "data_source.keyvalue":"$data_source"
+               }
+               }
+               }
+   },
+   "aggs":{
+      "value_search":{
+         "nested":{
+            "path":"key_values"
+         },
+               "aggs":{
+                  "required_values":{
+                     "cardinality":{
+                        "field":"key_values.name.keyword",
+                        "precision_threshold":4000
+                     }
+                  }
+               },
+"aggs": {"required_name": {
+"terms": {"field": "key_values.name.keyword","size": 9999}}}
+
+      }
+   }
 }
+'''
+)
+
+
+def get_resource_keys(resource, data_source):
+    res_index = resource_elasticsearchindex.get(resource)
+    res = search_index_for_value(res_index, json.loads(resource_keys_template.substitute(data_source=data_source)))
+    return res["aggregations"]["value_search"]["required_name"]["buckets"]

@@ -354,7 +354,42 @@ def get_file_list(path_name):
     return f
 
 
+def handle_file_2(lock, global_counter, val):
+    file_name = val[0]
+    resource = val[1]
+    data_source = val[2]
+    total_files = val[3]
+    try:
+        lock.acquire()
+        global_counter.value += 1
+    except Exception as ex:
+        print("Error %s" % ex)
+        raise ex
+    finally:
+        lock.release()
+    search_omero_app.logger.info(
+        "%s/%s Reading the csv file %s" % (global_counter.value, total_files, file_name)
+    )
+    if resource == "imqge":
+        df = pd.read_csv(file_name, low_memory=False).replace({np.nan: None})
+    else:
+        df = pd.read_csv(file_name, low_memory=False).replace({np.nan: None})
+    insert_resource_data_from_df(df, resource, data_source, lock)
+
+
 def insert_resource_data(folder, resource, data_source, from_json):
+    start_time = datetime.now()
+    no_processors = search_omero_app.config.get("NO_PROCESSES")
+    if not no_processors:
+        no_processors = int(multiprocessing.cpu_count() / 2)
+    search_omero_app.logger.info(
+        "Number of the allowed parallel\
+        processes inside the pool: %s"
+        % no_processors
+    )
+    # create the multiprocessing pool
+    pool = multiprocessing.Pool(no_processors)
+
     search_omero_app.logger.info(
         "Adding data to\
         {} using {}".format(
@@ -369,55 +404,6 @@ def insert_resource_data(folder, resource, data_source, from_json):
         )
         return
 
-    es_index = resource_elasticsearchindex.get(resource)
-    if resource == "image":
-        is_image = True
-        cols = [
-            "id",
-            "data_source",
-            "owner_id",
-            "experiment",
-            "group_id",
-            "name",
-            "description",
-            "mapvalue_name",
-            "mapvalue_value",
-            "mapvalue_index",
-            "project_name",
-            "project_id",
-            "dataset_name",
-            "dataset_id",
-            "screen_id",
-            "screen_name",
-            "plate_id",
-            "plate_name",
-            "well_id",
-            "wellsample_id",
-        ]
-    else:
-        is_image = False
-        if resource == "well":
-            cols = [
-                "id",
-                "data_source",
-                "owner_id",
-                "group_id",
-                "mapvalue_name",
-                "mapvalue_value",
-                "mapvalue_index",
-            ]
-        else:
-            cols = [
-                "id",
-                "data_source",
-                "owner_id",
-                "group_id",
-                "name",
-                "description",
-                "mapvalue_name",
-                "mapvalue_value",
-                "mapvalue_index",
-            ]
     f_con = 0
     if os.path.isfile(folder):
         files_list = [folder]
@@ -428,6 +414,7 @@ def insert_resource_data(folder, resource, data_source, from_json):
             "No valid folder ({folder}) is provided ".format(folder=folder)
         )
         return
+    vals = []
     for fil in files_list:
         fil = fil.strip()
         if from_json and not fil.endswith(".json"):
@@ -435,20 +422,38 @@ def insert_resource_data(folder, resource, data_source, from_json):
         n = len(files_list)
         search_omero_app.logger.info("%s==%s == %s" % (f_con, fil, n))
         file_name = os.path.join(folder, fil)
-        handle_file(file_name, es_index, cols, is_image, data_source, from_json)
-        search_omero_app.logger.info("File: %s has been processed" % fil)
-        try:
-            with open(file_name + ".done", "w") as outfile:
-                json.dump(f_con, outfile)
-        except Exception as ex:
-            search_omero_app.logger.info("Error .... writing Done file ...")
-            raise ex
-        f_con += 1
-
+        vals.append((file_name, resource, data_source, len(files_list)))
+        # vals.append((cur_max_id, (cur_max_id - page_size), resource, data_source))
+        # handle_file(file_name, es_index, cols, is_image, data_source, from_json)
+    # handle_file_2(file_name, resource, data_source)
+    # search_omero_app.logger.info("File: %s has been processed" % fil)
+    # try:
+    #    #with open(file_name + ".done", "w") as outfile:
+    #    json.dump(f_con, outfile)
+    #    print ("======")
+    # except Exception as ex:
+    #    search_omero_app.logger.info("Error .... writing Done file ...")
+    #    raise ex
+    # f_con += 1
+    try:
+        manager = multiprocessing.Manager()
+        # a lock which will be used between the processes in the pool
+        lock = manager.Lock()
+        # a counter which will be used by the processes in the pool
+        counter_val = manager.Value("i", 0)
+        func = partial(handle_file_2, lock, counter_val)
+        # map the data which will be consumed by the processes inside the pool
+        res = pool.map(func, vals)  # noqa
+        delta = str(datetime.now() - start_time)
+        search_omero_app.logger.info("Total time=%s" % delta)
+        # print(res)
+    except Exception as ex:
+        print("Error is : %s" % ex)
+        raise ex
+    finally:
+        pool.close()
 
 total_process = 0
-
-
 def get_insert_data_to_index(sql_st, resource, data_source, clean_index=True):
     """
     - Query the postgreSQL database server and get metadata (key-value pair)
@@ -656,7 +661,6 @@ def insert_plate_data(folder, plate_file):
     ]
     handle_file(file_name, es_index, cols)
 
-
 def save_key_value_buckets(
     resource_table_=None, data_source=None, clean_index=False, only_values=False
 ):
@@ -699,35 +703,51 @@ def save_key_value_buckets(
             %s ......."
             % resource_table
         )
-        resource_keys = get_keys(resource_table, data_source)
+        from omero_search_engine.api.v1.resources.resource_analyser import (
+            get_resource_keys,
+             get_resource_names)
+        from omero_search_engine.api.v1.resources.utils import get_all_index_data,get_number_image_inside_container
+        res = get_resource_keys(resource_table, data_source)
+        resource_keys = [res["key"] for res in res]
+        # resource_keys = get_keys(resource_table, data_source)
         name_results = None
         if resource_table in ["project", "screen"]:
-            sql = "select id, name,description  from {resource}".format(
-                resource=resource_table
-            )
-            conn = search_omero_app.config.database_connectors[data_source]
-            name_result = conn.execute_query(sql)
+            #sql = "select id, name,description  from {resource}".format(
+            #    resource=resource_table
+            #)
+            #conn = search_omero_app.config.database_connectors[data_source]
+            #name_result = conn.execute_query(sql)
+            #name_result = get_resource_names(resource=resource_table, data_source=json.dumps(data_source))
+            #print (name_result)
             # name_results = [res["name"] for res in name_results]
             # Determine the number of images for each container
-            for res in name_result:
-                id = res.get("id")
-                if resource_table == "project":
-                    sql_n = query_images_in_project_id.substitute(project_id=id)
-                elif resource_table == "screen":
-                    sql_n = query_images_in_screen_id.substitute(screen_id=id)
-                no_images_co = conn.execute_query(sql_n)
-                res["no_images"] = len(no_images_co)
+            name_result = get_all_index_data(resource_table, data_source)
+            # res=get_resource_names(resource=res_tabel, data_source=json.dumps(data_source))
+            try:
+                for res in name_result["results"]["results"]:
+                    id = res.get("id")
+                   # if resource_table == "project":
+                    #    sql_n = query_images_in_project_id.substitute(project_id=id)
+                    #elif resource_table == "screen":
+                     #   sql_n = query_images_in_screen_id.substitute(screen_id=id)
+                    no_images_co = get_number_image_inside_container(resource_table, id, data_source)
+                    #no_images_co = conn.execute_query(sql_n)
+                    res["no_images"] = no_images_co
 
-            name_results = [
-                {
-                    "id": res["id"],
-                    # "data_source": data_source,
-                    "description": res["description"],
-                    "name": res["name"],
-                    "no_images": res["no_images"],
-                }
-                for res in name_result
-            ]
+
+                name_results = [
+                    {
+                        "id": res["id"],
+                        # "data_source": data_source,
+                        "description": res["description"],
+                        "name": res["name"],
+                        "no_images": res["no_images"],
+                    }
+                    for res in name_result["results"]["results"]
+                ]
+
+            except:
+                print(resource_table, "Error, Reslts: %s" % name_result)
 
         push_keys_cache_index(
             resource_keys, resource_table, data_source, es_index_2, name_results
@@ -749,6 +769,9 @@ def save_key_value_buckets(
             vals.append(
                 (key, resource_table, es_index, len(resource_keys), data_source)
             )
+
+
+
         # determine the number of processes inside the process pool
         no_processors = search_omero_app.config.get("NO_PROCESSES")
         if not no_processors:

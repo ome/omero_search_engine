@@ -53,7 +53,7 @@ def check_get_names(idr_, resource, attribute, return_exact=False):
                     for name in pr_names_
                     if name[attribute] and idr_.lower() in name[attribute].lower()
                 ]
-                print(act_name, data_source)
+                # print(act_name, data_source)
                 all_act_names = all_act_names + act_name
         else:
             # This should be modified to query specific data source specific

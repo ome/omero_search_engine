@@ -58,30 +58,41 @@ def set_database_connection_variables(config):
     from omero_search_engine.database.database_connector import DatabaseConnector
 
     config.database_connectors = {}
+    config.FILES = {}
     for source in config.DATA_SOURCES:
-        if source.get("DATABASE").get("DATABASE_PORT"):
-            address = source.get("DATABASE").get(
-                "DATABASE_SERVER_URI"
-            ) + ":%s" % source.get("DATABASE").get("DATABASE_PORT")
-        else:
-            address = source.get("DATABASE").get("DATABASE_SERVER_URI")
-        DATABASE_URI = "postgresql://%s:%s@%s/%s" % (
-            source.get("DATABASE").get("DATABASE_USER"),
-            source.get("DATABASE").get("DATABASE_PASSWORD"),
-            address,
-            source.get("DATABASE").get("DATABASE_NAME"),
-        )
-        database_connector = DatabaseConnector(
-            source.get("DATABASE").get("DATABASE_NAME"), DATABASE_URI
-        )
-        config.database_connectors[source.get("name")] = database_connector
+        if source.get("DATABASE"):
+            if source.get("DATABASE").get("DATABASE_PORT"):
+                address = source.get("DATABASE").get(
+                    "DATABASE_SERVER_URI"
+                ) + ":%s" % source.get("DATABASE").get("DATABASE_PORT")
+            else:
+                address = source.get("DATABASE").get("DATABASE_SERVER_URI")
+            DATABASE_URI = "postgresql://%s:%s@%s/%s" % (
+                source.get("DATABASE").get("DATABASE_USER"),
+                source.get("DATABASE").get("DATABASE_PASSWORD"),
+                address,
+                source.get("DATABASE").get("DATABASE_NAME"),
+            )
+            database_connector = DatabaseConnector(
+                source.get("DATABASE").get("DATABASE_NAME"), DATABASE_URI
+            )
+            config.database_connectors[source.get("name")] = database_connector
+        elif  source.get("CSV"):
+            csv_config={"Type":"CSV"}
+            config.FILES [source.get("name")]= csv_config
+            if source.get("CSV"). get("images_folder"):
+                csv_config["images_folder"]=source.get("CSV"). get("images_folder")
+            if source.get("CSV").get("projects_file"):
+                csv_config["projects_file"] = source.get("CSV").get("projects_file")
+            if source.get("CSV").get("screens_file"):
+                csv_config["screens_file"] = source.get("CSV").get("screens_file")
 
 
-def update_config_file(updated_configuration, configure_database=False):
+def update_config_file(updated_configuration, data_source=False):
     is_changed = False
     with open(app_config.INSTANCE_CONFIG) as f:
         configuration = yaml.load(f)
-    if not configure_database:
+    if not data_source:
         found = []
         for key, value in updated_configuration.items():
             if key in configuration:
@@ -98,27 +109,40 @@ def update_config_file(updated_configuration, configure_database=False):
                     print("%s value is added with value %s " % (key, value))
                     is_changed = True
     else:
-        is_changed = config_database(configuration, updated_configuration)
+        is_changed = config_datasource(configuration, updated_configuration)
 
     if is_changed:
         with open(app_config.INSTANCE_CONFIG, "w") as f:
             yaml.dump(configuration, f)
 
-
-def config_database(configuration, updated_configuration):
-    for data_source in configuration.get("DATA_SOURCES"):
-        changed = False
-        Found = False
-        if data_source["name"].lower() == updated_configuration["name"].lower():
-            Found = True
-            for k, v in updated_configuration["DATABASE"].items():
-                if data_source["DATABASE"][k] != v:
-                    data_source["DATABASE"][k] = v
-                    changed = True
-            break
-    if not Found:
-        configuration.get("DATA_SOURCES").append(updated_configuration)
-        changed = True
+def config_datasource(configuration, updated_configuration):
+    changed = False
+    Found = False
+    if updated_configuration.get("CSV").get("type") =="CSV":
+        for data_source in configuration.get("DATA_SOURCES"):
+            if data_source.get("name").lower()==updated_configuration.get("name").lower():
+                Found=True
+                for k, v in updated_configuration["CSV"].items():
+                    if v=="CSV":
+                        continue
+                    if data_source["CSV"].get(k) != v:
+                        data_source["CSV"][k] = v
+                        changed = True
+        if not Found:
+            configuration.get("DATA_SOURCES").append(updated_configuration)
+            changed = True
+    else:
+        for data_source in configuration.get("DATA_SOURCES"):
+            if data_source["name"].lower() == updated_configuration["name"].lower():
+                Found = True
+                for k, v in updated_configuration["DATABASE"].items():
+                    if data_source["DATABASE"][k] != v:
+                        data_source["DATABASE"][k] = v
+                        changed = True
+                break
+        if not Found:
+            configuration.get("DATA_SOURCES").append(updated_configuration)
+            changed = True
     return changed
 
 

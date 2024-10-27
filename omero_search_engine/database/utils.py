@@ -38,7 +38,6 @@ def restore_database(source):
     print(search_omero_app.config.get("DATA_SOURCES"))
     print(search_omero_app.config.database_connectors.keys())
     for data_source in search_omero_app.config.get("DATA_SOURCES"):
-        print(data_source["name"])
         if (
             source
             and source.lower() != "all"

@@ -172,6 +172,7 @@ def get_index_data_from_database(resource="all", source="all", backup="True"):
         #        return
         #     get_insert_data_to_index(sql_st, resource)
         # else:
+
         for res, sql_st in sqls_resources.items():
             if resource.lower() != "all" and resource.lower() != res.lower():
                 continue
@@ -197,7 +198,6 @@ def get_index_data_from_database(resource="all", source="all", backup="True"):
     # backup the index data
     if backup:
         backup_elasticsearch_data()
-
 
 # set configurations
 @manager.command
@@ -237,7 +237,7 @@ def set_database_configuration(
         database_attrs["DATABASE_BACKUP_FILE"] = backup_filename
 
     if len(database_attrs) > 0:
-        update_config_file(databse_config, configure_database=True)
+        update_config_file(databse_config, data_source=True)
     else:
         search_omero_app.logger.info(
             "At least one database attribute\
@@ -245,6 +245,31 @@ def set_database_configuration(
              should be provided"
         )
 
+
+@manager.command
+@manager.option("-n", "--name", help="data source name")
+@manager.option("-i", "--images_folder", help="path to a folder contains csv files cwhich contains the image data ")
+@manager.option("-p", "--projects_file", help="path to the a file containing the projects data")
+@manager.option("-s", "--screens_file", help="path to the a file containing the screens data")
+@manager.option("-d", "--datasource_type", help=" data source type; supports csv")
+
+def set_data_source_files(name=None, images_folder=None, projects_file=None, screens_file=None,datasource_type="CSV"):
+    source={}
+    if not name:
+        print ("Source name attribute is missing")
+        return
+    source["name"]=name
+    source_attrs={}
+    source["CSV"]=source_attrs
+    source_attrs["type"]=datasource_type
+    if images_folder:
+        source_attrs["images_folder"]=images_folder
+    if projects_file:
+        source_attrs["projects_file"]=projects_file
+    if screens_file:
+        source_attrs["screens_file"]=screens_file
+
+    update_config_file(source, True)
 
 @manager.command
 @manager.option("-e", "--elasticsearch_url", help="elasticsearch url")
@@ -478,6 +503,37 @@ def test_container_key_value():
     )
 
     check_container_keys_vakues()
+
+@manager.command
+@manager.option(
+    "-s",
+    "--source",
+    help="data source name, ndexeing all the data sources is the default",  # noqa
+)
+@manager.option(
+    "-f",
+    "--folder",
+    help="data folder which contains csv files",  # noqa
+)
+@manager.option(
+    "-r",
+    "--resource",
+    help="resource name, creating all the indexes for all the resources is the default",  # noqa
+)
+def get_index_data_from_csv_files(source=None, folder=None, resource="image"):
+    from omero_search_engine.cache_functions.elasticsearch.transform_data import (
+        insert_resource_data,
+        save_key_value_buckets
+    )
+    insert_resource_data(
+        folder=folder, resource=resource, data_source=source, from_json=False
+    )
+    save_key_value_buckets(
+        resource_table_=resource,
+        data_source=source,
+        clean_index=False,
+        only_values=False,
+    )
 
 
 if __name__ == "__main__":

@@ -1073,7 +1073,7 @@ def get_no_images_sql_containers(data_source, write_report=True):
                 for res_name_ in res_name__:
                     res_name = res_name_.get("name")
                     res_id = res_name_.get("id")
-                    print(res_name)
+                    # print(res_name)
                     message1 = "Checking %s name: %s" % (resource, res_name)
                     messages.append(message1)
                     search_omero_app.logger.info(message1)
