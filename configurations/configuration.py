@@ -77,11 +77,11 @@ def set_database_connection_variables(config):
                 source.get("DATABASE").get("DATABASE_NAME"), DATABASE_URI
             )
             config.database_connectors[source.get("name")] = database_connector
-        elif  source.get("CSV"):
-            csv_config={"Type":"CSV"}
-            config.FILES [source.get("name")]= csv_config
-            if source.get("CSV"). get("images_folder"):
-                csv_config["images_folder"]=source.get("CSV"). get("images_folder")
+        elif source.get("CSV"):
+            csv_config = {"Type": "CSV"}
+            config.FILES[source.get("name")] = csv_config
+            if source.get("CSV").get("images_folder"):
+                csv_config["images_folder"] = source.get("CSV").get("images_folder")
             if source.get("CSV").get("projects_file"):
                 csv_config["projects_file"] = source.get("CSV").get("projects_file")
             if source.get("CSV").get("screens_file"):
@@ -115,15 +115,19 @@ def update_config_file(updated_configuration, data_source=False):
         with open(app_config.INSTANCE_CONFIG, "w") as f:
             yaml.dump(configuration, f)
 
+
 def config_datasource(configuration, updated_configuration):
     changed = False
     Found = False
-    if updated_configuration.get("CSV").get("type") =="CSV":
+    if updated_configuration.get("CSV").get("type") == "CSV":
         for data_source in configuration.get("DATA_SOURCES"):
-            if data_source.get("name").lower()==updated_configuration.get("name").lower():
-                Found=True
+            if (
+                data_source.get("name").lower()
+                == updated_configuration.get("name").lower()
+            ):
+                Found = True
                 for k, v in updated_configuration["CSV"].items():
-                    if v=="CSV":
+                    if v == "CSV":
                         continue
                     if data_source["CSV"].get(k) != v:
                         data_source["CSV"][k] = v

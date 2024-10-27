@@ -1350,8 +1350,10 @@ def check_empty_string(string_to_check):
 
 
 def get_all_index_data(res_table, data_source):
-    query_return_all_data = {"query_details": {"and_filters": [], "or_filters": [], "case_sensitive": False}}
-    res=search_resource_annotation(
+    query_return_all_data = {
+        "query_details": {"and_filters": [], "or_filters": [], "case_sensitive": False}
+    }
+    res = search_resource_annotation(
         res_table,
         query_return_all_data,
         return_containers=False,
@@ -1359,31 +1361,32 @@ def get_all_index_data(res_table, data_source):
     )
     return res
 
+
 ##################
 def get_number_image_inside_container(resource, res_id, data_source):
     and_filters = []
     main_attributes = {
-    "and_main_attributes": [
-    {
-        "name": "%s_id" % resource,
-        "value": res_id,
-        "operator": "equals",
-        "resource": "image",
-    },
-    {
-        "name": "data_source",
-        "value": data_source,
-        "operator": "equals",
-        "resource": "image",
-    },
-    ]
+        "and_main_attributes": [
+            {
+                "name": "%s_id" % resource,
+                "value": res_id,
+                "operator": "equals",
+                "resource": "image",
+            },
+            {
+                "name": "data_source",
+                "value": data_source,
+                "operator": "equals",
+                "resource": "image",
+            },
+        ]
     }
     or_filters = []
     query = {"and_filters": and_filters, "or_filters": or_filters}
 
     query_data = {
-    "query_details": query,
-    "main_attributes": main_attributes,
+        "query_details": query,
+        "main_attributes": main_attributes,
     }
 
     returned_results = search_resource_annotation("image", query_data)
@@ -1393,5 +1396,6 @@ def get_number_image_inside_container(resource, res_id, data_source):
     else:
         searchengine_results = 0
     return searchengine_results
+
 
 #####################

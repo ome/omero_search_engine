@@ -453,7 +453,10 @@ def insert_resource_data(folder, resource, data_source, from_json):
     finally:
         pool.close()
 
+
 total_process = 0
+
+
 def get_insert_data_to_index(sql_st, resource, data_source, clean_index=True):
     """
     - Query the postgreSQL database server and get metadata (key-value pair)
@@ -661,6 +664,7 @@ def insert_plate_data(folder, plate_file):
     ]
     handle_file(file_name, es_index, cols)
 
+
 def save_key_value_buckets(
     resource_table_=None, data_source=None, clean_index=False, only_values=False
 ):
@@ -705,20 +709,25 @@ def save_key_value_buckets(
         )
         from omero_search_engine.api.v1.resources.resource_analyser import (
             get_resource_keys,
-             get_resource_names)
-        from omero_search_engine.api.v1.resources.utils import get_all_index_data,get_number_image_inside_container
+            get_resource_names,
+        )
+        from omero_search_engine.api.v1.resources.utils import (
+            get_all_index_data,
+            get_number_image_inside_container,
+        )
+
         res = get_resource_keys(resource_table, data_source)
         resource_keys = [res["key"] for res in res]
         # resource_keys = get_keys(resource_table, data_source)
         name_results = None
         if resource_table in ["project", "screen"]:
-            #sql = "select id, name,description  from {resource}".format(
+            # sql = "select id, name,description  from {resource}".format(
             #    resource=resource_table
-            #)
-            #conn = search_omero_app.config.database_connectors[data_source]
-            #name_result = conn.execute_query(sql)
-            #name_result = get_resource_names(resource=resource_table, data_source=json.dumps(data_source))
-            #print (name_result)
+            # )
+            # conn = search_omero_app.config.database_connectors[data_source]
+            # name_result = conn.execute_query(sql)
+            # name_result = get_resource_names(resource=resource_table, data_source=json.dumps(data_source))
+            # print (name_result)
             # name_results = [res["name"] for res in name_results]
             # Determine the number of images for each container
             name_result = get_all_index_data(resource_table, data_source)
@@ -726,14 +735,15 @@ def save_key_value_buckets(
             try:
                 for res in name_result["results"]["results"]:
                     id = res.get("id")
-                   # if resource_table == "project":
+                    # if resource_table == "project":
                     #    sql_n = query_images_in_project_id.substitute(project_id=id)
-                    #elif resource_table == "screen":
-                     #   sql_n = query_images_in_screen_id.substitute(screen_id=id)
-                    no_images_co = get_number_image_inside_container(resource_table, id, data_source)
-                    #no_images_co = conn.execute_query(sql_n)
+                    # elif resource_table == "screen":
+                    #   sql_n = query_images_in_screen_id.substitute(screen_id=id)
+                    no_images_co = get_number_image_inside_container(
+                        resource_table, id, data_source
+                    )
+                    # no_images_co = conn.execute_query(sql_n)
                     res["no_images"] = no_images_co
-
 
                 name_results = [
                     {
@@ -769,8 +779,6 @@ def save_key_value_buckets(
             vals.append(
                 (key, resource_table, es_index, len(resource_keys), data_source)
             )
-
-
 
         # determine the number of processes inside the process pool
         no_processors = search_omero_app.config.get("NO_PROCESSES")

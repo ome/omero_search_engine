@@ -853,7 +853,7 @@ def get_the_results(
         es_index, query
     )  # .search(index=es_index, body=query)
     hits = results_["hits"]["hits"]
-    print ("===>>> Hist %s"%hits)
+    print("===>>> Hist %s" % hits)
 
     if len(hits) > 0:
         for hit in hits:
@@ -890,7 +890,6 @@ def get_the_results(
     for k, item in returned_results.items():
         del item[0]["description"]
     return returned_results
-
 
 
 def get_container_values_for_key(
@@ -1027,15 +1026,15 @@ container_project_values_key_template = Template(
 
 """
 Get all the keys bucket"""
-container_project_keys_template =  Template(
+container_project_keys_template = Template(
     """
 {"keys_search": {"nested": {"path": "key_values"},
 "aggs": {"required_values": {"cardinality": {"field": "key_values.name.keynamenormalize","precision_threshold": 4000,
 },},"uniquesTerms": {"terms": {"field": "key_values.name.keynamenormalize", "size": 10000}},},}}
 """
 )
-resource_keys_template= Template(
-    '''
+resource_keys_template = Template(
+    """
     {
    "size":0,
     "query":{ "bool" : {"must": {
@@ -1064,11 +1063,14 @@ resource_keys_template= Template(
       }
    }
 }
-'''
+"""
 )
 
 
 def get_resource_keys(resource, data_source):
     res_index = resource_elasticsearchindex.get(resource)
-    res = search_index_for_value(res_index, json.loads(resource_keys_template.substitute(data_source=data_source)))
+    res = search_index_for_value(
+        res_index,
+        json.loads(resource_keys_template.substitute(data_source=data_source)),
+    )
     return res["aggregations"]["value_search"]["required_name"]["buckets"]
