@@ -119,7 +119,10 @@ def update_config_file(updated_configuration, data_source=False):
 def config_datasource(configuration, updated_configuration):
     changed = False
     Found = False
-    if updated_configuration.get("CSV").get("type") == "CSV":
+    if (
+        updated_configuration.get("CSV")
+        and updated_configuration.get("CSV").get("type") == "CSV"
+    ):
         for data_source in configuration.get("DATA_SOURCES"):
             if (
                 data_source.get("name").lower()

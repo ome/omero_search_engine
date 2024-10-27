@@ -35,10 +35,6 @@ from omero_search_engine.cache_functions.elasticsearch.elasticsearch_templates i
     key_value_buckets_info_template,
     key_values_resource_cache_template,
 )
-from omero_search_engine.validation.psql_templates import (
-    query_images_in_project_id,
-    query_images_in_screen_id,
-)
 
 from app_data.data_attrs import annotation_resource_link
 from datetime import datetime
@@ -709,7 +705,6 @@ def save_key_value_buckets(
         )
         from omero_search_engine.api.v1.resources.resource_analyser import (
             get_resource_keys,
-            get_resource_names,
         )
         from omero_search_engine.api.v1.resources.utils import (
             get_all_index_data,
@@ -721,30 +716,14 @@ def save_key_value_buckets(
         # resource_keys = get_keys(resource_table, data_source)
         name_results = None
         if resource_table in ["project", "screen"]:
-            # sql = "select id, name,description  from {resource}".format(
-            #    resource=resource_table
-            # )
-            # conn = search_omero_app.config.database_connectors[data_source]
-            # name_result = conn.execute_query(sql)
-            # name_result = get_resource_names(resource=resource_table, data_source=json.dumps(data_source))
-            # print (name_result)
-            # name_results = [res["name"] for res in name_results]
-            # Determine the number of images for each container
             name_result = get_all_index_data(resource_table, data_source)
-            # res=get_resource_names(resource=res_tabel, data_source=json.dumps(data_source))
             try:
                 for res in name_result["results"]["results"]:
                     id = res.get("id")
-                    # if resource_table == "project":
-                    #    sql_n = query_images_in_project_id.substitute(project_id=id)
-                    # elif resource_table == "screen":
-                    #   sql_n = query_images_in_screen_id.substitute(screen_id=id)
                     no_images_co = get_number_image_inside_container(
                         resource_table, id, data_source
                     )
-                    # no_images_co = conn.execute_query(sql_n)
                     res["no_images"] = no_images_co
-
                 name_results = [
                     {
                         "id": res["id"],
@@ -756,8 +735,8 @@ def save_key_value_buckets(
                     for res in name_result["results"]["results"]
                 ]
 
-            except:
-                print(resource_table, "Error, Reslts: %s" % name_result)
+            except Exception as ex:
+                print(resource_table, "Error %s, Reslts: %s" % (str(ex), name_result))
 
         push_keys_cache_index(
             resource_keys, resource_table, data_source, es_index_2, name_results

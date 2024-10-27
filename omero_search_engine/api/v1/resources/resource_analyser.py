@@ -40,9 +40,11 @@ key_number_search_template_ = Template(
 {"field":"key_values.value.keyvalue","precision_threshold":4000
 }}}}}}}}"""
 )
+
 key_number_search_template = Template(
     """
-{"size":0,"query":{ "bool": {"must": {"match":{"data_source.keyvalue":"$data_source"}}}},
+{"size":0,"query":{ "bool": {"must": {"match":
+{"data_source.keyvalue":"$data_source"}}}},
 "aggs":{"value_search":{"nested":{"path":"key_values"},"aggs":{"value_filter":{"filter":{"terms":{
 "key_values.name.keyword":["$key"]}},"aggs":{"required_values":{"cardinality":{
 "field":"key_values.value.keyvalue","precision_threshold":4000}}}}}}}}"""
@@ -94,14 +96,8 @@ key_search_template = Template(
 
 values_for_key_template = Template(
     """
-{"size":0,
- "query":{ "bool" : {"must": {
-               "match":{
-                  "data_source.keyvalue":"$data_source"
-               }
-               }
-               }
-   },
+{"size":0, "query":{ "bool" : {"must": {"match":{
+"data_source.keyvalue":"$data_source"}}}},
 "aggs":{"name_search":{"nested":{ "path":"key_values"},
 "aggs":{"value_filter":{"filter":{
 "terms":{"key_values.name.keyword":["$key"]}},"aggs":{"required_values":{
@@ -1029,40 +1025,21 @@ Get all the keys bucket"""
 container_project_keys_template = Template(
     """
 {"keys_search": {"nested": {"path": "key_values"},
-"aggs": {"required_values": {"cardinality": {"field": "key_values.name.keynamenormalize","precision_threshold": 4000,
-},},"uniquesTerms": {"terms": {"field": "key_values.name.keynamenormalize", "size": 10000}},},}}
+"aggs": {"required_values": {"cardinality": {"field":
+"key_values.name.keynamenormalize","precision_threshold": 4000,
+},},"uniquesTerms": {"terms": {"field":
+"key_values.name.keynamenormalize", "size": 10000}},},}}
 """
 )
 resource_keys_template = Template(
     """
-    {
-   "size":0,
-    "query":{ "bool" : {"must": {
-               "match":{
-                  "data_source.keyvalue":"$data_source"
-               }
-               }
-               }
-   },
-   "aggs":{
-      "value_search":{
-         "nested":{
-            "path":"key_values"
-         },
-               "aggs":{
-                  "required_values":{
-                     "cardinality":{
-                        "field":"key_values.name.keyword",
-                        "precision_threshold":4000
-                     }
-                  }
-               },
+{"size":0,"query":{ "bool" : {"must": {"match":{
+"data_source.keyvalue":"$data_source"}}}},
+"aggs":{"value_search":{"nested":{"path":"key_values"},
+"aggs":{"required_values":{"cardinality":{
+"field":"key_values.name.keyword","precision_threshold":4000}}},
 "aggs": {"required_name": {
-"terms": {"field": "key_values.name.keyword","size": 9999}}}
-
-      }
-   }
-}
+"terms": {"field": "key_values.name.keyword","size": 9999}}}}}}
 """
 )
 
