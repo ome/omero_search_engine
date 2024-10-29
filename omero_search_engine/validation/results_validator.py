@@ -947,7 +947,7 @@ def check_number_images_sql_containers_using_ids(data_source):
 
     # conn = search_omero_app.config["database_connector"]
     conn = search_omero_app.config.database_connectors[data_source]
-    all_names = get_resource_names("all")
+    all_names = get_resource_names(resource="all", data_source=json.dumps(data_source))
     for resource in all_names:
         search_omero_app.logger.info(
             "######################## Checking %s ########################\n" % resource

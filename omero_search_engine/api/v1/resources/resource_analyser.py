@@ -849,8 +849,6 @@ def get_the_results(
         es_index, query
     )  # .search(index=es_index, body=query)
     hits = results_["hits"]["hits"]
-    print("===>>> Hist %s" % hits)
-
     if len(hits) > 0:
         for hit in hits:
             if len(hits) > 0:
