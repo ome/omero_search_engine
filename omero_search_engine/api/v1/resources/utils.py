@@ -1033,7 +1033,6 @@ def search_index_using_search_after(
         #####
         for data_s in data_source:
             query2 = copy.deepcopy(query)
-            del query2["query"]["bool"]["must"][0]
             main_dd = main_attribute_query_in_template.substitute(
                 attribute="data_source",
                 value=json.dumps([data_s]),
