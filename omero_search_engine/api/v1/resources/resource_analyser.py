@@ -851,6 +851,8 @@ def get_the_results(
     hits = results_["hits"]["hits"]
     if len(hits) > 0:
         for hit in hits:
+            if "resourcename" not in hit["_source"]:
+                continue
             if len(hits) > 0:
                 if name and not description:
                     returned_results[hit["_source"]["data_source"]] = [
@@ -871,18 +873,16 @@ def get_the_results(
                             and name.lower() in item.get("description").lower()
                         )
                     ]
-                elif "resourcename" in hit["_source"]:
+                else:
                     returned_results[hit["_source"]["data_source"]] = [
                         item for item in hit["_source"]["resourcename"]
                     ]
-                else:
-                    return returned_results
-
     # remove container description from the results,
     # should be added again later after cleaning up the description
 
     for k, item in returned_results.items():
-        del item[0]["description"]
+        if len(item) > 0:
+            del item[0]["description"]
     return returned_results
 
 
