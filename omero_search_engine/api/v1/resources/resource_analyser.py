@@ -802,23 +802,33 @@ def get_the_results(resource, name, description, es_index="key_values_resource_c
     return returned_results
 
 
-def get_container_values_for_key(table_, container_name, csv, key=None):
-    returned_results = []
+def get_containets_from_name(container_name):
+    act_names = {}
     pr_names = get_resource_names("all")
     for resourse, names in pr_names.items():
-        act_name = [
+        act_names[resourse] = [
             {"id": name["id"], "name": name["name"]}
             for name in names
             if name["name"] and container_name.lower() in name["name"].lower()
         ]
+
+    return act_names
+
+
+def get_container_values_for_key(table_, container_name, csv, key=None, query=None):
+    returned_results = []
+    act_names = get_containets_from_name(container_name)
+    for resourse, act_name in act_names.items():
         if len(act_name) > 0:
             for id in act_name:
                 if resourse != table_:
                     res = process_container_query(
-                        table_, resourse + "_id", id["id"], key, table_
+                        table_, resourse + "_id", id["id"], key, table_, query
                     )
                 else:
-                    res = process_container_query(table_, "id", id["id"], key, table_)
+                    res = process_container_query(
+                        table_, "id", id["id"], key, table_, query
+                    )
                 if len(res) > 0:
                     returned_results.append(
                         {"name": id["name"], "type": resourse, "results": res}
@@ -865,7 +875,9 @@ def get_container_values_for_key(table_, container_name, csv, key=None):
     return jsonify(returned_results)
 
 
-def process_container_query(table_, attribute_name, container_id, key, resourse):
+def process_container_query(
+    table_, attribute_name, container_id, key, resourse, query=None
+):
     from omero_search_engine.api.v1.resources.utils import elasticsearch_query_builder
 
     res_index = resource_elasticsearchindex.get(table_)
@@ -874,7 +886,15 @@ def process_container_query(table_, attribute_name, container_id, key, resourse)
             {"name": attribute_name, "value": container_id, "operator": "equals"}
         ]
     }
-    query_ = elasticsearch_query_builder([], [], False, main_attributes=main_attributes)
+    if query:
+        and_filter = query.get("query_details").get("and_filters")
+        or_filters = query.get("query_details").get("or_filters")
+    else:
+        and_filter = []
+        or_filters = []
+    query_ = elasticsearch_query_builder(
+        and_filter, or_filters, False, main_attributes=main_attributes
+    )
     query = json.loads(query_)
     if key:
         query["aggs"] = json.loads(
