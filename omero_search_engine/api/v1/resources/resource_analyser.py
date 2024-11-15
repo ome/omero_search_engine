@@ -757,7 +757,9 @@ def get_resource_attributes(
         returned_results.append(restircted_resources)
         if "project" in returned_results:
             returned_results_["project"].append("name")
-    return restircted_resources
+        return restircted_resources
+
+    return returned_results
 
 
 attribute_search_values_template = Template(
