@@ -232,7 +232,7 @@ def prepare_images_data(data, data_source, doc_type):
                 elif rcd == "data_source":
                     row_to_insert[rcd] = data_source
                 else:
-                    row_to_insert[rcd] = row[rcd]
+                    row_to_insert[rcd] = row.get(rcd)
 
             row_to_insert["key_values"] = []
             data_to_be_inserted[row["id"]] = row_to_insert
@@ -289,9 +289,9 @@ def prepare_data(data, data_source, doc_type):
         key_value = row_to_insert["key_values"]
         key_value.append(
             {
-                "name": row["mapvalue_name"],
-                "value": row["mapvalue_value"],
-                "index": row["mapvalue_index"],
+                "name": row.get("mapvalue_name"),
+                "value": row.get("mapvalue_value"),
+                "index": row.get("mapvalue_index"),
             }
         )
 
