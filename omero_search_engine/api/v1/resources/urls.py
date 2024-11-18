@@ -48,7 +48,7 @@ def index():
     return "OMERO search engine (API V1)"
 
 
-@resources.route("/data_resources/", methods=["GET"])
+@resources.route("/data_sources/", methods=["GET"])
 def return_data_resources():
     """
     file: swagger_docs/datasources.yml
