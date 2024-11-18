@@ -20,7 +20,7 @@ The query:
           "value": "Brain",
           "operator": "equals",
           "resource": "image"
-        },
+        }
       ],
       "or_filters": [
 
