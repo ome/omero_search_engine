@@ -1263,16 +1263,17 @@ def get_studies_titles(idr_name, resource, data_source=None):
     resourse_res = search_index_using_search_after(
         res_index, resource_query, None, None, None
     )
-    for item_ in resourse_res["results"]:
-        study_title["id"] = item_.get("id")
-        study_title["name"] = item_.get("name")
-        study_title["type"] = resource
-        # study_title["description"] = item_.get("description")
-        for value in item_.get("key_values"):
-            if value.get("name"):
-                value["key"] = value["name"]
-                del value["name"]
-        study_title["key_values"] = item_.get("key_values")
+    if len(resourse_res)>0:
+        for item_ in resourse_res["results"]:
+            study_title["id"] = item_.get("id")
+            study_title["name"] = item_.get("name")
+            study_title["type"] = resource
+            # study_title["description"] = item_.get("description")
+            for value in item_.get("key_values"):
+                if value.get("name"):
+                    value["key"] = value["name"]
+                    del value["name"]
+            study_title["key_values"] = item_.get("key_values")
     return study_title
 
 

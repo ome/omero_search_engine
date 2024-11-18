@@ -287,11 +287,12 @@ def prepare_data(data, data_source, doc_type):
             row_to_insert["key_values"] = []
             data_to_be_inserted[row["id"]] = row_to_insert
         key_value = row_to_insert["key_values"]
-        key_value.append(
-            {
-                "name": row.get("mapvalue_name"),
-                "value": row.get("mapvalue_value"),
-                "index": row.get("mapvalue_index"),
+        if row.get("mapvalue_name"):
+            key_value.append(
+                {
+                    "name": row.get("mapvalue_name"),
+                    "value": row.get("mapvalue_value"),
+                    "index": row.get("mapvalue_index"),
             }
         )
 
