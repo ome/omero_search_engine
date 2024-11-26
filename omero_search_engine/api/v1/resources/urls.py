@@ -469,8 +469,8 @@ def container_keys_search(resource_table):
 @resources.route("/container_images/", methods=["GET"])
 def container_images():
     """
-      file: swagger_docs/container_images.yml
-      """
+    file: swagger_docs/container_images.yml
+    """
     from omero_search_engine.api.v1.resources.resource_analyser import (
         return_containes_images,
     )
@@ -479,11 +479,11 @@ def container_images():
 
 
 # to do: add query to return the results withiz the sub-container
-@resources.route("/sub_container_images/", methods=["POST","GET"])
+@resources.route("/sub_container_images/", methods=["POST", "GET"])
 def sub_container_images():
     """
-       file: swagger_docs/sub_container_images.yml
-     """
+    file: swagger_docs/sub_container_images.yml
+    """
     from omero_search_engine.api.v1.resources.resource_analyser import (
         get_containers_no_images,
     )
@@ -497,7 +497,7 @@ def sub_container_images():
             )
         )
     data = request.data
-    query={}
+    query = {}
     if data:
         try:
             data = json.loads(data)
