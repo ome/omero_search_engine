@@ -31,17 +31,12 @@ This a query example:
   }
 }
 and the user should provide the container nane, e.g,idr0043-uhlen-humanproteinatlas/experimentA
-and the container type which is project
+
 This will return the dataset inside the project with several images in each, this is within the search results.
 ---
 tags:
   - Available sub-containers inside a container
 parameters:
-  - name: container
-    in: query
-    type: string
-    enum: ['project', 'screen']
-    required: true
   - name: container_name
     description: The container name
     in: query

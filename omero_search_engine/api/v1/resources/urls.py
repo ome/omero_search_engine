@@ -479,7 +479,7 @@ def container_images():
 
 
 # to do: add query to return the results withiz the sub-container
-@resources.route("/sub_container_images/", methods=["POST", "GET"])
+@resources.route("/sub_container_images/", methods=["POST"])
 def sub_container_images():
     """
     file: swagger_docs/sub_container_images.yml
@@ -488,13 +488,10 @@ def sub_container_images():
         get_containers_no_images,
     )
 
-    container = request.args.get("container")
     container_name = request.args.get("container_name")
-    if not container_name or not container:
+    if not container_name:
         return jsonify(
-            build_error_message(
-                "{error}".format(error="container and container name are required.")
-            )
+            build_error_message("{error}".format(error="Container name is required."))
         )
     data = request.data
     query = {}
@@ -507,8 +504,6 @@ def sub_container_images():
                     "{error}".format(error="No proper query data is provided.")
                 )
             )
-
         if "query_details" in data:
-            query = data["query_details "]
-
-    return get_containers_no_images(container, container_name, query)
+            query = data["query_details"]
+    return get_containers_no_images(container_name, query)

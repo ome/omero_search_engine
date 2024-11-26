@@ -1003,12 +1003,24 @@ containers_no_images = Template(
 )
 
 
-def get_containers_no_images(contianer, container_name, query_details=None):
+def get_containers_no_images(container_name, query_details=None):
+    contianer = None
     containers_subcontainers = {"project": "dataset", "screen": "plate"}
+    act_names = get_containets_from_name(container_name)
+    for res, item in act_names.items():
+        print(res, item)
+        if len(item) == 0:
+            continue
+        elif len(item) == 1:
+            print(res)
+            contianer = res
+            container_name = item[0]["name"]
+    if not contianer:
+        return "Container %s is not found" % container_name
     if contianer.lower() in containers_subcontainers:
         sub_container = containers_subcontainers[contianer.lower()]
     else:
-        return "Container %s is not supported"%contianer
+        return "Container %s is not supported" % contianer
     res_index = resource_elasticsearchindex.get("image")
     aggs_part = container_returned_sub_container_template.substitute(
         container_attribute_name="%s_name.keyvalue" % contianer,
