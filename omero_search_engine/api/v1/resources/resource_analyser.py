@@ -1005,7 +1005,10 @@ containers_no_images = Template(
 
 def get_containers_no_images(contianer, container_name, query_details=None):
     containers_subcontainers = {"project": "dataset", "screen": "plate"}
-    sub_container = containers_subcontainers[contianer]
+    if contianer.lower() in containers_subcontainers:
+        sub_container = containers_subcontainers[contianer.lower()]
+    else:
+        return "Container %s is not supported"%contianer
     res_index = resource_elasticsearchindex.get("image")
     aggs_part = container_returned_sub_container_template.substitute(
         container_attribute_name="%s_name.keyvalue" % contianer,
