@@ -953,3 +953,119 @@ container_project_keys_template = {
         },
     }
 }
+
+
+# Return sub container using a container attribute
+# for example get the no of  sub  containers e.g. datasets names,
+# inside a container, e.g. project using name.
+container_returned_sub_container_template = Template(
+    """
+         {
+      "values":{
+            "filter":{"terms":{"$container_attribute_name":["$container_attribute_value"]}},
+            "aggs":{
+               "required_values":{
+                  "cardinality":{
+                     "field":"$returned_sub_container",
+                     "precision_threshold":4000
+                  }
+               },
+               "uniquesTerms":{
+                  "terms":{
+                     "field":"$returned_sub_container",
+                     "size":10000
+                  }
+               }
+            }
+      }
+   }
+"""
+)
+
+
+containers_no_images = Template(
+    """{
+   "aggs":{
+      "required_values":{
+         "cardinality":{
+            "field":"$conatins_name.keyvalue",
+            "precision_threshold":4000
+         }
+      },
+      "uniquesTerms":{
+         "terms":{
+            "field":"$conatins_name.keyvalue",
+            "size":10000
+         }
+      }
+   }
+}
+"""
+)
+
+
+def get_containers_no_images(
+    contianer, container_name, sub_container=None, query_details=None
+):
+    containers_subcontainers = {"project": "dataset", "screen": "plate"}
+    if not sub_container:
+        if not containers_subcontainers.get(contianer.lower()):
+            return "No sub container is found, please check the container type"
+        sub_container = containers_subcontainers[contianer]
+    res_index = resource_elasticsearchindex.get("image")
+    aggs_part = container_returned_sub_container_template.substitute(
+        container_attribute_name="%s_name.keyvalue" % contianer,
+        container_attribute_value="%s" % container_name,
+        returned_sub_container="%s_name.keyvalue" % sub_container,
+    )
+    if not query_details:
+        query = {}
+    else:
+        and_filters = query_details.get("and_filters")
+        or_filters = query_details.get("or_filters")
+        case_sensitive = query_details.get("case_sensitive")
+        main_attributes = query.get("main_attributes")
+        from omero_search_engine.api.v1.resources.utils import (
+            elasticsearch_query_builder,
+        )
+
+        query_string = elasticsearch_query_builder(
+            and_filters, or_filters, case_sensitive, main_attributes
+        )
+        query = json.loads(query_string)
+        # query builder should be called
+
+    query["aggs"] = json.loads(aggs_part)
+    res = search_index_for_value(res_index, query)
+    buckets = res["aggregations"]["values"]["uniquesTerms"]["buckets"]
+    print(len(buckets))
+    print(buckets[0])
+    returned_results = []
+    for bucket in buckets:
+        returned_results.append(
+            {"no_images": bucket["doc_count"], "%s_name" % sub_container: bucket["key"]}
+        )
+    return jsonify(returned_results)
+
+
+def return_containes_images():
+    screens_query = containers_no_images.substitute(conatins_name="screen_name")
+    projects_query = containers_no_images.substitute(conatins_name="project_name")
+    res_index = resource_elasticsearchindex.get("image")
+    screens = search_index_for_value(res_index, screens_query)
+    projects = search_index_for_value(res_index, projects_query)
+    projects = projects["aggregations"]["uniquesTerms"]["buckets"]
+    screens = screens["aggregations"]["uniquesTerms"]["buckets"]
+    results = {}
+    results["projects"] = projects
+    results["screens"] = screens
+    returned_results = {}
+
+    for res, items in results.items():
+        res_items = []
+        returned_results[res] = res_items
+        for item in items:
+            res_items.append(
+                {"no_images": item["doc_count"], "%s_name" % res: item["key"]}
+            )
+    return jsonify(returned_results)

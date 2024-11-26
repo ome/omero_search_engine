@@ -464,3 +464,24 @@ def container_keys_search(resource_table):
             csv = False
     results = get_container_values_for_key(resource_table, container_name, csv)
     return results
+
+
+@resources.route("/container_images/", methods=["GET"])
+def container_images():
+    from omero_search_engine.api.v1.resources.resource_analyser import (
+        return_containes_images,
+    )
+
+    return return_containes_images()
+
+
+# to do: add query to return the results withiz the sub-container
+@resources.route("/sub_container_images/", methods=["GET"])
+def sub_container_images():
+    from omero_search_engine.api.v1.resources.resource_analyser import (
+        get_containers_no_images,
+    )
+
+    container = request.args.get("container")
+    container_name = request.args.get("container_name")
+    return get_containers_no_images(container, container_name)
