@@ -934,7 +934,6 @@ container_project_values_key_template = Template(
    {"terms": {"field": "key_values.value.keyvalue","size": 10000}}}}}}}"""
 )
 
-
 """
 Get all the keys bucket"""
 container_project_keys_template = {
@@ -1005,13 +1004,10 @@ containers_no_images = Template(
 
 
 def get_containers_no_images(
-    contianer, container_name, sub_container=None, query_details=None
+    contianer, container_name, query_details=None
 ):
     containers_subcontainers = {"project": "dataset", "screen": "plate"}
-    if not sub_container:
-        if not containers_subcontainers.get(contianer.lower()):
-            return "No sub container is found, please check the container type"
-        sub_container = containers_subcontainers[contianer]
+    sub_container = containers_subcontainers[contianer]
     res_index = resource_elasticsearchindex.get("image")
     aggs_part = container_returned_sub_container_template.substitute(
         container_attribute_name="%s_name.keyvalue" % contianer,
@@ -1024,7 +1020,7 @@ def get_containers_no_images(
         and_filters = query_details.get("and_filters")
         or_filters = query_details.get("or_filters")
         case_sensitive = query_details.get("case_sensitive")
-        main_attributes = query.get("main_attributes")
+        main_attributes = query_details.get("main_attributes")
         from omero_search_engine.api.v1.resources.utils import (
             elasticsearch_query_builder,
         )
@@ -1038,8 +1034,6 @@ def get_containers_no_images(
     query["aggs"] = json.loads(aggs_part)
     res = search_index_for_value(res_index, query)
     buckets = res["aggregations"]["values"]["uniquesTerms"]["buckets"]
-    print(len(buckets))
-    print(buckets[0])
     returned_results = []
     for bucket in buckets:
         returned_results.append(

@@ -468,6 +468,9 @@ def container_keys_search(resource_table):
 
 @resources.route("/container_images/", methods=["GET"])
 def container_images():
+    """
+      file: swagger_docs/container_images.yml
+      """
     from omero_search_engine.api.v1.resources.resource_analyser import (
         return_containes_images,
     )
@@ -476,12 +479,36 @@ def container_images():
 
 
 # to do: add query to return the results withiz the sub-container
-@resources.route("/sub_container_images/", methods=["GET"])
+@resources.route("/sub_container_images/", methods=["POST","GET"])
 def sub_container_images():
+    """
+       file: swagger_docs/sub_container_images.yml
+     """
     from omero_search_engine.api.v1.resources.resource_analyser import (
         get_containers_no_images,
     )
 
     container = request.args.get("container")
     container_name = request.args.get("container_name")
-    return get_containers_no_images(container, container_name)
+    if not container_name or not container:
+        return jsonify(
+            build_error_message(
+                "{error}".format(error="container and container name are required.")
+            )
+        )
+    data = request.data
+    query={}
+    if data:
+        try:
+            data = json.loads(data)
+        except Exception:
+            return jsonify(
+                build_error_message(
+                    "{error}".format(error="No proper query data is provided.")
+                )
+            )
+
+        if "query_details" in data:
+            query = data["query_details "]
+
+    return get_containers_no_images(container, container_name, query)

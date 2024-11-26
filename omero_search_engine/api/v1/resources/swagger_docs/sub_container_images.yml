@@ -1,0 +1,25 @@
+A searchengine endpoint to return the available sub-container in a container (e.g. dataset in project)
+A query can be provided to return only the search results
+---
+tags:
+  - Available sub-containers inside a container
+parameters:
+  - name: container
+    in: query
+    type: string
+    enum: ['project', 'screen']
+    required: true
+  - name: container_name
+    description: The container name
+    in: query
+    type: string
+    required: true
+  - name: data
+    in: body
+    required: false
+
+responses:
+  200:
+    description: A JSON contains the search results
+    examples:
+      results: []
