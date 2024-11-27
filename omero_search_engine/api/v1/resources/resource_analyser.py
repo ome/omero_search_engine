@@ -1053,34 +1053,109 @@ def get_resource_keys(resource, data_source):
     return res["aggregations"]["value_search"]["required_name"]["buckets"]
 
 
+# Return sub container using a container attribute
+# for example get the no of  sub  containers e.g. datasets names,
+# inside a container, e.g. project using name.
+container_returned_sub_container_template = Template(
+    """
+         {
+      "values":{
+            "filter":{"terms":{"$container_attribute_name":["$container_attribute_value"]}},
+            "aggs":{
+               "required_values":{
+                  "cardinality":{
+                     "field":"$returned_sub_container",
+                     "precision_threshold":4000
+                  }
+               },
+               "uniquesTerms":{
+                  "terms":{
+                     "field":"$returned_sub_container",
+                     "size":10000
+                  }
+               }
+            }
+      }
+   }
+"""
+)
+
+
+def get_containers_no_images(container_name, query_details=None):
+    contianer = None
+    containers_subcontainers = {"project": "dataset", "screen": "plate"}
+    act_names = get_containets_from_name(container_name)
+    if len(act_names) == 0:
+        return "Container %s is not found" % container_name
+    container_name = act_names[0]["name"]
+    contianer = act_names[0]["type"]
+    data_source = act_names[0]["data_source"]
+    if contianer.lower() in containers_subcontainers:
+        sub_container = containers_subcontainers[contianer.lower()]
+    else:
+        return "Container %s is not supported" % contianer
+    res_index = resource_elasticsearchindex.get("image")
+    aggs_part = container_returned_sub_container_template.substitute(
+        container_attribute_name="%s_name.keyvalue" % contianer,
+        container_attribute_value="%s" % container_name,
+        returned_sub_container="%s_name.keyvalue" % sub_container,
+    )
+    if not query_details:
+        query = {}
+    else:
+        and_filters = query_details.get("and_filters")
+        or_filters = query_details.get("or_filters")
+        case_sensitive = query_details.get("case_sensitive")
+        main_attributes = query_details.get("main_attributes")
+        from omero_search_engine.api.v1.resources.utils import (
+            elasticsearch_query_builder,
+        )
+
+        query_string = elasticsearch_query_builder(
+            and_filters, or_filters, case_sensitive, main_attributes
+        )
+        query = json.loads(query_string)
+        # query builder should be called
+
+    query["aggs"] = json.loads(aggs_part)
+    res = search_index_for_value(res_index, query)
+    buckets = res["aggregations"]["values"]["uniquesTerms"]["buckets"]
+    returned_results = []
+    for bucket in buckets:
+        returned_results.append(
+            {
+                "image count": bucket["doc_count"],
+                "%s_name" % sub_container: bucket["key"],
+                "data_source": data_source,
+            }
+        )
+    return {"Error": None, "results": {"results": returned_results}}
+
+
 def get_containets_from_name(container_name=None, returned_data_source=None):
     act_names = []  # {}
     pr_names = get_resource_names("all")
     for resourse, names_ in pr_names.items():
         if len(names_) > 0:
             print(names_.keys())
-
         for data_source, names in names_.items():
-            act_names.append(
-                [
-                    {
-                        "id": name["id"],
-                        "name": name["name"],
-                        "data_source": data_source,
-                        "image count": name["no_images"],
-                        "type": resourse,
-                    }
-                    for name in names
-                    if not container_name
-                    or (
-                        name.get("name")
-                        and container_name.lower() in name.get("name").lower()
-                    )
-                    and (
-                        not returned_data_source or returned_data_source == data_source
-                    )
-                ]
-            )
+            act_names_1 = [
+                {
+                    "id": name["id"],
+                    "name": name["name"],
+                    "data_source": data_source,
+                    "image count": name["no_images"],
+                    "type": resourse,
+                }
+                for name in names
+                if not container_name
+                or (
+                    name.get("name")
+                    and container_name.lower() in name.get("name").lower()
+                )
+                and (not returned_data_source or returned_data_source == data_source)
+            ]
+            act_names = act_names + act_names_1
     return act_names
 
 
