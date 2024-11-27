@@ -1054,20 +1054,36 @@ def get_resource_keys(resource, data_source):
 
 
 def get_containets_from_name(container_name=None, returned_data_source=None):
-    act_names =[]# {}
+    act_names = []  # {}
     pr_names = get_resource_names("all")
     for resourse, names_ in pr_names.items():
-        if len(names_)>0:
-            print (names_.keys())
+        if len(names_) > 0:
+            print(names_.keys())
 
         for data_source, names in names_.items():
-            act_names.append( [
-                {"id": name["id"], "name": name["name"], "data_source":data_source, "image count":name["no_images"], "type":resourse}
-                for name in names
-                if not container_name or(name.get("name") and container_name.lower() in name.get("name").lower()) and (not returned_data_source or returned_data_source==data_source)
-            ])
+            act_names.append(
+                [
+                    {
+                        "id": name["id"],
+                        "name": name["name"],
+                        "data_source": data_source,
+                        "image count": name["no_images"],
+                        "type": resourse,
+                    }
+                    for name in names
+                    if not container_name
+                    or (
+                        name.get("name")
+                        and container_name.lower() in name.get("name").lower()
+                    )
+                    and (
+                        not returned_data_source or returned_data_source == data_source
+                    )
+                ]
+            )
     return act_names
+
 
 def return_containes_images():
     data = get_containets_from_name()
-    return {"Error": None, "results": {"results":data}}
+    return {"Error": None, "results": {"results": data}}

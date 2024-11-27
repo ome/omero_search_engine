@@ -364,9 +364,9 @@ def submit_query_return_containers():
     except Exception:
         query = None
     if not query:
-        query={}
-        #return jsonify(build_error_message("No query is provided"))
-    if len(query)>0:
+        query = {}
+        # return jsonify(build_error_message("No query is provided"))
+    if len(query) > 0:
         adjust_query_for_container(query)
     return_columns = request.args.get("return_columns")
     data_source = request.args.get("data_source")
@@ -377,17 +377,17 @@ def submit_query_return_containers():
             return_columns = json.loads(return_columns.lower())
         except Exception:
             return_columns = False
-    if len(query)>0:
+    if len(query) > 0:
         validation_results = query_validator(query)
         if validation_results == "OK":
             return jsonify(
                 determine_search_results_(
-                query,
-                data_source=data_source,
-                return_columns=return_columns,
-                return_containers=True,
+                    query,
+                    data_source=data_source,
+                    return_columns=return_columns,
+                    return_containers=True,
+                )
             )
-        )
         else:
             return jsonify(build_error_message(validation_results))
     else:
