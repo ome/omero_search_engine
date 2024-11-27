@@ -1038,7 +1038,10 @@ def search_index_using_search_after(
                 value=json.dumps([data_s]),
             )
             # query["query"]["bool"]["must"][0] = json.loads(main_dd)
-            query2["query"]["bool"]["must"].append(json.loads(main_dd))
+            if "must"in query2["query"]["bool"]:
+                query2["query"]["bool"]["must"].append(json.loads(main_dd))
+            else:
+                query2["query"]["bool"]["must"]=[json.loads(main_dd)]
             res = es.search(index=e_index, body=query2)
             if len(res["hits"]["hits"]) == 0:
                 search_omero_app.logger.info("No result is found")
