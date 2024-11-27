@@ -293,8 +293,8 @@ def prepare_data(data, data_source, doc_type):
                     "name": row.get("mapvalue_name"),
                     "value": row.get("mapvalue_value"),
                     "index": row.get("mapvalue_index"),
-            }
-        )
+                }
+            )
 
     return data_to_be_inserted
 

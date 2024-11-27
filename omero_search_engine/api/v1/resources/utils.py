@@ -1266,7 +1266,7 @@ def get_studies_titles(idr_name, resource, data_source=None):
     resourse_res = search_index_using_search_after(
         res_index, resource_query, None, None, None
     )
-    if len(resourse_res)>0:
+    if len(resourse_res) > 0:
         for item_ in resourse_res["results"]:
             study_title["id"] = item_.get("id")
             study_title["name"] = item_.get("name")
