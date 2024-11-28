@@ -987,7 +987,7 @@ def process_container_query(table_, attribute_name, container_id, key, resourse)
             container_project_values_key_template.substitute(key=key.strip())
         )
     else:
-        query["aggs"] = container_project_keys_template
+        query["aggs"] = json.loads(container_project_keys_template.substitute())
     query["_source"] = {"includes": [""]}
     res = search_index_for_value(res_index, query)
     if key:
@@ -1026,10 +1026,9 @@ container_project_keys_template = Template(
     """
 {"keys_search": {"nested": {"path": "key_values"},
 "aggs": {"required_values": {"cardinality": {"field":
-"key_values.name.keynamenormalize","precision_threshold": 4000,
-},},"uniquesTerms": {"terms": {"field":
-"key_values.name.keynamenormalize", "size": 10000}},},}}
-"""
+"key_values.name.keynamenormalize","precision_threshold": 4000
+}},"uniquesTerms": {"terms": {"field":
+"key_values.name.keynamenormalize", "size": 10000}}}}}"""
 )
 resource_keys_template = Template(
     """
