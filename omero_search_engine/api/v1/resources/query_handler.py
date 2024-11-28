@@ -37,16 +37,19 @@ mapping_names = {
 
 res_and_main_attributes = None
 res_or_main_attributes = None
+data_sources = []
 
 
 def reset_global_values():
-    global res_and_main_attributes, res_or_main_attributes
+    global res_and_main_attributes, res_or_main_attributes, data_sources
     res_and_main_attributes = None
     res_or_main_attributes = None
+    data_sources = []
 
 
 def check_get_names(idr_, resource, attribute, data_source, return_exact=False):
     # check the idr name and return the resource and possible values
+    global data_sources
     if idr_:
         idr_ = idr_.strip()
     pr_names = get_resource_names(resource)
@@ -61,7 +64,7 @@ def check_get_names(idr_, resource, attribute, data_source, return_exact=False):
                 ):
                     continue
                 act_name = [
-                    name["id"]
+                    {"id": name["id"], "data_source": data_source_}
                     for name in pr_names_
                     if name[attribute] and idr_.lower() in name[attribute].lower()
                 ]
@@ -77,12 +80,18 @@ def check_get_names(idr_, resource, attribute, data_source, return_exact=False):
                 ):
                     continue
                 act_name = [
-                    name["id"]
+                    {"id": name["id"], "data_source": data_source_}
                     for name in pr_names_
-                    if name[attribute] and idr_.lower() == name[attribute].lower()
+                    if name[attribute] and idr_.lower() in name[attribute].lower()
                 ]
                 all_act_names = all_act_names + act_name
-        return all_act_names
+        returned_act_names = []
+        for act in all_act_names:
+            returned_act_names.append(act["id"])
+            if act["data_source"] not in data_sources:
+                data_sources.append(act["data_source"])
+
+        return returned_act_names
 
 
 class QueryItem(object):
@@ -433,7 +442,7 @@ class QueryRunner(
         # res = search_query(query, resource, bookmark,
         #                    self.raw_elasticsearch_query,
         #                    main_attributes,return_containers=self.return_containers)
-        global res_and_main_attributes, res_or_main_attributes
+        global res_and_main_attributes, res_or_main_attributes, data_sources
         if res_and_main_attributes:
             if main_attributes.get("and_main_attributes"):
                 main_attributes["and_main_attributes"] = (
@@ -442,27 +451,52 @@ class QueryRunner(
             else:
                 main_attributes["and_main_attributes"] = res_and_main_attributes
         if resource == "image" and self.return_containers:
-            res = search_query(
-                query,
-                resource,
-                bookmark,
-                pagination_dict,
-                self.raw_elasticsearch_query,
-                main_attributes,
-                return_containers=self.return_containers,
-                data_source=self.data_source,
-            )
-        else:
-            res = search_query(
-                query,
-                resource,
-                bookmark,
-                pagination_dict,
-                self.raw_elasticsearch_query,
-                main_attributes,
-                data_source=self.data_source,
-            )
+            if len(data_sources) > 0:
+                res = search_query(
+                    query,
+                    resource,
+                    bookmark,
+                    pagination_dict,
+                    self.raw_elasticsearch_query,
+                    main_attributes,
+                    return_containers=self.return_containers,
+                    # data_source=self.data_source,
+                    data_source=",".join(data_sources),
+                )
+            else:
+                res = search_query(
+                    query,
+                    resource,
+                    bookmark,
+                    pagination_dict,
+                    self.raw_elasticsearch_query,
+                    main_attributes,
+                    return_containers=self.return_containers,
+                    data_source=self.data_source,
+                )
 
+        else:
+            if len(data_sources) > 0:
+                res = search_query(
+                    query,
+                    resource,
+                    bookmark,
+                    pagination_dict,
+                    self.raw_elasticsearch_query,
+                    main_attributes,
+                    # data_source=self.data_source,
+                    data_source=",".join(data_sources),
+                )
+            else:
+                res = search_query(
+                    query,
+                    resource,
+                    bookmark,
+                    pagination_dict,
+                    self.raw_elasticsearch_query,
+                    main_attributes,
+                    data_source=self.data_source,
+                )
         if resource != "image":
             return res
         elif self.return_columns:
