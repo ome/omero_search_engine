@@ -335,18 +335,20 @@ def prepare_search_results(results, size=0):
     for hit in results["hits"]["hits"]:
         res = hit["_source"]
         resource = res.get("resource")
-        # ignore organism key in the results
+        # ignore
+        # key in the results
         # please see (https://github.com/ome/omero_search_engine/issues/45)
+        #
         # This will be checked later.
-        if (
-            resource == "image"
-            and res["Attribute"]
-            and res["Attribute"].lower() == "organism"
-        ):
-            continue
+        # if (
+        #    resource == "image"
+        #    and res["Attribute"]
+        #    and res["Attribute"].lower() == "organism"
+        # ):
+        #    continue
         row = {}
         returned_results.append(row)
-        row["Data Source"] = res["data_source"]
+        row["data_source"] = res["data_source"]
         row["Key"] = res["Attribute"]
         row["Value"] = res["Value"]
         row["Number of %ss" % resource] = res.get("items_in_the_bucket")
