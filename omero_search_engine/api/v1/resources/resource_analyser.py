@@ -387,7 +387,7 @@ def prepare_search_results_buckets(results_):
             res = hit["_source"]
             row["Key"] = res["Attribute"]
             row["Value"] = res["Value"]
-            row["data_resource"] = res["data_source"]
+            row["data_source"] = res["data_source"]
             resource = res.get("resource")
             row["Number of %ss" % resource] = res.get("items_in_the_bucket")
             total_number += res["items_in_the_bucket"]
