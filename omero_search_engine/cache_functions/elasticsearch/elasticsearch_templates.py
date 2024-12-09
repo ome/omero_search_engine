@@ -102,6 +102,7 @@ image_template = {
         "properties": {
             "doc_type": {"type": "keyword"},
             "id": {"type": "long"},
+            "image_size": {"type": "long"},
             "experiment": {"type": "long"},
             "owner_id": {"type": "long"},
             "group_id": {"type": "long"},
