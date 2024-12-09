@@ -207,6 +207,7 @@ def prepare_images_data(data, data_source, doc_type):
         "plate_name",
         "well_id",
         "wellsample_id",
+        "image_size"
     ]
     total = len(data.index)
     counter = 0
@@ -713,6 +714,7 @@ def save_key_value_buckets(
         )
 
         res = get_resource_keys(resource_table, data_source)
+        print (res, "======================>>>")
         resource_keys = [res["key"] for res in res]
         # resource_keys = get_keys(resource_table, data_source)
         name_results = None
@@ -759,7 +761,7 @@ def save_key_value_buckets(
             vals.append(
                 (key, resource_table, es_index, len(resource_keys), data_source)
             )
-
+        print (vals,"########################.................")
         # determine the number of processes inside the process pool
         no_processors = search_omero_app.config.get("NO_PROCESSES")
         if not no_processors:
