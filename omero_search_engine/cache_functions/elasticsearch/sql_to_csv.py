@@ -23,19 +23,22 @@ import os
 from string import Template
 
 
-sql_query_to_retuen_image_size=Template(
-"""
-select originalfile.size as image_size  from image inner join fileset on image.fileset=fileset.id inner join filesetentry on filesetentry.fileset=fileset.id 
+sql_query_to_retuen_image_size = Template(
+    """
+select originalfile.size as image_size  from image
+inner join fileset on image.fileset=fileset.id inner
+join filesetentry on filesetentry.fileset=fileset.id
 inner join originalfile on filesetentry.originalfile = originalfile.id $whereclause
 """
 )
-#example of above $whereclause (where image.id=15154185)
+# example of above $whereclause (where image.id=15154185)
 
-sql_query_return_the_pixel_data=Template (
-"""
-sql statment to query the pixel data     
-select  pixelstype.value as pixeltype,  physicalsizexunit, physicalsizeyunit, physicalsizeyunit  physicalsizex, 
-physicalsizey, physicalsizez, sizex, sizey, sizez   
+sql_query_return_the_pixel_data = Template(
+    """
+sql statment to query the pixel data
+select  pixelstype.value as pixeltype,  physicalsizexunit,
+physicalsizeyunit, physicalsizeyunit  physicalsizex,
+physicalsizey, physicalsizez, sizex, sizey, sizez
 from  pixels inner join pixelstype on pixelstype.id=pixels.pixelstype $whereclause
 """
 )
@@ -54,9 +57,9 @@ screen.id as screen_id, screen.name as screen_name,
 plate.id as plate_id, plate.name as plate_name,
 well.id as well_id,wellsample.id as wellsample_id
 from image
-inner join fileset on image.fileset=fileset.id 
-inner join filesetentry on filesetentry.fileset=fileset.id 
-inner join originalfile on filesetentry.originalfile = originalfile.id 
+inner join fileset on image.fileset=fileset.id
+inner join filesetentry on filesetentry.fileset=fileset.id
+inner join originalfile on filesetentry.originalfile = originalfile.id
 left join imageannotationlink on image.id =imageannotationlink.parent
 left join annotation_mapvalue on
 annotation_mapvalue.annotation_id=imageannotationlink.child

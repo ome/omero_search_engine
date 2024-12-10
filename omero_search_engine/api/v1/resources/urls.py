@@ -484,6 +484,17 @@ def container_key_values_search(resource_table):
     return results
 
 
+@resources.route("/container_images/", methods=["GET"])
+def container_images():
+    """
+    file: swagger_docs/container_images.yml
+    """
+    return return_containes_images()
+
+
+return_containes_images
+
+
 @resources.route("/<resource_table>/container_keys/", methods=["GET"])
 def container_keys_search(resource_table):
     """
@@ -539,3 +550,40 @@ def sub_container_images():
         if "query_details" in data:
             query = data["query_details"]
     return jsonify(get_containers_no_images(container_name, query))
+
+
+@resources.route("/<resource_table>/container_filterkeyvalues/", methods=["POST"])
+def container_key_values_filter(resource_table):
+    """
+    file: swagger_docs/container_filterkeyvalues.yml
+    """
+    from omero_search_engine.api.v1.resources.resource_analyser import (
+        get_container_values_for_key,
+    )
+
+    key = request.args.get("key")
+    container_name = request.args.get("container_name")
+    data_source = request.args.get("data_source")
+    if not container_name or not key:
+        return build_error_message("Container name and key are required")
+
+    data = request.data
+    try:
+        query = json.loads(data)
+    except Exception:
+        return jsonify(
+            build_error_message(
+                "{error}".format(error="No proper query data is provided ")
+            )
+        )
+    validation_results = query_validator(query)
+    if validation_results != "OK":
+        return jsonify(build_error_message(validation_results))
+    return get_container_values_for_key(
+        resource_table,
+        container_name,
+        csv=None,
+        ret_data_source=data_source,
+        key=key,
+        query=query,
+    )
