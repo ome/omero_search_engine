@@ -1,0 +1,10 @@
+A searchengine endpoint to Return the available containers and the number of images in each.
+---
+tags:
+  - Containers and the number of images in each.
+
+responses:
+  200:
+    description: A JSON contains the search results
+    examples:
+      results: []

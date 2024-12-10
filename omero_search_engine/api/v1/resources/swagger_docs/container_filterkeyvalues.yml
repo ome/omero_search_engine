@@ -1,0 +1,69 @@
+Return the available key values within a container which within a query results
+Example
+
+In this example the search will use the provided query results within the specified container and provides the aviable values for the provided key.
+
+The query:
+
+{
+  "resource": "image",
+    "query_details": {
+      "and_filters": [
+        {
+          "name": "Organism",
+          "value": "homo sapiens",
+          "operator": "equals",
+          "resource": "image"
+        },
+        {
+          "name": "Organism part",
+          "value": "Brain",
+          "operator": "equals",
+          "resource": "image"
+        }
+      ],
+      "or_filters": [
+
+      ],
+      "case_sensitive": false
+    }
+  }
+
+The user needs to specify
+- the container name, e.g. "idr0043-uhlen-humanproteinatlas/experimentA"
+- the key which its values is needed, e.g. "gene symbol"
+
+the results should contains buckets like this:
+{
+        "key": "Gene symbol",
+        "no_image": 146,
+        "value": "NBPF12"
+}
+---
+tags:
+ - Return available key values with a search results in a container
+parameters:
+  - name: resource_table
+    in: path
+    type: string
+    enum: ['image', 'project', 'screen', 'well', 'plate']
+    required: true
+    default: 'image'
+  - name: data
+    in: body
+    required: true
+  - name: container_name
+    in: query
+    type: string
+    required: true
+
+  - name: key
+    in: query
+    type: string
+    required: true
+
+responses:
+  200:
+    description: A JSON contains the results
+    examples:
+      results: []
