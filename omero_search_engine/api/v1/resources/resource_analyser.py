@@ -1159,10 +1159,12 @@ def get_containets_from_name(container_name=None, returned_data_source=None):
                     "type": resourse,
                 }
                 for name in names
-                if not container_name
-                or (
-                    name.get("name")
-                    and container_name.lower() in name.get("name").lower()
+                if (
+                    not container_name
+                    or (
+                        name.get("name")
+                        and container_name.lower() in name.get("name").lower()
+                    )
                 )
                 and (not returned_data_source or returned_data_source == data_source)
             ]
@@ -1170,6 +1172,6 @@ def get_containets_from_name(container_name=None, returned_data_source=None):
     return act_names
 
 
-def return_containes_images():
-    data = get_containets_from_name()
+def return_containes_images(data_source=None):
+    data = get_containets_from_name(returned_data_source=data_source)
     return {"Error": None, "results": {"results": data}}

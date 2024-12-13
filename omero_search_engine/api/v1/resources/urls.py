@@ -391,7 +391,7 @@ def submit_query_return_containers():
         else:
             return jsonify(build_error_message(validation_results))
     else:
-        return jsonify(return_containes_images())
+        return jsonify(return_containes_images(data_source))
 
 
 @resources.route("/submitquery/", methods=["POST"])
@@ -489,10 +489,10 @@ def container_images():
     """
     file: swagger_docs/container_images.yml
     """
-    return return_containes_images()
-
-
-return_containes_images
+    data_source = request.args.get("data_source")
+    if data_source:
+        data_source = data_source.strip()
+    return return_containes_images(data_source)
 
 
 @resources.route("/<resource_table>/container_keys/", methods=["GET"])

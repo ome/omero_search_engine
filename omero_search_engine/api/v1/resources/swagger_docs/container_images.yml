@@ -2,6 +2,12 @@ A searchengine endpoint to Return the available containers and the number of ima
 ---
 tags:
   - Containers and the number of images in each.
+parameters:
+  - name: data_source
+    in: query
+    type: string
+    required: false
+    description: If it is provided, it will return the results for a specific data source, otherwise it will return the results from all the data sources
 
 responses:
   200:

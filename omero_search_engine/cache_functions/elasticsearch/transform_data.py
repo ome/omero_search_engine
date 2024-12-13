@@ -714,7 +714,6 @@ def save_key_value_buckets(
         )
 
         res = get_resource_keys(resource_table, data_source)
-        print(res, "======================>>>")
         resource_keys = [res["key"] for res in res]
         # resource_keys = get_keys(resource_table, data_source)
         name_results = None
