@@ -999,7 +999,7 @@ def process_container_query(
             container_project_values_key_template.substitute(key=key.strip())
         )
     else:
-        query["aggs"] = container_project_keys_template
+        query["aggs"] =json.loads(container_project_keys_template)
     query["_source"] = {"includes": [""]}
     res = search_index_for_value(res_index, query)
     if key:
@@ -1034,14 +1034,13 @@ container_project_values_key_template = Template(
 
 """
 Get all the keys bucket"""
-container_project_keys_template = Template(
-    """
+container_project_keys_template = """
 {"keys_search": {"nested": {"path": "key_values"},
 "aggs": {"required_values": {"cardinality": {"field":
 "key_values.name.keynamenormalize","precision_threshold": 4000
 }},"uniquesTerms": {"terms": {"field":
 "key_values.name.keynamenormalize", "size": 10000}}}}}"""
-)
+
 resource_keys_template = Template(
     """
 {"size":0,"query":{ "bool" : {"must": {"match":{
