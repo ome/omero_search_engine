@@ -999,7 +999,7 @@ def process_container_query(
             container_project_values_key_template.substitute(key=key.strip())
         )
     else:
-        query["aggs"] =json.loads(container_project_keys_template)
+        query["aggs"] = json.loads(container_project_keys_template)
     query["_source"] = {"includes": [""]}
     res = search_index_for_value(res_index, query)
     if key:
