@@ -1267,10 +1267,17 @@ def get_studies_titles(idr_name, resource, data_source=None):
     """
     study_title = {}
     res_index = resource_elasticsearchindex.get(resource)
-    resource_query = json.loads(res_raw_query.substitute(idr=idr_name))
-    resourse_res = search_index_using_search_after(
-        res_index, resource_query, None, None, None
-    )
+    resourse_res = []
+    try:
+        resource_query = json.loads(res_raw_query.substitute(idr=idr_name))
+        resourse_res = search_index_using_search_after(
+            res_index, resource_query, None, None, None
+        )
+    except Exception as ex:
+        search_omero_app.logger.info(
+            "Error for name %s and datasource %s, erro message: %s "
+            % (idr_name, data_source, str(ex))
+        )
     if len(resourse_res) > 0:
         for item_ in resourse_res["results"]:
             study_title["id"] = item_.get("id")
