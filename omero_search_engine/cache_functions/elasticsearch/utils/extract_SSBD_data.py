@@ -75,7 +75,8 @@ def download_datasets_images():
                 "../data/ssbd_images/datasets_images_dataset_%s.json" % dataset_id
             ):
                 print(
-                    "Escap downloading, file ../data/ssbd_images/datasets_images_dataset_%s.json is exist"
+                    "Escap downloading, file "
+                    "../data/ssbd_images/datasets_images_dataset_%s.json is exist"
                     % dataset_id
                 )
                 continue
