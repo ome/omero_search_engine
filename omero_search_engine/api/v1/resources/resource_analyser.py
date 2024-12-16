@@ -820,7 +820,13 @@ def get_resource_attribute_values(
     return returned_results
 
 
-def get_resource_names(resource, name=None, description=False, data_source=None):
+def get_resource_names(
+    resource,
+    name=None,
+    description=False,
+    data_source=None,
+    return_orginal_format=False,
+):
     """
     return resources names attributes
     It works for projects and screens but can be extended.
@@ -836,7 +842,19 @@ def get_resource_names(resource, name=None, description=False, data_source=None)
         ress = ["project", "screen"]
         for res in ress:
             returned_results[res] = get_the_results(res, name, description, data_source)
-    return returned_results
+    if not return_orginal_format:
+        return returned_results
+    else:
+        org_results_format = {}
+        for resource, results in returned_results.items():
+            org_results_format_list = []
+            org_results_format[resource] = org_results_format_list
+
+            for data_source_, ress in results.items():
+                for res in ress:
+                    res["data_source"] = data_source_
+                org_results_format_list.append(res)
+        return org_results_format
 
 
 def get_the_results(
@@ -999,7 +1017,7 @@ def process_container_query(
             container_project_values_key_template.substitute(key=key.strip())
         )
     else:
-        query["aggs"] =json.loads(container_project_keys_template)
+        query["aggs"] = json.loads(container_project_keys_template)
     query["_source"] = {"includes": [""]}
     res = search_index_for_value(res_index, query)
     if key:

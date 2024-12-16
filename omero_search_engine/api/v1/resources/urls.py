@@ -351,7 +351,11 @@ def get_resource_names_(resource_table):
             description = True
         else:
             description = False
-    return jsonify(get_resource_names(resource_table, value, description, data_source))
+    return jsonify(
+        get_resource_names(
+            resource_table, value, description, data_source, return_orginal_format=True
+        )
+    )
 
 
 @resources.route("/submitquery/containers/", methods=["POST"])
