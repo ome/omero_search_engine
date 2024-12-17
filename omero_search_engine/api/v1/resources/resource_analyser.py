@@ -340,12 +340,12 @@ def prepare_search_results(results, size=0):
         # please see (https://github.com/ome/omero_search_engine/issues/45)
         #
         # This will be checked later.
-        # if (
-        #    resource == "image"
-        #    and res["Attribute"]
-        #    and res["Attribute"].lower() == "organism"
-        # ):
-        #    continue
+        if (
+            resource == "image"
+            and res["Attribute"]
+            and res["Attribute"].lower() == "organism"
+         ):
+            continue
         row = {}
         returned_results.append(row)
         row["data_source"] = res["data_source"]
