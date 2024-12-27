@@ -344,7 +344,7 @@ def prepare_search_results(results, size=0):
             resource == "image"
             and res["Attribute"]
             and res["Attribute"].lower() == "organism"
-         ):
+        ):
             continue
         row = {}
         returned_results.append(row)
