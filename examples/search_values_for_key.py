@@ -40,24 +40,30 @@ attrs_url = "{base_url}{image_attributes}".format(
 )
 
 resp = requests.get(url=attrs_url)
-res = json.loads(resp.text)
+ress = json.loads(resp.text)
 # a list contains the available attributes
-attributes = res.get("image")
-logging.info("Number of available attributes for images: %s" % len(attributes))  # noqa
+for res in ress:
+    data_source=res.get("data_source")
+    if not data_source:
+        continue
+    print ("Checking data source: %s "%data_source)
+    attributes = res.get("image")
+    logging.info("Number of available attributes for images: %s" % len(attributes))  # noqa
 
-"""
-The user can get the available values for the "Organism" attribute
-and the number of images for each value
-"""
-key = "Organism"
-values_attr_url = "{base_url}{image_key_values}?key={key}".format(
-    base_url=base_url, image_key_values=image_key_values, key=key
-)
-resp = requests.get(url=values_attr_url)
-res = json.loads(resp.text)
-# a list contains dicts of the available values with the number of images
-buckets = res.get("data")
-logging.info("Number of available buckets for attribute %s is %s" % (key, len(buckets)))
-# The first bucket
-for bucket in buckets:
-    logging.info("Bucket details: %s " % bucket)
+    """
+    The user can get the available values for the "Organism" attribute
+    and the number of images for each value
+    """
+    key = "Organism"
+    values_attr_url = "{base_url}{image_key_values}?key={key}&data_source={data_source}".format(
+        base_url=base_url, image_key_values=image_key_values, key=key, data_source=data_source
+    )
+    print (values_attr_url)
+    resp = requests.get(url=values_attr_url)
+    res = json.loads(resp.text)
+    # a list contains dicts of the available values with the number of images
+    buckets = res.get("data")
+    logging.info("Number of available buckets for attribute %s is %s" % (key, len(buckets)))
+    # The first bucket
+    for bucket in buckets:
+        logging.info("Bucket details: %s " % bucket)
