@@ -27,6 +27,11 @@ import json
 from omero_search_engine.api.v1.resources.utils import (
     elasticsearch_query_builder,
     search_resource_annotation,
+    get_data_sources,
+)
+
+from omero_search_engine.api.v1.resources.query_handler import (
+    simple_search,
 )
 
 from omero_search_engine.cache_functions.elasticsearch.elasticsearch_templates import (  # noqa
@@ -372,6 +377,22 @@ class BasicTestCase(unittest.TestCase):
                         validator.searchengine_results.get("size"),
                     )
 
+    def test_data_sources(self):
+        """
+        Test available data sources
+        """
+        data_sources = get_data_sources()
+        self.assertTrue("test_csv" in data_sources)
+
+    def test_csv_data_query(self):
+        """
+        Test available data sources
+        """
+        results = simple_search(
+            "organism", "homo sapiens", "equals", None, None, "image", None, "test_csv"
+        )
+        self.assertEqual(results.get("results").get("size"), 15756)
+
     # def test_add_delete_es_index(self):
     #    '''
     #    test create index in elastic search
@@ -392,4 +413,5 @@ class BasicTestCase(unittest.TestCase):
 
 
 if __name__ == "__main__":
+
     unittest.main()
