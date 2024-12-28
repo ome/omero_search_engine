@@ -419,7 +419,10 @@ def insert_resource_data(folder, resource, data_source, from_json):
             continue
         n = len(files_list)
         search_omero_app.logger.info("%s==%s == %s" % (f_con, fil, n))
-        file_name = os.path.join(folder, fil)
+        if folder != fil:
+            file_name = os.path.join(folder, fil)
+        else:
+            file_name = folder
         vals.append((file_name, resource, data_source, len(files_list)))
         # vals.append((cur_max_id, (cur_max_id - page_size), resource, data_source))
         # handle_file(file_name, es_index, cols, is_image, data_source, from_json)
