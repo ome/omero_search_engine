@@ -1346,3 +1346,20 @@ def check_container_keys_vakues():
                         search_omero_app.logger.info(
                             "No results returned from searchengine"
                         )
+
+
+def test_csv_data_sources(data_source="test_csv"):
+    from unit_tests.test_data import csv_test_data
+
+    is_valid = True
+    for data in csv_test_data:
+        results = simple_search(
+            data["key"], data["value"], "equals", None, None, "image", None, data_source
+        )
+        if results.get("results").get("size") != data["no_results"]:
+            search_omero_app.logger.info(
+                "This data record (%s) is not valid, returned results is %s"
+                % (data, results.get("results").get("size"))
+            )
+            is_valid = False
+    return is_valid

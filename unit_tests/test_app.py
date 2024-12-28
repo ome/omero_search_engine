@@ -30,10 +30,6 @@ from omero_search_engine.api.v1.resources.utils import (
     get_data_sources,
 )
 
-from omero_search_engine.api.v1.resources.query_handler import (
-    simple_search,
-)
-
 from omero_search_engine.cache_functions.elasticsearch.elasticsearch_templates import (  # noqa
     image_template,
     key_values_resource_cache_template,
@@ -41,6 +37,7 @@ from omero_search_engine.cache_functions.elasticsearch.elasticsearch_templates i
 
 from omero_search_engine.validation.results_validator import (
     Validator,
+    test_csv_data_sources,
     # check_number_images_sql_containers_using_ids,
 )
 from omero_search_engine.cache_functions.elasticsearch.transform_data import (
@@ -388,10 +385,8 @@ class BasicTestCase(unittest.TestCase):
         """
         Test available data sources
         """
-        results = simple_search(
-            "organism", "homo sapiens", "equals", None, None, "image", None, "test_csv"
-        )
-        self.assertEqual(results.get("results").get("size"), 15756)
+        is_valid = test_csv_data_sources()
+        self.assertTrue(is_valid)
 
     # def test_add_delete_es_index(self):
     #    '''
@@ -413,5 +408,4 @@ class BasicTestCase(unittest.TestCase):
 
 
 if __name__ == "__main__":
-
     unittest.main()
