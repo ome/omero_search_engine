@@ -252,7 +252,7 @@ def set_database_configuration(
 @manager.option(
     "-i",
     "--images_folder",
-    help="path to a folder contains csv files cwhich contains the image data ",
+    help="path to a folder contains csv files which contains the image data ",
 )
 @manager.option(
     "-p", "--projects_file", help="path to the a file containing the projects data"
@@ -545,6 +545,10 @@ def get_index_data_from_csv_files(source=None, folder=None, resource="image"):
     insert_resource_data(
         folder=folder, resource=resource, data_source=source, from_json=False
     )
+    search_omero_app.logger.info("Wating for 6o seconds... ")
+    import time
+
+    time.sleep(60)
     save_key_value_buckets(
         resource_table_=resource,
         data_source=source,
