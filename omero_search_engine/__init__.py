@@ -32,16 +32,17 @@ from logging.handlers import RotatingFileHandler
 
 from configurations.configuration import app_config as config_
 
+
 def get_current_version():
-    current_version=""
-    file_name="CHANGELOG.md"
+    file_name = "CHANGELOG.md"
     try:
         with open(file_name) as f:
             lines = f.readlines()
-        current_version=lines[0].split("(")[0]
-    except Exception as e:
-        pass
+        current_version = lines[0].split("(")[0]
+    except Exception:
+        current_version = ""
     return current_version
+
 
 template = {
     "swaggerUiPrefix": LazyString(
@@ -60,10 +61,13 @@ search_omero_app.json_encoder = LazyJSONEncoder
 search_omero_app.config["SWAGGER"] = {
     "title": "OMERO Search Engine API",
     "version": str(get_current_version()),
-    'description': LazyString(lambda: 'OMERO search engine app is used to search metadata (key-value pairs).\n'
-                                      'For additional details, please refer to the following link:\n'
-                                      'https://github.com/ome/omero_search_engine/blob/main/README.rst'),
-    "termsOfService": "https://github.com/ome/omero_search_engine/blob/main/LICENSE.txt",
+    "description": LazyString(
+        lambda: "OMERO search engine app is used to search metadata"
+        " (key-value pairs).\n"
+        "For additional details, please refer to the following link:\n"
+        "https://github.com/ome/omero_search_engine/blob/main/README.rst"
+    ),
+    "termsOfService": "https://github.com/ome/omero_search_engine/blob/main/LICENSE.txt",  # noqa
 }
 
 
