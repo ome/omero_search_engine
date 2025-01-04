@@ -175,10 +175,11 @@ def extract_images_projects_data():
 
             dataset_url = copy.deepcopy(iamge_name_)
             images_data.append(dataset_url)
-            dataset_url["mapvalue_name"] = "dataset_url"
+            dataset_url["mapvalue_name"] = "image_webclient_url"
             dataset_url["mapvalue_value"] = (
-                "https://ssbd.riken.jp/omero/webclient/?show=dataset-%s" % dataset_id
+                "https://ssbd.riken.jp/omero/webclient/?show=image-%s" % image["id"]
             )
+
             dataset_url["mapvalue_index"] = 0
             for name in images_key_values:
                 if row.get(name):

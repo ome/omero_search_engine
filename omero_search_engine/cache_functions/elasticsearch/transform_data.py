@@ -28,6 +28,7 @@ from omero_search_engine.api.v1.resources.utils import resource_elasticsearchind
 from omero_search_engine.api.v1.resources.resource_analyser import (
     query_cashed_bucket,
     get_all_values_for_a_key,
+    # return_containes_images,
 )
 from omero_search_engine.cache_functions.elasticsearch.elasticsearch_templates import (  # noqa
     image_template,
@@ -186,6 +187,17 @@ def delete_index(resource, es_index=None):
         return False
 
 
+def get_image_urls(data_source_):
+    for data_source in search_omero_app.config.get("DATA_SOURCES"):
+        if data_source.get("name") == data_source_:
+            image_webclient_url = data_source.get("image_webclient_url")
+            thumb_url = data_source.get("thumb_url")
+            image_url = data_source.get("image_url")
+            # if image_webclient_url and image_url and thumb_url :
+            return image_webclient_url, image_url, thumb_url
+    return None, None, None
+
+
 def prepare_images_data(data, data_source, doc_type):
     data_record = [
         "id",
@@ -209,6 +221,7 @@ def prepare_images_data(data, data_source, doc_type):
         "wellsample_id",
         "image_size",
     ]
+    image_webclient_url, image_url, thumb_url = get_image_urls(data_source)
     total = len(data.index)
     counter = 0
     data_to_be_inserted = {}
@@ -221,11 +234,14 @@ def prepare_images_data(data, data_source, doc_type):
                     counter=counter, total=total
                 )
             )
-
         if row["id"] in data_to_be_inserted:
             row_to_insert = data_to_be_inserted[row["id"]]
         else:
             row_to_insert = {}
+            if image_webclient_url and image_url and thumb_url:
+                row_to_insert["image_webclient_url"] = image_webclient_url % row["id"]
+                row_to_insert["image_url"] = image_url % row["id"]
+                row_to_insert["thumb_url"] = thumb_url % row["id"]
             row_to_insert["doc_type"] = doc_type
             for rcd in data_record:
                 if rcd in ["mapvalue_name", "mapvalue_value"]:
