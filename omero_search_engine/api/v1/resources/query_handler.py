@@ -294,6 +294,8 @@ class QueryRunner(
                     query = {}
                     query["or_filters"] = or_query
                     res = self.run_query(query, resource)
+                    if type(res) is str:
+                        return res
                     new_cond = get_ids(res, resource, self.data_source)
                     if new_cond:
                         if not main_or_attribute_.get(resource):
@@ -761,6 +763,7 @@ def determine_search_results_(
                         new_fil["operator"] = filter["operator"]
                         new_fil["set_query_type"] = True
                         new_fil["query_type"] = q_item.query_type
+                        new_fil["data_source"] = data_source
                         new_or_filter.append(new_fil)
                 else:
                     q_item.name = "id"

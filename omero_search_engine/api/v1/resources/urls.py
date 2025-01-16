@@ -26,6 +26,7 @@ from omero_search_engine.api.v1.resources.utils import (
     adjust_query_for_container,
     get_data_sources,
     check_empty_string,
+    search_resource_annotation_return_conatines_only,
 )
 from omero_search_engine.api.v1.resources.resource_analyser import (
     search_value_for_resource,
@@ -385,6 +386,15 @@ def submit_query_return_containers():
         validation_results = query_validator(query)
         if validation_results == "OK":
             return jsonify(
+                search_resource_annotation_return_conatines_only(
+                    query,
+                    data_source,
+                    return_columns,
+                    True,
+                )
+            )
+            """
+            return jsonify(
                 determine_search_results_(
                     query,
                     data_source=data_source,
@@ -392,6 +402,8 @@ def submit_query_return_containers():
                     return_containers=True,
                 )
             )
+        """
+
         else:
             return jsonify(build_error_message(validation_results))
     else:

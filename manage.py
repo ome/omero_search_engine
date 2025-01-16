@@ -545,7 +545,7 @@ def get_index_data_from_csv_files(source=None, folder=None, resource="image"):
     insert_resource_data(
         folder=folder, resource=resource, data_source=source, from_json=False
     )
-    search_omero_app.logger.info("Wating for 6o seconds... ")
+    search_omero_app.logger.info("Waiting to index the data... ")
     import time
 
     time.sleep(60)

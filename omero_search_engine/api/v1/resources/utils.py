@@ -1050,7 +1050,7 @@ def search_index_using_search_after(
             idrs = []
             for ek in keys_counts:
                 idrs.append(ek["key"])
-                res_res = get_studies_titles(ek["key"], ret_type, data_source)
+                res_res = get_studies_titles(ek["key"], ret_type, data_s)
                 res_res["image count"] = ek["doc_count"]
                 if data_source:
                     res_res["data_source"] = data_s
@@ -1109,9 +1109,33 @@ def handle_query(table_, query):
 
 
 def search_resource_annotation_return_conatines_only(
-    table_, query, raw_elasticsearch_query=None, page=None, bookmark=None
+    query,
+    data_source,
+    return_columns,
+    return_containers,
 ):
-    pass
+    from omero_search_engine.api.v1.resources.query_handler import (
+        determine_search_results_,
+    )
+
+    if not data_source:
+        data_sources = get_data_sources()
+    else:
+        data_sources = data_source.split(",")
+    results = {}
+    for data_s in data_sources:
+        res = determine_search_results_(
+            query, data_s, return_columns, return_containers
+        )
+        if type(res) is dict and len(res) > 0:
+            if len(results) == 0:
+                results = res
+            else:
+                results["results"]["results"] = (
+                    results["results"]["results"] + res["results"]["results"]
+                )
+
+    return results
 
 
 def search_resource_annotation(
@@ -1151,7 +1175,7 @@ def search_resource_annotation(
         ):
             logging.info("Error ")
             return build_error_message(
-                "{query} is not a valid query".format(query=query)
+                "{query} is not" " a valid query".format(query=query)
             )
         if data_source and data_source.lower() != "all":
             data_sources = get_data_sources()
@@ -1271,7 +1295,7 @@ def get_studies_titles(idr_name, resource, data_source=None):
     try:
         resource_query = json.loads(res_raw_query.substitute(idr=idr_name))
         resourse_res = search_index_using_search_after(
-            res_index, resource_query, None, None, None
+            res_index, resource_query, None, None, None, data_source
         )
     except Exception as ex:
         search_omero_app.logger.info(
