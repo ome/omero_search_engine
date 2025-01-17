@@ -851,13 +851,25 @@ def simple_search(
     query_details["bookmark"] = [bookmark]
     query_details["case_sensitive"] = case_sensitive
     if not study:
-        return search_resource_annotation(
-            resource,
-            {"query_details": query_details},
-            bookmark=bookmark,
-            return_containers=return_containers,
-            data_source=data_source,
-        )
+        if return_containers:
+            from omero_search_engine.api.v1.resources.utils import (
+                search_resource_annotation_return_conatines_only,
+            )
+
+            return search_resource_annotation_return_conatines_only(
+                {"query_details": query_details},
+                data_source,
+                None,
+                True,
+            )
+        else:
+            return search_resource_annotation(
+                resource,
+                {"query_details": query_details},
+                bookmark=bookmark,
+                return_containers=return_containers,
+                data_source=data_source,
+            )
     else:
         and_filters.append(
             {
@@ -867,9 +879,21 @@ def simple_search(
                 "resource": "project",
             }
         )
-        return determine_search_results_(
-            {"query_details": query_details}, data_source=data_source
-        )
+        if return_containers:
+            from omero_search_engine.api.v1.resources.utils import (
+                search_resource_annotation_return_conatines_only,
+            )
+
+            search_resource_annotation_return_conatines_only(
+                query_details,
+                data_source,
+                None,
+                True,
+            )
+        else:
+            return determine_search_results_(
+                {"query_details": query_details}, data_source=data_source
+            )
 
 
 def add_local_schemas_to(resolver, schema_folder, base_uri, schema_ext=".json"):
