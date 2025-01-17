@@ -50,7 +50,6 @@ project_keyvalues = [
     "Organism Part",
 ]
 
-
 trouble_links = []
 trouble_datasets = []
 datasets_projects = {}
@@ -116,11 +115,17 @@ no_image_found_jsom = []
 def is_added_before(id, key_, value_, added_key_value):
     added_before = False
     for item in added_key_value:
-        if item["id"] == id and item["mapvalue_name"].lower() == key_.lower():
+        if int(item["id"]) == int(id) and item["mapvalue_name"].lower() == key_.lower():
             if (
-                item["mapvalue_value"].lower() == value_.lower()
-                or item["mapvalue_value"].lower() == "h. sapiens"
-                or item["mapvalue_value"].lower() == "m. musculus"
+                item["mapvalue_value"].lower().strip() == value_.lower()
+                or (
+                    item["mapvalue_value"].lower() == "homo sapiens"
+                    and value_.lower() == "h. sapiens"
+                )
+                or (
+                    item["mapvalue_value"].lower() == "mus musculus"
+                    and value_.lower() == "m. musculus"
+                )
             ):
                 added_before = True
                 break
@@ -164,6 +169,7 @@ def extract_projects_data():
                         project["id"], name, row.get(name), added_key_value
                     ):
                         continue
+
                     project__ = copy.deepcopy(project_)
                     projects_data.append(project__)
                     project__["mapvalue_name"] = name
@@ -275,11 +281,11 @@ links_filename = "../data/ssbd_images/ssbd_links_error.csv"
 
 download_datasets_images()
 extract_projects_data()
-extract_images_data()
+# extract_images_data()
 
 
-df_image = pd.DataFrame(images_data)
-df_image.to_csv(images_filename, index=False)
+# df_image = pd.DataFrame(images_data)
+# df_image.to_csv(images_filename, index=False)
 
 projects_keys = [
     "id",
@@ -294,7 +300,6 @@ df_project = pd.DataFrame(projects_data)
 df_project.to_csv(projects_filename, index=False)
 
 print(len(no_image_found_jsom))
-
 
 print(len(trouble_links))
 
