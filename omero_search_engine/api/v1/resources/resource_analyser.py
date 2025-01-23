@@ -845,15 +845,21 @@ def get_resource_names(
     if not return_orginal_format:
         return returned_results
     else:
-        org_results_format = {}
-        for resource, results in returned_results.items():
-            org_results_format_list = []
-            org_results_format[resource] = org_results_format_list
-
-            for data_source_, ress in results.items():
-                for res in ress:
-                    res["data_source"] = data_source_
-                org_results_format_list.append(res)
+        if resource != "all":
+            org_results_format = []
+            for data_source_, res_res in returned_results.items():
+                for ress in res_res:
+                    ress["data_source"] = data_source_
+                    org_results_format.append(ress)
+        else:
+            org_results_format = {}
+            for resource_, results in returned_results.items():
+                org_results_format_list = []
+                org_results_format[resource_] = org_results_format_list
+                for data_source_, ress in results.items():
+                    for res in ress:
+                        res["data_source"] = data_source_
+                        org_results_format_list.append(res)
         return org_results_format
 
 
