@@ -51,7 +51,7 @@ parameters:
     default: 'image'
   - name: data
     in: body
-    required: true
+    required: false
   - name: container_name
     in: query
     type: string

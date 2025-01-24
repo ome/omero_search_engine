@@ -584,17 +584,23 @@ def container_key_values_filter(resource_table):
         return build_error_message("Container name and key are required")
 
     data = request.data
-    try:
-        query = json.loads(data)
-    except Exception:
-        return jsonify(
-            build_error_message(
-                "{error}".format(error="No proper query data is provided ")
+    if data and len(data) > 0:
+        try:
+            query = json.loads(data)
+        except Exception:
+            return jsonify(
+                build_error_message(
+                    "{error}".format(error="No proper query data is provided ")
+                )
             )
-        )
-    validation_results = query_validator(query)
-    if validation_results != "OK":
-        return jsonify(build_error_message(validation_results))
+    else:
+        query = {}
+
+    if len(query) > 0:
+        adjust_query_for_container(query)
+        validation_results = query_validator(query)
+        if validation_results != "OK":
+            return jsonify(build_error_message(validation_results))
     return get_container_values_for_key(
         resource_table,
         container_name,
