@@ -1,3 +1,9 @@
+0.6.0 (March 2024):
+--------------------
+- Add description and extract current version [#105](https://github.com/ome/omero_search_engine/pull/105)
+- Modify unit test and validation [#63](https://github.com/ome/omero_search_engine/pull/63)
+- support the "in" and "not in" operators [#59](https://github.com/ome/omero_search_engine/pull/59) 
+
 0.5.4 (March 2024):
 --------------------
 - Support Rocky Linux 9  [#93](https://github.com/ome/omero_search_engine/pull/93)
