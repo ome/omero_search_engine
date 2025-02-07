@@ -1019,7 +1019,7 @@ def search_index_using_search_after(
     return_containers,
     data_source=None,
     ret_type=None,
-    random_results=False
+    random_results=False,
 ) -> object:
     # toz  ya
     returned_results = []
@@ -1063,14 +1063,12 @@ def search_index_using_search_after(
     size = res["count"]
     search_omero_app.logger.info("Total: %s" % size)
     if random_results:
-        query["sort"]= [
+        query["sort"] = [
             {
                 "_script": {
                     "type": "number",
-                    "script": {
-                        "source": "Math.random()"
-                    },
-                    "order": "asc"
+                    "script": {"source": "Math.random()"},
+                    "order": "asc",
                 }
             }
         ]
@@ -1128,7 +1126,6 @@ def search_index_using_search_after(
     return results_dict
 
 
-
 def handle_query(table_, query):
     pass
 
@@ -1142,6 +1139,7 @@ def search_resource_annotation_return_conatines_only(
     from omero_search_engine.api.v1.resources.query_handler import (
         determine_search_results_,
     )
+
     if not data_source:
         data_sources = get_data_sources()
     else:
@@ -1152,8 +1150,10 @@ def search_resource_annotation_return_conatines_only(
             query, data_s, return_columns, return_containers
         )
         if type(res) is dict and len(res) > 0:
-            if len(res)==1 and res.get("Error"):
-                logging.info("Data source %s Error: %s"%(data_s,results.get("Error")))
+            if len(res) == 1 and res.get("Error"):
+                logging.info(
+                    "Data source %s Error: %s" % (data_s, results.get("Error"))
+                )
                 continue
             elif len(results) == 0:
                 results = res
@@ -1172,7 +1172,7 @@ def search_resource_annotation(
     pagination_dict=None,
     return_containers=False,
     data_source=None,
-    random_results=False
+    random_results=False,
 ):
     """
     @table_: the resource table, e.g. image. project, etc.
@@ -1291,7 +1291,7 @@ def search_resource_annotation(
             pagination_dict,
             return_containers,
             data_source=data_source,
-            random_results=random_results
+            random_results=random_results,
         )
     notice = ""
     end_time = time.time()
@@ -1354,6 +1354,7 @@ def get_filter_list(filter):
     f2["resource"] = "screen"
     new_or_filter.append(f2)
     return new_or_filter
+
 
 def adjust_query_for_container(query):
     query_details = query.get("query_details")

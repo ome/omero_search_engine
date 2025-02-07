@@ -834,7 +834,7 @@ def simple_search(
     study,
     data_source,
     return_containers=False,
-    random_results=False
+    random_results=False,
 ):
     reset_global_values()
     if not operator:
@@ -870,7 +870,7 @@ def simple_search(
                 bookmark=bookmark,
                 return_containers=return_containers,
                 data_source=data_source,
-                random_results=random_results
+                random_results=random_results,
             )
     else:
         and_filters.append(

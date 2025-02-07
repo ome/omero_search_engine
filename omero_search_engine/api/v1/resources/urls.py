@@ -367,7 +367,7 @@ def submit_query_return_containers():
     try:
         query = json.loads(request.data)
     except Exception:
-        print ("error reading the query")
+        print("error reading the query")
         query = None
     if not query:
         query = {}
@@ -472,7 +472,7 @@ def search(resource_table):
         study,
         data_source,
         return_containers,
-        random_results=random_results
+        random_results=random_results,
     )
     return jsonify(results)
 
