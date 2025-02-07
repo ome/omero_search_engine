@@ -48,9 +48,10 @@ parameters:
     description: If it is provided, it will return the search results for a specific data source, otherwise it will return the results from all the data sources
   - name: random_results
     in: query
-    type: string
+    type: integer
     required: false
-    description: If it is provided, it will return randomized list of query results.
+    default: 0
+    description: If the value > 0, it will return randomized list of the query results, the size of the list is equal to the provided value.
 responses:
   200:
     description: A JSON contains the search results

@@ -459,6 +459,15 @@ def search(resource_table):
     data_source = request.args.get("data_source")
     data_source = check_empty_string(data_source)
     random_results = request.args.get("random_results")
+    if random_results:
+        if not random_results.isdigit():
+            return build_error_message(
+                "random_results parameter should have an integer value"
+            )
+        else:
+            random_results = int(random_results)
+    else:
+        random_results = 0
     return_containers = request.args.get("return_containers")
     if return_containers:
         return_containers = json.loads(return_containers.lower())

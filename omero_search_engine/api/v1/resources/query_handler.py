@@ -834,7 +834,7 @@ def simple_search(
     study,
     data_source,
     return_containers=False,
-    random_results=False,
+    random_results=0,
 ):
     reset_global_values()
     if not operator:
