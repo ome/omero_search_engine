@@ -1062,7 +1062,7 @@ def search_index_using_search_after(
     res = es.count(index=e_index, body=query)
     size = res["count"]
     search_omero_app.logger.info("Total: %s" % size)
-    if random_results and random_results > 0:
+    if random_results > 0:
         query["sort"] = [
             {
                 "_script": {
@@ -1108,7 +1108,7 @@ def search_index_using_search_after(
             search_omero_app.logger.info("No result is found")
             return returned_results
         bookmark = [res["hits"]["hits"][-1]["sort"][0]]
-    if not returned_results:
+    if random_results == 0:
         results_dict = {
             "results": returned_results,
             "total_pages": no_of_pages,
