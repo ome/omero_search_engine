@@ -1269,7 +1269,7 @@ def search_resource_annotation(
             return_containers,
             data_source=data_source,
             ret_type="project",
-            random_results=random_results
+            random_results=random_results,
         )
         query["aggs"] = json.loads(
             count_attr_template.substitute(field="screen_name.keyvalue")
