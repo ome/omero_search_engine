@@ -1019,7 +1019,7 @@ def search_index_using_search_after(
     return_containers,
     data_source=None,
     ret_type=None,
-    random_results=False,
+    random_results=0,
 ) -> object:
     # toz  ya
     returned_results = []
@@ -1062,7 +1062,7 @@ def search_index_using_search_after(
     res = es.count(index=e_index, body=query)
     size = res["count"]
     search_omero_app.logger.info("Total: %s" % size)
-    if random_results:
+    if random_results and random_results > 0:
         query["sort"] = [
             {
                 "_script": {
@@ -1072,7 +1072,8 @@ def search_index_using_search_after(
                 }
             }
         ]
-        query["size"] = 400
+        query["explain"] = True
+        query["size"] = random_results
     else:
         query["size"] = page_size
 
@@ -1121,6 +1122,7 @@ def search_index_using_search_after(
     else:
         results_dict = {
             "results": returned_results,
+            "bookmark": bookmark,
             "size": size,
         }
     return results_dict
@@ -1172,7 +1174,7 @@ def search_resource_annotation(
     pagination_dict=None,
     return_containers=False,
     data_source=None,
-    random_results=False,
+    random_results=0,
 ):
     """
     @table_: the resource table, e.g. image. project, etc.
@@ -1267,6 +1269,7 @@ def search_resource_annotation(
             return_containers,
             data_source=data_source,
             ret_type="project",
+            random_results=random_results
         )
         query["aggs"] = json.loads(
             count_attr_template.substitute(field="screen_name.keyvalue")
