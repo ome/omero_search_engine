@@ -1019,6 +1019,7 @@ def search_index_using_search_after(
     return_containers,
     data_source=None,
     ret_type=None,
+    random_results=False
 ) -> object:
     # toz  ya
     returned_results = []
@@ -1061,14 +1062,30 @@ def search_index_using_search_after(
     res = es.count(index=e_index, body=query)
     size = res["count"]
     search_omero_app.logger.info("Total: %s" % size)
-    query["size"] = page_size
-    if size % page_size == 0:
-        add_to_page = 0
+    if random_results:
+        query["sort"]= [
+            {
+                "_script": {
+                    "type": "number",
+                    "script": {
+                        "source": "Math.random()"
+                    },
+                    "order": "asc"
+                }
+            }
+        ]
+        query["size"] = 400
     else:
-        add_to_page = 1
-    no_of_pages = (int)(size / page_size) + add_to_page
-    search_omero_app.logger.info("No of pages: %s" % no_of_pages)
-    query["sort"] = [{"id": "asc"}]
+        query["size"] = page_size
+
+        if size % page_size == 0:
+            add_to_page = 0
+        else:
+            add_to_page = 1
+        no_of_pages = (int)(size / page_size) + add_to_page
+        search_omero_app.logger.info("No of pages: %s" % no_of_pages)
+        query["sort"] = [{"id": "asc"}]
+
     if not bookmark_ and pagination_dict:
         bookmark_ = get_bookmark(pagination_dict)
     if not bookmark_:
@@ -1092,16 +1109,24 @@ def search_index_using_search_after(
             search_omero_app.logger.info("No result is found")
             return returned_results
         bookmark = [res["hits"]["hits"][-1]["sort"][0]]
-    results_dict = {
-        "results": returned_results,
-        "total_pages": no_of_pages,
-        "bookmark": bookmark,
-        "size": size,
-    }
-    if add_paination:
-        pagination_dict = get_pagination(no_of_pages, bookmark, pagination_dict)
-        results_dict["pagination"] = pagination_dict
+    if not returned_results:
+        results_dict = {
+            "results": returned_results,
+            "total_pages": no_of_pages,
+            "bookmark": bookmark,
+            "size": size,
+        }
+        if add_paination:
+            pagination_dict = get_pagination(no_of_pages, bookmark, pagination_dict)
+            results_dict["pagination"] = pagination_dict
+
+    else:
+        results_dict = {
+            "results": returned_results,
+            "size": size,
+        }
     return results_dict
+
 
 
 def handle_query(table_, query):
@@ -1117,7 +1142,6 @@ def search_resource_annotation_return_conatines_only(
     from omero_search_engine.api.v1.resources.query_handler import (
         determine_search_results_,
     )
-
     if not data_source:
         data_sources = get_data_sources()
     else:
@@ -1128,13 +1152,15 @@ def search_resource_annotation_return_conatines_only(
             query, data_s, return_columns, return_containers
         )
         if type(res) is dict and len(res) > 0:
-            if len(results) == 0:
+            if len(res)==1 and res.get("Error"):
+                logging.info("Data source %s Error: %s"%(data_s,results.get("Error")))
+                continue
+            elif len(results) == 0:
                 results = res
             else:
                 results["results"]["results"] = (
                     results["results"]["results"] + res["results"]["results"]
                 )
-
     return results
 
 
@@ -1146,6 +1172,7 @@ def search_resource_annotation(
     pagination_dict=None,
     return_containers=False,
     data_source=None,
+    random_results=False
 ):
     """
     @table_: the resource table, e.g. image. project, etc.
@@ -1244,7 +1271,6 @@ def search_resource_annotation(
         query["aggs"] = json.loads(
             count_attr_template.substitute(field="screen_name.keyvalue")
         )
-
         res_2 = search_index_using_search_after(
             res_index,
             query,
@@ -1265,6 +1291,7 @@ def search_resource_annotation(
             pagination_dict,
             return_containers,
             data_source=data_source,
+            random_results=random_results
         )
     notice = ""
     end_time = time.time()
@@ -1327,7 +1354,6 @@ def get_filter_list(filter):
     f2["resource"] = "screen"
     new_or_filter.append(f2)
     return new_or_filter
-
 
 def adjust_query_for_container(query):
     query_details = query.get("query_details")
