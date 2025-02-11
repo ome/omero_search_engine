@@ -23,6 +23,7 @@ import logging
 from elasticsearch import Elasticsearch
 from flasgger import Swagger, LazyString, LazyJSONEncoder
 from omero_search_engine.database.database_connector import DatabaseConnector
+from omero_search_engine.__version__ import __version__
 from configurations.configuration import (
     configLooader,
     load_configuration_variables_from_file,
@@ -31,17 +32,6 @@ from configurations.configuration import (
 from logging.handlers import RotatingFileHandler
 
 from configurations.configuration import app_config as config_
-
-
-def get_current_version():
-    file_name = "CHANGELOG.md"
-    try:
-        with open(file_name) as f:
-            lines = f.readlines()
-        current_version = lines[0].split("(")[0]
-    except Exception:
-        current_version = ""
-    return current_version
 
 
 template = {
@@ -60,7 +50,7 @@ search_omero_app.json_encoder = LazyJSONEncoder
 
 search_omero_app.config["SWAGGER"] = {
     "title": "OMERO Search Engine API",
-    "version": str(get_current_version()),
+    "version": str(__version__),
     "description": LazyString(
         lambda: "OMERO search engine app is used to search metadata"
         " (key-value pairs).\n"
