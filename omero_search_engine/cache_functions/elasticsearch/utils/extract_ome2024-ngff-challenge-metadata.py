@@ -9,21 +9,22 @@ import math
 
 tax_id_org = {}
 
+
 def escape_string(string_to_check):
     return string_to_check
     if type(string_to_check) is not str:
         return string_to_check
 
-    sb = ''
+    sb = ""
     for i in range(len(string_to_check)):
         c = string_to_check[i]
         # These characters are part of the data and should be removed
         reserved_chars_ = ["'", '"', "*", "\\", "\n", "\r"]
         if c in reserved_chars_:
             if not sb:
-                sb = ' '
+                sb = " "
             else:
-                sb = sb + ' '
+                sb = sb + " "
         else:
             if not sb:
                 sb = c
@@ -48,7 +49,9 @@ def read_ro_crate_metadata(crate_path):
 def extract_data_from_metadata(metadata):
     extracted_data = {
         "crate_name": metadata.get("@graph", [{}])[0].get("name", "Unnamed Crate"),
-        "crate_description": metadata.get("@graph", [{}])[0].get("description", "No description"),
+        "crate_description": metadata.get("@graph", [{}])[0].get(
+            "description", "No description"
+        ),
         "files": [],
         "datasets": [],
     }
@@ -56,19 +59,24 @@ def extract_data_from_metadata(metadata):
     # Extract files and datasets from the "@graph"
     for item in metadata.get("@graph", []):
         if item.get("@type") == "File":
-            extracted_data["files"].append({
-                "id": item.get("@id"),
-                "name": item.get("name", item.get("@id")),
-                "description": item.get("description", "No description"),
-            })
+            extracted_data["files"].append(
+                {
+                    "id": item.get("@id"),
+                    "name": item.get("name", item.get("@id")),
+                    "description": item.get("description", "No description"),
+                }
+            )
         elif item.get("@type") == "Dataset":
-            extracted_data["datasets"].append({
-                "id": item.get("@id"),
-                "name": item.get("name", item.get("@id")),
-                "description": item.get("description", "No description"),
-            })
+            extracted_data["datasets"].append(
+                {
+                    "id": item.get("@id"),
+                    "name": item.get("name", item.get("@id")),
+                    "description": item.get("description", "No description"),
+                }
+            )
 
     return extracted_data
+
 
 def main(crate_path):
     try:
@@ -115,28 +123,29 @@ def read_metadata_file(crate_path):
 
         else:
             if entity.type == "image_acquisition":
-                propreties["image_acquisition"] = entity.properties().get("image_acquisition")
+                propreties["image_acquisition"] = entity.properties().get(
+                    "image_acquisition"
+                )
         # print (type(entity.properties()))
         if "organism_classification" in entity.properties():
             # print ("FOUND",entity.properties().get("organism_classification").get("@id"))
-            propreties["organism"] = entity.properties().get("organism_classification").get("@id")
+            propreties["organism"] = (
+                entity.properties().get("organism_classification").get("@id")
+            )
 
     return propreties
 
 
 def get_entity(pubmed_id):
     import requests
+
     tax_id = None
 
     # Define the base URL for the E-utilities API
     base_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/"
 
     # Define the parameters for the query
-    params = {
-        "db": "pubmed",
-        "id": pubmed_id,
-        "retmode": "json"
-    }
+    params = {"db": "pubmed", "id": pubmed_id, "retmode": "json"}
 
     # Make the request
     response = requests.get(base_url + "efetch.fcgi", params=params)
@@ -164,11 +173,7 @@ def test():
     base_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/"
 
     # Define the parameters for the query
-    params = {
-        "db": "pubmed",
-        "id": pubmed_id,
-        "retmode": "xml"
-    }
+    params = {"db": "pubmed", "id": pubmed_id, "retmode": "xml"}
 
     # Make the request
     response = requests.get(base_url + "efetch.fcgi", params=params)
@@ -180,7 +185,7 @@ def test():
 
         # Find the PubmedArticle element
         pubmed_article = root.find("PubmedArticle")
-        '''
+        """
         MedlineCitation
 
         PMID
@@ -195,7 +200,7 @@ def test():
         History
         PublicationStatus
         ArticleIdList
-        '''
+        """
 
         # Find and explore the MedlineCitation element
         medline_citation = pubmed_article.find("MedlineCitation/PMID")
@@ -219,11 +224,7 @@ def test_2():
     base_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/"
 
     # Define the parameters for the query
-    params = {
-        "db": "pubmed",
-        "id": pubmed_id,
-        "retmode": "xml"
-    }
+    params = {"db": "pubmed", "id": pubmed_id, "retmode": "xml"}
 
     # Make the request
     response = requests.get(base_url + "efetch.fcgi", params=params)
@@ -244,7 +245,10 @@ def test_2():
             if mesh_heading_list is not None:
                 for mesh_heading in mesh_heading_list.findall("MeshHeading"):
                     descriptor_name = mesh_heading.find("DescriptorName")
-                    if descriptor_name is not None and 'Organism' in descriptor_name.attrib.get('MajorTopicYN', ''):
+                    if (
+                        descriptor_name is not None
+                        and "Organism" in descriptor_name.attrib.get("MajorTopicYN", "")
+                    ):
                         print(f"Organism Classification: {descriptor_name.text}")
                     elif descriptor_name is not None:
                         print(f"Descriptor: {descriptor_name.text}")
@@ -259,17 +263,14 @@ def test_2():
 def test_3():
     import requests
     import xml.etree.ElementTree as ET
+
     # Define the PubMed ID you want to fetch
     pubmed_id = "NCBI:txid9606"
     # Define the base URL for the E-utilities API
     base_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/"
 
     # Define the parameters for the query
-    params = {
-        "db": "pubmed",
-        "id": pubmed_id,
-        "retmode": "xml"
-    }
+    params = {"db": "pubmed", "id": pubmed_id, "retmode": "xml"}
 
     # Make the request
     response = requests.get(base_url + "efetch.fcgi", params=params)
@@ -304,11 +305,7 @@ def get_organism(tax_id):
     base_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi"
 
     # Define the parameters for the query
-    params = {
-        "db": "taxonomy",
-        "id": tax_id,
-        "retmode": "json"
-    }
+    params = {"db": "taxonomy", "id": tax_id, "retmode": "json"}
 
     # Make the request
     response = requests.get(base_url, params=params)
@@ -324,7 +321,7 @@ def get_organism(tax_id):
 
 
 def get_image_acquisition():
-    '''
+    """
     import requests
 
     # Define the term ID
@@ -344,7 +341,7 @@ def get_image_acquisition():
         print(data)
     else:
         print(f"Error: {response.status_code}")
-     '''
+    """
     import requests
 
     # Define the term ID
@@ -373,6 +370,7 @@ def list_files_pathlib(p, files_list):
     count += 1
     ignore_list = [".git", ".venv"]
     from pathlib import Path
+
     for entry in p.iterdir():
         print("processing: %s , %s " % (count, entry))
         if entry.is_file():
@@ -390,9 +388,11 @@ def list_files_pathlib(p, files_list):
 
 def read_files(ome_path):
     from pathlib import Path
+
     p = Path(ome_path)
     for child in p.iterdir():
         print(child)
+
 
 def get_the_actual_data(part_to_remove):
     json_list = []
@@ -429,6 +429,7 @@ def get_the_actual_data(part_to_remove):
 
 def copy_csv_files():
     import shutil
+
     # shutil.copyfile('/path/to/file', '/path/to/new/file')
     target = "/mnt/d/projects/forks/ome2024-ngff-challenge-metadata/utils/csvs"
     with open("csv.csv", "r") as text_file:
@@ -442,15 +443,17 @@ def copy_csv_files():
 
 def get_files():
     import datetime
+
     print(datetime.datetime.now())
     from pathlib import Path
+
     files_list = {"json": [], "csv": []}
-    p = Path('/mnt/d/projects/forks/ome2024-ngff-challenge-metadata')
+    p = Path("/mnt/d/projects/forks/ome2024-ngff-challenge-metadata")
     list_files_pathlib(p, files_list)
     print(len(files_list["json"]))
     print(len(files_list["csv"]))
-    json_string = '\n'.join(files_list["json"])
-    csv_string = '\n'.join(files_list["csv"])
+    json_string = "\n".join(files_list["json"])
+    csv_string = "\n".join(files_list["csv"])
     with open("json.csv", "w") as text_file:
         text_file.write(json_string)
 
@@ -480,7 +483,8 @@ def extract_meta_data(part_to_remove):
             error_list.append(crate_path)
             continue
         propreties = read_metadata_file(crate_path)
-        if 'datePublished' in propreties: del propreties['datePublished']
+        if "datePublished" in propreties:
+            del propreties["datePublished"]
 
         if len(propreties) > 0 and "organism" in propreties:
             org_to_be_extracted = propreties["organism"]
@@ -491,9 +495,17 @@ def extract_meta_data(part_to_remove):
             else:
                 tax_id = get_entity(org_to_be_extracted)
                 data = get_organism(tax_id)
-                if data and data.get("result") and data.get("result").get("%s" % tax_id):
-                    propreties["organism"] = data.get("result").get("%s" % tax_id).get("scientificname")
-                    tax_id_org[org_to_be_extracted] = data.get("result").get("%s" % tax_id).get("scientificname")
+                if (
+                    data
+                    and data.get("result")
+                    and data.get("result").get("%s" % tax_id)
+                ):
+                    propreties["organism"] = (
+                        data.get("result").get("%s" % tax_id).get("scientificname")
+                    )
+                    tax_id_org[org_to_be_extracted] = (
+                        data.get("result").get("%s" % tax_id).get("scientificname")
+                    )
                 else:
                     tax_id_org[org_to_be_extracted] = None
         # print ("=======================")
@@ -503,8 +515,8 @@ def extract_meta_data(part_to_remove):
 
     df_metadat = pd.DataFrame(meta_data)
     df_metadat.to_csv("metadata.csv", index=False)
-    with open("create_path_errors.csv", 'w', newline='') as output_file:
-        output_file.write('\n'.join(error_list))
+    with open("create_path_errors.csv", "w", newline="") as output_file:
+        output_file.write("\n".join(error_list))
 
 
 def uuid_to_int():
@@ -545,34 +557,88 @@ def create_searchengine_scsv_files(resources_list):
     search_engine_data_["jax"] = []
     search_engine_data_["NFDI4BIOIMAGE"] = []
     search_engine_data_["other"] = []
-    data_sources = {"NFDI4BIOIMAGE": 1, "jax": 2, "idr": 3, "bia": 4, "Webknossos": 5, "UniversityofMuenster": 6,
-                    "Crick": 7}
+    data_sources = {
+        "NFDI4BIOIMAGE": 1,
+        "jax": 2,
+        "idr": 3,
+        "bia": 4,
+        "Webknossos": 5,
+        "UniversityofMuenster": 6,
+        "Crick": 7,
+    }
     prjects = [
-        {"id": 1, "name": "NFDI4BIOIMAGE", "description": "ome2024-ngff-challenge from NFDI4BIOIMAGE",
-         "mapvalue_name": "", "mapvalue_value": "", "index": 0},
-        {"id": 2, "name": "jax", "description": "ome2024-ngff-challenge data from Jax lab",
-         "mapvalue_name": "", "mapvalue_value": "", "index": 0},
-        {"id": 3, "name": "idr", "description": "ome2024-ngff-challenge data from idr", "mapvalue_name": "",
-         "mapvalue_value": "", "index": 0},
-        {"id": 4, "name": "bia", "description": "ome2024-ngff-challenge from bia", "mapvalue_name": "",
-         "mapvalue_value": "", "index": 0},
-        {"id": 5, "name": "Webknossos", "description": "ome2024-ngff-challenge from Webknossos",
-         "mapvalue_name": "",
-         "mapvalue_value": "", "index": 0},
-        {"id": 6, "name": "UniversityofMuenster", "description": "ome2024-ngff-challenge from UniversityofMuenster",
-         "mapvalue_name": "",
-         "mapvalue_value": "", "index": 0},
-        {"id": 7, "name": "Crick", "description": "ome2024-ngff-challenge from Crick", "mapvalue_name": "",
-         "mapvalue_value": "", "index": 0},
+        {
+            "id": 1,
+            "name": "NFDI4BIOIMAGE",
+            "description": "ome2024-ngff-challenge from NFDI4BIOIMAGE",
+            "mapvalue_name": "",
+            "mapvalue_value": "",
+            "index": 0,
+        },
+        {
+            "id": 2,
+            "name": "jax",
+            "description": "ome2024-ngff-challenge data from Jax lab",
+            "mapvalue_name": "",
+            "mapvalue_value": "",
+            "index": 0,
+        },
+        {
+            "id": 3,
+            "name": "idr",
+            "description": "ome2024-ngff-challenge data from idr",
+            "mapvalue_name": "",
+            "mapvalue_value": "",
+            "index": 0,
+        },
+        {
+            "id": 4,
+            "name": "bia",
+            "description": "ome2024-ngff-challenge from bia",
+            "mapvalue_name": "",
+            "mapvalue_value": "",
+            "index": 0,
+        },
+        {
+            "id": 5,
+            "name": "Webknossos",
+            "description": "ome2024-ngff-challenge from Webknossos",
+            "mapvalue_name": "",
+            "mapvalue_value": "",
+            "index": 0,
+        },
+        {
+            "id": 6,
+            "name": "UniversityofMuenster",
+            "description": "ome2024-ngff-challenge from UniversityofMuenster",
+            "mapvalue_name": "",
+            "mapvalue_value": "",
+            "index": 0,
+        },
+        {
+            "id": 7,
+            "name": "Crick",
+            "description": "ome2024-ngff-challenge from Crick",
+            "mapvalue_name": "",
+            "mapvalue_value": "",
+            "index": 0,
+        },
     ]
 
     idr = 0
     NFDI4BIOIMAGE = 0
     jax = 0
     other = 0
-    cols = ["license", "organism", "image_acquisition", "ngff_id", "description", "name"]
+    cols = [
+        "license",
+        "organism",
+        "image_acquisition",
+        "ngff_id",
+        "description",
+        "name",
+    ]
     print("Loading the metadata .....")
-    metadata_df = pd.read_csv('metadata.csv')
+    metadata_df = pd.read_csv("metadata.csv")
     ccc = 0
     NoneType = type(None)
     for data_source, metadata in resources_list.items():
@@ -634,9 +700,11 @@ def create_searchengine_scsv_files(resources_list):
     df_project_metadat.to_csv("projects_ngff__metadata.csv", index=False)
 
 
-def get_file_name(url_, base_folder="/mnt/d/projects/forks/ome2024-ngff-challenge-metadata/utils/csvs"):
+def get_file_name(
+    url_, base_folder="/mnt/d/projects/forks/ome2024-ngff-challenge-metadata/utils/csvs"
+):
     if url_.endswith("/"):
-        url_ = url_[:len(url_) - 1]
+        url_ = url_[: len(url_) - 1]
     head, tail = os.path.split(url_)
     if base_folder:
         f_path = os.path.join(base_folder, tail)
@@ -659,6 +727,7 @@ def get_files_contents():
 
 def read_csv_files():
     from pathlib import Path
+
     resources_list = {}
     # contains sub files
     idr = "https://raw.githubusercontent.com/will-moore/ome2024-ngff-challenge/samples_viewer/samples/idr_samples.csv"
@@ -747,4 +816,3 @@ if __name__ == "__main__":
     extract_meta_data("path/to/ome2024-ngff-challenge-metadata/")
     resources_list = read_csv_files()
     create_searchengine_scsv_files(resources_list)
-
