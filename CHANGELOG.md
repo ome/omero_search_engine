@@ -1,4 +1,5 @@
-0.6.0 (March 2024):
+0.6.0 (Feb 2025):
+
 --------------------
 - Add description and extract current version [#105](https://github.com/ome/omero_search_engine/pull/105)
 - Modify unit test and validation [#63](https://github.com/ome/omero_search_engine/pull/63)
