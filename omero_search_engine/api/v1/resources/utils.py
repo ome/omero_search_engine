@@ -1151,6 +1151,7 @@ def search_resource_annotation_return_conatines_only(
         res = determine_search_results_(
             query, data_s, return_columns, return_containers
         )
+
         if type(res) is dict and len(res) > 0:
             if len(res) == 1 and res.get("Error"):
                 logging.info(
@@ -1160,9 +1161,15 @@ def search_resource_annotation_return_conatines_only(
             elif len(results) == 0:
                 results = res
             else:
+                search_omero_app.logger.info("Adding RESULTS FOUND FOR %s" % data_s)
                 results["results"]["results"] = (
                     results["results"]["results"] + res["results"]["results"]
                 )
+        else:
+            search_omero_app.logger.info(
+                "NP RESULTS FOUND ...............................>>>>>%s" % data_s
+            )
+
     return results
 
 
@@ -1401,6 +1408,12 @@ def adjust_query_for_container(query):
 
         for filter in new_or_filters:
             or_filters.append(filter)
+        tt = []
+        for o_f in or_filters:
+            if len(o_f) == 0:
+                tt.append(o_f)
+        for f in tt:
+            or_filters.remove(f)
 
 
 def get_data_sources():

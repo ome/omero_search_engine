@@ -227,7 +227,7 @@ def get_all_values_for_a_key(table_, data_source, key):
     try:
         res = search_index_for_value(res_index, query)
     except Exception as ex:
-        print("Query: %s Error: %s" % (query, str(ex)))
+        search_omero_app.logger.info("Query: %s Error: %s" % (query, str(ex)))
         raise ex
     number_of_buckets = (
         res.get("aggregations")
@@ -1170,8 +1170,6 @@ def get_containets_from_name(container_name=None, returned_data_source=None):
     act_names = []  # {}
     pr_names = get_resource_names("all")
     for resourse, names_ in pr_names.items():
-        if len(names_) > 0:
-            print(names_.keys())
         for data_source, names in names_.items():
             act_names_1 = [
                 {

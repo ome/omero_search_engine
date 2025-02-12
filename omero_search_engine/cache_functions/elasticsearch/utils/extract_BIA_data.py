@@ -8,6 +8,29 @@ import copy
 import csv
 import random
 
+
+def escape_string(string_to_check):
+    if type(string_to_check) is not str:
+        return string_to_check
+
+    sb = ""
+    for i in range(len(string_to_check)):
+        c = string_to_check[i]
+        # These characters are part of the data and should be removed
+        reserved_chars_ = ["'", '"', "*", "\\", "\n", "\r"]
+        if c in reserved_chars_:
+            if not sb:
+                sb = " "
+            else:
+                sb = sb + " "
+        else:
+            if not sb:
+                sb = c
+            else:
+                sb = sb + c
+    return sb
+
+
 # All the path and file names should be configured to the hosted platform
 bia_image_sample_json_file = "../data/bia-image-export.json"
 bia_study_sample_json_file = "../data/bia-study-metadata.json"
@@ -70,10 +93,12 @@ def extract_images_data():
         image["project_id"] = project_id_uuid[
             datasets_projects[imag.get("submission_dataset_uuid")]
         ]
-        image["project_name"] = projects_id_name[
-            datasets_projects[imag.get("submission_dataset_uuid")]
-        ]
-        image["dataset_name"] = dataset_names_id[imag.get("submission_dataset_uuid")]
+        image["project_name"] = escape_string(
+            projects_id_name[datasets_projects[imag.get("submission_dataset_uuid")]]
+        )
+        image["dataset_name"] = escape_string(
+            dataset_names_id[imag.get("submission_dataset_uuid")]
+        )
         image_ = copy.deepcopy(image)
         iamge_uid = copy.deepcopy(image_)
         images_data.append(iamge_uid)
@@ -97,9 +122,9 @@ def extract_images_data():
             image_org = copy.deepcopy(image_)
             images_data.append(image_org)
             image_org["mapvalue_name"] = "organism"
-            image_org["mapvalue_value"] = sample["organism_classification"][0][
-                "scientific_name"
-            ]
+            image_org["mapvalue_value"] = escape_string(
+                sample["organism_classification"][0]["scientific_name"]
+            )
             image_org["mapvalue_index"] = index
             if not keys:
                 keys = image_org.keys()
@@ -110,8 +135,8 @@ def extract_images_data():
                     values.append(key)
                 image_attr = copy.deepcopy(image_)
                 images_data.append(image_attr)
-                image_attr["mapvalue_name"] = key
-                image_attr["mapvalue_value"] = value
+                image_attr["mapvalue_name"] = escape_string(key)
+                image_attr["mapvalue_value"] = escape_string(value)
                 image_attr["mapvalue_index"] = 0
         index = 0
         # total_size_in_bytes
@@ -119,7 +144,7 @@ def extract_images_data():
             image_file = copy.deepcopy(image_)
             images_data.append(image_file)
             image_file["mapvalue_name"] = "image_format"
-            image_file["mapvalue_value"] = file_["image_format"]
+            image_file["mapvalue_value"] = escape_string(file_["image_format"])
             image_file["mapvalue_index"] = index
             image_file_ = copy.deepcopy(image_)
             images_data.append(image_file_)
@@ -143,32 +168,48 @@ def extract_projects_data():
         project = {}
         project["id"] = uuid_to_int(study.get("uuid"))
         project_id_uuid[study.get("uuid")] = project["id"]
-        project["name"] = study.get("title")
+        project["name"] = escape_string(study.get("title"))
         projects_id_name[study.get("uuid")] = study.get("title")
-        project["description"] = study.get("description")
+        project["description"] = escape_string(study.get("description"))
         project_ = copy.deepcopy(project)
         # projects_data.append(project)
         if study.get("Title"):
             Project_title = copy.deepcopy(project_)
             projects_data.append(Project_title)
             Project_title["mapvalue_name"] = "Title"
-            Project_title["mapvalue_value"] = study.get("Title")
+            Project_title["mapvalue_value"] = escape_string(study.get("Title"))
             Project_title["mapvalue_index"] = 0
         for name in projects_keyvalues:
             if study.get(name):
                 project__ = copy.deepcopy(project_)
                 projects_data.append(project__)
                 project__["mapvalue_name"] = name
-                project__["mapvalue_value"] = study.get(name)
+                project__["mapvalue_value"] = escape_string(study.get(name))
                 project__["mapvalue_index"] = 0
         index = 0
+        if study.get("experimental_imaging_component"):
+            for entity_ in study.get("experimental_imaging_component"):
+                entities = entity_.get("biological_entity")
+                if entities:
+                    for entity in entities:
+                        if entity.get("organism_classification"):
+                            for enti in entity.get("organism_classification"):
+                                if not enti:
+                                    continue
+                                organism = enti.get("scientific_name")
+                                project__o = copy.deepcopy(project_)
+                                projects_data.append(project__o)
+                                project__o["mapvalue_name"] = "organism"
+                                project__o["mapvalue_value"] = escape_string(organism)
+                                project__o["mapvalue_index"] = 0
+
         if study.get("Author"):
             for author in study.get("Author"):
                 index = index + 1
                 project__ = copy.deepcopy(project_)
                 projects_data.append(project__)
                 project__["mapvalue_name"] = "author_name"
-                project__["mapvalue_value"] = author.get("name")
+                project__["mapvalue_value"] = escape_string(author.get("name"))
                 project__["mapvalue_index"] = index
                 project___ = copy.deepcopy(project_)
                 projects_data.append(project___)

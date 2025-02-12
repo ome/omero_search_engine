@@ -183,6 +183,11 @@ def extract_projects_data():
                         and name.lower() == "organism"
                     ):
                         project__["mapvalue_value"] = "mus musculus"
+                    elif (
+                        row.get(name).lower() == "drosophila"
+                        and name.lower() == "organism"
+                    ):
+                        project__["mapvalue_value"] = "Drosophila melanogaster"
                     else:
                         project__["mapvalue_value"] = row.get(name)
                     if name.lower() == "organism":
@@ -191,6 +196,9 @@ def extract_projects_data():
                     else:
                         project__["mapvalue_index"] = 0
                     added_key_value.append(project__)
+
+
+#
 
 
 def extract_images_data():
@@ -271,6 +279,11 @@ def extract_images_data():
                         and name.lower() == "organism"
                     ):
                         iamge_name_["mapvalue_value"] = "mus musculus"
+                    elif (
+                        row.get(name).lower() == "drosophila"
+                        and name.lower() == "organism"
+                    ):
+                        iamge_name_["mapvalue_value"] = "Drosophila melanogaster"
                     else:
                         iamge_name_["mapvalue_value"] = row.get(name)
 

@@ -270,7 +270,7 @@ class QueryRunner(
                 elif len(main_or_attribute_.keys()) == 0 and len(checked_list) == len(
                     or_it.resources_query
                 ):
-                    return {"Error": "Your query returns no results"}
+                    return {"Error": "4. Your query returns no results"}
             for res, items_ in main_or_attribute_.items():
                 if res not in main_or_attribute:
                     main_or_attribute[res] = items_
@@ -312,7 +312,7 @@ class QueryRunner(
                         if len(main_or_attribute_.keys()) == 0 and len(
                             checked_list
                         ) == len(or_it.resources_query):
-                            return {"Error": "Your query returns no results"}
+                            return {"Error": "5. Your query returns no results"}
             for res, items_ in main_or_attribute_.items():
                 if res not in main_or_attribute:
                     main_or_attribute[res] = items_
@@ -320,13 +320,15 @@ class QueryRunner(
                     main_or_attribute[res] = combine_conds(
                         main_or_attribute[res], items_, res
                     )
-
         if len(self.or_query_group) > 0 and len(image_or_queries) == 0:
             no_conds = 0
             for res, item in main_or_attribute.items():
                 no_conds += len(item)
             if no_conds == 0:
-                return {"Error": "Your query returns no results"}
+                return {
+                    "Error": "6. Your query returns no results for %s"
+                    % self.data_source
+                }
         # check and main attributes
         for and_it in self.and_query_group:
             for resource, main in and_it.main_attribute.items():
@@ -338,11 +340,11 @@ class QueryRunner(
                     if not main_and_attribute.get(resource):
                         main_and_attribute[resource] = new_cond
                     else:
-                        main_and_attribute[resource] = combine_conds(
+                        main_and_attribute[resource] = combine_and_conds(
                             main_and_attribute[resource], new_cond, resource
                         )
                 else:
-                    return {"Error": "Your query returns no results"}
+                    return {"Error": "1. Your query returns no results"}
 
         # check and_filters
         for and_it in self.and_query_group:
@@ -360,15 +362,15 @@ class QueryRunner(
                         if not main_and_attribute.get(resource):
                             main_and_attribute[resource] = new_cond
                         else:
-                            main_and_attribute[resource] = combine_conds(
+                            main_and_attribute[resource] = combine_and_conds(
                                 main_and_attribute[resource], new_cond, resource
                             )
                     else:
-                        return {"Error": "Your query returns no results"}
+                        return {"Error": "2. Your query returns no results"}
 
         for res, main_list in main_and_attribute.items():
             if res in main_or_attribute:
-                m_list = combine_conds(main_list, main_or_attribute[res], res)
+                m_list = combine_and_conds(main_list, main_or_attribute[res], res)
                 main_or_attribute[res] = m_list
             else:
                 main_or_attribute[res] = main_list
@@ -384,7 +386,6 @@ class QueryRunner(
     def run_query(self, query_, resource):
         main_attributes = {}
         query = {"and_filters": [], "or_filters": []}
-
         if query_.get("and_filters"):
             for qu in query_.get("and_filters"):
                 if isinstance(qu, list):
@@ -571,7 +572,22 @@ def search_query(
         }
 
 
+def combine_and_conds(curnt_cond, new_cond, resource):
+    returned_cond = []
+    cons = []
+    for c_cond in curnt_cond:
+        cons.append(c_cond.value)
+        returned_cond.append(c_cond)
+    for cond in new_cond:
+        if cond.value not in cons:
+            returned_cond.append(cond)
+    return returned_cond
+
+
 def combine_conds(curnt_cond, new_cond, resource):
+    if resource == "project" or resource == "screen":
+        return combine_and_conds(curnt_cond, new_cond, resource)
+
     returned_cond = []
     cons = []
     for c_cond in curnt_cond:
@@ -579,7 +595,6 @@ def combine_conds(curnt_cond, new_cond, resource):
     for cond in new_cond:
         if cond.value in cons:
             returned_cond.append(cond)
-
     return returned_cond
 
 
@@ -610,7 +625,7 @@ def process_search_results(results, resource, columns_def):
     returned_results = {}
 
     if not results.get("results") or len(results["results"]) == 0:
-        returned_results["Error"] = "Your query returns no results"
+        returned_results["Error"] = "3. Your query returns no results"
         return returned_results
     cols = []
     values = []
@@ -714,7 +729,6 @@ def determine_search_results_(
     from omero_search_engine.api.v1.resources.utils import build_error_message
 
     reset_global_values()
-
     if query_.get("query_details"):
         case_sensitive = query_.get("query_details").get("case_sensitive")
     else:
@@ -780,8 +794,9 @@ def determine_search_results_(
             if isinstance(filters_, list):
                 for filter in filters_:
                     q_item = QueryItem(filter, data_source)
-                    if q_item.query_type == "main_attribute" and (
-                        filter["name"] == "description"
+                    if (
+                        q_item.query_type == "main_attribute"
+                        and filter["name"] == "description"
                     ):
                         return build_error_message(
                             "This release does not support search by description."

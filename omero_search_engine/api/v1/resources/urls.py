@@ -364,13 +364,16 @@ def submit_query_return_containers():
     """
     file: swagger_docs/submitquery_returncontainers.yml
     """
-    try:
-        query = json.loads(request.data)
-    except Exception:
-        print("error reading the query")
-        query = None
-    if not query:
+    query = request.data
+    if not query or len(query.decode().strip()) == 0:
         query = {}
+    else:
+        try:
+            query = json.loads(query)
+        except Exception:
+            query_error = "query parsing error: %s" % query
+            return jsonify(build_error_message(query_error))
+
         # return jsonify(build_error_message("No query is provided"))
     if len(query) > 0:
         adjust_query_for_container(query)

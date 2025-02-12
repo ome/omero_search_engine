@@ -784,6 +784,7 @@ def save_key_value_buckets(
         no_processors = search_omero_app.config.get("NO_PROCESSES")
         if not no_processors:
             no_processors = int(multiprocessing.cpu_count() / 2)
+        no_processors = 1
         search_omero_app.logger.info(
             "No of the allowed parallel processes: %s" % no_processors
         )
@@ -805,6 +806,7 @@ def save_key_value_buckets_process(lock, global_counter, vals):
     inside the multiprocessing Pool
     """
     key = vals[0]
+    search_omero_app.logger.info("===>>>Processing key '%s' ?" % key)
     resource_table = vals[1]
     es_index = vals[2]
     total = vals[3]
