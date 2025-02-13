@@ -47,6 +47,16 @@ parameters:
     in: query
     type: string
     required: true
+  - name: data_source
+    in: query
+    type: string
+    required: false
+    description: If it is provided, it will return the search results for a specific data source, otherwise it will return the results from all the data sources
+  - name: data_source
+    in: query
+    type: string
+    required: false
+    description: If it is provided, it will return the search results for a specific data source, otherwise it will return the results from all the data sources
   - name: csv
     description: a flag to return a CSV file which is created on the fly instead of JSON
     in: query
