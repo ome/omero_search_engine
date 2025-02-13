@@ -317,7 +317,7 @@ class QueryRunner(
                 if res not in main_or_attribute:
                     main_or_attribute[res] = items_
                 else:
-                    main_or_attribute[res] = combine_conds(
+                    main_or_attribute[res] = combine_add_conds(
                         main_or_attribute[res], items_, res
                     )
         if len(self.or_query_group) > 0 and len(image_or_queries) == 0:
@@ -340,7 +340,7 @@ class QueryRunner(
                     if not main_and_attribute.get(resource):
                         main_and_attribute[resource] = new_cond
                     else:
-                        main_and_attribute[resource] = combine_and_conds(
+                        main_and_attribute[resource] = combine_add_conds(
                             main_and_attribute[resource], new_cond, resource
                         )
                 else:
@@ -362,7 +362,7 @@ class QueryRunner(
                         if not main_and_attribute.get(resource):
                             main_and_attribute[resource] = new_cond
                         else:
-                            main_and_attribute[resource] = combine_and_conds(
+                            main_and_attribute[resource] = combine_add_conds(
                                 main_and_attribute[resource], new_cond, resource
                             )
                     else:
@@ -370,7 +370,7 @@ class QueryRunner(
 
         for res, main_list in main_and_attribute.items():
             if res in main_or_attribute:
-                m_list = combine_and_conds(main_list, main_or_attribute[res], res)
+                m_list = combine_add_conds(main_list, main_or_attribute[res], res)
                 main_or_attribute[res] = m_list
             else:
                 main_or_attribute[res] = main_list
@@ -572,7 +572,7 @@ def search_query(
         }
 
 
-def combine_and_conds(curnt_cond, new_cond, resource):
+def combine_add_conds(curnt_cond, new_cond, resource):
     returned_cond = []
     cons = []
     for c_cond in curnt_cond:
@@ -585,9 +585,6 @@ def combine_and_conds(curnt_cond, new_cond, resource):
 
 
 def combine_conds(curnt_cond, new_cond, resource):
-    if resource == "project" or resource == "screen":
-        return combine_and_conds(curnt_cond, new_cond, resource)
-
     returned_cond = []
     cons = []
     for c_cond in curnt_cond:

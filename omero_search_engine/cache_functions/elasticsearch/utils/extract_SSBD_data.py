@@ -112,6 +112,16 @@ projects_data = []
 no_image_found_jsom = []
 
 
+def is_added_before_2(id, key_, value_, added_key_value):
+    added_before = False
+    if added_key_value.get(id):
+        for item in added_key_value.get(id):
+            if item["mapvalue_name"] == key_ and item["mapvalue_value"] == value_:
+                added_before = True
+                break
+    return added_before
+
+
 def is_added_before(id, key_, value_, added_key_value):
     added_before = False
     for item in added_key_value:
@@ -125,6 +135,18 @@ def is_added_before(id, key_, value_, added_key_value):
                 or (
                     item["mapvalue_value"].lower() == "mus musculus"
                     and value_.lower() == "m. musculus"
+                )
+                or (
+                    item["mapvalue_value"].lower() == "hela"
+                    and value_.lower() == "hell cell"
+                )
+                or (
+                    item["mapvalue_value"].lower() == "protein name"
+                    and value_.lower() == "protein names"
+                )
+                or (
+                    item["mapvalue_value"].lower() == "gene symbol"
+                    and value_.lower() == "gene symbol"
                 )
             ):
                 added_before = True
@@ -169,7 +191,6 @@ def extract_projects_data():
                         project["id"], name, row.get(name), added_key_value
                     ):
                         continue
-
                     project__ = copy.deepcopy(project_)
                     projects_data.append(project__)
                     project__["mapvalue_name"] = name
@@ -198,10 +219,26 @@ def extract_projects_data():
                     added_key_value.append(project__)
 
 
-#
+def conver_keyvalue(name, value):
+    new_value = value
+    new_name = name
+    if name == "Gene symbols":
+        new_name = "Gene symbol"
+    elif name == "Protein names":
+        new_name = "Protein name"
+    if value == "h. sapiens" and new_name.lower() == "organism":
+        new_value = "Homo sapiens"
+    elif value.lower() == "hell cell" and name.lower() == "cell line":
+        new_value = "hela"
+    elif value.lower() == "m. musculus" and new_name.lower() == "organism":
+        new_value = "mus musculus"
+    elif value.lower() == "drosophila" and new_name.lower() == "organism":
+        new_value = "Drosophila melanogaster"
+    return new_name, new_value
 
 
 def extract_images_data():
+    added_key_value = {}
     files_counter = 0
     for index, row in df.iterrows():
         if not row.get("SSBD:OMERO Dataset ID"):
@@ -253,39 +290,30 @@ def extract_images_data():
             dataset_url["mapvalue_index"] = 0
             for name in images_key_values:
                 if row.get(name):
-                    iamge_name = copy.deepcopy(iamge_name_)
-                    images_data.append(iamge_name)
-                    iamge_name_ = copy.deepcopy(image)
-                    """   "Gene symbols",
-                          "Protein names","""
-                    if name == "Gene symbols":
-                        iamge_name_["mapvalue_name"] = "Gene symbol"
-                    elif name == "Protein names":
-                        iamge_name_["mapvalue_name"] = "Protein name"
-                    else:
-                        iamge_name_["mapvalue_name"] = name
-                    if (
-                        row.get(name).lower() == "h. sapiens"
-                        and name.lower() == "organism"
-                    ):
-                        iamge_name_["mapvalue_value"] = "Homo sapiens"
-                    elif (
-                        row.get(name).lower() == "hell cell"
-                        and name.lower() == "cell line"
-                    ):
-                        iamge_name_["mapvalue_value"] = "hela"
-                    elif (
-                        row.get(name).lower() == "m. musculus"
-                        and name.lower() == "organism"
-                    ):
-                        iamge_name_["mapvalue_value"] = "mus musculus"
-                    elif (
-                        row.get(name).lower() == "drosophila"
-                        and name.lower() == "organism"
-                    ):
-                        iamge_name_["mapvalue_value"] = "Drosophila melanogaster"
-                    else:
-                        iamge_name_["mapvalue_value"] = row.get(name)
+                    new_name, new_value = conver_keyvalue(name, row.get(name))
+                    if row.get(name):
+                        if is_added_before_2(
+                            image["id"], new_name, new_value, added_key_value
+                        ):
+                            continue
+                        iamge_name = copy.deepcopy(iamge_name_)
+                        images_data.append(iamge_name)
+                        iamge_name_ = copy.deepcopy(image)
+                        """   "Gene symbols",
+                              "Protein names","""
+
+                        iamge_name_["mapvalue_name"] = new_name
+                        iamge_name_["mapvalue_value"] = new_value
+                        if not added_key_value.get(int(iamge_name["id"])):
+                            added_key_value[int(iamge_name["id"])] = [
+                                {"mapvalue_name": new_name, "mapvalue_value": new_value}
+                            ]
+                        else:
+                            added_key_value[int(iamge_name["id"])] = added_key_value[
+                                int(iamge_name["id"])
+                            ].append(
+                                {"mapvalue_name": new_name, "mapvalue_value": new_value}
+                            )
 
 
 projects_filename = "../data/ssbd_images/ssbd_projects.csv"
@@ -294,12 +322,12 @@ links_filename = "../data/ssbd_images/ssbd_links_error.csv"
 
 download_datasets_images()
 extract_projects_data()
-# extract_images_data()
+extract_images_data()
 
 
-# df_image = pd.DataFrame(images_data)
-# df_image.to_csv(images_filename, index=False)
-
+df_image = pd.DataFrame(images_data)
+df_image.to_csv(images_filename, index=False)
+print("===>>>", len(images_data))
 projects_keys = [
     "id",
     "name",
@@ -324,3 +352,5 @@ print(len(df.index))
 
 print(list_854)
 print(len(list_854))
+
+# 5089

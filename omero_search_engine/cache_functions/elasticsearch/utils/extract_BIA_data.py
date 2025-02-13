@@ -16,8 +16,8 @@ def escape_string(string_to_check):
     sb = ""
     for i in range(len(string_to_check)):
         c = string_to_check[i]
-        # These characters are part of the data and should be removed
-        reserved_chars_ = ["'", '"', "*", "\\", "\n", "\r"]
+        # These characters are part of the query syntax and must be escaped
+        reserved_chars_ = ["|", "!", "'", '"', "*", "\\", "\n", "\r"]
         if c in reserved_chars_:
             if not sb:
                 sb = " "
@@ -82,6 +82,7 @@ def extract_dataset_projects():
 
 def extract_images_data():
     global keys
+    added_key_value = []
     for st, imag in images.items():
         image = {}
         images_data.append(image)
@@ -119,6 +120,13 @@ def extract_images_data():
         iamge_dataset_uid["mapvalue_index"] = 0
         index = 0
         for sample in imag["subject"]["sample_of"]:
+            if is_added_before(
+                image["id"],
+                "organism",
+                escape_string(sample["organism_classification"][0]["scientific_name"]),
+                added_key_value,
+            ):
+                continue
             image_org = copy.deepcopy(image_)
             images_data.append(image_org)
             image_org["mapvalue_name"] = "organism"
@@ -126,10 +134,16 @@ def extract_images_data():
                 sample["organism_classification"][0]["scientific_name"]
             )
             image_org["mapvalue_index"] = index
+            added_key_value.append(image_org)
             if not keys:
                 keys = image_org.keys()
             index = index + 1
         for key, value in imag["attribute"].items():
+            if is_added_before(
+                image_["id"], escape_string(key), escape_string(value), added_key_value
+            ):
+                continue
+
             if type(value) is str:
                 if key not in values:
                     values.append(key)
@@ -138,6 +152,7 @@ def extract_images_data():
                 image_attr["mapvalue_name"] = escape_string(key)
                 image_attr["mapvalue_value"] = escape_string(value)
                 image_attr["mapvalue_index"] = 0
+                added_key_value.append(image_attr)
         index = 0
         # total_size_in_bytes
         for file_ in imag["representation"]:
@@ -163,7 +178,28 @@ def extract_images_data():
             index = index + 1
 
 
+def is_added_before(id, key_, value_, added_key_value):
+    added_before = False
+    for item in added_key_value:
+        if int(item["id"]) == int(id) and item["mapvalue_name"].lower() == key_.lower():
+            if (
+                item["mapvalue_value"].lower().strip() == value_.lower()
+                or (
+                    item["mapvalue_value"].lower() == "homo sapiens"
+                    and value_.lower() == "h. sapiens"
+                )
+                or (
+                    item["mapvalue_value"].lower() == "mus musculus"
+                    and value_.lower() == "m. musculus"
+                )
+            ):
+                added_before = True
+                break
+    return added_before
+
+
 def extract_projects_data():
+    added_key_value = []
     for st, study in studies.items():
         project = {}
         project["id"] = uuid_to_int(study.get("uuid"))
@@ -197,11 +233,16 @@ def extract_projects_data():
                                 if not enti:
                                     continue
                                 organism = enti.get("scientific_name")
+                                if is_added_before(
+                                    project["id"], "organism", organism, added_key_value
+                                ):
+                                    continue
                                 project__o = copy.deepcopy(project_)
                                 projects_data.append(project__o)
                                 project__o["mapvalue_name"] = "organism"
                                 project__o["mapvalue_value"] = escape_string(organism)
                                 project__o["mapvalue_index"] = 0
+                                added_key_value.append(project__o)
 
         if study.get("Author"):
             for author in study.get("Author"):
