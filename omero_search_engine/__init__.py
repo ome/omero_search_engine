@@ -23,6 +23,7 @@ import logging
 from elasticsearch import Elasticsearch
 from flasgger import Swagger, LazyString, LazyJSONEncoder
 from omero_search_engine.database.database_connector import DatabaseConnector
+from omero_search_engine.__version__ import __version__
 from configurations.configuration import (
     configLooader,
     load_configuration_variables_from_file,
@@ -47,11 +48,18 @@ search_omero_app = Flask(__name__)
 
 search_omero_app.json_encoder = LazyJSONEncoder
 
-
 search_omero_app.config["SWAGGER"] = {
     "title": "OMERO Search Engine API",
-    "version": "0.2.0",
+    "version": str(__version__),
+    "description": LazyString(
+        lambda: "OMERO search engine app is used to search metadata"
+        " (key-value pairs).\n"
+        "For additional details, please refer to the following link:\n"
+        "https://github.com/ome/omero_search_engine/blob/main/README.rst"
+    ),
+    "termsOfService": "https://github.com/ome/omero_search_engine/blob/main/LICENSE.txt",  # noqa
 }
+
 
 swagger = Swagger(search_omero_app, template=template)
 
