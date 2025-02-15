@@ -389,6 +389,37 @@ def search(resource_table):
     return jsonify(results)
 
 
+@resources.route("/<resource_table>/container_filterkeyvalues/", methods=["POST"])
+def container_key_values_filter(resource_table):
+    """
+    file: swagger_docs/container_filterkeyvalues.yml
+    """
+    from omero_search_engine.api.v1.resources.resource_analyser import (
+        get_container_values_for_key,
+    )
+
+    key = request.args.get("key")
+    container_name = request.args.get("container_name")
+    if not container_name or not key:
+        return build_error_message("Container name and key are required")
+
+    data = request.data
+    try:
+        query = json.loads(data)
+    except Exception:
+        return jsonify(
+            build_error_message(
+                "{error}".format(error="No proper query data is provided ")
+            )
+        )
+    validation_results = query_validator(query)
+    if validation_results != "OK":
+        return jsonify(build_error_message(validation_results))
+    return get_container_values_for_key(
+        resource_table, container_name, None, key, query
+    )
+
+
 @resources.route("/<resource_table>/container_keyvalues/", methods=["GET"])
 def container_key_values_search(resource_table):
     """
@@ -433,3 +464,46 @@ def container_keys_search(resource_table):
             csv = False
     results = get_container_values_for_key(resource_table, container_name, csv)
     return results
+
+
+@resources.route("/container_images/", methods=["GET"])
+def container_images():
+    """
+    file: swagger_docs/container_images.yml
+    """
+    from omero_search_engine.api.v1.resources.resource_analyser import (
+        return_containes_images,
+    )
+
+    return return_containes_images()
+
+
+# to do: add query to return the results withiz the sub-container
+@resources.route("/sub_container_images/", methods=["POST"])
+def sub_container_images():
+    """
+    file: swagger_docs/sub_container_images.yml
+    """
+    from omero_search_engine.api.v1.resources.resource_analyser import (
+        get_containers_no_images,
+    )
+
+    container_name = request.args.get("container_name")
+    if not container_name:
+        return jsonify(
+            build_error_message("{error}".format(error="Container name is required."))
+        )
+    data = request.data
+    query = {}
+    if data:
+        try:
+            data = json.loads(data)
+        except Exception:
+            return jsonify(
+                build_error_message(
+                    "{error}".format(error="No proper query data is provided.")
+                )
+            )
+        if "query_details" in data:
+            query = data["query_details"]
+    return get_containers_no_images(container_name, query)

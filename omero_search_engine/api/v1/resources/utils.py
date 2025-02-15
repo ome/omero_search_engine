@@ -1040,8 +1040,13 @@ def search_resource_annotation(
                 return query_string
 
             search_omero_app.logger.info("Query %s" % query_string)
-            query = json.loads(query_string, strict=False)
-            raw_query_to_send_back = json.loads(query_string, strict=False)
+            from ast import literal_eval
+
+            try:
+                query = literal_eval(query_string)
+                raw_query_to_send_back = literal_eval(query_string)
+            except Exception as ex:
+                raise Exception("Failed to load the query, error: %s" % str(ex))
         else:
             query = raw_elasticsearch_query
             raw_query_to_send_back = copy.copy(raw_elasticsearch_query)

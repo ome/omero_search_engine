@@ -802,23 +802,33 @@ def get_the_results(resource, name, description, es_index="key_values_resource_c
     return returned_results
 
 
-def get_container_values_for_key(table_, container_name, csv, key=None):
-    returned_results = []
+def get_containets_from_name(container_name):
+    act_names = {}
     pr_names = get_resource_names("all")
     for resourse, names in pr_names.items():
-        act_name = [
+        act_names[resourse] = [
             {"id": name["id"], "name": name["name"]}
             for name in names
             if name["name"] and container_name.lower() in name["name"].lower()
         ]
+
+    return act_names
+
+
+def get_container_values_for_key(table_, container_name, csv, key=None, query=None):
+    returned_results = []
+    act_names = get_containets_from_name(container_name)
+    for resourse, act_name in act_names.items():
         if len(act_name) > 0:
             for id in act_name:
                 if resourse != table_:
                     res = process_container_query(
-                        table_, resourse + "_id", id["id"], key, table_
+                        table_, resourse + "_id", id["id"], key, table_, query
                     )
                 else:
-                    res = process_container_query(table_, "id", id["id"], key, table_)
+                    res = process_container_query(
+                        table_, "id", id["id"], key, table_, query
+                    )
                 if len(res) > 0:
                     returned_results.append(
                         {"name": id["name"], "type": resourse, "results": res}
@@ -865,7 +875,9 @@ def get_container_values_for_key(table_, container_name, csv, key=None):
     return jsonify(returned_results)
 
 
-def process_container_query(table_, attribute_name, container_id, key, resourse):
+def process_container_query(
+    table_, attribute_name, container_id, key, resourse, query=None
+):
     from omero_search_engine.api.v1.resources.utils import elasticsearch_query_builder
 
     res_index = resource_elasticsearchindex.get(table_)
@@ -874,7 +886,15 @@ def process_container_query(table_, attribute_name, container_id, key, resourse)
             {"name": attribute_name, "value": container_id, "operator": "equals"}
         ]
     }
-    query_ = elasticsearch_query_builder([], [], False, main_attributes=main_attributes)
+    if query:
+        and_filter = query.get("query_details").get("and_filters")
+        or_filters = query.get("query_details").get("or_filters")
+    else:
+        and_filter = []
+        or_filters = []
+    query_ = elasticsearch_query_builder(
+        and_filter, or_filters, False, main_attributes=main_attributes
+    )
     query = json.loads(query_)
     if key:
         query["aggs"] = json.loads(
@@ -914,7 +934,6 @@ container_project_values_key_template = Template(
    {"terms": {"field": "key_values.value.keyvalue","size": 10000}}}}}}}"""
 )
 
-
 """
 Get all the keys bucket"""
 container_project_keys_template = {
@@ -933,3 +952,127 @@ container_project_keys_template = {
         },
     }
 }
+
+
+# Return sub container using a container attribute
+# for example get the no of  sub  containers e.g. datasets names,
+# inside a container, e.g. project using name.
+container_returned_sub_container_template = Template(
+    """
+         {
+      "values":{
+            "filter":{"terms":{"$container_attribute_name":["$container_attribute_value"]}},
+            "aggs":{
+               "required_values":{
+                  "cardinality":{
+                     "field":"$returned_sub_container",
+                     "precision_threshold":4000
+                  }
+               },
+               "uniquesTerms":{
+                  "terms":{
+                     "field":"$returned_sub_container",
+                     "size":10000
+                  }
+               }
+            }
+      }
+   }
+"""
+)
+
+
+containers_no_images = Template(
+    """{
+   "aggs":{
+      "required_values":{
+         "cardinality":{
+            "field":"$conatins_name.keyvalue",
+            "precision_threshold":4000
+         }
+      },
+      "uniquesTerms":{
+         "terms":{
+            "field":"$conatins_name.keyvalue",
+            "size":10000
+         }
+      }
+   }
+}
+"""
+)
+
+
+def get_containers_no_images(container_name, query_details=None):
+    contianer = None
+    containers_subcontainers = {"project": "dataset", "screen": "plate"}
+    act_names = get_containets_from_name(container_name)
+    for res, item in act_names.items():
+        print(res, item)
+        if len(item) == 0:
+            continue
+        elif len(item) == 1:
+            print(res)
+            contianer = res
+            container_name = item[0]["name"]
+    if not contianer:
+        return "Container %s is not found" % container_name
+    if contianer.lower() in containers_subcontainers:
+        sub_container = containers_subcontainers[contianer.lower()]
+    else:
+        return "Container %s is not supported" % contianer
+    res_index = resource_elasticsearchindex.get("image")
+    aggs_part = container_returned_sub_container_template.substitute(
+        container_attribute_name="%s_name.keyvalue" % contianer,
+        container_attribute_value="%s" % container_name,
+        returned_sub_container="%s_name.keyvalue" % sub_container,
+    )
+    if not query_details:
+        query = {}
+    else:
+        and_filters = query_details.get("and_filters")
+        or_filters = query_details.get("or_filters")
+        case_sensitive = query_details.get("case_sensitive")
+        main_attributes = query_details.get("main_attributes")
+        from omero_search_engine.api.v1.resources.utils import (
+            elasticsearch_query_builder,
+        )
+
+        query_string = elasticsearch_query_builder(
+            and_filters, or_filters, case_sensitive, main_attributes
+        )
+        query = json.loads(query_string)
+        # query builder should be called
+
+    query["aggs"] = json.loads(aggs_part)
+    res = search_index_for_value(res_index, query)
+    buckets = res["aggregations"]["values"]["uniquesTerms"]["buckets"]
+    returned_results = []
+    for bucket in buckets:
+        returned_results.append(
+            {"no_images": bucket["doc_count"], "%s_name" % sub_container: bucket["key"]}
+        )
+    return jsonify(returned_results)
+
+
+def return_containes_images():
+    screens_query = containers_no_images.substitute(conatins_name="screen_name")
+    projects_query = containers_no_images.substitute(conatins_name="project_name")
+    res_index = resource_elasticsearchindex.get("image")
+    screens = search_index_for_value(res_index, screens_query)
+    projects = search_index_for_value(res_index, projects_query)
+    projects = projects["aggregations"]["uniquesTerms"]["buckets"]
+    screens = screens["aggregations"]["uniquesTerms"]["buckets"]
+    results = {}
+    results["projects"] = projects
+    results["screens"] = screens
+    returned_results = {}
+
+    for res, items in results.items():
+        res_items = []
+        returned_results[res] = res_items
+        for item in items:
+            res_items.append(
+                {"no_images": item["doc_count"], "%s_name" % res: item["key"]}
+            )
+    return jsonify(returned_results)
