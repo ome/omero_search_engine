@@ -53,11 +53,6 @@ tags:
  - Return containers for a Mixed Complex query
 
 parameters:
-  - name: return_columns
-    description: return additional columns to help display the results in a table
-    in: query
-    type: boolean
-    required: false
   - name: data
     in: body
     required: true
