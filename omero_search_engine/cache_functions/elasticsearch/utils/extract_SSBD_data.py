@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+from datetime import datetime
 import requests
 import json
 import copy
@@ -41,14 +42,15 @@ images_key_values = [
     "GO Molecular Function ontology",
 ]
 
-project_keyvalues = [
-    "Biological Imaging Method",
-    "Biological Imaging Method ontology",
-    "ssbd_dataset_id",
-    "Gene Name",
-    "Organism",
-    "Organism Part",
-]
+project_keyvalues = {
+    "Biological Imaging Method": "Biological Imaging Method",
+    "Biological Imaging Method ontology": "Biological Imaging Method ontology",
+    "SSBD:dataset": "Dataset ID",
+    "SSBD:database": "Project ID",
+    "Gene symbols": "Gene symbols",
+    "Organism": "Organism",
+    "Organism Part": "Organism Part",
+}
 
 trouble_links = []
 trouble_datasets = []
@@ -57,8 +59,6 @@ added_projects = []
 
 
 def download_datasets_images():
-    from datetime import datetime
-
     cou = 0
     for index, row in df.iterrows():
         if row.get("SSBD:OMERO Dataset ID") and row.get("SSBD:OMERO Project ID"):
@@ -109,6 +109,7 @@ def download_datasets_images():
 list_854 = []
 images_data = []
 projects_data = []
+dataset_data = []
 no_image_found_jsom = []
 
 
@@ -159,7 +160,6 @@ def extract_projects_data():
     added_key_value = []
     project_counter = 0
     for index, row in df.iterrows():
-        project_org = []
         if not row.get("SSBD:OMERO Dataset ID"):
             continue
         project_counter += 1
@@ -185,38 +185,28 @@ def extract_projects_data():
                 Project_title["mapvalue_name"] = "Title"
                 Project_title["mapvalue_value"] = row.get("Title")
                 Project_title["mapvalue_index"] = 0
-            for name in project_keyvalues:
-                if row.get(name):
+            for name, item in project_keyvalues.items():
+                if row.get(item):
                     if is_added_before(
-                        project["id"], name, row.get(name), added_key_value
+                        project["id"], name, row.get(item), added_key_value
                     ):
                         continue
                     project__ = copy.deepcopy(project_)
                     projects_data.append(project__)
-                    project__["mapvalue_name"] = name
-                    if (
-                        row.get(name).lower() == "h. sapiens"
-                        and name.lower() == "organism"
-                    ):
-                        project__["mapvalue_value"] = "Homo sapiens"
-                    elif (
-                        row.get(name).lower() == "m. musculus"
-                        and name.lower() == "organism"
-                    ):
-                        project__["mapvalue_value"] = "mus musculus"
-                    elif (
-                        row.get(name).lower() == "drosophila"
-                        and name.lower() == "organism"
-                    ):
-                        project__["mapvalue_value"] = "Drosophila melanogaster"
-                    else:
-                        project__["mapvalue_value"] = row.get(name)
-                    if name.lower() == "organism":
-                        project__["mapvalue_index"] = len(project_org)
-                        project_org.append(project__["mapvalue_value"])
-                    else:
-                        project__["mapvalue_index"] = 0
+                    new_name, new_value = conver_keyvalue(name, row.get(item))
+                    project__["mapvalue_name"] = new_name
+                    project__["mapvalue_value"] = new_value
+                    project__["mapvalue_index"] = 0
                     added_key_value.append(project__)
+                    if name == "SSBD:database":
+                        project_u = copy.deepcopy(project_)
+                        projects_data.append(project_u)
+                        project_u["mapvalue_name"] = "URL"
+                        project_u["mapvalue_value"] = (
+                            "https://ssbd.riken.jp/database/project/%s" % row.get(item)
+                        )
+                        project_u["mapvalue_index"] = 0
+                        # added_key_value.append(project_u)
 
 
 def conver_keyvalue(name, value):
@@ -226,9 +216,9 @@ def conver_keyvalue(name, value):
         new_name = "Gene symbol"
     elif name == "Protein names":
         new_name = "Protein name"
-    if value == "h. sapiens" and new_name.lower() == "organism":
+    if value.lower() == "h. sapiens" and new_name.lower() == "organism":
         new_value = "Homo sapiens"
-    elif value.lower() == "hell cell" and name.lower() == "cell line":
+    elif value.lower() == "hela cell" and name.lower() == "cell line":
         new_value = "hela"
     elif value.lower() == "m. musculus" and new_name.lower() == "organism":
         new_value = "mus musculus"
@@ -287,7 +277,16 @@ def extract_images_data():
             dataset_url["mapvalue_value"] = (
                 "https://ssbd.riken.jp/omero/webclient/?show=image-%s" % image["id"]
             )
-            dataset_url["mapvalue_index"] = 0
+            #############
+            if image_.get("date"):
+                images_date = copy.deepcopy(iamge_name_)
+                images_date["mapvalue_name"] = "Date"
+                images_date["mapvalue_value"] = datetime.fromtimestamp(
+                    image_.get("date")
+                ).strftime("%d/%m/%Y")
+                images_date["index"] = 0
+                images_data.append(images_date)
+            ##############
             for name in images_key_values:
                 if row.get(name):
                     new_name, new_value = conver_keyvalue(name, row.get(name))
@@ -314,6 +313,10 @@ def extract_images_data():
                             ].append(
                                 {"mapvalue_name": new_name, "mapvalue_value": new_value}
                             )
+
+
+def extract_dataset_data():
+    pass
 
 
 projects_filename = "../data/ssbd_images/ssbd_projects.csv"
