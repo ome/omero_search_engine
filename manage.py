@@ -248,6 +248,15 @@ def set_database_configuration(
 
 
 @manager.command
+@manager.option("-d", "--dEFAULT_DATASOURCE", help="Default data source")
+def set_default_datasource(dEFAULT_DATASOURCE=None):
+    if dEFAULT_DATASOURCE:
+        update_config_file({"DEFAULT_DATASOURCE": dEFAULT_DATASOURCE})
+    else:
+        search_omero_app.logger.info("No attribute is provided")
+
+
+@manager.command
 @manager.option("-n", "--name", help="data source name")
 @manager.option(
     "-i",

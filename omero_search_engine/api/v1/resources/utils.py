@@ -1142,10 +1142,15 @@ def search_resource_annotation_return_conatines_only(
         determine_search_results_,
     )
 
+    all_data_sources = get_data_sources()
     if not data_source:
-        data_sources = get_data_sources()
+        data_sources = all_data_sources
     else:
         data_sources = data_source.split(",")
+        for data_s in data_sources:
+            if data_s and data_s.strip().lower() not in all_data_sources:
+                return "'%s' is not a data source" % data_s
+
     results = {}
     for data_s in data_sources:
         res = determine_search_results_(
@@ -1167,7 +1172,7 @@ def search_resource_annotation_return_conatines_only(
                 )
         else:
             search_omero_app.logger.info(
-                "NP RESULTS FOUND ...............................>>>>>%s" % data_s
+                "No results found from the data source: %s" % data_s
             )
 
     return results
@@ -1185,7 +1190,7 @@ def search_resource_annotation(
 ):
     """
     @table_: the resource table, e.g. image. project, etc.
-    @query: the a dict contains the three filters (or, and and  not) items
+    @query: the dict contains the three filters (or, and and  not) items
     @raw_elasticsearch_query: raw query sending directly to elasticsearch
     """
     # try:
@@ -1480,4 +1485,13 @@ def get_number_image_inside_container(resource, res_id, data_source):
     return searchengine_results
 
 
-#####################
+def get_working_datasource(requested_datasource):
+    data_sources = get_data_sources()
+    default_datasource = search_omero_app.config.get("DEFAULT_DATASOURCE")
+    requested_datasource = check_empty_string(requested_datasource)
+    if requested_datasource:
+        return requested_datasource
+    elif default_datasource:
+        return default_datasource
+    else:
+        return ",".join(data_sources)
