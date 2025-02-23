@@ -1167,6 +1167,7 @@ def get_containers_no_images(container_name, query_details=None):
 
 
 def get_containets_from_name(container_name=None, returned_data_source=None):
+    returned_data_source = returned_data_source.split(",")
     act_names = []  # {}
     pr_names = get_resource_names("all")
     for resourse, names_ in pr_names.items():
@@ -1187,7 +1188,7 @@ def get_containets_from_name(container_name=None, returned_data_source=None):
                         and container_name.lower() in name.get("name").lower()
                     )
                 )
-                and (not returned_data_source or returned_data_source == data_source)
+                and (not returned_data_source or data_source in returned_data_source)
             ]
             act_names = act_names + act_names_1
     return act_names

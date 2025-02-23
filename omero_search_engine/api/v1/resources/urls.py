@@ -25,7 +25,7 @@ from omero_search_engine.api.v1.resources.utils import (
     build_error_message,
     adjust_query_for_container,
     get_data_sources,
-    check_empty_string,
+    # check_empty_string,
     search_resource_annotation_return_conatines_only,
     get_working_datasource,
 )

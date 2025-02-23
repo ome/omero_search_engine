@@ -1490,7 +1490,10 @@ def get_working_datasource(requested_datasource):
     default_datasource = search_omero_app.config.get("DEFAULT_DATASOURCE")
     requested_datasource = check_empty_string(requested_datasource)
     if requested_datasource:
-        return requested_datasource
+        requested_datasource = [
+            item.strip() for item in requested_datasource.split(",")
+        ]
+        return ",".join(requested_datasource)
     elif default_datasource:
         return default_datasource
     else:
