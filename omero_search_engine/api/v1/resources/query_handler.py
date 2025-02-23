@@ -60,7 +60,7 @@ def check_get_names(idr_, resource, attribute, data_source, return_exact=False):
                 if (
                     data_source
                     and data_source != "all"
-                    and data_source.lower() != data_source_.lower()
+                    and data_source_.lower() not in data_source
                 ):
                     continue
                 act_name = [
@@ -76,7 +76,7 @@ def check_get_names(idr_, resource, attribute, data_source, return_exact=False):
                 if (
                     data_source
                     and data_source != "all"
-                    and data_source.lower() != data_source_.lower()
+                    and data_source_.lower() not in data_source
                 ):
                     continue
                 act_name = [
@@ -730,7 +730,8 @@ def determine_search_results_(
         case_sensitive = query_.get("query_details").get("case_sensitive")
     else:
         case_sensitive = False
-
+    if data_source:
+        data_source = data_source.split(",")
     bookmark = query_.get("bookmark")
     pagination_dict = query_.get("pagination")
     raw_elasticsearch_query = query_.get("raw_elasticsearch_query")

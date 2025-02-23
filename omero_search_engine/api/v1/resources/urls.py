@@ -332,9 +332,9 @@ def get_resource_names_(resource_table):
     value = request.args.get("value")
     description = request.args.get("use_description")
     data_source = get_working_datasource(request.args.get("data_source"))
-    if data_source:
-        data_source = data_source.strip(",")
-        data_source = json.dumps(data_source)
+    # if data_source:
+    #    data_source = data_source.strip(",")
+    #    data_source = json.dumps(data_source)
     if description:
         if description.lower() in ["true", "false"]:
             description = json.loads(description.lower())

@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# from encodings.cp866 import decoding_table
 
 # Copyright (C) 2022 University of Dundee & Open Microscopy Environment.
 # All rights reserved.
@@ -831,6 +832,8 @@ def get_resource_names(
     return resources names attributes
     It works for projects and screens but can be extended.
     """
+    if data_source:
+        data_source = data_source.split(",")
     if description:
         return build_error_message(
             "This release does not support search by description."
@@ -839,9 +842,19 @@ def get_resource_names(
         returned_results = get_the_results(resource, name, description, data_source)
     else:
         returned_results = {}
-        ress = ["project", "screen"]
-        for res in ress:
-            returned_results[res] = get_the_results(res, name, description, data_source)
+        for data_s in data_source:
+            ress = ["project", "screen"]
+            for res in ress:
+                if res in returned_results:
+                    returned_results[res] = {
+                        **returned_results[res],
+                        **get_the_results(res, name, description, json.dumps(data_s)),
+                    }
+                else:
+                    returned_results[res] = get_the_results(
+                        res, name, description, json.dumps(data_s)
+                    )
+
     if not return_orginal_format:
         return returned_results
     else:
@@ -1167,7 +1180,8 @@ def get_containers_no_images(container_name, query_details=None):
 
 
 def get_containets_from_name(container_name=None, returned_data_source=None):
-    returned_data_source = returned_data_source.split(",")
+    if returned_data_source:
+        returned_data_source = returned_data_source.split(",")
     act_names = []  # {}
     pr_names = get_resource_names("all")
     for resourse, names_ in pr_names.items():

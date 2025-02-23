@@ -1218,9 +1218,10 @@ def search_resource_annotation(
             return build_error_message(
                 "{query} is not" " a valid query".format(query=query)
             )
-        if data_source and data_source.lower() != "all":
+        if data_source and data_source != "all":
             data_sources = get_data_sources()
-            data_source = [itm.strip() for itm in data_source.split(",")]
+            if type(data_source) is str:
+                data_source = [itm.strip() for itm in data_source.split(",")]
             for data_s in data_source:
                 if data_s and data_s.strip().lower() not in data_sources:
                     return "'%s' is not a data source" % data_s
