@@ -53,6 +53,7 @@ def check_get_names(idr_, resource, attribute, data_source, return_exact=False):
     if idr_:
         idr_ = idr_.strip()
     pr_names = get_resource_names(resource)
+    pr_names = get_resource_names(resource=resource)
     all_act_names = []
     if pr_names:
         if not return_exact:

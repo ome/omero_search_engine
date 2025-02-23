@@ -832,16 +832,23 @@ def get_resource_names(
     return resources names attributes
     It works for projects and screens but can be extended.
     """
-    if data_source:
+    if data_source and data_source != "all":
         data_source = data_source.split(",")
+    else:
+        data_source = get_data_sources()
     if description:
         return build_error_message(
             "This release does not support search by description."
         )
+    returned_results = {}
     if resource != "all":
-        returned_results = get_the_results(resource, name, description, data_source)
+
+        for data_s in data_source:
+            returned_results = {
+                **returned_results,
+                **get_the_results(resource, name, description, json.dumps(data_s)),
+            }
     else:
-        returned_results = {}
         for data_s in data_source:
             ress = ["project", "screen"]
             for res in ress:
