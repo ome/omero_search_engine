@@ -1359,15 +1359,17 @@ def get_studies_titles(idr_name, resource, data_source=None):
     return study_title
 
 
-def get_filter_list(filter):
+def get_filter_list(filter, org_type):
     import copy
 
     new_or_filter = []
     f1 = copy.deepcopy(filter)
     f1["resource"] = "project"
+    f1["org_type"] = org_type
     new_or_filter.append(f1)
     f2 = copy.deepcopy(filter)
     f2["resource"] = "screen"
+    f2["org_type"] = org_type
     new_or_filter.append(f2)
     return new_or_filter
 
@@ -1382,7 +1384,7 @@ def adjust_query_for_container(query):
         if and_filters:
             for filter in and_filters:
                 if filter.get("resource") == "container":
-                    new_or_filters.append(get_filter_list(filter))
+                    new_or_filters.append(get_filter_list(filter, "and"))
                     to_delete_and_filter.append(filter)
 
         or_filters = query_details.get("or_filters")
@@ -1391,11 +1393,11 @@ def adjust_query_for_container(query):
                 if isinstance(filter, list):
                     for filter_ in filter:
                         if filter_.get("resource") == "container":
-                            new_or_filters.append(get_filter_list(filter_))
+                            new_or_filters.append(get_filter_list(filter_, "or"))
                             to_delete_or_filter.append(filter_)
                 else:
                     if filter.get("resource") == "container":
-                        new_or_filters.append(get_filter_list(filter))
+                        new_or_filters.append(get_filter_list(filter, "or"))
                         to_delete_or_filter.append(filter)
         else:
             or_filters = []

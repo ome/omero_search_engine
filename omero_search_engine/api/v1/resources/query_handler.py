@@ -111,6 +111,7 @@ class QueryItem(object):
         self.value = filter.get("value")
         self.operator = filter.get("operator")
         self.data_source = data_source
+        self.org_type = filter.get("org_type")
         if filter.get("set_query_type") and filter.get("query_type"):
             self.query_type = filter.get("query_type")
         else:
@@ -259,8 +260,16 @@ class QueryRunner(
                 checked_list.append(resource)
                 query = {}
                 query["main_attribute"] = main
+                for k, v in main.items():
+                    org_type = None
+                    for v_ in v:
+                        org_type = v_.org_type
+                        if org_type:
+                            break
+                    if org_type:
+                        break
                 res = self.run_query(query, resource)
-                new_cond = get_ids(res, resource, self.data_source)
+                new_cond = get_ids(res, resource, self.data_source, org_type)
                 if new_cond:
                     if not main_or_attribute_.get(resource):
                         main_or_attribute_[resource] = new_cond
@@ -273,6 +282,10 @@ class QueryRunner(
                 ):
                     return {"Error": "4. Your query returns no results"}
             for res, items_ in main_or_attribute_.items():
+                for it_ in items_:
+                    org_type = it_.org_type
+                    if org_type:
+                        break
                 if res not in main_or_attribute:
                     main_or_attribute[res] = items_
                 else:
@@ -294,10 +307,19 @@ class QueryRunner(
                         continue
                     query = {}
                     query["or_filters"] = or_query
+                    for con_ in or_query:
+                        org_type = con_.org_type
+                        if org_type:
+                            break
                     res = self.run_query(query, resource)
                     if type(res) is str:
                         return res
-                    new_cond = get_ids(res, resource, self.data_source)
+                    for con_ in or_query:
+                        org_type = con_.org_type
+                        if org_type:
+                            break
+
+                    new_cond = get_ids(res, resource, self.data_source, org_type)
                     if new_cond:
                         if not main_or_attribute_.get(resource):
                             main_or_attribute_[resource] = new_cond
@@ -318,9 +340,19 @@ class QueryRunner(
                 if res not in main_or_attribute:
                     main_or_attribute[res] = items_
                 else:
-                    main_or_attribute[res] = combine_add_conds(
-                        main_or_attribute[res], items_, res
-                    )
+                    for it_ in items_:
+                        org_type = it_.org_type
+                        if org_type:
+                            break
+                    if org_type == "and":
+                        #######
+                        main_or_attribute[res] = combine_conds(
+                            main_or_attribute[res], items_, res
+                        )
+                    else:
+                        main_or_attribute[res] = combine_add_conds(
+                            main_or_attribute[res], items_, res
+                        )
         if len(self.or_query_group) > 0 and len(image_or_queries) == 0:
             no_conds = 0
             for res, item in main_or_attribute.items():
@@ -336,7 +368,7 @@ class QueryRunner(
                 query = {}
                 query["main_attribute"] = main
                 res = self.run_query(query, resource)
-                new_cond = get_ids(res, resource, self.data_source)
+                new_cond = get_ids(res, resource, self.data_source, "and")
                 if new_cond:
                     if not main_and_attribute.get(resource):
                         main_and_attribute[resource] = new_cond
@@ -358,7 +390,7 @@ class QueryRunner(
                     query = {}
                     query["and_filters"] = and_query
                     res = self.run_query(query, resource)
-                    new_cond = get_ids(res, resource, self.data_source)
+                    new_cond = get_ids(res, resource, self.data_source, "and")
                     if new_cond:
                         if not main_and_attribute.get(resource):
                             main_and_attribute[resource] = new_cond
@@ -596,7 +628,7 @@ def combine_conds(curnt_cond, new_cond, resource):
     return returned_cond
 
 
-def get_ids(results, resource, data_source):
+def get_ids(results, resource, data_source, org_type):
     ids = []
     if results.get("results") and results.get("results").get("results"):
         for item in results["results"]["results"]:
@@ -606,6 +638,7 @@ def get_ids(results, resource, data_source):
             qur_item["value"] = item["id"]
             qur_item["operator"] = "equals"
             qur_item["resource"] = resource
+            qur_item["org_type"] = org_type
             qur_item_ = QueryItem(qur_item, data_source)
             ids.append(qur_item_)
     else:
@@ -777,6 +810,8 @@ def determine_search_results_(
                         new_fil["set_query_type"] = True
                         new_fil["query_type"] = q_item.query_type
                         new_fil["data_source"] = data_source
+                        if filter.get("org_type"):
+                            new_fil["org_type"] = filter.get("org_type")
                         new_or_filter.append(new_fil)
                 else:
                     q_item.name = "id"
@@ -812,6 +847,8 @@ def determine_search_results_(
                                 new_fil["operator"] = filter["operator"]
                                 new_fil["set_query_type"] = True
                                 new_fil["query_type"] = q_item.query_type
+                                if filter.get("org_type"):
+                                    new_fil["org_type"] = filter.get("org_type")
                                 _q_item = QueryItem(new_fil, data_source)
                                 or_query_group.add_query(_q_item)
                         else:

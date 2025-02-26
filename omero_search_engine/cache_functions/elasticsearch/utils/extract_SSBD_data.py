@@ -160,6 +160,7 @@ def extract_projects_data():
     added_key_value = []
     project_counter = 0
     for index, row in df.iterrows():
+        # project_org = []
         if not row.get("SSBD:OMERO Dataset ID"):
             continue
         project_counter += 1
@@ -210,8 +211,8 @@ def extract_projects_data():
 
 
 def conver_keyvalue(name, value):
-    new_value = value
-    new_name = name
+    new_value = value.strip()
+    new_name = name.strip()
     if name == "Gene symbols":
         new_name = "Gene symbol"
     elif name == "Protein names":
