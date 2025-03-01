@@ -1135,54 +1135,56 @@ container_returned_sub_container_template = Template(
 )
 
 
-def get_containers_no_images(container_name, query_details=None):
+def get_containers_no_images(container_name, query_details=None, data_source=None):
     contianer = None
+    returned_results = []
     containers_subcontainers = {"project": "dataset", "screen": "plate"}
-    act_names = get_containets_from_name(container_name)
+    act_names = get_containets_from_name(container_name, data_source)
     if len(act_names) == 0:
         return "Container %s is not found" % container_name
-    container_name = act_names[0]["name"]
-    contianer = act_names[0]["type"]
-    data_source = act_names[0]["data_source"]
-    if contianer.lower() in containers_subcontainers:
-        sub_container = containers_subcontainers[contianer.lower()]
-    else:
-        return "Container %s is not supported" % contianer
-    res_index = resource_elasticsearchindex.get("image")
-    aggs_part = container_returned_sub_container_template.substitute(
-        container_attribute_name="%s_name.keyvalue" % contianer,
-        container_attribute_value="%s" % container_name,
-        returned_sub_container="%s_name.keyvalue" % sub_container,
-    )
-    if not query_details:
-        query = {}
-    else:
-        and_filters = query_details.get("and_filters")
-        or_filters = query_details.get("or_filters")
-        case_sensitive = query_details.get("case_sensitive")
-        main_attributes = query_details.get("main_attributes")
-        from omero_search_engine.api.v1.resources.utils import (
-            elasticsearch_query_builder,
+    for act_name in act_names:
+        container_name = act_name["name"]
+        contianer = act_name["type"]
+        data_source_ = act_name["data_source"]
+        if contianer.lower() in containers_subcontainers:
+            sub_container = containers_subcontainers[contianer.lower()]
+        else:
+            return "Container %s is not supported" % contianer
+        res_index = resource_elasticsearchindex.get("image")
+        aggs_part = container_returned_sub_container_template.substitute(
+            container_attribute_name="%s_name.keyvalue" % contianer,
+            container_attribute_value="%s" % container_name,
+            returned_sub_container="%s_name.keyvalue" % sub_container,
         )
+        if not query_details:
+            query = {}
+        else:
+            and_filters = query_details.get("and_filters")
+            or_filters = query_details.get("or_filters")
+            case_sensitive = query_details.get("case_sensitive")
+            main_attributes = query_details.get("main_attributes")
+            from omero_search_engine.api.v1.resources.utils import (
+                elasticsearch_query_builder,
+            )
 
-        query_string = elasticsearch_query_builder(
-            and_filters, or_filters, case_sensitive, main_attributes
-        )
-        query = json.loads(query_string)
-        # query builder should be called
+            query_string = elasticsearch_query_builder(
+                and_filters, or_filters, case_sensitive, main_attributes
+            )
+            query = json.loads(query_string)
+            # query builder should be called
 
-    query["aggs"] = json.loads(aggs_part)
-    res = search_index_for_value(res_index, query)
-    buckets = res["aggregations"]["values"]["uniquesTerms"]["buckets"]
-    returned_results = []
-    for bucket in buckets:
-        returned_results.append(
-            {
-                "image count": bucket["doc_count"],
-                "%s_name" % sub_container: bucket["key"],
-                "data_source": data_source,
-            }
-        )
+        query["aggs"] = json.loads(aggs_part)
+        res = search_index_for_value(res_index, query)
+        buckets = res["aggregations"]["values"]["uniquesTerms"]["buckets"]
+
+        for bucket in buckets:
+            returned_results.append(
+                {
+                    "image count": bucket["doc_count"],
+                    "%s_name" % sub_container: bucket["key"],
+                    "data_source": data_source_,
+                }
+            )
     return {"Error": None, "results": {"results": returned_results}}
 
 

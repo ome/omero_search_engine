@@ -551,6 +551,8 @@ def sub_container_images():
             build_error_message("{error}".format(error="Container name is required."))
         )
     data = request.data
+    data_source = get_working_datasource(request.args.get("data_source"))
+
     query = {}
     if data:
         try:
@@ -563,7 +565,9 @@ def sub_container_images():
             )
         if "query_details" in data:
             query = data["query_details"]
-    return jsonify(get_containers_no_images(container_name, query))
+    return jsonify(
+        get_containers_no_images(container_name, query, data_source=data_source)
+    )
 
 
 @resources.route("/<resource_table>/container_filterkeyvalues/", methods=["POST"])
