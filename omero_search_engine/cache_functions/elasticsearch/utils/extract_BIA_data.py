@@ -156,26 +156,32 @@ def extract_images_data():
         index = 0
         # total_size_in_bytes
         for file_ in imag["representation"]:
-            image_file = copy.deepcopy(image_)
-            images_data.append(image_file)
-            image_file["mapvalue_name"] = "image_format"
-            image_file["mapvalue_value"] = escape_string(file_["image_format"])
-            image_file["mapvalue_index"] = index
+            # image_file = copy.deepcopy(image_)
+            # images_data.append(image_file)
+            # image_file["mapvalue_name"] = "image_format"
+            # image_file["mapvalue_value"] = escape_string(file_["image_format"])
+            # image_file["mapvalue_index"] = index
             image_file_ = copy.deepcopy(image_)
             images_data.append(image_file_)
-            image_file_["mapvalue_name"] = "file_uri"
+            use_type = escape_string(file_["use_type"])
+            if use_type == "THUMBNAIL":
+                image_file_["mapvalue_name"] = "thumb_url"
+            elif use_type == "UPLOADED_BY_SUBMITTER":
+                image_file_["mapvalue_name"] = "image_url"
+            else:
+                image_file_["mapvalue_name"] = "file_uri"
             image_file_["mapvalue_index"] = index
             if len(file_["file_uri"]) == 0:
                 images_without_url.append(st)
                 image_file_["mapvalue_value"] = "None"
             else:
                 image_file_["mapvalue_value"] = file_["file_uri"][0]
-            image_size = copy.deepcopy(image_)
-            images_data.append(image_size)
-            image_size["mapvalue_name"] = "image_size"
-            image_size["mapvalue_index"] = index
-            image_size["mapvalue_value"] = file_.get("total_size_in_bytes")
-            index = index + 1
+            # image_size = copy.deepcopy(image_)
+            # images_data.append(image_size)
+            # image_size["mapvalue_name"] = "image_size"
+            # image_size["mapvalue_index"] = index
+            # image_size["mapvalue_value"] = file_.get("total_size_in_bytes")
+            # index = index
 
 
 def is_added_before(id, key_, value_, added_key_value):

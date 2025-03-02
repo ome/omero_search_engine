@@ -8,7 +8,68 @@ import copy
 
 # import math
 
+
 tax_id_org = {}
+
+search_engine_data_ = {}
+prjects = [
+    {
+        "id": 1,
+        "name": "NFDI4BIOIMAGE",
+        "description": "ome2024-ngff-challenge from NFDI4BIOIMAGE",
+        "mapvalue_name": "",
+        "mapvalue_value": "",
+        "index": 0,
+    },
+    {
+        "id": 2,
+        "name": "jax",
+        "description": "ome2024-ngff-challenge data from Jax lab",
+        "mapvalue_name": "",
+        "mapvalue_value": "",
+        "index": 0,
+    },
+    {
+        "id": 3,
+        "name": "idr",
+        "description": "ome2024-ngff-challenge data from idr",
+        "mapvalue_name": "",
+        "mapvalue_value": "",
+        "index": 0,
+    },
+    {
+        "id": 4,
+        "name": "bia",
+        "description": "ome2024-ngff-challenge from bia",
+        "mapvalue_name": "",
+        "mapvalue_value": "",
+        "index": 0,
+    },
+    {
+        "id": 5,
+        "name": "Webknossos",
+        "description": "ome2024-ngff-challenge from Webknossos",
+        "mapvalue_name": "",
+        "mapvalue_value": "",
+        "index": 0,
+    },
+    {
+        "id": 6,
+        "name": "UniversityofMuenster",
+        "description": "ome2024-ngff-challenge from UniversityofMuenster",
+        "mapvalue_name": "",
+        "mapvalue_value": "",
+        "index": 0,
+    },
+    {
+        "id": 7,
+        "name": "Crick",
+        "description": "ome2024-ngff-challenge from Crick",
+        "mapvalue_name": "",
+        "mapvalue_value": "",
+        "index": 0,
+    },
+]
 
 
 def escape_string(string_to_check):
@@ -551,7 +612,7 @@ def get_metadata_row(metadata_df, target_zar_file):
 
 
 def create_searchengine_scsv_files(resources_list):
-    search_engine_data_ = {}
+    global prjects, search_engine_data
     search_engine_data = []
     search_engine_data_["idr"] = []
     search_engine_data_["jax"] = []
@@ -566,64 +627,6 @@ def create_searchengine_scsv_files(resources_list):
         "UniversityofMuenster": 6,
         "Crick": 7,
     }
-    prjects = [
-        {
-            "id": 1,
-            "name": "NFDI4BIOIMAGE",
-            "description": "ome2024-ngff-challenge from NFDI4BIOIMAGE",
-            "mapvalue_name": "",
-            "mapvalue_value": "",
-            "index": 0,
-        },
-        {
-            "id": 2,
-            "name": "jax",
-            "description": "ome2024-ngff-challenge data from Jax lab",
-            "mapvalue_name": "",
-            "mapvalue_value": "",
-            "index": 0,
-        },
-        {
-            "id": 3,
-            "name": "idr",
-            "description": "ome2024-ngff-challenge data from idr",
-            "mapvalue_name": "",
-            "mapvalue_value": "",
-            "index": 0,
-        },
-        {
-            "id": 4,
-            "name": "bia",
-            "description": "ome2024-ngff-challenge from bia",
-            "mapvalue_name": "",
-            "mapvalue_value": "",
-            "index": 0,
-        },
-        {
-            "id": 5,
-            "name": "Webknossos",
-            "description": "ome2024-ngff-challenge from Webknossos",
-            "mapvalue_name": "",
-            "mapvalue_value": "",
-            "index": 0,
-        },
-        {
-            "id": 6,
-            "name": "UniversityofMuenster",
-            "description": "ome2024-ngff-challenge from UniversityofMuenster",
-            "mapvalue_name": "",
-            "mapvalue_value": "",
-            "index": 0,
-        },
-        {
-            "id": 7,
-            "name": "Crick",
-            "description": "ome2024-ngff-challenge from Crick",
-            "mapvalue_name": "",
-            "mapvalue_value": "",
-            "index": 0,
-        },
-    ]
 
     idr = 0
     NFDI4BIOIMAGE = 0
@@ -812,7 +815,55 @@ def read_csv_files():
     return resources_list
 
 
+def get_ssbd_data():
+    global prjects, search_engine_data
+    ssbd_file = "csvs/ssbd_ngff.csv"
+    ssbd_metadata_df = pd.read_csv(ssbd_file)
+    project_name = "ssbd"
+    project = {}
+    project["name"] = project_name
+    project["id"] = 8
+    license = None
+    for index, row in ssbd_metadata_df.iterrows():
+        image = {}
+        image["id"] = uuid_to_int()
+        image["name"] = row["name"]
+        image["project_id"] = project["id"]
+        image["project_name"] = project["name"]
+        image["description"] = row["description"]
+        for ke, val in row.items():
+            if ke == "name" or ke == "description":
+                continue
+            if row.get("license") and not license:
+                license = row["license"]
+            image_row = copy.deepcopy(image)
+            if ke == "organismId":
+                tax_id = get_entity(val)
+                data = get_organism(tax_id)
+                if (
+                    data
+                    and data.get("result")
+                    and data.get("result").get("%s" % tax_id)
+                ):
+                    image_row["mapvalue_name"] = "organism"
+                    image_row["mapvalue_value"] = (
+                        data.get("result").get("%s" % tax_id).get("scientificname")
+                    )
+                else:
+                    continue
+            else:
+                image_row["mapvalue_name"] = ke
+                image_row["mapvalue_value"] = val
+            search_engine_data.append(image_row)
+    project["description"] = "SSBD-metadata for OME 2024 NGFF challenge"
+    project["mapvalue_name"] = "license"
+    project["mapvalue_value"] = license
+    prjects.append(project)
+    print(len(search_engine_data))
+
+
 if __name__ == "__main__":
+    get_ssbd_data()
     extract_meta_data("path/to/ome2024-ngff-challenge-metadata/")
     resources_list = read_csv_files()
     create_searchengine_scsv_files(resources_list)
