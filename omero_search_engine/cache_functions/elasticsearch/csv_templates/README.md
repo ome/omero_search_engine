@@ -4,3 +4,4 @@ It is assumed that a project (study) contains one or more datasets, and each dat
 Each project, dataset, and image have an ID (integer), a name (string), and optionally, a description (string). 
 Additionally, each project, dataset, and image may have one or more associated attributes (e.g. organism, cell line, protein name, etc.)
 There are two csv files should be provided, i.e. images_template.csv and container_template.csv.
+There is a method inside the manage.py will be used to transfer these CSV files to a format that the searchengine can read and index the data.
