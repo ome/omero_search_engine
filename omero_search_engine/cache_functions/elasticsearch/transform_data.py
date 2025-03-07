@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import copy
 import logging
 
 # Copyright (C) 2022 University of Dundee & Open Microscopy Environment.
@@ -391,7 +392,46 @@ def handle_file_2(lock, global_counter, val):
     insert_resource_data_from_df(df, resource, data_source, lock)
 
 
-def insert_resource_data(folder, resource, data_source, from_json):
+def conver_to_searchengine_fromat(file_name, resource):
+    ext_ = file_name.split(".")[-1]
+    new_file_name = file_name.replace(".%s" % ext_, "_.%s" % ext_)
+    df = pd.read_csv(file_name)
+    main_attr = ["id", "name", "description"]
+    image_only = ["project_id", "project_name", "dataset_id", "dataset_name"]
+    data = []
+    for index, row in df.iterrows():
+        key_val_row = {}
+        for ma in main_attr:
+            key_val_row[ma] = row.get(ma)
+        if resource == "image":
+            for ima in image_only:
+                key_val_row[ima] = row.get(ima)
+        for ke, val in row.items():
+            if ke in main_attr or ke in image_only:
+                continue
+            ls_va = str(val).split("\t")
+            if len(ls_va) == 1:
+                key_val_row_copy = copy.deepcopy(key_val_row)
+                key_val_row_copy["mapvalue_name"] = ke
+                key_val_row_copy["mapvalue_value"] = val
+                key_val_row_copy["mapvalue_index"] = 0
+                data.append(key_val_row_copy)
+            else:
+                index = 0
+                for _vs in ls_va:
+                    key_val_row_copy = copy.deepcopy(key_val_row)
+                    key_val_row_copy["mapvalue_name"] = ke
+                    key_val_row_copy["mapvalue_value"] = _vs
+                    key_val_row_copy["mapvalue_index"] = index
+                    index += 1
+                    data.append(key_val_row_copy)
+
+    df_res = pd.DataFrame(data)
+    df_res.to_csv(new_file_name, index=False)
+    return new_file_name
+
+
+def insert_resource_data(folder, resource, data_source, from_json, need_convert=False):
     start_time = datetime.now()
     no_processors = search_omero_app.config.get("NO_PROCESSES")
     if not no_processors:
@@ -420,6 +460,7 @@ def insert_resource_data(folder, resource, data_source, from_json):
 
     f_con = 0
     if os.path.isfile(folder):
+        folder = conver_to_searchengine_fromat(folder, resource)
         files_list = [folder]
     elif os.path.isdir(folder):
         files_list = get_file_list(folder)

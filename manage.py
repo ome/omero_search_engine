@@ -545,14 +545,28 @@ def test_container_key_value():
     "--resource",
     help="resource name, creating all the indexes for all the resources is the default",  # noqa
 )
-def get_index_data_from_csv_files(source=None, folder=None, resource="image"):
+@manager.option(
+    "-n",
+    "--need_convert",
+    help="if csv files are generating from csv templates, this attribure needs to be true",  # noqa
+)
+def get_index_data_from_csv_files(
+    source=None, folder=None, resource="image", need_convert="False"
+):
     from omero_search_engine.cache_functions.elasticsearch.transform_data import (
         insert_resource_data,
         save_key_value_buckets,
     )
+    import json
+
+    need_convert = json.loads(need_convert.lower())
 
     insert_resource_data(
-        folder=folder, resource=resource, data_source=source, from_json=False
+        folder=folder,
+        resource=resource,
+        data_source=source,
+        from_json=False,
+        need_convert=need_convert,
     )
     search_omero_app.logger.info("Waiting to index the data... ")
     import time
@@ -564,6 +578,26 @@ def get_index_data_from_csv_files(source=None, folder=None, resource="image"):
         clean_index=False,
         only_values=False,
     )
+
+
+@manager.command
+@manager.option(
+    "-f",
+    "--file_name",
+    help="csv file name",  # noqa
+)
+@manager.option(
+    "-r",
+    "--resource",
+    help="resource name, creating all the indexes for all the resources is the default",  # noqa
+)
+def convert_to_searchengine_indexer_format(file_name=None, resource=None):
+    from omero_search_engine.cache_functions.elasticsearch.transform_data import (
+        conver_to_searchengine_fromat,
+    )
+
+    converted_file_name = conver_to_searchengine_fromat(file_name, resource)
+    print(converted_file_name)
 
 
 if __name__ == "__main__":
