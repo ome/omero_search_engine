@@ -460,7 +460,8 @@ def insert_resource_data(folder, resource, data_source, from_json, need_convert=
 
     f_con = 0
     if os.path.isfile(folder):
-        folder = conver_to_searchengine_fromat(folder, resource)
+        if need_convert:
+            folder = conver_to_searchengine_fromat(folder, resource)
         files_list = [folder]
     elif os.path.isdir(folder):
         files_list = get_file_list(folder)
