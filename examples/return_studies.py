@@ -63,8 +63,8 @@ data = {
             },
             {
                 "name": "Imaging Method",
-                "value": "light sheet fluorescence microscopy, spim",
-                "operator": "equals",
+                "value": "light sheet fluorescence microscopy",
+                "operator": "contains",
                 "resource": "project",
             },
         ],

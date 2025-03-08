@@ -24,31 +24,30 @@ The application should have the access attributes (e.g, URL, username, password,
 * When the app runs for the first time, it will look for the application configuration file.
 
   * If the file does not exist, it will copy a default file to the user's home folder.
-  * The file contains some default values which the user can modify.
+  * The file contains some default values which the user should modify.
 
 * The user needs to install Elasticsearch_ before start using the app.
 
-* The user needs to create the Elasticsearch_ indices and insert the required data in order to use the application.
+* The user may need to create the Elasticsearch_ indices and insert the required data in order to use the application.
 
 * The method ``get_index_data_from_database`` inside :omero_search_engine:`manage.py <manage.py>` allows indexing automatically from the app.
 
-* Another method to index the data:
+* Index the data using CSV files:
 
-  * The data is extracted from the IDR/OMERO database using some SQL queries and saved to csv files using :omero_search_engine:`sql_to_csv.py <omero_search_engine/cache_functions/elasticsearch/sql_to_csv.py>`
+  * The data should be extracted from the IDR/OMERO database using some SQL queries and saved to csv files using :omero_search_engine:`sql_to_csv.py <omero_search_engine/cache_functions/elasticsearch/sql_to_csv.py>`
   * The image index data is generated in a large file, so it is recommended that the user splits it into several files to facilitate the processing of the data and its insertion into the index e.g. ``split -l 2600000 images.csv``.
-  * ``create_index``: Create the Elasticsearch indices, it can be used to create a single index or all the indices; the default is creating all the indices.
-  * the indices are saved using the script :omero_search_engine:`sql_to_csv.py <omero_search_engine/cache_functions/elasticsearch/elasticsearch_templates.py>`
-  * ``add_resource_data_to_es_index``: Insert the data to the ELasticsearch index; the data can be in a single file (CSV format) or multiple files.
-
+  * ``create_index``: Create the Elasticsearch indices in case of the there is no data been added before, it can be used to create a single index or all the indices; the default is creating all the indices.
+  * The user should add a new data source (csv) using the ''set_data_source_files'' command inside :omero_search_engine:`manage.py <manage.py>`
+  * ``get_index_data_from_csv_files``is used to read the data, format it then push the data to the resource ELasticsearch index. The user can provide a single file (CSV format) or folder, in the later the indexer will use all the files inside the folder.
 
 Application installation using Docker
 =====================================
 
-Ubuntu and CentOS 7 images are provided.
+Ubuntu and Rocky Linux 9 images are provided.
 
 * The user may build the Docker image using the following command::
 
-    $ docker build . -f deployment/docker/centos/Dockerfile -t searchengine
+    $ docker build . -f deployment/docker/rockylinux/Dockerfile -t searchengine
 
 * Alternatively, the user can pull the openmicroscopy docker image by using the following command::
     
@@ -61,7 +60,7 @@ Ubuntu and CentOS 7 images are provided.
   * It will be used to save the configuration file so the user can configure his instance
   * Additionally, it will be used to save the logs files and other cached data.
 
-* An example of running the docker run command for a CentOS image which maps the ``etc/searchengine`` folder to the user home folder in order to save the log files as well as mapping the application configuration file ::
+* An example of running the docker run command for a Rocky Linux 9 image which maps the ``etc/searchengine`` folder to the user home folder in order to save the log files as well as mapping the application configuration file ::
 
     $ docker run --rm -p 5577:5577 -d  -v $HOME/:/etc/searchengine/  searchengine
 

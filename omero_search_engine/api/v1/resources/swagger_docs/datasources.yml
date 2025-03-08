@@ -1,0 +1,10 @@
+A searchengine endpoint to return the available data sources
+---
+tags:
+ - Data Sources
+
+responses:
+  200:
+    description: A JSON contains the data sources
+    examples:
+      results: []
