@@ -18,6 +18,12 @@ parameters:
     in: query
     type: boolean
     required: false
+  - name: data_source
+    in: query
+    type: string
+    required: false
+    description: If it is provided, it will return the search results for a specific data source, otherwise it will return the results from all the data sources
+
 responses:
   200:
     description: A JSON contains the search results
