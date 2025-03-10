@@ -13,7 +13,7 @@ Each image should also include the following columns:
 * dataset_id (``integer``)
 * dataset_name (``string``)
 
-Additionally, each project, dataset, and image may have one or more associated attributes (e.g. ``organismv``, ``cell line``, vprotein name``, etc.)
+Additionally, each project, dataset, and image may have one or more associated attributes (e.g. ``organism``, ``cell line``, ``protein name``, etc.)
 There are two csv files should be provided, i.e. images_template.csv and container_template.csv.
 
 The ``convert_to_searchengine_indexer_format`` method ``inside manage.py`` can be used to convert these file to search engine indexer foramt.
