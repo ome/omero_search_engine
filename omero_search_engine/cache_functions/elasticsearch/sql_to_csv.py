@@ -23,6 +23,14 @@ import os
 from string import Template
 
 
+"""
+originalfile.size as image_size,
+
+inner join fileset on image.fileset=fileset.id
+inner join filesetentry on filesetentry.fileset=fileset.id
+inner join originalfile on filesetentry.originalfile = originalfile.id
+
+"""
 image_sql = Template(
     """
 select image.id, image.description, image.owner_id, image.experiment, image.group_id,
@@ -102,7 +110,6 @@ copy ({project_sql}) TO 'projects_sorted_projects_screen_ids.csv'
 WITH CSV HEADER""".format(
     project_sql=project_sql.substitute(whereclause="")
 )
-
 
 screen_sql = Template(
     """
