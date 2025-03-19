@@ -566,7 +566,9 @@ def sub_container_images():
         if "query_details" in data:
             query = data["query_details"]
     return jsonify(
-        get_containers_no_images(container_name, query, data_source=data_source)
+        get_containers_no_images(
+            container_name=container_name, query_details=query, data_source=data_source
+        )
     )
 
 

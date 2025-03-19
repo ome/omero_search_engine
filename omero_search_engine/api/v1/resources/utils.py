@@ -18,6 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import copy
+import datetime
 import logging
 import os
 import sys
@@ -1501,3 +1502,137 @@ def get_working_datasource(requested_datasource):
         return default_datasource
     else:
         return ",".join(data_sources)
+
+
+def delete_data_source_cache(es, data_source):
+    search_omero_app.logger.info("delete cache for data source %s" % data_source)
+    delete_cache = delete_cache_query.substitute(data_source=data_source)
+    es_index = "key_value_buckets_information"
+    es_index_2 = "key_values_resource_cach"
+    res_1 = es.delete_by_query(
+        index=es_index, body=json.loads(delete_cache), request_timeout=1000
+    )
+    search_omero_app.logger.info("delete cache result 1 %s" % res_1)
+    res_2 = es.delete_by_query(
+        index=es_index_2, body=json.loads(delete_cache), request_timeout=1000
+    )
+    search_omero_app.logger.info("delete cache result 2 %s" % res_2)
+
+
+def delete_container(ids, resource, data_source, update_cache):
+    """
+    Delete a container (project or screen) from the searchengine
+     Also delete all images inside it and cache the data
+     delete cache and create it again
+     the data source caching should be re-created
+    """
+    st = datetime.datetime.now()
+    from omero_search_engine.cache_functions.elasticsearch.transform_data import (
+        save_key_value_buckets,
+    )
+    from omero_search_engine.api.v1.resources.resource_analyser import (
+        get_containers_no_images,
+    )
+
+    es = search_omero_app.config.get("es_connector")
+    ids = ids.split(",")
+    for id in ids:
+        sub_containers = get_containers_no_images(
+            container_id=id, data_source=data_source, resource=resource
+        )
+        if (
+            type(sub_containers) is not str
+            and sub_containers.get("results")
+            and sub_containers.get("results").get("results")
+        ):
+            counter = 0
+            idss = {}
+            for res in sub_containers["results"]["results"]:
+                counter += 1
+                if idss.get(res["resource"]):
+                    idss[res["resource"]].append(str(res["id"]))
+                else:
+                    idss[res["resource"]] = [str(res["id"])]
+
+            for resou, ids in idss.items():
+                if not resource_elasticsearchindex.get(resou):
+                    continue
+
+                sub_container_delet_query = delete_container_query.substitute(
+                    attribute="id", id=(",").join(ids), data_source=data_source
+                )
+
+                res__2 = delete_container_res = es.delete_by_query(
+                    index=resource_elasticsearchindex[resou],
+                    body=json.loads(sub_container_delet_query),
+                )
+                search_omero_app.logger.info(
+                    "%s/%s, delete results is %s"
+                    % (counter, len(sub_containers["results"]["results"]), res__2)
+                )
+
+        attribute = "%s_id" % resource
+        image_delet_query = delete_container_query.substitute(
+            attribute=attribute, id=id, data_source=data_source
+        )
+
+        container_delet_query = delete_container_query.substitute(
+            attribute="id", id=int(id), data_source=data_source
+        )
+
+        # Delete container
+        search_omero_app.logger.info(
+            "Delete %s with Id %s from data source: %s" % (resource, id, data_source)
+        )
+        delete_container_res = es.delete_by_query(
+            index=resource_elasticsearchindex[resource],
+            body=json.loads(container_delet_query),
+        )
+        search_omero_app.logger.info("Delete results: %s" % delete_container_res)
+
+        # Delete images inside the container
+        search_omero_app.logger.info("Delete images inside the  %s" % resource)
+        delete_image_res = es.delete_by_query(
+            index=resource_elasticsearchindex["image"],
+            body=json.loads(image_delet_query),
+        )
+        search_omero_app.logger.info("Delete results: %s" % delete_image_res)
+
+    if not update_cache:
+        return
+    # Delete the cache for the data source
+    delete_data_source_cache(es, data_source)
+    # Trigger caching for  the data source
+
+    search_omero_app.logger.info("Trigger caching for data source %s" % data_source)
+    save_key_value_buckets(None, data_source, False, False)
+    en = datetime.datetime.now()
+    search_omero_app.logger.info("Start at: %s" % st)
+    search_omero_app.logger.info("Ends at: %s" % en)
+
+
+delete_container_query = Template(
+    """
+{"query":{
+      "bool":{"must":[{
+               "bool":{
+                  "must":{
+                     "terms":{
+                        "$attribute":[$id]}}}},{
+               "bool":{
+                  "must":{
+                     "match":{
+                        "data_source.keyvalue":"$data_source"
+                     }}}}]}}}
+"""
+)
+
+delete_cache_query = Template(
+    """
+{"query":{"bool":{"must":[{"bool":{
+                  "must":{
+                     "match":{
+                        "data_source.keyvalue":"$data_source"
+                     }}}}]}}}
+"""
+)
