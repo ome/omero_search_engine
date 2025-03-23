@@ -125,11 +125,11 @@ def search_index_for_value(e_index, query, get_size=False):
 
 def search_index_for_values_get_all_buckets(e_index, query):
     """
-    Perform search the elastcisearch using value and
+    Perform search the elasticsearch using value and
     return all the key values whihch this value has been used,
     it will include the number of records.
     It is relatively slow but it might be due
-    to the elasticsearcg hosting machine
+    to the elasticssearch hosting machine
     """
     page_size = 9999
     bookmark = 0

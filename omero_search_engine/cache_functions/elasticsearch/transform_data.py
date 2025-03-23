@@ -623,6 +623,137 @@ def processor_work(lock, global_counter, val):
     search_omero_app.logger.info("elpased time:%s" % average_time)
 
 
+def splite_results(results):
+    page_size = search_omero_app.config["CACHE_ROWS"]
+    ids_ = []
+    offest = 0
+    for rr in results:
+        ids_.append(str(rr["id"]))
+    all_lists = []
+    if len(ids_) <= page_size:
+        all_lists.append(ids_)
+    else:
+        while True:
+            ss = ids_[offest : page_size + offest]
+            if len(ss) == 0:
+                break
+            all_lists.append(ss)
+            offest = offest + page_size
+
+    return all_lists
+
+
+def processor_container_work(lock, global_counter, val):
+    """
+    A method to do the work inside a process within the multiprocessing pool
+    """
+    ids = val[0]
+    resource = val[1]
+    data_source = val[2]
+    from omero_search_engine.cache_functions.elasticsearch.sql_to_csv import (
+        sqls_resources,
+    )
+
+    sql_st = sqls_resources.get(resource)
+    try:
+        lock.acquire()
+        global_counter.value += 1
+    except Exception as ex:
+        print("Error %s" % ex)
+        raise ex
+    finally:
+        lock.release()
+    whereclause = " where image.id in (%s)" % ",".join(ids)
+    mod_sql = sql_st.substitute(whereclause=whereclause)
+    st = datetime.now()
+    conn = search_omero_app.config.database_connectors[data_source]
+    results = conn.execute_query(mod_sql)
+    search_omero_app.logger.info("Processing the results...")
+    process_results(results, resource, data_source, lock)
+    average_time = (datetime.now() - st) / 2
+    search_omero_app.logger.info("Done")
+    search_omero_app.logger.info("elpased time:%s" % average_time)
+
+
+def index_container_from_database(target_resource, resource, id, data_source):
+    """
+    A method to do the work inside a process within the multiprocessing pool
+    """
+    from omero_search_engine.cache_functions.elasticsearch.sql_to_csv import (
+        sqls_resources,
+        well_screen_clause,
+        plate_screen_clause,
+        images_ids_screen,
+        images_ids_project,
+    )
+
+    st = datetime.now()
+    if resource == "image":
+        whereclause = "where %s.id in (%s)" % (target_resource, id)
+    elif resource == "project" or resource == "screen":
+        whereclause = "where %s.id in (%s)" % (resource, id)
+    elif resource == "well":
+        whereclause = well_screen_clause.substitute(screen_id=id)
+    elif resource == "plate":
+        whereclause = plate_screen_clause.substitute(screen_id=id)
+    sql_st = sqls_resources.get(resource)
+    print(sqls_resources)
+    print(resource)
+    conn = search_omero_app.config.database_connectors[data_source]
+    if resource == "image":
+        st = datetime.now()
+        search_omero_app.logger.info("Calling the databas for %s/%s" % (resource, 1))
+        search_omero_app.logger.info("Connecting to the database ....")
+        if target_resource == "screen":
+            sql_stat = images_ids_screen.substitute(ids=id)
+        elif target_resource == "project":
+            sql_stat = images_ids_project.substitute(ids=id)
+        results = conn.execute_query(sql_stat)
+        all_lists = splite_results(results)
+        print(len(all_lists))
+        vals = []
+        for ss_ in all_lists:
+            vals.append((ss_, resource, data_source))
+        ################
+        no_processors = search_omero_app.config.get("NO_PROCESSES")
+        if not no_processors:
+            no_processors = int(multiprocessing.cpu_count() / 2)
+        no_processors = 2
+        search_omero_app.logger.info(
+            "Number of the allowed parallel\
+            processes inside the pool: %s"
+            % no_processors
+        )
+        # create the multiprocessing pool
+        pool = multiprocessing.Pool(no_processors)
+        try:
+            manager = multiprocessing.Manager()
+            # a lock which will be used between the processes in the pool
+            lock = manager.Lock()
+            # a counter which will be used by the processes in the pool
+            counter_val = manager.Value("i", 0)
+            func = partial(processor_container_work, lock, counter_val)
+            # map the data which will be consumed by the processes inside the pool
+            res = pool.map(func, vals)  # noqa
+            # print(res)
+        except Exception as ex:
+            print("Error is : %s" % ex)
+            raise ex
+        finally:
+            pool.close()
+
+        ################
+
+    else:
+        mod_sql = sql_st.substitute(whereclause=whereclause)
+        results = conn.execute_query(mod_sql)
+        search_omero_app.logger.info("Processing the results...")
+        process_results(results, resource, data_source, None)
+    average_time = (datetime.now() - st) / 2
+    search_omero_app.logger.info("Done")
+    search_omero_app.logger.info("elpased time:%s" % average_time)
+
+
 def process_results(results, resource, data_source, lock=None):
     df = pd.DataFrame(results).replace({np.nan: None})
     insert_resource_data_from_df(df, resource, data_source, lock)
@@ -658,7 +789,8 @@ def insert_resource_data_from_df(df, resource, data_source, lock=None):
     # logging.getLogger("elasticsearch").setLevel(logging.ERROR)
     search_omero_app.logger.info("Pushing the data to the Elasticsearch")
     try:
-        lock.acquire()
+        if lock:
+            lock.acquire()
         res = helpers.bulk(es, actions)
         search_omero_app.logger.info("Pushing results: %s" % str(res))
 
@@ -667,7 +799,8 @@ def insert_resource_data_from_df(df, resource, data_source, lock=None):
         raise err
 
     finally:
-        lock.release()
+        if lock:
+            lock.release()
 
     search_omero_app.logger.info("Added to search engine")
 
@@ -728,7 +861,7 @@ def save_key_value_buckets(
     resource_table_=None, data_source=None, clean_index=False, only_values=False
 ):
     """
-    Query the database and get all available keys and values for
+    Query the and get all available keys and values for
     the resource e.g. image,
     then query the elastic search to get value buckets for each bucket
     It will use multiprocessing pool to use parallel processing

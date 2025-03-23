@@ -1504,7 +1504,12 @@ def get_working_datasource(requested_datasource):
         return ",".join(data_sources)
 
 
-def delete_data_source_cache(es, data_source):
+def update_data_source_cache(data_source):
+    from omero_search_engine.cache_functions.elasticsearch.transform_data import (
+        save_key_value_buckets,
+    )
+
+    es = search_omero_app.config.get("es_connector")
     search_omero_app.logger.info("delete cache for data source %s" % data_source)
     delete_cache = delete_cache_query.substitute(data_source=data_source)
     es_index = "key_value_buckets_information"
@@ -1517,6 +1522,10 @@ def delete_data_source_cache(es, data_source):
         index=es_index_2, body=json.loads(delete_cache), request_timeout=1000
     )
     search_omero_app.logger.info("delete cache result 2 %s" % res_2)
+    # Trigger caching for  the data source
+
+    search_omero_app.logger.info("Trigger caching for data source %s" % data_source)
+    save_key_value_buckets(None, data_source, False, False)
 
 
 def delete_container(ids, resource, data_source, update_cache):
@@ -1527,9 +1536,7 @@ def delete_container(ids, resource, data_source, update_cache):
      the data source caching should be re-created
     """
     st = datetime.datetime.now()
-    from omero_search_engine.cache_functions.elasticsearch.transform_data import (
-        save_key_value_buckets,
-    )
+
     from omero_search_engine.api.v1.resources.resource_analyser import (
         get_containers_no_images,
     )
@@ -1598,14 +1605,9 @@ def delete_container(ids, resource, data_source, update_cache):
         )
         search_omero_app.logger.info("Delete results: %s" % delete_image_res)
 
-    if not update_cache:
-        return
-    # Delete the cache for the data source
-    delete_data_source_cache(es, data_source)
-    # Trigger caching for  the data source
-
-    search_omero_app.logger.info("Trigger caching for data source %s" % data_source)
-    save_key_value_buckets(None, data_source, False, False)
+    if update_cache:
+        # update the cache for the data source
+        update_data_source_cache(data_source)
     en = datetime.datetime.now()
     search_omero_app.logger.info("Start at: %s" % st)
     search_omero_app.logger.info("Ends at: %s" % en)

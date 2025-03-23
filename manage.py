@@ -550,8 +550,13 @@ def test_container_key_value():
     "--need_convert",
     help="if csv files are generating from csv templates, this attribure needs to be true",  # noqa
 )
+@manager.option("-u", "--update_cache", help="update the cache")
 def get_index_data_from_csv_files(
-    source=None, folder=None, resource="image", need_convert="False"
+    source=None,
+    folder=None,
+    resource="image",
+    need_convert="False",
+    update_cache="False",
 ):
     from omero_search_engine.cache_functions.elasticsearch.transform_data import (
         insert_resource_data,
@@ -559,6 +564,7 @@ def get_index_data_from_csv_files(
     )
     import json
 
+    update_cache = json.loads(update_cache.lower())
     need_convert = json.loads(need_convert.lower())
 
     insert_resource_data(
@@ -572,12 +578,17 @@ def get_index_data_from_csv_files(
     import time
 
     time.sleep(60)
-    save_key_value_buckets(
-        resource_table_=resource,
-        data_source=source,
-        clean_index=False,
-        only_values=False,
-    )
+    if not update_cache:
+        save_key_value_buckets(
+            resource_table_=resource,
+            data_source=source,
+            clean_index=False,
+            only_values=False,
+        )
+    else:
+        from omero_search_engine.api.v1.resources.utils import update_data_source_cache
+
+        update_data_source_cache(source)
 
 
 @manager.command
@@ -600,8 +611,78 @@ def convert_to_searchengine_indexer_format(file_name=None, resource=None):
     print(converted_file_name)
 
 
+@manager.command
+@manager.option("-r", "--resource", help="resource name, e.g. image")
+@manager.option("-d", "--data_source", help="data_source name, i.e. project or screen")
+@manager.option(
+    "-i",
+    "--id",
+    help=" resource id, if more than one then should ',' seprate between them",
+)
+@manager.option("-u", "--update_cache", help="update the cache")
+def delete_conatiner(resource=None, data_source=None, id=None, update_cache="True"):
+    """
+    delete a container (project or screen)
+    if it is required to delete more than container:
+     ids should be seprated by ','
+    """
+    from omero_search_engine.api.v1.resources.utils import delete_container
+    import json
+
+    update_cache = json.loads(update_cache.lower())
+    delete_container(id, resource, data_source, update_cache)
+
+
+@manager.command
+@manager.command
+@manager.option("-r", "--resource", help="resource name, e.g. image")
+@manager.option("-d", "--data_source", help="data_source name, i.e. project or screen")
+@manager.option(
+    "-i",
+    "--id",
+    help=" resource id, if more than one then should ',' seprate between them",
+)
+@manager.option(
+    "-b",
+    "--backup",
+    help="if True, backup will be called ",  # noqa
+)
+@manager.option("-u", "--update_cache", help="update the cache")
+def index_container_from_database(
+    resource=None, data_source=None, id=None, backup="False", update_cache="False"
+):
+
+    resources_index = {
+        "project": ["image", "project"],
+        "screen": ["image", "screen", "well", "plate"],
+    }
+    from omero_search_engine.cache_functions.elasticsearch.transform_data import (
+        index_container_from_database,
+    )
+    import json
+
+    backup = json.loads(backup.lower())
+    update_cache = json.loads(update_cache.lower())
+
+    for res in resources_index[resource]:
+        index_container_from_database(resource, res, id, data_source)
+
+    if update_cache:
+        from omero_search_engine.api.v1.resources.utils import update_data_source_cache
+
+        update_data_source_cache(data_source)
+
+    # backup the index data
+    if backup:
+        backup_elasticsearch_data()
+
+
 if __name__ == "__main__":
     from flask_script import Command
 
     Command.capture_all_args = False
     manager.run()
+
+# 23:53:55,523
+# screen 206
+# project 404
