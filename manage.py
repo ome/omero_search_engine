@@ -677,6 +677,17 @@ def index_container_from_database(
         backup_elasticsearch_data()
 
 
+@manager.command
+@manager.option("-d", "--working_data_source", help="data source")
+def update_data_source_cache(data_source=None):
+    from omero_search_engine.api.v1.resources.utils import update_data_source_cache
+
+    if not data_source:
+        print("Data source is required")
+        return
+    update_data_source_cache(data_source)
+
+
 if __name__ == "__main__":
     from flask_script import Command
 
