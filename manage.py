@@ -657,7 +657,7 @@ def index_container_from_database(
         "screen": ["image", "screen", "well", "plate"],
     }
     from omero_search_engine.cache_functions.elasticsearch.transform_data import (
-        index_container_from_database,
+        index_container_s_from_database,
     )
     import json
 
@@ -665,7 +665,7 @@ def index_container_from_database(
     update_cache = json.loads(update_cache.lower())
 
     for res in resources_index[resource]:
-        index_container_from_database(resource, res, id, data_source)
+        index_container_s_from_database(resource, res, id, data_source)
 
     if update_cache:
         from omero_search_engine.api.v1.resources.utils import update_data_source_cache

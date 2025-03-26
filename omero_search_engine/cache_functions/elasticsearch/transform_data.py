@@ -675,7 +675,7 @@ def processor_container_work(lock, global_counter, val):
     search_omero_app.logger.info("elpased time:%s" % average_time)
 
 
-def index_container_from_database(target_resource, resource, id, data_source):
+def index_container_s_from_database(target_resource, resource, id, data_source):
     """
     A method to do the work inside a process within the multiprocessing pool
     """
@@ -697,8 +697,6 @@ def index_container_from_database(target_resource, resource, id, data_source):
     elif resource == "plate":
         whereclause = plate_screen_clause.substitute(screen_id=id)
     sql_st = sqls_resources.get(resource)
-    print(sqls_resources)
-    print(resource)
     conn = search_omero_app.config.database_connectors[data_source]
     if resource == "image":
         st = datetime.now()
