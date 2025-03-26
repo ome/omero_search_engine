@@ -115,13 +115,13 @@ containers_1 = {
         "type": "project",
         "name": "idr0021-R",
         "image count": 414,
-        "data_source": "omero_trainer",
+        "data_source": "omero1",
     },
     "701": {
         "type": "project",
         "name": "ggg",
         "image count": 1,
-        "data_source": "omero_trainer",
+        "data_source": "omero1",
     },
 }
 
