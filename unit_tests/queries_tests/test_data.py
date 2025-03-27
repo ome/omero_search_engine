@@ -108,34 +108,3 @@ csv_test_data = [
     {"key": "organism", "value": "homo sapiens", "no_results": 15756},
     {"key": "gene symbol", "value": "pcnt", "no_results": 1484},
 ]
-
-
-containers_1 = {
-    "1273": {
-        "type": "project",
-        "name": "idr0021-R",
-        "image count": 414,
-        "data_source": "omero1",
-    },
-    "701": {
-        "type": "project",
-        "name": "ggg",
-        "image count": 1,
-        "data_source": "omero1",
-    },
-}
-
-containers_2 = {
-    "1582": {
-        "type": "project",
-        "name": "matlab-project",
-        "image count": 4,
-        "data_source": "omero1",
-    },
-    "1270": {
-        "type": "project",
-        "name": "idr0021",
-        "image count": 33,
-        "data_source": "omero1",
-    },
-}

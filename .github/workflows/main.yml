@@ -78,7 +78,8 @@ jobs:
           rm app_data/test_images.zip
           python manage.py get_index_data_from_csv_files -s test_csv -f app_data/test_images.csv -r image
           # run tests
-          python -m unittest discover -s unit_tests
+          python -m unittest discover -s unit_tests/queries_tests
+          python -m unittest discover -s unit_tests/indexing_tests
   upload:
     needs: build
     if: startsWith(github.ref, 'refs/tags')
