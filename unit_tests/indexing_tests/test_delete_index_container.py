@@ -106,7 +106,7 @@ class BasicTestCase(unittest.TestCase):
             self.assertEqual(int(cur_res["image count"]), int(container["image count"]))
             self.assertEqual(cur_res["name"], container["name"])
 
-    #def test_delete_index_multi_containers(self):
+        # def test_delete_index_multi_containers(self):
         resources_index = {
             "project": ["image", "project"],
             "screen": ["image", "screen", "well", "plate"],
