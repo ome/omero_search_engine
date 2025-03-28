@@ -1349,7 +1349,7 @@ def check_container_keys_vakues():
 
 
 def test_csv_data_sources(data_source="test_csv"):
-    from unit_tests.test_data import csv_test_data
+    from unit_tests.queries_tests.test_data import csv_test_data
 
     is_valid = True
     for data in csv_test_data:
