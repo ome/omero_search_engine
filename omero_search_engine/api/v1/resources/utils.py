@@ -1525,7 +1525,11 @@ def update_data_source_cache(data_source):
     # Trigger caching for  the data source
 
     search_omero_app.logger.info("Trigger caching for data source %s" % data_source)
-    save_key_value_buckets(None, data_source, False, False)
+    save_key_value_buckets("image", data_source, False, False)
+    import time
+
+    time.sleep(60)
+    save_key_value_buckets("project", data_source, False, False)
 
 
 def delete_container(ids, resource, data_source, update_cache):

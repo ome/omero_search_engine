@@ -426,7 +426,7 @@ def cache_key_value_index(
 @manager.option(
     "-s",
     "--source",
-    help="data source name, ndexeing all the data sources is the default",  # noqa
+    help="data source name, testing  all the data sources is the default",  # noqa
 )
 def test_indexing_search_query(
     json_file="app_data/test_index_data.json",
@@ -660,12 +660,14 @@ def index_container_from_database(
         index_container_s_from_database,
     )
     import json
+    import time
 
     backup = json.loads(backup.lower())
     update_cache = json.loads(update_cache.lower())
 
     for res in resources_index[resource]:
         index_container_s_from_database(resource, res, id, data_source)
+        time.sleep(60)
 
     if update_cache:
         from omero_search_engine.api.v1.resources.utils import update_data_source_cache
@@ -675,6 +677,7 @@ def index_container_from_database(
     # backup the index data
     if backup:
         backup_elasticsearch_data()
+    time.sleep(60)
 
 
 @manager.command

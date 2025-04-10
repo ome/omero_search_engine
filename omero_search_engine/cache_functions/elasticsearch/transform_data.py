@@ -356,7 +356,8 @@ def handle_file(file_name, es_index, cols, is_image, data_source, from_json):
             }
         )
     es = search_omero_app.config.get("es_connector")
-    helpers.bulk(es, actions)
+    res = helpers.bulk(es, actions)
+    search_omero_app.logger.info("1. Results is: %s" % str(res))
 
 
 def get_file_list(path_name):
@@ -790,10 +791,10 @@ def insert_resource_data_from_df(df, resource, data_source, lock=None):
         if lock:
             lock.acquire()
         res = helpers.bulk(es, actions)
-        search_omero_app.logger.info("Pushing results: %s" % str(res))
+        search_omero_app.logger.info("%s Pushing results: %s" % (es_index, str(res)))
 
     except Exception as err:
-        search_omero_app.logger.info("Error: %s" % str(err))
+        search_omero_app.logger.info("1. Error: %s" % str(err))
         raise err
 
     finally:
@@ -1013,7 +1014,8 @@ def save_key_value_buckets_process(lock, global_counter, vals):
         search_omero_app.logger.info("Pushing to elasticsearch")
         try:
             lock.acquire()
-            search_omero_app.logger.info(helpers.bulk(es, actions))
+            res = helpers.bulk(es, actions)
+            search_omero_app.logger.info("2. Results is %s" % str(res))
         except Exception as e:
             search_omero_app.logger.info("Error:  %s" % str(e))
             # raise e
@@ -1061,7 +1063,8 @@ def push_keys_cache_index(results, resource, data_source, es_index, resourcename
     actions = []
     actions.append({"_index": es_index, "_source": row})
     es = search_omero_app.config.get("es_connector")
-    search_omero_app.logger.info(helpers.bulk(es, actions))
+    res = helpers.bulk(es, actions)
+    search_omero_app.logger.info("3. Results is %s" % str(res))
 
 
 def get_buckets(key, data_source, resourcse, es_index, lock=None):
