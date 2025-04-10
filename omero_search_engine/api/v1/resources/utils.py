@@ -1504,7 +1504,7 @@ def get_working_datasource(requested_datasource):
         return ",".join(data_sources)
 
 
-def update_data_source_cache(data_source):
+def update_data_source_cache(data_source, res=None, delete_current_cache=True):
     from omero_search_engine.cache_functions.elasticsearch.transform_data import (
         save_key_value_buckets,
     )
@@ -1514,22 +1514,19 @@ def update_data_source_cache(data_source):
     delete_cache = delete_cache_query.substitute(data_source=data_source)
     es_index = "key_value_buckets_information"
     es_index_2 = "key_values_resource_cach"
-    res_1 = es.delete_by_query(
-        index=es_index, body=json.loads(delete_cache), request_timeout=1000
-    )
-    search_omero_app.logger.info("delete cache result 1 %s" % res_1)
-    res_2 = es.delete_by_query(
-        index=es_index_2, body=json.loads(delete_cache), request_timeout=1000
-    )
-    search_omero_app.logger.info("delete cache result 2 %s" % res_2)
+    if delete_current_cache:
+        res_1 = es.delete_by_query(
+            index=es_index, body=json.loads(delete_cache), request_timeout=1000
+        )
+        search_omero_app.logger.info("delete cache result 1 %s" % res_1)
+        res_2 = es.delete_by_query(
+            index=es_index_2, body=json.loads(delete_cache), request_timeout=1000
+        )
+        search_omero_app.logger.info("delete cache result 2 %s" % res_2)
     # Trigger caching for  the data source
 
     search_omero_app.logger.info("Trigger caching for data source %s" % data_source)
-    save_key_value_buckets("image", data_source, False, False)
-    import time
-
-    time.sleep(60)
-    save_key_value_buckets("project", data_source, False, False)
+    save_key_value_buckets(res, data_source, False, False)
 
 
 def delete_container(ids, resource, data_source, update_cache):

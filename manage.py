@@ -651,7 +651,6 @@ def delete_conatiner(resource=None, data_source=None, id=None, update_cache="Tru
 def index_container_from_database(
     resource=None, data_source=None, id=None, backup="False", update_cache="False"
 ):
-
     resources_index = {
         "project": ["image", "project"],
         "screen": ["image", "screen", "well", "plate"],
@@ -659,20 +658,21 @@ def index_container_from_database(
     from omero_search_engine.cache_functions.elasticsearch.transform_data import (
         index_container_s_from_database,
     )
+    from omero_search_engine.api.v1.resources.utils import update_data_source_cache
     import json
     import time
 
     backup = json.loads(backup.lower())
     update_cache = json.loads(update_cache.lower())
+    delete_current_cache = True
 
     for res in resources_index[resource]:
         index_container_s_from_database(resource, res, id, data_source)
         time.sleep(60)
-
-    if update_cache:
-        from omero_search_engine.api.v1.resources.utils import update_data_source_cache
-
-        update_data_source_cache(data_source)
+        if update_cache:
+            update_data_source_cache(data_source, res, delete_current_cache)
+            time.sleep(60)
+            delete_current_cache = False
 
     # backup the index data
     if backup:
