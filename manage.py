@@ -658,21 +658,20 @@ def index_container_from_database(
     from omero_search_engine.cache_functions.elasticsearch.transform_data import (
         index_container_s_from_database,
     )
-    from omero_search_engine.api.v1.resources.utils import update_data_source_cache
+
+    # from omero_search_engine.api.v1.resources.utils import update_data_source_cache
     import json
     import time
 
     backup = json.loads(backup.lower())
     update_cache = json.loads(update_cache.lower())
-    delete_current_cache = True
 
     for res in resources_index[resource]:
         index_container_s_from_database(resource, res, id, data_source)
         time.sleep(60)
-        if update_cache:
-            update_data_source_cache(data_source, res, delete_current_cache)
-            time.sleep(60)
-            delete_current_cache = False
+
+    if update_cache:
+        update_data_source_cache(data_source)
 
     # backup the index data
     if backup:
@@ -696,7 +695,3 @@ if __name__ == "__main__":
 
     Command.capture_all_args = False
     manager.run()
-
-# 23:53:55,523
-# screen 206
-# project 404
