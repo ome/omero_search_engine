@@ -20,3 +20,4 @@ DATA_SOURCES:
           DATABASE_SERVER_URI: 127.0.0.1
           DATABASE_PORT: 5432
           DATABASE_BACKUP_FILE: database.sql
+DEFAULT_DATASOURCE: default_datasource

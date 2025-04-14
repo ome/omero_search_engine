@@ -578,7 +578,7 @@ def get_index_data_from_csv_files(
     import time
 
     time.sleep(60)
-    if not update_cache:
+    if update_cache:
         save_key_value_buckets(
             resource_table_=resource,
             data_source=source,
