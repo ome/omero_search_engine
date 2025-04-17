@@ -955,11 +955,17 @@ def get_container_values_for_key(
                 for id in act_name:
                     if resourse != table_:
                         res = process_container_query(
-                            table_, resourse + "_id", id["id"], key, table_, query
+                            table_,
+                            resourse + "_id",
+                            id["id"],
+                            key,
+                            table_,
+                            query,
+                            data_source,
                         )
                     else:
                         res = process_container_query(
-                            table_, "id", id["id"], key, table_, query
+                            table_, "id", id["id"], key, table_, query, data_source
                         )
                     if len(res) > 0:
                         returned_results.append(
@@ -1018,16 +1024,20 @@ def get_container_values_for_key(
 
 
 def process_container_query(
-    table_, attribute_name, container_id, key, resourse, query=None
+    table_, attribute_name, container_id, key, resourse, query=None, data_source=None
 ):
     from omero_search_engine.api.v1.resources.utils import elasticsearch_query_builder
 
     res_index = resource_elasticsearchindex.get(table_)
     main_attributes = {
         "and_main_attributes": [
-            {"name": attribute_name, "value": container_id, "operator": "equals"}
+            {"name": attribute_name, "value": container_id, "operator": "equals"},
         ]
     }
+    if data_source:
+        main_attributes["and_main_attributes"].append(
+            {"name": "data_source", "value": "ssbd", "operator": "equals"}
+        )
     if query:
         and_filter = query.get("query_details").get("and_filters")
         or_filters = query.get("query_details").get("or_filters")

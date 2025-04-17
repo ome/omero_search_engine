@@ -560,7 +560,7 @@ def get_index_data_from_csv_files(
 ):
     from omero_search_engine.cache_functions.elasticsearch.transform_data import (
         insert_resource_data,
-        save_key_value_buckets,
+        # save_key_value_buckets,
     )
     import json
 
@@ -579,15 +579,13 @@ def get_index_data_from_csv_files(
 
     time.sleep(60)
     if update_cache:
-        save_key_value_buckets(
-            resource_table_=resource,
-            data_source=source,
-            clean_index=False,
-            only_values=False,
-        )
-    else:
-        from omero_search_engine.api.v1.resources.utils import update_data_source_cache
-
+        # save_key_value_buckets(
+        #    resource_table_=resource,
+        #    data_source=source,
+        #    clean_index=False,
+        #    only_values=False,
+        # )
+        # else:
         update_data_source_cache(source)
 
 
@@ -677,6 +675,17 @@ def index_container_from_database(
     if backup:
         backup_elasticsearch_data()
     time.sleep(60)
+
+
+@manager.command
+@manager.option("-d", "--working_data_source", help="data source")
+def delete_data_source_data(data_source=None):
+    if not data_source:
+        print("Data source is required")
+        return
+    from omero_search_engine.api.v1.resources.utils import delete_data_source_data
+
+    delete_data_source_data(data_source)
 
 
 @manager.command
