@@ -34,7 +34,6 @@ from omero_search_engine.cache_functions.elasticsearch.elasticsearch_templates i
 )
 
 
-
 from omero_search_engine import create_app
 
 create_app("testing")
@@ -55,17 +54,20 @@ class BasicTestCase(unittest.TestCase):
         from manage import (
             delete_data_source_data,
         )
-        data_source="omero_train"
+
+        data_source = "omero_train"
         delete_data_source_data(data_source)
         from omero_search_engine.api.v1.resources.utils import get_data_sources
         import time
+
         time.sleep(10)
-        #create_app("testing")
-        print ("==========================")
+        # create_app("testing")
+        print("==========================")
         data_sources = get_data_sources()
-        print (data_sources)
+        print(data_sources)
         print("==========================")
         assert data_source not in data_sources
+
 
 if __name__ == "__main__":
     unittest.main()
