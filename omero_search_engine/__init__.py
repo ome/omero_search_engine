@@ -22,6 +22,10 @@ import os
 import logging
 from elasticsearch import Elasticsearch
 from flasgger import Swagger, LazyString, LazyJSONEncoder
+from watchdog.observers import Observer
+from watchdog.events import FileSystemEventHandler
+import threading
+import time
 
 # from omero_search_engine.database.database_connector import DatabaseConnector
 from omero_search_engine.__version__ import __version__
@@ -30,6 +34,7 @@ from configurations.configuration import (
     configLooader,
     load_configuration_variables_from_file,
     set_database_connection_variables,
+    get_configure_file,
 )
 from logging.handlers import RotatingFileHandler
 
@@ -41,6 +46,8 @@ template = {
         lambda: request.environ.get("SCRIPT_NAME", "")
     )  # noqa
 }
+
+act_config_name = "development"
 
 
 main_folder = os.path.dirname(os.path.realpath(__file__))
@@ -68,7 +75,30 @@ swagger = Swagger(search_omero_app, template=template)
 app_config = load_configuration_variables_from_file(config_)
 
 
-def create_app(config_name="development"):
+class ConfigHandler(FileSystemEventHandler):
+    def on_modified(self, event):
+        self.reload_configuration_from_file(event)
+
+    def on_created(self, event):
+        self.reload_configuration_from_file(event)
+
+    def reload_configuration_from_file(self, event):
+        try:
+            if event.src_path.endswith(".app_config.yml"):
+                if search_omero_app.config.get("AUTOMATIC_REFRESH"):
+                    print("Configuration reloaded!")
+                    create_app()
+        except Exception as e:
+            print("ERROR:   ===>>> %s" % e)
+
+
+def create_app(config_name=None):
+    global act_config_name
+    if not config_name:
+        config_name = act_config_name
+    else:
+        print("re-assign...")
+        act_config_name = config_name
     app_config = configLooader.get(config_name)
     load_configuration_variables_from_file(app_config)
     set_database_connection_variables(app_config)
@@ -91,7 +121,6 @@ def create_app(config_name="development"):
         scheme="https",
         http_auth=("elastic", ELASTIC_PASSWORD),
     )
-
     search_omero_app.config.database_connectors = app_config.database_connectors
     print(search_omero_app.config.database_connectors)
     search_omero_app.config["es_connector"] = es_connector
@@ -118,7 +147,26 @@ def create_app(config_name="development"):
     return search_omero_app
 
 
-create_app()
+def start_watcher():
+    observer = Observer()
+    observer.schedule(
+        ConfigHandler(), path=os.path.dirname(get_configure_file()), recursive=False
+    )
+    observer.start()
+    try:
+        while True:
+            time.sleep(1)  # Prevents thread from exiting
+    except Exception as ex:
+        print("Error ,, %s" % ex)
+        observer.stop()
+    finally:
+        observer.join()
+
+
+watcher_thread = threading.Thread(target=start_watcher, daemon=True)
+watcher_thread.start()
+
+# create_app()
 
 from omero_search_engine.api.v1.resources import (  # noqa
     resources as resources_routers_blueprint_v1,
@@ -150,3 +198,8 @@ def page_not_found(error):
     response = make_response(resp_message, 404)
     response.mimetype = "text/plain"
     return response
+
+
+if __name__ == "__main__":
+    print("hi")
+    create_app()

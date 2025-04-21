@@ -21,3 +21,4 @@ DATA_SOURCES:
           DATABASE_PORT: 5432
           DATABASE_BACKUP_FILE: database.sql
 DEFAULT_DATASOURCE: default_datasource
+AUTOMATIC_REFRESH: True

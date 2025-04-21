@@ -32,3 +32,4 @@ vine==5.0.0
 wcwidth==0.2.5
 Werkzeug==1.0.1
 bump2version==1.0.1
+watchdog==6.0.0

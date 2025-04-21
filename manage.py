@@ -18,9 +18,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
-from omero_search_engine import search_omero_app
+from omero_search_engine import search_omero_app, create_app
 from flask_script import Manager
-from configurations.configuration import update_config_file
+from configurations.configuration import update_config_file, delete_data_source
 
 manager = Manager(search_omero_app)
 
@@ -679,17 +679,6 @@ def index_container_from_database(
 
 @manager.command
 @manager.option("-d", "--working_data_source", help="data source")
-def delete_data_source_data(data_source=None):
-    if not data_source:
-        print("Data source is required")
-        return
-    from omero_search_engine.api.v1.resources.utils import delete_data_source_data
-
-    delete_data_source_data(data_source)
-
-
-@manager.command
-@manager.option("-d", "--working_data_source", help="data source")
 def update_data_source_cache(data_source=None):
     from omero_search_engine.api.v1.resources.utils import update_data_source_cache
 
@@ -699,8 +688,22 @@ def update_data_source_cache(data_source=None):
     update_data_source_cache(data_source)
 
 
+@manager.command
+@manager.option("-d", "--working_data_source", help="data source")
+def delete_data_source_data(data_source=None):
+    if not data_source:
+        print("Data source is required")
+        return
+    from omero_search_engine.api.v1.resources.utils import delete_data_source_data
+
+    found = delete_data_source_data(data_source)
+    if found:
+        delete_data_source(data_source)
+
+
 if __name__ == "__main__":
     from flask_script import Command
 
     Command.capture_all_args = False
+    create_app()
     manager.run()

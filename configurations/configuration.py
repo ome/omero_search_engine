@@ -27,7 +27,6 @@ def load_configuration_variables_from_file(config):
     # loading application configuration variables from a file
     print("Injecting config variables from :%s" % app_config.INSTANCE_CONFIG)
     with open(app_config.INSTANCE_CONFIG, "rt") as f:
-
         # with open(app_config.INSTANCE_CONFIG) as f:
         cofg = yaml.safe_load(f.read())
     for x, y in cofg.items():
@@ -153,10 +152,51 @@ def config_datasource(configuration, updated_configuration):
     return changed
 
 
+def delete_data_source(data_source_name):
+    change = False
+    with open(app_config.INSTANCE_CONFIG) as f:
+        configuration = yaml.load(f)
+    for data_source in configuration.get("DATA_SOURCES"):
+        if data_source.get("name").lower() == data_source_name.lower():
+            configuration.get("DATA_SOURCES").remove(data_source)
+            change = True
+
+    if not change:
+        for data_source in configuration.get("DATA_SOURCES"):
+            if data_source["name"].lower() == data_source_name.lower():
+                configuration.get("DATA_SOURCES").remove(data_source)
+                return True
+    if change:
+        with open(app_config.INSTANCE_CONFIG, "w") as f:
+            yaml.dump(configuration, f)
+
+
+def get_configure_file():
+    home_folder = os.path.expanduser("~")
+    INSTANCE_CONFIG = os.path.join(home_folder, ".app_config.yml")
+    DEPLOYED_CONFIG = r"/etc/searchengine/.app_config.yml"
+    if not os.path.isfile(INSTANCE_CONFIG):
+        # Check if the configuration file exists in the docker deployed folder
+        # if not, it will assume it is either development environment or
+        # deploying using other methods
+        if os.path.isfile(DEPLOYED_CONFIG):
+            INSTANCE_CONFIG = DEPLOYED_CONFIG
+        else:
+            LOCAL_CONFIG_FILE = os.path.join(
+                os.path.abspath(os.path.dirname(__file__)), "app_config.yml"
+            )
+            copyfile(LOCAL_CONFIG_FILE, INSTANCE_CONFIG)
+            print(LOCAL_CONFIG_FILE, INSTANCE_CONFIG)
+
+    return INSTANCE_CONFIG
+
+
 class app_config(object):
     # the configuration can be loadd from yml file later
-    home_folder = os.path.expanduser("~")
+    INSTANCE_CONFIG = get_configure_file()
 
+    """
+    home_folder = os.path.expanduser("~")
     INSTANCE_CONFIG = os.path.join(home_folder, ".app_config.yml")
     DEPLOYED_CONFIG = r"/etc/searchengine/.app_config.yml"
     if not os.path.isfile(INSTANCE_CONFIG):
@@ -172,6 +212,7 @@ class app_config(object):
             )
             copyfile(LOCAL_CONFIG_FILE, INSTANCE_CONFIG)
             print(LOCAL_CONFIG_FILE, INSTANCE_CONFIG)
+    """
 
 
 class development_app_config(app_config):

@@ -1486,6 +1486,7 @@ def get_number_image_inside_container(resource, res_id, data_source):
             searchengine_results = returned_results["results"]["size"]
     else:
         searchengine_results = 0
+
     return searchengine_results
 
 
@@ -1514,16 +1515,20 @@ def update_data_source_cache(data_source, res=None, delete_current_cache=True):
     delete_cache = delete_cache_query.substitute(data_source=data_source)
     es_index = "key_value_buckets_information"
     es_index_2 = "key_values_resource_cach"
-    if delete_current_cache:
-        res_1 = es.delete_by_query(
-            index=es_index, body=json.loads(delete_cache), request_timeout=1000
-        )
-        search_omero_app.logger.info("delete cache result 1 %s" % res_1)
-        res_2 = es.delete_by_query(
-            index=es_index_2, body=json.loads(delete_cache), request_timeout=1000
-        )
-        search_omero_app.logger.info("delete cache result 2 %s" % res_2)
-    # Trigger caching for  the data source
+    try:
+        if delete_current_cache:
+            res_1 = es.delete_by_query(
+                index=es_index, body=json.loads(delete_cache), request_timeout=1000
+            )
+            search_omero_app.logger.info("delete cache result 1 %s" % res_1)
+            res_2 = es.delete_by_query(
+                index=es_index_2, body=json.loads(delete_cache), request_timeout=1000
+            )
+            search_omero_app.logger.info("delete cache result 2 %s" % res_2)
+        # Trigger caching for  the data source
+    except Exception as e:
+        print(e)
+        sys.exit()
 
     search_omero_app.logger.info("Trigger caching for data source %s" % data_source)
     save_key_value_buckets(res, data_source, False, False)
@@ -1569,8 +1574,9 @@ def delete_container(ids, resource, data_source, update_cache):
                 sub_container_delet_query = delete_container_query.substitute(
                     attribute="id", id=(",").join(ids), data_source=data_source
                 )
-
-                res__2 = delete_container_res = es.delete_by_query(
+                # check
+                # res__2 = delete_container_res = es.delete_by_query(
+                res__2 = es.delete_by_query(
                     index=resource_elasticsearchindex[resou],
                     body=json.loads(sub_container_delet_query),
                 )
@@ -1614,6 +1620,75 @@ def delete_container(ids, resource, data_source, update_cache):
     search_omero_app.logger.info("Ends at: %s" % en)
 
 
+def delete_data_source_data(data_source):
+    data_sources = get_data_sources()
+    found = False
+    for d_s in data_sources:
+        if d_s.lower() == data_source:
+            found = True
+            break
+    if not found:
+        search_omero_app.logger.info("Data source %s is not found" % data_source)
+        return found
+
+    st = datetime.datetime.now()
+    resources_index = ["image", "project", "screen", "well", "plate"]
+    query = delete_datasource_query.substitute(data_source=data_source)
+    es = search_omero_app.config.get("es_connector")
+    for res in resources_index:
+        #  Not enough active copies to meet shard count of
+        try:
+            search_omero_app.logger.info("Please wait while deleting  %s" % res)
+            delete_sub_res = es.delete_by_query(
+                index=resource_elasticsearchindex[res],
+                body=json.loads(query),
+                refresh=True,
+                wait_for_active_shards="all",
+                wait_for_completion=False,
+                slices="auto",
+                scroll="10m",
+                # requests_per_second=-1,
+            )
+            search_omero_app.logger.info(
+                "Delete results for %s is %s" % (res, delete_sub_res)
+            )
+            es.indices.refresh(index=resource_elasticsearchindex[res])
+        except Exception as ex:
+            search_omero_app.logger.info(
+                "Error while deleting  %s, error is %s" % (res, ex)
+            )
+
+    # delete data source cache
+    delete_cache = delete_cache_query.substitute(data_source=data_source)
+    es_index = ["key_value_buckets_information", "key_values_resource_cach"]
+    for e_inxex in es_index:
+        try:
+            search_omero_app.logger.info(
+                "Deleting cache inside %s for data source %s" % (e_inxex, data_source)
+            )
+            res_1 = es.delete_by_query(
+                index=e_inxex,
+                body=json.loads(delete_cache),
+                request_timeout=1000,
+                refresh=True,
+                wait_for_active_shards="all",
+                wait_for_completion=False,
+                slices="auto",
+                scroll="10m",
+            )
+            es.indices.refresh(index=es_index)
+            search_omero_app.logger.info("delete cache result 1 %s" % res_1)
+        except Exception as ex:
+            search_omero_app.logger.info(
+                "Error while deleting cache inside  %s, error is %s" % (e_inxex, ex)
+            )
+
+    en = datetime.datetime.now()
+
+    search_omero_app.logger.info("start time %s , end time %s" % (st, en))
+    return found
+
+
 delete_container_query = Template(
     """
 {"query":{
@@ -1633,6 +1708,21 @@ delete_container_query = Template(
 delete_cache_query = Template(
     """
 {"query":{"bool":{"must":[{"bool":{
+                  "must":{
+                     "match":{
+                        "data_source.keyvalue":"$data_source"
+                     }}}}]}}}
+"""
+)
+
+delete_datasource_query = Template(
+    """
+        {
+   "query":{
+      "bool":{
+         "must":[
+            {
+               "bool":{
                   "must":{
                      "match":{
                         "data_source.keyvalue":"$data_source"

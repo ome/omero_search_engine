@@ -79,7 +79,10 @@ jobs:
           python manage.py get_index_data_from_csv_files -s test_csv -f app_data/test_images.csv -r image -u True
           # run tests          
           python -m unittest discover -s unit_tests/indexing_tests
-          python -m unittest discover -s unit_tests/queries_tests
+          python -m unittest discover -s unit_tests/queries_tests         
+          python -m unittest discover -s unit_tests/datasource_tests
+
+
   upload:
     needs: build
     if: startsWith(github.ref, 'refs/tags')
