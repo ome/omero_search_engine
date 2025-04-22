@@ -24,10 +24,6 @@ Basic app unit tests
 import unittest
 
 
-from omero_search_engine.api.v1.resources.resource_analyser import (
-    return_containes_images,
-)
-
 from omero_search_engine.cache_functions.elasticsearch.elasticsearch_templates import (  # noqa
     image_template,
     key_values_resource_cache_template,

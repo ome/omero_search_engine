@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import json
 
 # Copyright (C) 2022 University of Dundee & Open Microscopy Environment.
 # All rights reserved.
@@ -18,6 +19,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
+
 from omero_search_engine import search_omero_app, create_app
 from flask_script import Manager
 from configurations.configuration import update_config_file, delete_data_source
@@ -700,6 +702,22 @@ def delete_data_source_data(data_source=None):
     if found:
         delete_data_source(data_source)
 
+
+@manager.command
+@manager.option(
+    "-a",
+    "--automatic_refresh",
+    help="set automatic refresh, if true any change of "
+    "the configuration file will be reloaded at run time",
+)
+def set_automatic_refresh(automatic_refresh="True"):
+    if not automatic_refresh:
+        print("Error, no attribute is value provided")
+    automatic_refresh = json.loads((automatic_refresh.lower()))
+    update_config_file({"AUTOMATIC_REFRESH": automatic_refresh})
+
+
+#
 
 if __name__ == "__main__":
     from flask_script import Command
