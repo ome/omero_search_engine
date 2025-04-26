@@ -1527,10 +1527,14 @@ def update_data_source_cache(data_source, res=None, delete_current_cache=True):
             search_omero_app.logger.info("delete cache result 2 %s" % res_2)
         # Trigger caching for  the data source
     except Exception as e:
-        print(e)
+        search_omero_app.logger.info(
+            "Error deleting cache for datasource %s, error message is %s"
+            % (data_source, str(e))
+        )
         sys.exit()
 
     search_omero_app.logger.info("Trigger caching for data source %s" % data_source)
+
     save_key_value_buckets(res, data_source, False, False)
 
 

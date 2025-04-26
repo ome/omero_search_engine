@@ -68,7 +68,7 @@ jobs:
           echo $PGPASSWORD
           psql -h localhost -U postgress -p ${{ job.services.postgres.ports[5432] }} -c 'CREATE DATABASE omero_train'
           python manage.py restore_postgresql_database -s omero_train
-          python manage.py get_index_data_from_database -b False -s omero_train
+          python manage.py get_index_data_from_database -b False -d omero_train
           rm app_data/omero_train.pgdump
           # set csv data source
           python manage.py set_data_source_files -n test_csv
@@ -76,7 +76,7 @@ jobs:
           wget https://github.com/khaledk2/ice-archh-64/releases/download/test_csv/test_images.zip -P app_data
           unzip app_data/test_images.zip -d app_data/
           rm app_data/test_images.zip
-          python manage.py get_index_data_from_csv_files -s test_csv -f app_data/test_images.csv -r image -u True
+          python manage.py get_index_data_from_csv_files -d git  -f app_data/test_images.csv -r image -u True
           # run tests          
           python -m unittest discover -s unit_tests/indexing_tests
           python -m unittest discover -s unit_tests/queries_tests         

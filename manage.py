@@ -133,16 +133,16 @@ def restore_postgresql_database(source="all"):
     help="resource name, creating all the indexes for all the resources is the default",  # noqa
 )
 @manager.option(
-    "-s",
-    "--source",
+    "-d",
+    "--data_source",
     help="data source name, ndexeing all the data sources is the default",  # noqa
 )
 @manager.option(
-    "-b",
+    "-d",
     "--backup",
     help="if True, backup will be called ",  # noqa
 )
-def get_index_data_from_database(resource="all", source="all", backup="True"):
+def get_index_data_from_database(resource="all", data_source="all", backup="True"):
     """
     insert data in Elasticsearch index for each resource
     It gets the data from postgres database server
@@ -157,16 +157,16 @@ def get_index_data_from_database(resource="all", source="all", backup="True"):
     import json
 
     backup = json.loads(backup.lower())
-    if not source:
+    if not data_source:
         print("Data source is required to process")
         return
-    elif source == "all":
+    elif data_source == "all":
         clean_index = True
 
     else:
         clean_index = False
-    for data_source in search_omero_app.config.database_connectors.keys():
-        if source.lower() != "all" and data_source.lower() != source.lower():
+    for data_source_ in search_omero_app.config.database_connectors.keys():
+        if data_source.lower() != "all" and data_source_.lower() != data_source.lower():
             continue
         # if resource != "all":
         #    sql_st = sqls_resources.get(resource)
@@ -178,23 +178,23 @@ def get_index_data_from_database(resource="all", source="all", backup="True"):
         for res, sql_st in sqls_resources.items():
             if resource.lower() != "all" and resource.lower() != res.lower():
                 continue
-            get_insert_data_to_index(sql_st, res, data_source, clean_index)
+            get_insert_data_to_index(sql_st, res, data_source_, clean_index)
         save_key_value_buckets(
             resource_table_=None,
-            data_source=data_source,
+            data_source=data_source_,
             clean_index=clean_index,
             only_values=False,
         )
         print(
             "!Done for data_source: %s from %s"
-            % (data_source, search_omero_app.config.database_connectors.keys())
+            % (data_source_, search_omero_app.config.database_connectors.keys())
         )
         if clean_index:
             clean_index = False
 
         # validat ethe indexing
         test_indexing_search_query(
-            source=data_source, deep_check=False, check_studies=True
+            source=data_source_, deep_check=False, check_studies=True
         )
 
     # backup the index data
@@ -533,8 +533,8 @@ def test_container_key_value():
 
 @manager.command
 @manager.option(
-    "-s",
-    "--source",
+    "-d",
+    "--datasource",
     help="data source name, ndexeing all the data sources is the default",  # noqa
 )
 @manager.option(
@@ -554,7 +554,7 @@ def test_container_key_value():
 )
 @manager.option("-u", "--update_cache", help="update the cache")
 def get_index_data_from_csv_files(
-    source=None,
+    datasource=None,
     folder=None,
     resource="image",
     need_convert="False",
@@ -572,7 +572,7 @@ def get_index_data_from_csv_files(
     insert_resource_data(
         folder=folder,
         resource=resource,
-        data_source=source,
+        data_source=datasource,
         from_json=False,
         need_convert=need_convert,
     )
@@ -588,7 +588,7 @@ def get_index_data_from_csv_files(
         #    only_values=False,
         # )
         # else:
-        update_data_source_cache(source)
+        update_data_source_cache(datasource)
 
 
 @manager.command
@@ -612,7 +612,7 @@ def convert_to_searchengine_indexer_format(file_name=None, resource=None):
 
 
 @manager.command
-@manager.option("-r", "--resource", help="resource name, e.g. image")
+@manager.option("-r", "--resource", help="resource name, i.e. project or scxreen")
 @manager.option("-d", "--data_source", help="data_source name, i.e. project or screen")
 @manager.option(
     "-i",
@@ -692,7 +692,7 @@ def update_data_source_cache(data_source=None):
 
 @manager.command
 @manager.option("-d", "--working_data_source", help="data source")
-def delete_data_source_data(data_source=None):
+def delete_datasource(data_source=None):
     if not data_source:
         print("Data source is required")
         return
@@ -716,8 +716,6 @@ def set_automatic_refresh(automatic_refresh="True"):
     automatic_refresh = json.loads((automatic_refresh.lower()))
     update_config_file({"AUTOMATIC_REFRESH": automatic_refresh})
 
-
-#
 
 if __name__ == "__main__":
     from flask_script import Command

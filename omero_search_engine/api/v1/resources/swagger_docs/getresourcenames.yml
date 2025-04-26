@@ -16,7 +16,7 @@ parameters:
     in: query
     type: string
     required: false
-    description: If it is provided, it will return the search results for a specific data source, otherwise it will return the results from all the data sources
+    description: If a specific data source is provided, results will be retrieved from that source. Otherwise, the default data source will be used. If no default data source is not configured, results will be gathered from all available sources.
 definitions:
   names:
     type: array
