@@ -152,6 +152,29 @@ def config_datasource(configuration, updated_configuration):
     return changed
 
 
+def rename_datasource(data_source_name, new_data_source_name):
+    change = False
+    with open(app_config.INSTANCE_CONFIG) as f:
+        configuration = yaml.load(f)
+    for data_source in configuration.get("DATA_SOURCES"):
+        if data_source.get("name").lower() == data_source_name.lower():
+            data_source["name"] = new_data_source_name
+            change = True
+
+    if not change:
+        for data_source in configuration.get("DATA_SOURCES"):
+            if data_source["name"].lower() == data_source_name.lower():
+                data_source["name"] = new_data_source_name
+                return True
+    if change:
+        print(
+            "data source %s has been renamed to %s"
+            % (data_source_name, new_data_source_name)
+        )
+        with open(app_config.INSTANCE_CONFIG, "w") as f:
+            yaml.dump(configuration, f)
+
+
 def delete_data_source(data_source_name):
     change = False
     with open(app_config.INSTANCE_CONFIG) as f:

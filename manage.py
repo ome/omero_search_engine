@@ -22,7 +22,11 @@ import os
 
 from omero_search_engine import search_omero_app, create_app
 from flask_script import Manager
-from configurations.configuration import update_config_file, delete_data_source
+from configurations.configuration import (
+    update_config_file,
+    delete_data_source,
+    rename_datasource,
+)
 
 manager = Manager(search_omero_app)
 
@@ -295,6 +299,18 @@ def set_data_source_files(
         source_attrs["screens_file"] = screens_file
 
     update_config_file(source, True)
+
+
+@manager.command
+@manager.option("-n", "--new_data_source_name", help="new data source name")
+@manager.option("-d", "--source_name", help="orginal data source name")
+def rename_data_source(data_source=None, new_data_source_name=None):
+    if not data_source or not new_data_source_name:
+        search_omero_app.logger.info(
+            "Existing data source name and new data source name are required"
+        )
+        return
+    rename_datasource(data_source, new_data_source_name)
 
 
 @manager.command

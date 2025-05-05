@@ -44,7 +44,9 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt;
-          # Configure database url          
+          # Configure database url    
+          # rename data source 
+          python manage.py rename_data_source -d idr -n omero1          
           python manage.py set_database_configuration -u localhost -s  ${{ job.services.postgres.ports[5432] }} -n postgress -p passwprd -w omero1 -d omero -b omero.pgdump
           export PGPASSWORD=passwprd;
           echo $PGPASSWORD
