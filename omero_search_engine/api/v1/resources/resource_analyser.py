@@ -1036,7 +1036,7 @@ def process_container_query(
     }
     if data_source:
         main_attributes["and_main_attributes"].append(
-            {"name": "data_source", "value": "ssbd", "operator": "equals"}
+            {"name": "data_source", "value": data_source, "operator": "equals"}
         )
     if query:
         and_filter = query.get("query_details").get("and_filters")

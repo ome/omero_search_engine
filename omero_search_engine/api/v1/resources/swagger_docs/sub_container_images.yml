@@ -37,6 +37,9 @@ This will return the dataset inside the project with several images in each, thi
 tags:
   - Available sub-containers inside a container
 parameters:
+  - name: data
+    in: body
+    required: false
   - name: container_name
     description: The container name
     in: query

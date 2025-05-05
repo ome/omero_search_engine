@@ -12,7 +12,7 @@ ELASTIC_PASSWORD: elasticsearch_user_password
 BASE_FOLDER: /etc/searchengine/
 #NO_PROCESSES: 1
 DATA_SOURCES:
-    - name: omero1
+    - name: idr
       DATABASE:
           DATABASE_NAME: omero
           DATABASE_USER: database_user
