@@ -108,7 +108,7 @@ parameters:
     in: query
     type: string
     required: false
-    description: If a specific data source is provided, results will be retrieved from that source. Otherwise, the default data source will be used. If no default data source is not configured, results will be gathered from all available sources.
+    description: If a specific data source is provided, results will be retrieved from that source. Otherwise, the default data source will be used. If there is no default data source configured, results will be gathered from all available sources.
     #examples:
     #  query: {
     #    "resource": "image",

@@ -1,6 +1,6 @@
 """
-This script reads the bia json files and creates the csv files
-These csv files  will be used to index the data and push it to the elasticsearch
+This script reads the bia json files and creates the CSV files
+These CSV files will be used to index the data and push it to the elasticsearch
 """
 
 import json

@@ -270,12 +270,14 @@ def set_default_datasource(dEFAULT_DATASOURCE=None):
     help="path to a folder containing CSV files which contains the image data ",
 )
 @manager.option(
-    "-p", "--projects_file", help="path to the a file containing the projects data"
+    "-p", "--projects_file", help="path to a file containing the projects data"
+
 )
 @manager.option(
     "-s", "--screens_file", help="path to a file containing the screens data"
 )
-@manager.option("-d", "--datasource_type", help=" data source type; supports csv")
+@manager.option("-d", "--datasource_type", help=" data source type; supports CSV")
+
 def set_data_source_files(
     name=None,
     images_folder=None,
@@ -556,7 +558,8 @@ def test_container_key_value():
 @manager.option(
     "-f",
     "--folder",
-    help="data folder which contains csv files",  # noqa
+    help="data folder which contains CSV files",  # noqa
+
 )
 @manager.option(
     "-r",
@@ -612,7 +615,8 @@ def get_index_data_from_csv_files(
 @manager.option(
     "-f",
     "--file_name",
-    help="csv file name",  # noqa
+    help="CSV file name",  # noqa
+
 )
 @manager.option(
     "-r",
@@ -629,7 +633,8 @@ def convert_to_searchengine_indexer_format(file_name=None, resource=None):
 
 
 @manager.command
-@manager.option("-r", "--resource", help="resource name, i.e. project or scxreen")
+@manager.option("-r", "--resource", help="resource name, i.e. project or screen")
+
 @manager.option("-d", "--data_source", help="data_source name, i.e. project or screen")
 @manager.option(
     "-i",
@@ -641,7 +646,8 @@ def delete_conatiner(resource=None, data_source=None, id=None, update_cache="Tru
     """
     delete a container (project or screen)
     if it is required to delete more than container:
-     ids should be seprated by ','
+     ids should be seprated by comma
+
     """
     from omero_search_engine.api.v1.resources.utils import delete_container
     import json
@@ -657,7 +663,8 @@ def delete_conatiner(resource=None, data_source=None, id=None, update_cache="Tru
 @manager.option(
     "-i",
     "--id",
-    help=" resource id, if more than one then should ',' seprate between them",
+    help=" resource id, if more than one then use command to  separate the values",
+
 )
 @manager.option(
     "-b",
@@ -729,7 +736,8 @@ def delete_datasource(data_source=None):
 )
 def set_automatic_refresh(automatic_refresh="True"):
     if not automatic_refresh:
-        print("Error, no attribute is value provided")
+        print("Error, no attribute value provided")
+
     automatic_refresh = json.loads((automatic_refresh.lower()))
     update_config_file({"AUTOMATIC_REFRESH": automatic_refresh})
 

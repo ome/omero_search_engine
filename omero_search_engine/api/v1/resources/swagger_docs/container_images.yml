@@ -1,16 +1,16 @@
-A searchengine endpoint to Return the available containers and the number of images in each.
+A searchengine endpoint to return the available containers and the number of images in each.
 ---
 tags:
-  - Containers and the number of images in each.
+  - Containers and the number of images in each container
 parameters:
   - name: data_source
     in: query
     type: string
     required: false
-    description: If a specific data source is provided, results will be retrieved from that source. Otherwise, the default data source will be used. If no default data source is not configured, results will be gathered from all available sources.
+    description: If a specific data source is provided, results will be retrieved from that source. Otherwise, the default data source will be used. If there is no default data source is configured, results will be gathered from all available sources.
 
 responses:
   200:
-    description: A JSON contains the search results
+    description: A JSON containing the search results
     examples:
       results: []

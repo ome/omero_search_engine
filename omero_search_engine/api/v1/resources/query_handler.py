@@ -72,7 +72,7 @@ def check_get_names(idr_, resource, attribute, data_source, return_exact=False):
                 # print(act_name, data_source)
                 all_act_names = all_act_names + act_name
         else:
-            # This should be modified to query specific data source specific
+            # This should be modified to query a specific data source
             for data_source_, pr_names_ in pr_names.items():
                 if (
                     data_source

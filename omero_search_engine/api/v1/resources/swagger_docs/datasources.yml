@@ -5,6 +5,6 @@ tags:
 
 responses:
   200:
-    description: A JSON contains the data sources
+    description: A JSON containing the data sources
     examples:
       results: []

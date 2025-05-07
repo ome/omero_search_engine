@@ -1,4 +1,4 @@
-A searchengine endpoint to accept search by value only (no key is provided),for example, find all the images which have value = "Homo sapiens".
+A searchengine endpoint to accept search by value only (no key is provided), for example, find all the images which have value = "Homo sapiens".
 ---
 tags:
  - Search by value
@@ -29,20 +29,20 @@ parameters:
     in: query
     type: boolean
   - name: bookmark
-    description: bookmark is used to the call the next page if number of results is bigger than 1000, it returns with each reasult page.
+    description: bookmark is used to call the next page if number of results is bigger than 1000, it returns with each result page.
     in: query
     type: integer
   - name: data_source
     in: query
     type: string
     required: false
-    description: If a specific data source is provided, results will be retrieved from that source. Otherwise, the default data source will be used. If no default data source is not configured, results will be gathered from all available sources.
+    description: If a specific data source is provided, results will be retrieved from that source. Otherwise, the default data source will be used. If there is no default data source configured, results will be gathered from all available sources.
   - name: return_containers
     in: query
     type: boolean
     required: false
 responses:
   200:
-    description: A JSON contains the search results
+    description: A JSON containing the search results
     examples:
       results: []

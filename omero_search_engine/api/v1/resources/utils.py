@@ -256,7 +256,7 @@ def elasticsearch_query_builder(
                 else:
                     attribute = clause
                     if attribute["operator"].strip() == "in":
-                        # it is assuming that in operator value is a lit
+                        # it is assuming that in operator value is a list
                         main_dd = main_attribute_query_in_template.substitute(
                             attribute=attribute["name"].strip(),
                             value=json.dumps(attribute["value"]),
