@@ -140,7 +140,6 @@ def restore_postgresql_database(source="all"):
     "-d",
     "--data_source",
     help="data source name, indexing all the data sources is the default",  # noqa
-
 )
 @manager.option(
     "-d",
@@ -192,7 +191,6 @@ def get_index_data_from_database(resource="all", data_source="all", backup="True
         )
         print(
             "Done for data_source: %s from %s"
-
             % (data_source_, search_omero_app.config.database_connectors.keys())
         )
         if clean_index:
@@ -215,7 +213,6 @@ def get_index_data_from_database(resource="all", data_source="all", backup="True
 @manager.option("-d", "--database", help="database name")
 @manager.option("-n", "--name", help="database usernname")
 @manager.option("-b", "--backup_filename", help="database backup filename")
-
 @manager.option("-p", "--password", help="database username password")
 @manager.option("-w", "--working_data_source", help="data source")
 def set_database_configuration(
@@ -271,14 +268,12 @@ def set_default_datasource(dEFAULT_DATASOURCE=None):
     "-i",
     "--images_folder",
     help="path to a folder containing CSV files which contains the image data ",
-
 )
 @manager.option(
     "-p", "--projects_file", help="path to the a file containing the projects data"
 )
 @manager.option(
     "-s", "--screens_file", help="path to a file containing the screens data"
-
 )
 @manager.option("-d", "--datasource_type", help=" data source type; supports csv")
 def set_data_source_files(
@@ -557,7 +552,6 @@ def test_container_key_value():
     "-d",
     "--datasource",
     help="data source name, indexing all the data sources is the default",  # noqa
-
 )
 @manager.option(
     "-f",
@@ -573,7 +567,6 @@ def test_container_key_value():
     "-n",
     "--need_convert",
     help="if CSV files are generating from CSV templates, this attribute needs to be true",  # noqa
-
 )
 @manager.option("-u", "--update_cache", help="update the cache")
 def get_index_data_from_csv_files(
