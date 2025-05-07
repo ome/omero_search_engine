@@ -228,7 +228,7 @@ key_value_buckets_info_template = {
                 "type": "text",
                 "fields": {
                     "keyname": {"type": "keyword"},
-                    "keyrnamenormalize": {
+                    "keynamenormalize": {
                         "type": "keyword",
                         "normalizer": "valuesnormalizer",
                     },

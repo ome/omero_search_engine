@@ -25,7 +25,7 @@ import unittest
 
 
 from omero_search_engine.api.v1.resources.resource_analyser import (
-    return_containes_images,
+    return_containers_images,
 )
 
 from omero_search_engine.cache_functions.elasticsearch.elasticsearch_templates import (  # noqa
@@ -58,14 +58,14 @@ class BasicTestCase(unittest.TestCase):
     def test_delete_index_one_container(self):
         from manage import (
             index_container_from_database,
-            delete_conatiner,
+            delete_containers,
         )
 
         ids_ = list(containers_n.keys())
         data_source = containers_n[ids_[0]]["data_source"]
         resource = containers_n[ids_[0]]["type"]
-        delete_conatiner(resource, data_source, ",".join(ids_), "True")
-        containers_ad = return_containes_images(
+        delete_containers(resource, data_source, ",".join(ids_), "True")
+        containers_ad = return_containers_images(
             data_source,
         )
         # test delete container
@@ -76,7 +76,7 @@ class BasicTestCase(unittest.TestCase):
             resource, data_source, ",".join(ids_), "False", "True"
         )
 
-        containers_ad = return_containes_images(data_source)
+        containers_ad = return_containers_images(data_source)
         found = False
         for id, container in containers_n.items():
             for con1 in containers_ad["results"]["results"]:
@@ -91,14 +91,14 @@ class BasicTestCase(unittest.TestCase):
     def test_delete_index_other_container(self):
         from manage import (
             index_container_from_database,
-            delete_conatiner,
+            delete_container,
         )
 
         ids_ = list(container_m.keys())
         data_source = container_m[ids_[0]]["data_source"]
         resource = container_m[ids_[0]]["type"]
-        delete_conatiner(resource, data_source, ",".join(ids_), "True")
-        containers_ad = return_containes_images(
+        delete_container(resource, data_source, ",".join(ids_), "True")
+        containers_ad = return_containers_images(
             data_source,
         )
         # test delete container
@@ -112,7 +112,7 @@ class BasicTestCase(unittest.TestCase):
         #    #index_container_from_database(resource, data_source,
         #    ",".join(ids_), "False", "True")
         #    index_container_from_database(resource, data_source, id, "False", "True")
-        containers_ad = return_containes_images(data_source)
+        containers_ad = return_containers_images(data_source)
         found = False
         for id, container in container_m.items():
             for con1 in containers_ad["results"]["results"]:

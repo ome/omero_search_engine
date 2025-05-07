@@ -24,7 +24,7 @@ from omero_search_engine import search_omero_app, create_app
 from flask_script import Manager
 from configurations.configuration import (
     update_config_file,
-    delete_data_source,
+    delete_data_source_configuration,
     rename_datasource,
 )
 
@@ -227,9 +227,8 @@ def set_database_configuration(
     if not working_data_source:
         print("Data source is required to process")
     database_attrs = {}
-    databse_config = {}
-    databse_config["name"] = working_data_source
-    databse_config["DATABASE"] = database_attrs
+    database_attrs["name"] = working_data_source
+    database_attrs["DATABASE"] = database_attrs
     if database:
         database_attrs["DATABASE_NAME"] = database
     if url:
@@ -244,7 +243,7 @@ def set_database_configuration(
         database_attrs["DATABASE_BACKUP_FILE"] = backup_filename
 
     if len(database_attrs) > 0:
-        update_config_file(databse_config, data_source=True)
+        update_config_file(database_attrs, data_source=True)
     else:
         search_omero_app.logger.info(
             "At least one database attribute\
@@ -254,10 +253,10 @@ def set_database_configuration(
 
 
 @manager.command
-@manager.option("-d", "--dEFAULT_DATASOURCE", help="Default data source")
-def set_default_datasource(dEFAULT_DATASOURCE=None):
-    if dEFAULT_DATASOURCE:
-        update_config_file({"DEFAULT_DATASOURCE": dEFAULT_DATASOURCE})
+@manager.option("-d", "--default_database", help="Default data source")
+def set_default_datasource(default_database=None):
+    if default_database:
+        update_config_file({"DEFAULT_DATASOURCE": default_database})
     else:
         search_omero_app.logger.info("No attribute is provided")
 
@@ -598,13 +597,6 @@ def get_index_data_from_csv_files(
 
     time.sleep(60)
     if update_cache:
-        # save_key_value_buckets(
-        #    resource_table_=resource,
-        #    data_source=source,
-        #    clean_index=False,
-        #    only_values=False,
-        # )
-        # else:
         update_data_source_cache(datasource)
 
 
@@ -637,11 +629,11 @@ def convert_to_searchengine_indexer_format(file_name=None, resource=None):
     help=" resource id, if more than one then should ',' seprate between them",
 )
 @manager.option("-u", "--update_cache", help="update the cache")
-def delete_conatiner(resource=None, data_source=None, id=None, update_cache="True"):
+def delete_containers(resource=None, data_source=None, id=None, update_cache="True"):
     """
     delete a container (project or screen)
     if it is required to delete more than container:
-     ids should be seprated by comma
+     ids should be separated by comma
 
     """
     from omero_search_engine.api.v1.resources.utils import delete_container
@@ -710,15 +702,15 @@ def update_data_source_cache(data_source=None):
 
 @manager.command
 @manager.option("-d", "--working_data_source", help="data source")
-def delete_datasource(data_source=None):
+def delete_data_source(data_source=None):
     if not data_source:
         print("Data source is required")
         return
-    from omero_search_engine.api.v1.resources.utils import delete_data_source_data
+    from omero_search_engine.api.v1.resources.utils import delete_data_source_contents
 
-    found = delete_data_source_data(data_source)
+    found = delete_data_source_contents(data_source)
     if found:
-        delete_data_source(data_source)
+        delete_data_source_configuration(data_source)
 
 
 @manager.command

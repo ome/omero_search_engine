@@ -1025,9 +1025,9 @@ def search_index_using_search_after(
     # toz  ya
     returned_results = []
     if bookmark_ and not pagination_dict:
-        add_paination = False
+        add_pagination = False
     else:
-        add_paination = True
+        add_pagination = True
     if not data_source:
         data_source = get_data_sources()
     es = search_omero_app.config.get("es_connector")
@@ -1116,7 +1116,7 @@ def search_index_using_search_after(
             "bookmark": bookmark,
             "size": size,
         }
-        if add_paination:
+        if add_pagination:
             pagination_dict = get_pagination(no_of_pages, bookmark, pagination_dict)
             results_dict["pagination"] = pagination_dict
 
@@ -1133,7 +1133,7 @@ def handle_query(table_, query):
     pass
 
 
-def search_resource_annotation_return_conatines_only(
+def search_resource_annotation_return_containers_only(
     query,
     data_source,
     return_columns,
@@ -1490,7 +1490,7 @@ def get_number_image_inside_container(resource, res_id, data_source):
     return searchengine_results
 
 
-def get_working_datasource(requested_datasource):
+def get_working_data_source(requested_datasource):
     data_sources = get_data_sources()
     default_datasource = search_omero_app.config.get("DEFAULT_DATASOURCE")
     requested_datasource = check_empty_string(requested_datasource)
@@ -1514,7 +1514,7 @@ def update_data_source_cache(data_source, res=None, delete_current_cache=True):
     search_omero_app.logger.info("delete cache for data source %s" % data_source)
     delete_cache = delete_cache_query.substitute(data_source=data_source)
     es_index = "key_value_buckets_information"
-    es_index_2 = "key_values_resource_cach"
+    es_index_2 = "key_values_resource_cached"
     try:
         if delete_current_cache:
             res_1 = es.delete_by_query(
@@ -1624,7 +1624,7 @@ def delete_container(ids, resource, data_source, update_cache):
     search_omero_app.logger.info("Ends at: %s" % en)
 
 
-def delete_data_source_data(data_source):
+def delete_data_source_contents(data_source):
     data_sources = get_data_sources()
     found = False
     for d_s in data_sources:
@@ -1664,7 +1664,7 @@ def delete_data_source_data(data_source):
 
     # delete data source cache
     delete_cache = delete_cache_query.substitute(data_source=data_source)
-    es_index = ["key_value_buckets_information", "key_values_resource_cach"]
+    es_index = ["key_value_buckets_information", "key_values_resource_cached"]
     for e_inxex in es_index:
         try:
             search_omero_app.logger.info(

@@ -167,7 +167,7 @@ class BasicTestCase(unittest.TestCase):
         # table = "image1"
         table_2 = "image"
         es_index = "image_keyvalue_pair_metadata_1"
-        es_index_2 = "key_values_resource_cach"
+        es_index_2 = "key_values_resource_cached"
         create_es_index_2 = True
         all_all_indices = get_all_indexes_from_elasticsearch()
         if es_index_2 in all_all_indices.keys():

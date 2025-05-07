@@ -883,7 +883,7 @@ def get_omero_stats():
 
         from omero_search_engine.api.v1.resources.resource_analyser import (
             get_restircted_search_terms,
-            query_cashed_bucket,
+            query_cached_bucket,
         )
 
         data = []
@@ -893,7 +893,7 @@ def get_omero_stats():
             for name in names:
                 if name == "name":
                     continue
-                returned_results = query_cashed_bucket(name, resource, data_source)
+                returned_results = query_cached_bucket(name, resource, data_source)
                 if resource == "image":
                     data.append(
                         "%s, %s, %s,%s,%s"

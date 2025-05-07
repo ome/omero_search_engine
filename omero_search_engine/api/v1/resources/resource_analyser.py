@@ -126,10 +126,10 @@ def search_index_for_value(e_index, query, get_size=False):
 def search_index_for_values_get_all_buckets(e_index, query):
     """
     Perform search the elasticsearch using value and
-    return all the key values whihch this value has been used,
+    return all the key values which this value has been used,
     it will include the number of records.
-    It is relatively slow but it might be due
-    to the elasticssearch hosting machine
+    It is relatively slow, but it might be due
+    to the Elasticsearch hosting machine
     """
     page_size = 9999
     bookmark = 0
@@ -401,7 +401,7 @@ def prepare_search_results_buckets(results_):
 
 
 def get_key_values_return_contents(name, resource, data_source, csv):
-    resource_keys = query_cashed_bucket(name, resource, data_source)
+    resource_keys = query_cached_bucket(name, resource, data_source)
     # if a csv flag is true thenm iut will send a CSV file
     # which contains the results otherwise it will return a JSON file
     if csv:
@@ -490,7 +490,7 @@ def query_cashed_bucket_part_value_keys(
         return returned_results
 
 
-def query_cashed_bucket(
+def query_cached_bucket(
     name, resource, data_source, es_index="key_value_buckets_information"
 ):
     # returns possible matches for a specific resource
@@ -586,7 +586,7 @@ key_values_buckets_template = Template(
     """
 {
 "query":{"bool":{"must":[{"bool":{
-"must":{"match":{"Attribute.keyrnamenormalize":"$name"}}}},{"bool":{"must":{
+"must":{"match":{"Attribute.keynamenormalize":"$name"}}}},{"bool":{"must":{
 "match":{"resource.keyresource":"$resource"}}}
 },{"bool":{"must":{"terms":{"data_source.keyvalue":$data_source}
 }}}]}}}
@@ -598,7 +598,7 @@ Search using key, part of the value and resource
 """
 key_part_values_buckets_template = Template(
     """{"query":{"bool":{"must":[{"bool":{"must":[{
-"match":{"Attribute.keyrnamenormalize":"$name"}},
+"match":{"Attribute.keynamenormalize":"$name"}},
 {"wildcard":{"Value.keyvaluenormalize":"*$value*"}
 }]}},{"bool":{"must":[{"match":{"resource.keyresource":"$resource"}
 }]}},{"bool":{"must":{"terms":{"data_source.keyvalue":$data_source}}}}]}}}
@@ -693,7 +693,7 @@ def get_restircted_search_terms():
 
 
 def get_resource_attributes(
-    resource, data_source=None, mode=None, es_index="key_values_resource_cach"
+    resource, data_source=None, mode=None, es_index="key_values_resource_cached"
 ):
     """
     return the available attributes for one or all resources
@@ -884,7 +884,7 @@ def get_resource_names(
 
 
 def get_the_results(
-    resource, name, description, data_source, es_index="key_values_resource_cach"
+    resource, name, description, data_source, es_index="key_values_resource_cached"
 ):
     returned_results = {}
     if data_source:
@@ -1162,7 +1162,7 @@ def get_containers_no_images(
         target = "name"
     elif container_id:
         target = "id"
-    contianer = None
+
     returned_results = []
     containers_subcontainers = {"project": ["dataset"], "screen": ["well", "plate"]}
     act_names = get_containets_using_id_or_name(
@@ -1267,6 +1267,6 @@ def get_containets_using_id_or_name(
     return act_names
 
 
-def return_containes_images(data_source=None):
+def return_containers_images(data_source=None):
     data = get_containets_using_id_or_name(returned_data_source=data_source)
     return {"Error": None, "results": {"results": data}}

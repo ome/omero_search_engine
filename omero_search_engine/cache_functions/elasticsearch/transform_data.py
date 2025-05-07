@@ -27,7 +27,7 @@ import os
 import uuid
 from omero_search_engine.api.v1.resources.utils import resource_elasticsearchindex
 from omero_search_engine.api.v1.resources.resource_analyser import (
-    query_cashed_bucket,
+    query_cached_bucket,
     get_all_values_for_a_key,
     # return_containes_images,
 )
@@ -104,7 +104,7 @@ def get_all_indexes():
         "well_keyvalue_pair_metadata",
         "image_keyvalue_pair_metadata",
         "key_value_buckets_information",
-        "key_values_resource_cach",
+        "key_values_resource_cached",
     ]
 
 
@@ -869,7 +869,7 @@ def save_key_value_buckets(
     if data_source is None:
         return "No data source is provided"
     es_index = "key_value_buckets_information"
-    es_index_2 = "key_values_resource_cach"
+    es_index_2 = "key_values_resource_cached"
 
     if clean_index:
         if not only_values:
@@ -1102,5 +1102,5 @@ def prepare_bucket_index_data(results, res_table, data_source, es_index):
 
 
 def determine_cashed_bucket(attribute, resource, es_indrx):
-    res = query_cashed_bucket(attribute, resource, es_indrx)
+    res = query_cached_bucket(attribute, resource, es_indrx)
     search_omero_app.logger.info(res)

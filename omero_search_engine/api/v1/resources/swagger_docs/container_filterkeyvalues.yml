@@ -1,4 +1,4 @@
-Return the available key values within a container which within a query results
+Return the available key values within a container from the query results.
 Example
 
 In this example the search will use the provided query results within the specified container and provides the available values for the provided key.

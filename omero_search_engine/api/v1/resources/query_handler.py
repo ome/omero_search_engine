@@ -69,7 +69,6 @@ def check_get_names(idr_, resource, attribute, data_source, return_exact=False):
                     for name in pr_names_
                     if name[attribute] and idr_.lower() in name[attribute].lower()
                 ]
-                # print(act_name, data_source)
                 all_act_names = all_act_names + act_name
         else:
             # This should be modified to query a specific data source
@@ -280,7 +279,7 @@ class QueryRunner(
                 elif len(main_or_attribute_.keys()) == 0 and len(checked_list) == len(
                     or_it.resources_query
                 ):
-                    return {"Error": "4. Your query returns no results"}
+                    return {"Error": "Your query returns no results"}
             for res, items_ in main_or_attribute_.items():
                 for it_ in items_:
                     org_type = it_.org_type
@@ -335,7 +334,7 @@ class QueryRunner(
                         if len(main_or_attribute_.keys()) == 0 and len(
                             checked_list
                         ) == len(or_it.resources_query):
-                            return {"Error": "5. Your query returns no results"}
+                            return {"Error": "Your query returns no results"}
             for res, items_ in main_or_attribute_.items():
                 if res not in main_or_attribute:
                     main_or_attribute[res] = items_
@@ -377,7 +376,7 @@ class QueryRunner(
                             main_and_attribute[resource], new_cond, resource
                         )
                 else:
-                    return {"Error": "1. Your query returns no results"}
+                    return {"Error": "Your query returns no results"}
 
         # check and_filters
         for and_it in self.and_query_group:
@@ -399,7 +398,7 @@ class QueryRunner(
                                 main_and_attribute[resource], new_cond, resource
                             )
                     else:
-                        return {"Error": "2. Your query returns no results"}
+                        return {"Error": "Your query returns no results"}
 
         for res, main_list in main_and_attribute.items():
             if res in main_or_attribute:
@@ -905,10 +904,10 @@ def simple_search(
     if not study:
         if return_containers:
             from omero_search_engine.api.v1.resources.utils import (
-                search_resource_annotation_return_conatines_only,
+                search_resource_annotation_return_containers_only,
             )
 
-            return search_resource_annotation_return_conatines_only(
+            return search_resource_annotation_return_containers_only(
                 {"query_details": query_details},
                 data_source,
                 None,
@@ -934,10 +933,10 @@ def simple_search(
         )
         if return_containers:
             from omero_search_engine.api.v1.resources.utils import (
-                search_resource_annotation_return_conatines_only,
+                search_resource_annotation_return_containers_only,
             )
 
-            search_resource_annotation_return_conatines_only(
+            search_resource_annotation_return_containers_only(
                 query_details,
                 data_source,
                 None,

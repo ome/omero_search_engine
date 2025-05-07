@@ -175,7 +175,7 @@ def rename_datasource(data_source_name, new_data_source_name):
             yaml.dump(configuration, f)
 
 
-def delete_data_source(data_source_name):
+def delete_data_source_configuration(data_source_name):
     change = False
     with open(app_config.INSTANCE_CONFIG) as f:
         configuration = yaml.load(f)

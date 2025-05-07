@@ -26,8 +26,8 @@ from omero_search_engine.api.v1.resources.utils import (
     adjust_query_for_container,
     get_data_sources,
     # check_empty_string,
-    search_resource_annotation_return_conatines_only,
-    get_working_datasource,
+    search_resource_annotation_return_containers_only,
+    get_working_data_source,
 )
 from omero_search_engine.api.v1.resources.resource_analyser import (
     search_value_for_resource,
@@ -36,7 +36,7 @@ from omero_search_engine.api.v1.resources.resource_analyser import (
     get_resource_names,
     get_key_values_return_contents,
     query_cashed_bucket_part_value_keys,
-    return_containes_images,
+    return_containers_images,
 )
 from omero_search_engine.api.v1.resources.utils import get_resource_annotation_table
 from omero_search_engine.api.v1.resources.query_handler import (
@@ -97,7 +97,7 @@ def search_resource_page(resource_table):
             raw_elasticsearch_query = data.get("raw_elasticsearch_query")
             pagination_dict = data.get("pagination")
             return_containers = data.get("return_containers")
-            data_source = get_working_datasource(request.args.get("data_source"))
+            data_source = get_working_data_source(request.args.get("data_source"))
             if return_containers:
                 return_containers = json.loads(return_containers.lower())
 
@@ -178,7 +178,7 @@ def search_resource(resource_table):
     validation_results = query_validator(query)
     if validation_results == "OK":
         return_containers = request.args.get("return_containers")
-        data_source = get_working_datasource(request.args.get("data_source"))
+        data_source = get_working_data_source(request.args.get("data_source"))
         if return_containers:
             return_containers = json.loads(return_containers.lower())
 
@@ -199,7 +199,7 @@ def get_values_using_value(resource_table):
     file: swagger_docs/search_for_any_value.yml
     """
     value = request.args.get("value")
-    data_source = get_working_datasource(request.args.get("data_source"))
+    data_source = get_working_data_source(request.args.get("data_source"))
     if not value:
         return jsonify(
             build_error_message("Error: {error}".format(error="No value is provided "))
@@ -268,7 +268,7 @@ def search_values_for_a_key(resource_table):
     # default is false
     # if it sets to true, a CSV file content will be sent instead of dict
     csv = request.args.get("csv")
-    data_source = get_working_datasource(request.args.get("data_source"))
+    data_source = get_working_data_source(request.args.get("data_source"))
     if csv:
         try:
             csv = json.loads(csv.lower())
@@ -289,7 +289,7 @@ def get_resource_keys(resource_table):
      return the keys for a resource or all the resources
     """
     mode = request.args.get("mode")
-    data_source = get_working_datasource(request.args.get("data_source"))
+    data_source = get_working_data_source(request.args.get("data_source"))
     resource_keys = get_resource_attributes(
         resource_table, data_source=data_source, mode=mode
     )
@@ -331,7 +331,7 @@ def get_resource_names_(resource_table):
 
     value = request.args.get("value")
     description = request.args.get("use_description")
-    data_source = get_working_datasource(request.args.get("data_source"))
+    data_source = get_working_data_source(request.args.get("data_source"))
     # if data_source:
     #    data_source = data_source.strip(",")
     #    data_source = json.dumps(data_source)
@@ -368,7 +368,7 @@ def submit_query_return_containers():
     if len(query) > 0:
         adjust_query_for_container(query)
     return_columns = request.args.get("return_columns")
-    data_source = get_working_datasource(request.args.get("data_source"))
+    data_source = get_working_data_source(request.args.get("data_source"))
 
     if return_columns:
         try:
@@ -379,7 +379,7 @@ def submit_query_return_containers():
         validation_results = query_validator(query)
         if validation_results == "OK":
             return jsonify(
-                search_resource_annotation_return_conatines_only(
+                search_resource_annotation_return_containers_only(
                     query,
                     data_source,
                     return_columns,
@@ -400,7 +400,7 @@ def submit_query_return_containers():
         else:
             return jsonify(build_error_message(validation_results))
     else:
-        return jsonify(return_containes_images(data_source))
+        return jsonify(return_containers_images(data_source))
 
 
 @resources.route("/submitquery/", methods=["POST"])
@@ -416,7 +416,7 @@ def submit_query():
         return jsonify(build_error_message("No query is provided"))
     adjust_query_for_container(query)
     return_columns = request.args.get("return_columns")
-    data_source = get_working_datasource(request.args.get("data_source"))
+    data_source = get_working_data_source(request.args.get("data_source"))
     if return_columns:
         try:
             return_columns = json.loads(return_columns.lower())
@@ -444,7 +444,7 @@ def search(resource_table):
     case_sensitive = request.args.get("case_sensitive")
     operator = request.args.get("operator")
     bookmark = request.args.get("bookmark")
-    data_source = get_working_datasource(request.args.get("data_source"))
+    data_source = get_working_data_source(request.args.get("data_source"))
     print(data_source)
     random_results = request.args.get("random_results")
     if random_results:
@@ -485,7 +485,7 @@ def container_key_values_search(resource_table):
 
     key = request.args.get("key")
     container_name = request.args.get("container_name")
-    data_source = get_working_datasource(request.args.get("data_source"))
+    data_source = get_working_data_source(request.args.get("data_source"))
     if not container_name or not key:
         return build_error_message("Container name and key are required")
     csv = request.args.get("csv")
@@ -505,8 +505,8 @@ def container_images():
     """
     file: swagger_docs/container_images.yml
     """
-    data_source = get_working_datasource(request.args.get("data_source"))
-    return return_containes_images(data_source)
+    data_source = get_working_data_source(request.args.get("data_source"))
+    return return_containers_images(data_source)
 
 
 @resources.route("/<resource_table>/container_keys/", methods=["GET"])
@@ -523,7 +523,7 @@ def container_keys_search(resource_table):
         return build_error_message("Container name is required")
 
     csv = request.args.get("csv")
-    data_source = get_working_datasource(request.args.get("data_source"))
+    data_source = get_working_data_source(request.args.get("data_source"))
     if csv:
         try:
             csv = json.loads(csv.lower())
@@ -551,7 +551,7 @@ def sub_container_images():
             build_error_message("{error}".format(error="Container name is required."))
         )
     data = request.data
-    data_source = get_working_datasource(request.args.get("data_source"))
+    data_source = get_working_data_source(request.args.get("data_source"))
 
     query = {}
     if data:
@@ -583,7 +583,7 @@ def container_key_values_filter(resource_table):
 
     key = request.args.get("key")
     container_name = request.args.get("container_name")
-    data_source = get_working_datasource(request.args.get("data_source"))
+    data_source = get_working_data_source(request.args.get("data_source"))
     if not container_name or not key:
         return build_error_message("Container name and key are required")
     data = request.data
