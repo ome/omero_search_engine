@@ -227,8 +227,9 @@ def set_database_configuration(
     if not working_data_source:
         print("Data source is required to process")
     database_attrs = {}
-    database_attrs["name"] = working_data_source
-    database_attrs["DATABASE"] = database_attrs
+    database_config = {}
+    database_config["name"] = working_data_source
+    database_config["DATABASE"] = database_attrs
     if database:
         database_attrs["DATABASE_NAME"] = database
     if url:
@@ -243,7 +244,7 @@ def set_database_configuration(
         database_attrs["DATABASE_BACKUP_FILE"] = backup_filename
 
     if len(database_attrs) > 0:
-        update_config_file(database_attrs, data_source=True)
+        update_config_file(database_config, data_source=True)
     else:
         search_omero_app.logger.info(
             "At least one database attribute\
