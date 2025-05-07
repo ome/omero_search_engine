@@ -91,13 +91,13 @@ class BasicTestCase(unittest.TestCase):
     def test_delete_index_other_container(self):
         from manage import (
             index_container_from_database,
-            delete_container,
+            delete_containers,
         )
 
         ids_ = list(container_m.keys())
         data_source = container_m[ids_[0]]["data_source"]
         resource = container_m[ids_[0]]["type"]
-        delete_container(resource, data_source, ",".join(ids_), "True")
+        delete_containers(resource, data_source, ",".join(ids_), "True")
         containers_ad = return_containers_images(
             data_source,
         )
