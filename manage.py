@@ -271,13 +271,11 @@ def set_default_datasource(dEFAULT_DATASOURCE=None):
 )
 @manager.option(
     "-p", "--projects_file", help="path to a file containing the projects data"
-
 )
 @manager.option(
     "-s", "--screens_file", help="path to a file containing the screens data"
 )
 @manager.option("-d", "--datasource_type", help=" data source type; supports CSV")
-
 def set_data_source_files(
     name=None,
     images_folder=None,
@@ -559,7 +557,6 @@ def test_container_key_value():
     "-f",
     "--folder",
     help="data folder which contains CSV files",  # noqa
-
 )
 @manager.option(
     "-r",
@@ -616,7 +613,6 @@ def get_index_data_from_csv_files(
     "-f",
     "--file_name",
     help="CSV file name",  # noqa
-
 )
 @manager.option(
     "-r",
@@ -634,7 +630,6 @@ def convert_to_searchengine_indexer_format(file_name=None, resource=None):
 
 @manager.command
 @manager.option("-r", "--resource", help="resource name, i.e. project or screen")
-
 @manager.option("-d", "--data_source", help="data_source name, i.e. project or screen")
 @manager.option(
     "-i",
@@ -664,7 +659,6 @@ def delete_conatiner(resource=None, data_source=None, id=None, update_cache="Tru
     "-i",
     "--id",
     help=" resource id, if more than one then use command to  separate the values",
-
 )
 @manager.option(
     "-b",
