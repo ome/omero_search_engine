@@ -38,7 +38,7 @@ The application should have the access attributes (e.g, URL, username, password,
   * The image index data is generated in a large file, so it is recommended that the user splits it into several files to facilitate the processing of the data and its insertion into the index e.g. ``split -l 2600000 images.csv``.
   * ``create_index``: Create the Elasticsearch indices in case of there is no data been added before, it can be used to create a single index or all the indices; the default is creating all the indices.
   * The user should add a new data source (csv) using the ''set_data_source_files'' command inside :omero_search_engine:`manage.py <manage.py>`
-  * ``get_index_data_from_csv_files``is used to read the data, format it then push the data to the resource ELasticsearch index. The user can provide a single file (CSV format) or folder, in the later the indexer will use all the files inside the folder.
+  * ``get_index_data_from_csv_files`` is used to read the data, format it then push the data to the resource ELasticsearch index. The user can provide a single file (CSV format) or folder, in the later the indexer will use all the files inside the folder.
 
 Application installation using Docker
 =====================================
