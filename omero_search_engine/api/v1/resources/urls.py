@@ -35,7 +35,7 @@ from omero_search_engine.api.v1.resources.resource_analyser import (
     get_resource_attribute_values,
     get_resource_names,
     get_key_values_return_contents,
-    query_cashed_bucket_part_value_keys,
+    query_cached_bucket_part_value_keys,
     return_containers_images,
 )
 from omero_search_engine.api.v1.resources.utils import get_resource_annotation_table
@@ -217,7 +217,7 @@ def get_values_using_value(resource_table):
     if key:
         # If the key is provided it will restrict the search to the provided key.
 
-        return query_cashed_bucket_part_value_keys(
+        return query_cached_bucket_part_value_keys(
             key, value, data_source, resource_table
         )
     bookmark = request.args.get("bookmark")

@@ -1,7 +1,3 @@
-import logging
-import json
-import requests
-
 # !/usr/bin/env python
 # -*- coding: utf-8 -*-
 
@@ -20,6 +16,10 @@ import requests
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+import logging
+import json
+import requests
 
 from utils import base_url
 

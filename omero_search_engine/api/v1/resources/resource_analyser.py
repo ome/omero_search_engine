@@ -110,11 +110,11 @@ values_for_key_template = Template(
 
 def search_index_for_value(e_index, query, get_size=False):
     """
-    Perform search the elastcisearch using value and
-    return all the key values whihch this value has been used,
-    it will include the number of records.
-    It is relatively slow but it might be due
-    to the elasticsearcg hosting machine
+    Perform a search in the indexed data using a specific value and return
+    all associated key-value pairs where this value has been used.
+    The results will also include the number of records found.
+    The search process may be relatively slow, potentially due to the performance
+     of the Elasticsearch hosting machine.
     """
     es = search_omero_app.config.get("es_connector")
     if get_size:
@@ -444,7 +444,7 @@ def get_key_values_return_contents(name, resource, data_source, csv):
     return jsonify(resource_keys)
 
 
-def query_cashed_bucket_part_value_keys(
+def query_cached_bucket_part_value_keys(
     name, value, data_source, resource, es_index="key_value_buckets_information"
 ):
     """
@@ -586,7 +586,7 @@ key_values_buckets_template = Template(
     """
 {
 "query":{"bool":{"must":[{"bool":{
-"must":{"match":{"Attribute.keynamenormalize":"$name"}}}},{"bool":{"must":{
+"must":{"match":{" .keynamenormalize":"$name"}}}},{"bool":{"must":{
 "match":{"resource.keyresource":"$resource"}}}
 },{"bool":{"must":{"terms":{"data_source.keyvalue":$data_source}
 }}}]}}}

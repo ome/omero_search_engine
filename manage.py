@@ -172,12 +172,6 @@ def get_index_data_from_database(resource="all", data_source="all", backup="True
     for data_source_ in search_omero_app.config.database_connectors.keys():
         if data_source.lower() != "all" and data_source_.lower() != data_source.lower():
             continue
-        # if resource != "all":
-        #    sql_st = sqls_resources.get(resource)
-        #    if not sql_st:
-        #        return
-        #     get_insert_data_to_index(sql_st, resource)
-        # else:
 
         for res, sql_st in sqls_resources.items():
             if resource.lower() != "all" and resource.lower() != res.lower():
