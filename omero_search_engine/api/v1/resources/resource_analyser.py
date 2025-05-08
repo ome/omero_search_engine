@@ -586,7 +586,7 @@ key_values_buckets_template = Template(
     """
 {
 "query":{"bool":{"must":[{"bool":{
-"must":{"match":{" .keynamenormalize":"$name"}}}},{"bool":{"must":{
+"must":{"match":{"Attribute.keynamenormalize":"$name"}}}},{"bool":{"must":{
 "match":{"resource.keyresource":"$resource"}}}
 },{"bool":{"must":{"terms":{"data_source.keyvalue":$data_source}
 }}}]}}}
