@@ -21,7 +21,7 @@ parameters:
     required: true
   - name: study
     description: filter by study name
-    in: querygit push
+    in: query
     type: string
     required: False
   - name: operator
