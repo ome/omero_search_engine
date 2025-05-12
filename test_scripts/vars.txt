@@ -13,3 +13,6 @@ synchronous_run=True
 UPDATE_CACHE=True
 # the task ID is used to follow up asynchronous deleting containers, it will be the results of run asynchronous delete
 TASK_ID=9kfkEIVNQNafmYyAlpiy9g:239972
+data_base_url=192.168.2.160
+# this shoould be replaced by the database user password
+data_base_user_bassword=data_base_user_bassword

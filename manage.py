@@ -718,7 +718,7 @@ def update_data_source_cache(data_source=None):
 
 
 @manager.command
-@manager.option("-d", "--working_data_source", help="data source")
+@manager.option("-d", "--data_source", help="data source")
 def delete_data_source(data_source=None):
     if not data_source:
         print("Data source is required")
