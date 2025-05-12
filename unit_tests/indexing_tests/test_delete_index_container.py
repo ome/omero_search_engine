@@ -64,7 +64,7 @@ class BasicTestCase(unittest.TestCase):
         ids_ = list(containers_n.keys())
         data_source = containers_n[ids_[0]]["data_source"]
         resource = containers_n[ids_[0]]["type"]
-        delete_containers(resource, data_source, ",".join(ids_), "True")
+        delete_containers(resource, data_source, ",".join(ids_), "True", "True")
         containers_ad = return_containers_images(
             data_source,
         )
@@ -97,7 +97,7 @@ class BasicTestCase(unittest.TestCase):
         ids_ = list(container_m.keys())
         data_source = container_m[ids_[0]]["data_source"]
         resource = container_m[ids_[0]]["type"]
-        delete_containers(resource, data_source, ",".join(ids_), "True")
+        delete_containers(resource, data_source, ",".join(ids_), "True", "True")
         containers_ad = return_containers_images(
             data_source,
         )
