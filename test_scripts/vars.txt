@@ -1,0 +1,15 @@
+# the searchengine docket image which supports the mult-data souirce and delete, reindex containers
+SEARCHENGINE_IMAGE=khaledk2/searchengine:multisource
+USER_NAME=elastic
+PASSWORD=es_password
+#should be replaced by the container id
+IDs=2151
+# the data source to which the containers belong.
+DATA_SOURCE=idr
+RESOURCE=project
+# for large containers the two following attributes should be False
+synchronous_run=True
+# update cache should be False in case of asynchronous delete or in case of needing to delete projects and screens in two seperate delete command, then update cash should be called
+UPDATE_CACHE=True
+# the task ID is used to follow up asynchronous deleting containers, it will be the results of run asynchronous delete
+TASK_ID=9kfkEIVNQNafmYyAlpiy9g:239972
