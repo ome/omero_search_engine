@@ -664,6 +664,9 @@ def processor_container_work(lock, global_counter, val):
         raise ex
     finally:
         lock.release()
+    search_omero_app.logger.info(
+        "Calling the databas for %s/%s" % (global_counter.value, total_process)
+    )
     whereclause = " where image.id in (%s)" % ",".join(ids)
     mod_sql = sql_st.substitute(whereclause=whereclause)
     st = datetime.now()
@@ -676,7 +679,9 @@ def processor_container_work(lock, global_counter, val):
     search_omero_app.logger.info("elpased time:%s" % average_time)
 
 
-def index_container_s_from_database(target_resource, resource, id, data_source):
+def index_container_s_from_database(
+    target_resource, resource, id, data_source, no_processors_=2
+):
     """
     A method to do the work inside a process within the multiprocessing pool
     """
@@ -717,13 +722,15 @@ def index_container_s_from_database(target_resource, resource, id, data_source):
         no_processors = search_omero_app.config.get("NO_PROCESSES")
         if not no_processors:
             no_processors = int(multiprocessing.cpu_count() / 2)
-        no_processors = 2
+        no_processors = no_processors_
         search_omero_app.logger.info(
             "Number of the allowed parallel\
             processes inside the pool: %s"
             % no_processors
         )
         # create the multiprocessing pool
+        global total_process
+        total_process = len(vals)
         pool = multiprocessing.Pool(no_processors)
         try:
             manager = multiprocessing.Manager()

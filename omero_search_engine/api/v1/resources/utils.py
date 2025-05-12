@@ -1538,13 +1538,14 @@ def update_data_source_cache(data_source, res=None, delete_current_cache=True):
     save_key_value_buckets(res, data_source, False, False)
 
 
-def delete_container(ids, resource, data_source, update_cache):
+def delete_container(ids, resource, data_source, update_cache, synchronous_run=False):
     """
     Delete a container (project or screen) from the searchengine
      Also delete all images inside it and cache the data
      delete cache and create it again
      the data source caching should be re-created
     """
+    # "request_cache": false,
     st = datetime.datetime.now()
 
     from omero_search_engine.api.v1.resources.resource_analyser import (
@@ -1583,6 +1584,9 @@ def delete_container(ids, resource, data_source, update_cache):
                 res__2 = es.delete_by_query(
                     index=resource_elasticsearchindex[resou],
                     body=json.loads(sub_container_delet_query),
+                    request_cache=False,
+                    wait_for_completion=synchronous_run,
+                    error_trace=True,
                 )
                 search_omero_app.logger.info(
                     "%s/%s, delete results is %s"
@@ -1605,6 +1609,9 @@ def delete_container(ids, resource, data_source, update_cache):
         delete_container_res = es.delete_by_query(
             index=resource_elasticsearchindex[resource],
             body=json.loads(container_delet_query),
+            request_cache=False,
+            wait_for_completion=synchronous_run,
+            error_trace=True,
         )
         search_omero_app.logger.info("Delete results: %s" % delete_container_res)
 
@@ -1613,10 +1620,13 @@ def delete_container(ids, resource, data_source, update_cache):
         delete_image_res = es.delete_by_query(
             index=resource_elasticsearchindex["image"],
             body=json.loads(image_delet_query),
+            request_cache=False,
+            wait_for_completion=synchronous_run,
+            error_trace=True,
         )
         search_omero_app.logger.info("Delete results: %s" % delete_image_res)
 
-    if update_cache:
+    if update_cache and synchronous_run:
         # update the cache for the data source
         update_data_source_cache(data_source)
     en = datetime.datetime.now()
