@@ -4,13 +4,13 @@ Test delete and index container
 For example, search the Gene Symbol=pax6
 https://idr-testing.openmicroscopy.org/search/?key=Gene+Symbol&value=pax6&operator=equals
 * In this search there are results that come from project **idr0114-lindsay-hdbr/experimentA**, its id=**2151**
-* Delete this project using **delete_container.sh** script, then update the cache which will be updated. this process may take a long time  depending on the number of container inside the data source , I am looking to improve this, though perhaps not in this PR)
-* Perform the same search and then the results should not have results from this project
-* This project should be indexed and the data source cache updated using **index_continer_from_dataase.sh** script. Then search again, the results from this project should be displayed.
+* Delete this project using **delete_container.sh** script, then update the cache which will be updated. This process may take time depending on the number of containers inside the data source .
+* Perform the same search and then the results should not contain any image from this project
+* This project should be indexed and the data source cache updated using **index_container_from_database.sh** script. Then search again, the results from this project should be displayed.
 
-I have included scripts for deleting containers, indexing containers, updating the cache, and checking the progress of deleted containers in cthe ase of an asynchronous deletion. The user should configure these scripts using the attributes inside the vars.txt file.
+I have included scripts for deleting containers, indexing containers, updating the cache, and checking the progress of deleted containers in cthe ase of an asynchronous deletion. The user should configure these scripts using the attributes inside the ``vars.txt`` file.
 
-* if restoring the original data is necessary, the **restore_searchengine_data.sh** script can be used to recover it from the indexed data snapshot
+* if restoring the original data is necessary, the **restore_searchengine_data.sh** script can be used to recover it from the indexed data snapshot.
 
 Test data sources
 =================
