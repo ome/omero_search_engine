@@ -1,7 +1,7 @@
 Return the available key values within a container from the query results.
 Example
 
-In this example the search will use the provided query results within the specified container and provides the available values for the provided key.
+In this example the search will use the provided query results within the specified container and provides the available values for the specified key.
 
 The query:
 
@@ -33,7 +33,7 @@ The user needs to specify
 - the container name, e.g. "idr0043-uhlen-humanproteinatlas/experimentA"
 - the key which its values is needed, e.g. "gene symbol"
 
-the results should contains buckets like this:
+the results should contain buckets like this:
 {
         "key": "Gene symbol",
         "no_image": 146,

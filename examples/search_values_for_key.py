@@ -41,7 +41,7 @@ attrs_url = "{base_url}{image_attributes}".format(
 
 resp = requests.get(url=attrs_url)
 ress = json.loads(resp.text)
-# a list contains the available attributes
+# a list containing the available attributes
 for res in ress:
     data_source = res.get("data_source")
     if not data_source:
@@ -68,7 +68,7 @@ for res in ress:
     print(values_attr_url)
     resp = requests.get(url=values_attr_url)
     res = json.loads(resp.text)
-    # a list contains dicts of the available values with the number of images
+    # a list containing dicts of the available values with the number of images
     buckets = res.get("data")
     logging.info(
         "Number of available buckets for attribute %s is %s" % (key, len(buckets))

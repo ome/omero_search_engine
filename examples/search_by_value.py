@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2023 University of Dundee & Open Microscopy Environment.
+# Copyright (C) 2025 University of Dundee & Open Microscopy Environment.
 # All rights reserved.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -23,9 +23,9 @@ from utils import query_the_search_ending, logging
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 """
-This example will use search by value only without key
-It will search for thr images which have key/value
-pairs which the vlaue contains cancer"""
+This example will use search by value only without key.
+It will search for the images which have the key/value
+pairs which the value contains cancer"""
 
 query = {
     "and_filters": [
