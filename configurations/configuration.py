@@ -28,7 +28,6 @@ def load_configuration_variables_from_file(config):
     print("Injecting config variables from :%s" % app_config.INSTANCE_CONFIG)
     with open(app_config.INSTANCE_CONFIG, "rt") as f:
 
-
         cofg = yaml.safe_load(f.read())
     for x, y in cofg.items():
         setattr(config, x, y)
