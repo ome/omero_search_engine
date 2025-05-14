@@ -249,10 +249,10 @@ def set_database_configuration(
 
 
 @manager.command
-@manager.option("-d", "--default_database", help="Default data source")
-def set_default_datasource(default_database=None):
-    if default_database:
-        update_config_file({"DEFAULT_DATASOURCE": default_database})
+@manager.option("-d", "--default_data_source", help="Default data source")
+def set_default_datasource(default_data_source=None):
+    if default_data_source:
+        update_config_file({"DEFAULT_DATASOURCE": default_data_source})
     else:
         search_omero_app.logger.info("No attribute is provided")
 
@@ -270,13 +270,13 @@ def set_default_datasource(default_database=None):
 @manager.option(
     "-s", "--screens_file", help="path to a file containing the screens data"
 )
-@manager.option("-d", "--datasource_type", help=" data source type; supports CSV")
+@manager.option("-o", "--origin_type ", help=" data source origin  type; supports CSV")
 def set_data_source_files(
     name=None,
     images_folder=None,
     projects_file=None,
     screens_file=None,
-    datasource_type="CSV",
+    origin_type="CSV",
 ):
     source = {}
     if not name:
@@ -285,7 +285,7 @@ def set_data_source_files(
     source["name"] = name
     source_attrs = {}
     source["CSV"] = source_attrs
-    source_attrs["type"] = datasource_type
+    source_attrs["type"] = origin_type
     if images_folder:
         source_attrs["images_folder"] = images_folder
     if projects_file:
@@ -298,14 +298,14 @@ def set_data_source_files(
 
 @manager.command
 @manager.option("-n", "--new_data_source_name", help="new data source name")
-@manager.option("-d", "--source_name", help="orginal data source name")
-def rename_data_source(data_source=None, new_data_source_name=None):
-    if not data_source or not new_data_source_name:
+@manager.option("-c", "--current_data_source_name", help="orginal data source name")
+def rename_data_source(current_data_source_name=None, new_data_source_name=None):
+    if not current_data_source_name or not new_data_source_name:
         search_omero_app.logger.info(
             "Existing data source name and new data source name are required"
         )
         return
-    rename_datasource(data_source, new_data_source_name)
+    rename_datasource(current_data_source_name, new_data_source_name)
 
 
 @manager.command
@@ -669,14 +669,14 @@ def delete_containers(
     help="if True, backup will be called ",  # noqa
 )
 @manager.option("-u", "--update_cache", help="update the cache")
-@manager.option("-n", "--no_processors", help="allowed no of parallel processes")
+@manager.option("-n", "--number_of_processors", help="Number of parallel processes")
 def index_container_from_database(
     resource=None,
     data_source=None,
     id=None,
     backup="False",
     update_cache="False",
-    no_processors=2,
+    number_of_processors=2,
 ):
     resources_index = {
         "project": ["image", "project"],
@@ -692,7 +692,7 @@ def index_container_from_database(
 
     backup = json.loads(backup.lower())
     update_cache = json.loads(update_cache.lower())
-    no_processors = int(no_processors)
+    no_processors = int(number_of_processors)
 
     for res in resources_index[resource]:
         index_container_s_from_database(resource, res, id, data_source, no_processors)
