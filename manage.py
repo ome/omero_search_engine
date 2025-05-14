@@ -123,7 +123,6 @@ def sql_results_to_panda():
     "-s",
     "--source",
     help="data source name, restore all the data sources by default",  # noqa
-
 )
 def restore_postgresql_database(source="all"):
     from omero_search_engine.database.utils import restore_database
@@ -141,7 +140,6 @@ def restore_postgresql_database(source="all"):
     "-d",
     "--data_source",
     help="data source name, indexing all the data sources by default",  # noqa
-
 )
 @manager.option(
     "-d",
@@ -265,7 +263,6 @@ def set_default_datasource(default_database=None):
     "-i",
     "--images_folder",
     help="path to a folder containing the CSV files containing the image data ",
-
 )
 @manager.option(
     "-p", "--projects_file", help="path to a file containing the projects data"
@@ -443,7 +440,6 @@ def cache_key_value_index(
     "-s",
     "--source",
     help="data source name, testing  all the data sources by default",  # noqa
-
 )
 def test_indexing_search_query(
     json_file="app_data/test_index_data.json",
@@ -551,13 +547,11 @@ def test_container_key_value():
     "-d",
     "--datasource",
     help="data source name, indexing all the data sources by default",  # noqa
-
 )
 @manager.option(
     "-f",
     "--folder",
     help="data folder containing the CSV files",  # noqa
-
 )
 @manager.option(
     "-r",
@@ -568,7 +562,6 @@ def test_container_key_value():
     "-n",
     "--need_convert",
     help="if the CSV files are generating from CSV templates, this attribute must be true",  # noqa
-
 )
 @manager.option("-u", "--update_cache", help="update the cache")
 def get_index_data_from_csv_files(
@@ -608,13 +601,11 @@ def get_index_data_from_csv_files(
     "-f",
     "--file_name",
     help="The CSV file name",  # noqa
-
 )
 @manager.option(
     "-r",
     "--resource",
     help="resource name, creating all the indexes for all the resources by default",  # noqa
-
 )
 def convert_to_searchengine_indexer_format(file_name=None, resource=None):
     from omero_search_engine.cache_functions.elasticsearch.transform_data import (
@@ -638,7 +629,6 @@ def convert_to_searchengine_indexer_format(file_name=None, resource=None):
     "-i",
     "--id",
     help="Resource id, if more than one then should use comma to separate them",
-
 )
 @manager.option("-u", "--update_cache", help="update the cache")
 def delete_containers(
@@ -672,7 +662,6 @@ def delete_containers(
     "-i",
     "--id",
     help="Resource id, if more than one then use comma to  separate the values",
-
 )
 @manager.option(
     "-b",
@@ -748,7 +737,6 @@ def delete_data_source(data_source=None):
     "--automatic_refresh",
     help="set automatic refresh, if true any change of "
     "the configuration file will be reloaded at runtime",
-
 )
 def set_automatic_refresh(automatic_refresh="True"):
     if not automatic_refresh:
