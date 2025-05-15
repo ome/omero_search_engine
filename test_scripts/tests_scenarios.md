@@ -3,22 +3,20 @@ Test delete and index container
 * Perform a search and check the results to identify a container in which the results contain images.
 For example, search the Gene Symbol=pax6
 https://idr-testing.openmicroscopy.org/search/?key=Gene+Symbol&value=pax6&operator=equals
-* In this search there are results that come from project **idr0114-lindsay-hdbr/experimentA**, its id=**2151**
-* Delete this project using **delete_container.sh** script, then update the cache which will be updated. This process may take time depending on the number of containers inside the data source .
+* In this search there are results that come from project **idr0114-lindsay-hdbr/experimentA**, its is id=**2151**
+* Delete this project using **delete_container.sh** script, then update the cache manually if the flag to update automatically is ``false``. This process may take time depending on the number of containers inside the data source .
 * Perform the same search and then the results should not contain any image from this project
-* This project should be indexed and the data source cache updated using **index_container_from_database.sh** script. Then search again, the results from this project should be displayed.
+* This project should be re-indexed and the data source cache updated using **index_container_from_database.sh** script. Then search again, the results from this project should be displayed.
 
-I have included scripts for deleting containers, indexing containers, updating the cache, and checking the progress of deleted containers in cthe ase of an asynchronous deletion. The user should configure these scripts using the attributes inside the ``vars.txt`` file.
+Scripts for deleting containers, indexing containers, updating the cache, and checking the progress of deleted containers in the case of an asynchronous deletion are available. The user should configure these scripts using the attributes inside the ``vars.txt`` file.
 
 Test data sources
 =================
 * The default data source is idr, so the IDR-Gallery only returns the results from IDR.
-  * It is possible to change the default data source using **update_datasource_cache.sh**  
-* This URL should be used to check all the available data sources in the search engine,
-  * https://idr-testing.openmicroscopy.org/searchengine//api/v1/resources/data_sources/
-* It is possible to override the default data source by adding a data source attribute to the request. For example, the following URL will return the results for this query
-**cell ine=hela** from the **SSBD** data source only
-  * https://idr-testing.openmicroscopy.org/searchengine//api/v1/resources/image/search/?key=cell%20line&value=hela&data_source=ssbd&random_results=0
+* It is possible to change the default data source using **update_datasource_cache.sh**  
+* Use the endpoint ``searchengine/api/v1/resources/data_sources/`` to check all the available data sources in the search engine,
+* It is possible to override the default data source by adding a data source attribute to the request. For example, the following endpoint ``searchengine/api/v1/resources/image/search/?key=cell%20line&value=hela&data_source=ssbd&random_results=0`` will return the results for this query
+**cell line=hela** from the **SSBD** data source only
 * Add a new data source
   * There are two types of data sources
     * Database data source  
@@ -27,8 +25,8 @@ Test data sources
       * Then index the data from the database
         * run the **get_data_from_datasource_database.sh** script to extract the data from the database and index them
     * CSV data source
-      * It is required to add the csv data source using **add_csv_data_source.sh** script
-      * Then add the data from the csv file using **get_data_from_csv_datasource.sh** script
+      * It is required to add the CSV data source using **add_csv_data_source.sh** script
+      * Then add the data from the CSV file using **get_data_from_csv_datasource.sh** script
       
 * It is possible to delete a data source from the search engine using **delete_data_source.sh** script
   * Then, to check  all the available data sources use https://idr-testing.openmicroscopy.org/searchengine//api/v1/resources/data_sources/,  the response should not include the deleted datasource

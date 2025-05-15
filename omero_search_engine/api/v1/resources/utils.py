@@ -225,7 +225,7 @@ def elasticsearch_query_builder(
                 if isinstance(clause, list):
                     for attribute in clause:
                         if attribute["operator"].strip() == "in":
-                            # it is assuming that in operator value is a lit
+                            # it is assuming that in operator value is a list
                             main_dd = main_attribute_query_in_template.substitute(
                                 attribute=attribute["name"].strip(),
                                 value=json.dumps(attribute["value"]),
@@ -1046,7 +1046,7 @@ def search_index_using_search_after(
                 query2["query"]["bool"]["must"] = [json.loads(main_dd)]
             res = es.search(index=e_index, body=query2)
             if len(res["hits"]["hits"]) == 0:
-                search_omero_app.logger.info("No result is found")
+                search_omero_app.logger.info("No result found")
                 continue
             keys_counts = res["aggregations"]["key_count"]["buckets"]
             idrs = []
@@ -1083,14 +1083,13 @@ def search_index_using_search_after(
         else:
             add_to_page = 1
         no_of_pages = (int)(size / page_size) + add_to_page
-        search_omero_app.logger.info("No of pages: %s" % no_of_pages)
+        search_omero_app.logger.info("Number of pages: %s" % no_of_pages)
         query["sort"] = [{"id": "asc"}]
 
     if not bookmark_ and pagination_dict:
         bookmark_ = get_bookmark(pagination_dict)
     if not bookmark_:
         result = es.search(index=e_index, body=query)
-        # print (result)
         if len(result["hits"]["hits"]) == 0:
             search_omero_app.logger.info("No result is found")
             return returned_results
@@ -1198,7 +1197,7 @@ def search_resource_annotation(
     res_index = resource_elasticsearchindex.get(table_)
     if not res_index:
         return build_error_message(
-            "{table_} is not a valid resurce".format(table_=table_)
+            "{table_} is not a valid resource".format(table_=table_)
         )
     query_details = query.get("query_details")
     start_time = time.time()
@@ -1217,7 +1216,7 @@ def search_resource_annotation(
         ):
             logging.info("Error ")
             return build_error_message(
-                "{query} is not" " a valid query".format(query=query)
+                "{query} is not a valid query".format(query=query)
             )
         if data_source and data_source != "all":
             data_sources = get_data_sources()
@@ -1244,14 +1243,14 @@ def search_resource_annotation(
         case_sensitive = query_details.get("case_sensitive")
         # check and fid if possible names and values inside
         # filters conditions
-        # check_filters is cpmmented as it has no actual use and take time to excute
+        # check_filters is commented out as it has no actual use and take time to execute
         # check_filters(table_, [and_filters, or_filters], case_sensitive)
         query_string = elasticsearch_query_builder(
             and_filters, or_filters, case_sensitive, main_attributes
         )
         # query_string has to be a string, if it is a dict,
         # something went wrong and the message inside the dict
-        # which will be returned to the sender:
+        # will be returned to the sender:
         if isinstance(query_string, dict):
             return query_string
 
@@ -1343,7 +1342,7 @@ def get_studies_titles(idr_name, resource, data_source=None):
         )
     except Exception as ex:
         search_omero_app.logger.info(
-            "Error for name %s and datasource %s, erro message: %s "
+            "Error for name %s and datasource %s, error message: %s "
             % (idr_name, data_source, str(ex))
         )
     if len(resourse_res) > 0:
@@ -1528,7 +1527,7 @@ def update_data_source_cache(data_source, res=None, delete_current_cache=True):
         # Trigger caching for  the data source
     except Exception as e:
         search_omero_app.logger.info(
-            "Error deleting cache for datasource %s, error message is %s"
+            "Error deleting cache for data source %s, error message is %s"
             % (data_source, str(e))
         )
         sys.exit()

@@ -556,7 +556,8 @@ def test_container_key_value():
 @manager.option(
     "-r",
     "--resource",
-    help="resource name, creating all the indexes for all the resources is the default",  # noqa
+    help="resource name, creating all the indexes for all the resources by default",  # noqa
+
 )
 @manager.option(
     "-n",

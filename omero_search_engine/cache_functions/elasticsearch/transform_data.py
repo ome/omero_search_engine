@@ -29,7 +29,6 @@ from omero_search_engine.api.v1.resources.utils import resource_elasticsearchind
 from omero_search_engine.api.v1.resources.resource_analyser import (
     query_cached_bucket,
     get_all_values_for_a_key,
-    # return_containes_images,
 )
 from omero_search_engine.cache_functions.elasticsearch.elasticsearch_templates import (  # noqa
     image_template,
@@ -194,7 +193,6 @@ def get_image_urls(data_source_):
             image_webclient_url = data_source.get("image_webclient_url")
             thumb_url = data_source.get("thumb_url")
             image_url = data_source.get("image_url")
-            # if image_webclient_url and image_url and thumb_url :
             return image_webclient_url, image_url, thumb_url
     return None, None, None
 
@@ -384,7 +382,7 @@ def handle_file_2(lock, global_counter, val):
     finally:
         lock.release()
     search_omero_app.logger.info(
-        "%s/%s Reading the csv file %s" % (global_counter.value, total_files, file_name)
+        "%s/%s Reading the CSV file %s" % (global_counter.value, total_files, file_name)
     )
     if resource == "imqge":
         df = pd.read_csv(file_name, low_memory=False).replace({np.nan: None})
@@ -438,7 +436,7 @@ def insert_resource_data(folder, resource, data_source, from_json, need_convert=
     if not no_processors:
         no_processors = int(multiprocessing.cpu_count() / 2)
     search_omero_app.logger.info(
-        "Number of the allowed parallel\
+        "Number of allowed parallel\
         processes inside the pool: %s"
         % no_processors
     )
@@ -574,7 +572,6 @@ def get_insert_data_to_index(sql_st, resource, data_source, clean_index=True):
         search_omero_app.logger.info(cur_max_id)
         delta = str(datetime.now() - start_time)
         search_omero_app.logger.info("Total time=%s" % delta)
-        # print(res)
     except Exception as ex:
         print("Error is : %s" % ex)
         raise ex
@@ -621,7 +618,7 @@ def processor_work(lock, global_counter, val):
     process_results(results, resource, data_source, lock)
     average_time = (datetime.now() - st) / 2
     search_omero_app.logger.info("Done")
-    search_omero_app.logger.info("elpased time:%s" % average_time)
+    search_omero_app.logger.info("elapsed time:%s" % average_time)
 
 
 def splite_results(results):
@@ -665,7 +662,7 @@ def processor_container_work(lock, global_counter, val):
     finally:
         lock.release()
     search_omero_app.logger.info(
-        "Calling the databas for %s/%s" % (global_counter.value, total_process)
+        "Calling the database for %s/%s" % (global_counter.value, total_process)
     )
     whereclause = " where image.id in (%s)" % ",".join(ids)
     mod_sql = sql_st.substitute(whereclause=whereclause)
@@ -706,7 +703,7 @@ def index_container_s_from_database(
     conn = search_omero_app.config.database_connectors[data_source]
     if resource == "image":
         st = datetime.now()
-        search_omero_app.logger.info("Calling the databas for %s/%s" % (resource, 1))
+        search_omero_app.logger.info("Calling the database for %s/%s" % (resource, 1))
         search_omero_app.logger.info("Connecting to the database ....")
         if target_resource == "screen":
             sql_stat = images_ids_screen.substitute(ids=id)
@@ -724,7 +721,7 @@ def index_container_s_from_database(
             no_processors = int(multiprocessing.cpu_count() / 2)
         no_processors = no_processors_
         search_omero_app.logger.info(
-            "Number of the allowed parallel\
+            "Number of allowed parallel\
             processes inside the pool: %s"
             % no_processors
         )
@@ -867,14 +864,14 @@ def save_key_value_buckets(
     resource_table_=None, data_source=None, clean_index=False, only_values=False
 ):
     """
-    Query the and get all available keys and values for
+    Query the data source and get all available keys and values for
     the resource e.g. image,
     then query the elastic search to get value buckets for each bucket
     It will use multiprocessing pool to use parallel processing
 
     """
     if data_source is None:
-        return "No data source is provided"
+        return "No data source provided"
     es_index = "key_value_buckets_information"
     es_index_2 = "key_values_resource_cached"
 
@@ -967,7 +964,7 @@ def save_key_value_buckets(
             no_processors = int(multiprocessing.cpu_count() / 2)
         no_processors = 1
         search_omero_app.logger.info(
-            "No of the allowed parallel processes: %s" % no_processors
+            "Number of allowed parallel processes: %s" % no_processors
         )
         pool = multiprocessing.Pool(no_processors)
         try:

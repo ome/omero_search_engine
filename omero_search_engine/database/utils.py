@@ -71,7 +71,7 @@ def restore_database(source):
 
             print("Done for create %s, error %s" % (stdout, stderr))
         except Exception as e:
-            print("Error: exception happened during create database %s" % (e))
+            print("Error: exception happened while creating the database %s" % (e))
         restore_command = "psql --username %s  --host %s --port %s -d %s -f  %s" % (
             data_source.get("DATABASE").get("DATABASE_USER"),
             data_source.get("DATABASE").get("DATABASE_SERVER_URI"),

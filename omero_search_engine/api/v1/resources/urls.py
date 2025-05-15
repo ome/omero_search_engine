@@ -560,7 +560,7 @@ def sub_container_images():
         except Exception:
             return jsonify(
                 build_error_message(
-                    "{error}".format(error="No proper query data is provided.")
+                    "{error}".format(error="No proper query data provided.")
                 )
             )
         if "query_details" in data:
@@ -593,7 +593,7 @@ def container_key_values_filter(resource_table):
         except Exception:
             return jsonify(
                 build_error_message(
-                    "{error}".format(error="No proper query data is provided ")
+                    "{error}".format(error="No proper query data provided ")
                 )
             )
     else:

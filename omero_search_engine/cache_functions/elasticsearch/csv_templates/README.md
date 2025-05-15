@@ -12,13 +12,13 @@ Each image should also include the following columns:
 * project_name (``string``)
 * dataset_id (``integer``)
 * dataset_name (``string``)
-* thumb_url (``URL for the image thumb``)
-* image_url (``URL for the image viewer or  download URL``)
-* image_webclient_url (``This attribute should have a value in case of they have a webclient``)
+* thumb_url (``URL for the image thumbnail``)
+* image_url (``URL for the image viewer or download URL``)
+* image_webclient_url (``This attribute should be set if the repository is available via a Web client``)
 
 Additionally, each project, dataset, and image may have one or more associated attributes (e.g. ``organism``, ``cell line``, ``protein name``, etc.)
-There are two CSV files should be provided, i.e. images_template.csv and container_template.csv.
+The two following CSV files ``images_template.csv`` and ``container_template.csv`` should be provided.
 
-The ``convert_to_searchengine_indexer_format`` method ``inside manage.py`` can be used to convert these file to the search engine indexer format.
+The ``convert_to_searchengine_indexer_format`` method ``inside manage.py`` can be used to convert the content of the files to the search engine indexer format.
 
 Alternatively, there is the ``-n`` argument for the ``get_index_data_from_csv_files`` method. If set to True, it will convert the file automatically during the indexing.
