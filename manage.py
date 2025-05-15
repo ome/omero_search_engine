@@ -594,6 +594,10 @@ def get_index_data_from_csv_files(
     time.sleep(60)
     if update_cache:
         update_data_source_cache(datasource)
+    else:
+        from omero_search_engine.api.v1.resources.utils import delete_data_source_cache
+
+        delete_data_source_cache(datasource)
 
 
 @manager.command

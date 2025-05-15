@@ -1493,36 +1493,36 @@ def get_working_data_source(requested_datasource):
         return ",".join(data_sources)
 
 
-def update_data_source_cache(data_source, res=None, delete_current_cache=True):
-    from omero_search_engine.cache_functions.elasticsearch.transform_data import (
-        save_key_value_buckets,
-    )
-
+def delete_data_source_cache(data_source):
     es = search_omero_app.config.get("es_connector")
     search_omero_app.logger.info("delete cache for data source %s" % data_source)
     delete_cache = delete_cache_query.substitute(data_source=data_source)
     es_index = "key_value_buckets_information"
     es_index_2 = "key_values_resource_cached"
     try:
-        if delete_current_cache:
-            res_1 = es.delete_by_query(
-                index=es_index, body=json.loads(delete_cache), request_timeout=1000
-            )
-            search_omero_app.logger.info("delete cache result 1 %s" % res_1)
-            res_2 = es.delete_by_query(
-                index=es_index_2, body=json.loads(delete_cache), request_timeout=1000
-            )
-            search_omero_app.logger.info("delete cache result 2 %s" % res_2)
-        # Trigger caching for  the data source
+        res_1 = es.delete_by_query(
+            index=es_index, body=json.loads(delete_cache), request_timeout=1000
+        )
+        search_omero_app.logger.info("delete cache result 1 %s" % res_1)
+        res_2 = es.delete_by_query(
+            index=es_index_2, body=json.loads(delete_cache), request_timeout=1000
+        )
+        search_omero_app.logger.info("delete cache result 2 %s" % res_2)
+    # Trigger caching for  the data source
     except Exception as e:
         search_omero_app.logger.info(
             "Error deleting cache for data source %s, error message is %s"
             % (data_source, str(e))
         )
-        sys.exit()
 
+
+def update_data_source_cache(data_source, res=None, delete_current_cache=True):
+    from omero_search_engine.cache_functions.elasticsearch.transform_data import (
+        save_key_value_buckets,
+    )
+
+    delete_data_source_cache(data_source)
     search_omero_app.logger.info("Trigger caching for data source %s" % data_source)
-
     save_key_value_buckets(res, data_source, False, False)
 
 
@@ -1617,6 +1617,8 @@ def delete_container(ids, resource, data_source, update_cache, synchronous_run=F
     if update_cache and synchronous_run:
         # update the cache for the data source
         update_data_source_cache(data_source)
+    else:
+        delete_data_source_cache(data_source)
     en = datetime.datetime.now()
     search_omero_app.logger.info("Start at: %s" % st)
     search_omero_app.logger.info("Ends at: %s" % en)
