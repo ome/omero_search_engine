@@ -152,20 +152,20 @@ def config_datasource(configuration, updated_configuration):
 
 
 def rename_datasource(data_source_name, new_data_source_name):
-    change = False
+    changed = False
     with open(app_config.INSTANCE_CONFIG) as f:
         configuration = yaml.load(f)
     for data_source in configuration.get("DATA_SOURCES"):
         if data_source.get("name").lower() == data_source_name.lower():
             data_source["name"] = new_data_source_name
-            change = True
+            changed = True
 
-    if not change:
+    if not changed:
         for data_source in configuration.get("DATA_SOURCES"):
             if data_source["name"].lower() == data_source_name.lower():
                 data_source["name"] = new_data_source_name
                 return True
-    if change:
+    if changed:
         print(
             "data source %s has been renamed to %s"
             % (data_source_name, new_data_source_name)
@@ -175,20 +175,20 @@ def rename_datasource(data_source_name, new_data_source_name):
 
 
 def delete_data_source_configuration(data_source_name):
-    change = False
+    changed = False
     with open(app_config.INSTANCE_CONFIG) as f:
         configuration = yaml.load(f)
     for data_source in configuration.get("DATA_SOURCES"):
         if data_source.get("name").lower() == data_source_name.lower():
             configuration.get("DATA_SOURCES").remove(data_source)
-            change = True
+            changed = True
 
-    if not change:
+    if not changed:
         for data_source in configuration.get("DATA_SOURCES"):
             if data_source["name"].lower() == data_source_name.lower():
                 configuration.get("DATA_SOURCES").remove(data_source)
                 return True
-    if change:
+    if changed:
         with open(app_config.INSTANCE_CONFIG, "w") as f:
             yaml.dump(configuration, f)
 

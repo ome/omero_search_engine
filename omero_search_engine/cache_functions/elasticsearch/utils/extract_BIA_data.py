@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# from encodings.cp866 import decoding_table
-
 # Copyright (C) 2025 University of Dundee & Open Microscopy Environment.
 # All rights reserved.
 #
@@ -174,7 +172,6 @@ def extract_images_data():
                 image_attr["mapvalue_index"] = 0
                 added_key_value.append(image_attr)
         index = 0
-        # total_size_in_bytes
         for file_ in imag["representation"]:
             # image_file = copy.deepcopy(image_)
             # images_data.append(image_file)

@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import copy
-import logging
 
 # Copyright (C) 2022 University of Dundee & Open Microscopy Environment.
 # All rights reserved.
@@ -25,6 +23,8 @@ import pandas as pd
 import numpy as np
 import os
 import uuid
+import copy
+import logging
 from omero_search_engine.api.v1.resources.utils import resource_elasticsearchindex
 from omero_search_engine.api.v1.resources.resource_analyser import (
     query_cached_bucket,
@@ -481,18 +481,7 @@ def insert_resource_data(folder, resource, data_source, from_json, need_convert=
         else:
             file_name = folder
         vals.append((file_name, resource, data_source, len(files_list)))
-        # vals.append((cur_max_id, (cur_max_id - page_size), resource, data_source))
-        # handle_file(file_name, es_index, cols, is_image, data_source, from_json)
-    # handle_file_2(file_name, resource, data_source)
-    # search_omero_app.logger.info("File: %s has been processed" % fil)
-    # try:
-    #    #with open(file_name + ".done", "w") as outfile:
-    #    json.dump(f_con, outfile)
-    #    print ("======")
-    # except Exception as ex:
-    #    search_omero_app.logger.info("Error .... writing Done file ...")
-    #    raise ex
-    # f_con += 1
+
     try:
         manager = multiprocessing.Manager()
         # a lock which will be used between the processes in the pool
@@ -531,7 +520,6 @@ def get_insert_data_to_index(sql_st, resource, data_source, clean_index=True):
         create_omero_indexes(resource)
     sql_ = "select max (id) from %s" % resource
     res2 = search_omero_app.config.database_connectors[data_source].execute_query(sql_)
-    # res2 = search_omero_app.config["database_connector"].execute_query(sql_)
     max_id = res2[0]["max"]
     if not max_id:
         return
@@ -676,7 +664,7 @@ def processor_container_work(lock, global_counter, val):
     search_omero_app.logger.info("elpased time:%s" % average_time)
 
 
-def index_container_s_from_database(
+def index_containers_from_database(
     target_resource, resource, id, data_source, no_processors_=2
 ):
     """
@@ -789,7 +777,6 @@ def insert_resource_data_from_df(df, resource, data_source, lock=None):
 
         actions.append({"_index": es_index, "_source": record})  # ,
     es = search_omero_app.config.get("es_connector")
-    # logging.getLogger("elasticsearch").setLevel(logging.ERROR)
     search_omero_app.logger.info("Pushing the data to the Elasticsearch")
     try:
         if lock:
@@ -912,7 +899,6 @@ def save_key_value_buckets(
 
         res = get_resource_keys(resource_table, data_source)
         resource_keys = [res["key"] for res in res]
-        # resource_keys = get_keys(resource_table, data_source)
         name_results = None
         if resource_table in ["project", "screen"]:
             name_result = get_all_index_data(resource_table, data_source)
@@ -1049,7 +1035,6 @@ def get_keys(res_table, data_source):
     results = search_omero_app.config.database_connectors[data_source].execute_query(
         sql
     )
-    # results = search_omero_app.config["database_connector"].execute_query(sql)
     results = [res["name"] for res in results]
     return results
 
@@ -1071,10 +1056,10 @@ def push_keys_cache_index(results, resource, data_source, es_index, resourcename
     search_omero_app.logger.info("3. Results is %s" % str(res))
 
 
-def get_buckets(key, data_source, resourcse, es_index, lock=None):
+def get_buckets(key, data_source, resource, es_index, lock=None):
     try:
         lock.acquire()
-        res = get_all_values_for_a_key(resourcse, data_source, key)
+        res = get_all_values_for_a_key(resource, data_source, key)
     except Exception as ex:
         print("Error %s" % ex)
         raise ex
@@ -1083,7 +1068,7 @@ def get_buckets(key, data_source, resourcse, es_index, lock=None):
     search_omero_app.logger.info(
         "number of bucket: %s" % res.get("total_number_of_buckets")
     )
-    data_to_be_pushed = prepare_bucket_index_data(res, resourcse, data_source, es_index)
+    data_to_be_pushed = prepare_bucket_index_data(res, resource, data_source, es_index)
     return data_to_be_pushed
 
 

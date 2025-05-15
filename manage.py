@@ -607,7 +607,7 @@ def get_index_data_from_csv_files(
     "--resource",
     help="resource name, creating all the indexes for all the resources by default",  # noqa
 )
-def convert_to_searchengine_indexer_format(file_name=None, resource=None):
+def convert_to_searchengine_format(file_name=None, resource=None):
     from omero_search_engine.cache_functions.elasticsearch.transform_data import (
         conver_to_searchengine_fromat,
     )
@@ -683,7 +683,7 @@ def index_container_from_database(
         "screen": ["image", "screen", "well", "plate"],
     }
     from omero_search_engine.cache_functions.elasticsearch.transform_data import (
-        index_container_s_from_database,
+        index_containers_from_database,
     )
 
     # from omero_search_engine.api.v1.resources.utils import update_data_source_cache
@@ -695,7 +695,7 @@ def index_container_from_database(
     no_processors = int(number_of_processors)
 
     for res in resources_index[resource]:
-        index_container_s_from_database(resource, res, id, data_source, no_processors)
+        index_containers_from_database(resource, res, id, data_source, no_processors)
         time.sleep(60)
 
     if update_cache:

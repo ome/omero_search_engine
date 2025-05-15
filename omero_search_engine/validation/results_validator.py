@@ -138,8 +138,6 @@ class Validator(object):
             sql = query_methods[name].substitute(
                 names=names, values=values, operator="not in"
             )
-        # sql = query_methods[name].substitute(names=names, values=values)
-        # conn = search_omero_app.config["database_connector"]
         conn = search_omero_app.config.database_connectors[self.data_source]
         postgres_results = conn.execute_query(sql)
         results = [item["id"] for item in postgres_results]

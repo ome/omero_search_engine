@@ -445,7 +445,6 @@ def search(resource_table):
     operator = request.args.get("operator")
     bookmark = request.args.get("bookmark")
     data_source = get_working_data_source(request.args.get("data_source"))
-    print(data_source)
     random_results = request.args.get("random_results")
     if random_results:
         if not random_results.isdigit():
@@ -493,7 +492,7 @@ def container_key_values_search(resource_table):
         try:
             csv = json.loads(csv.lower())
         except Exception:
-            csv = False
+            csv = None
     results = get_container_values_for_key(
         resource_table, container_name, csv, ret_data_source=data_source, key=key
     )

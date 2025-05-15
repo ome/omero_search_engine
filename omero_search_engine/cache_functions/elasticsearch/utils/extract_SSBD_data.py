@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# from encodings.cp866 import decoding_table
-
 # Copyright (C) 2025 University of Dundee & Open Microscopy Environment.
 # All rights reserved.
 #

@@ -19,6 +19,6 @@ Each image should also include the following columns:
 Additionally, each project, dataset, and image may have one or more associated attributes (e.g. ``organism``, ``cell line``, ``protein name``, etc.)
 The two following CSV files ``images_template.csv`` and ``container_template.csv`` should be provided.
 
-The ``convert_to_searchengine_indexer_format`` method ``inside manage.py`` can be used to convert the content of the files to the search engine indexer format.
+The ``convert_to_searchengine_format`` method ``inside manage.py`` can be used to convert the content of the files to the search engine indexer format.
 
 Alternatively, there is the ``-n`` argument for the ``get_index_data_from_csv_files`` method. If set to True, it will convert the file automatically during the indexing.

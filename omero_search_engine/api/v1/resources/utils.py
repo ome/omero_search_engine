@@ -29,6 +29,7 @@ from omero_search_engine import search_omero_app
 from string import Template
 from app_data.data_attrs import annotation_resource_link
 
+contain_list = ["contains", "not_contains"]
 main_dir = os.path.abspath(os.path.dirname(__file__))
 mm = main_dir.replace("omero_search_engine/api/v2/resources", "")
 sys.path.append(mm)
@@ -839,7 +840,7 @@ def check_single_filter(res_table, filter, names, organism_converter):
     key = filter.get("name")
     value = filter["value"]
     operator = filter["operator"]
-    if operator != "contains" and operator != "not_contains":
+    if operator not in contain_list:
         if key:
             for names_ in names:
                 key_ = [name for name in names_ if name.casefold() == key.casefold()]
@@ -1022,7 +1023,6 @@ def search_index_using_search_after(
     ret_type=None,
     random_results=0,
 ) -> object:
-    # toz  ya
     returned_results = []
     if bookmark_ and not pagination_dict:
         add_pagination = False
@@ -1241,10 +1241,6 @@ def search_resource_annotation(
         and_filters = query_details.get("and_filters")
         or_filters = query_details.get("or_filters")
         case_sensitive = query_details.get("case_sensitive")
-        # check and fid if possible names and values inside
-        # filters conditions
-        # check_filters is commented out as it has no actual use and take time to execute
-        # check_filters(table_, [and_filters, or_filters], case_sensitive)
         query_string = elasticsearch_query_builder(
             and_filters, or_filters, case_sensitive, main_attributes
         )
@@ -1320,12 +1316,6 @@ def search_resource_annotation(
         "raw_elasticsearch_query": raw_query_to_send_back,
         "notice": notice,
     }
-    # except Exception as e:
-    #    search_omero_app.logger.info("Query %s" % str(query))
-    #    search_omero_app.logger.info("==>>>Error: %s" % str(e))
-    #    return build_error_message(
-    #        "Something went wrong, please check your query and try again later."
-    #    )
 
 
 def get_studies_titles(idr_name, resource, data_source=None):
@@ -1350,7 +1340,6 @@ def get_studies_titles(idr_name, resource, data_source=None):
             study_title["id"] = item_.get("id")
             study_title["name"] = item_.get("name")
             study_title["type"] = resource
-            # study_title["description"] = item_.get("description")
             for value in item_.get("key_values"):
                 if value.get("name"):
                     value["key"] = value["name"]
@@ -1634,10 +1623,13 @@ def delete_container(ids, resource, data_source, update_cache, synchronous_run=F
 
 
 def delete_data_source_contents(data_source):
-    data_sources = get_data_sources()
     found = False
+    if not data_source:
+        search_omero_app.logger.info("Data source is not provided")
+        return found
+    data_sources = get_data_sources()
     for d_s in data_sources:
-        if d_s.lower() == data_source:
+        if d_s.lower() == data_source.lower():
             found = True
             break
     if not found:
