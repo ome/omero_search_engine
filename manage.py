@@ -723,6 +723,17 @@ def update_data_source_cache(data_source=None):
 
 
 @manager.command
+@manager.option("-d", "--working_data_source", help="data source")
+def delete_data_source_cache(data_source=None):
+    if not data_source:
+        print("Data source is required")
+        return
+    from omero_search_engine.api.v1.resources.utils import delete_data_source_cache
+
+    delete_data_source_cache(data_source)
+
+
+@manager.command
 @manager.option("-d", "--data_source", help="data source")
 def delete_data_source(data_source=None):
     if not data_source:
