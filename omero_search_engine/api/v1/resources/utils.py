@@ -1516,6 +1516,18 @@ def delete_data_source_cache(data_source):
         )
 
 
+def get_number_of_images_inside_container(resource_table, data_source, id):
+    name_result = get_all_index_data(resource_table, data_source)
+    no_images_co = 0
+    for res in name_result["results"]["results"]:
+        if res.get("id") == int(id):
+            no_images_co = get_number_image_inside_container(
+                resource_table, id, data_source
+            )
+            break
+    return no_images_co
+
+
 def update_data_source_cache(data_source, res=None, delete_current_cache=True):
     from omero_search_engine.cache_functions.elasticsearch.transform_data import (
         save_key_value_buckets,
@@ -1543,6 +1555,22 @@ def delete_container(ids, resource, data_source, update_cache, synchronous_run=F
     es = search_omero_app.config.get("es_connector")
     ids = ids.split(",")
     for id in ids:
+        no_images = get_number_of_images_inside_container(resource, data_source, id)
+        if no_images == 0:
+            search_omero_app.logger.info(
+                "The requested %s with ID=%s does not correspond to any existing one."
+                % (resource, id)
+            )
+            return
+        elif no_images > 740000 and synchronous_run:
+            # This number has been approximately estimated through trial and error.
+            search_omero_app.logger.info(
+                "Due to the high number of images in the %s with ID=%s, "
+                "an asynchronous delete operation is highly advised. "
+                "\nInitiating asynchronous deletion." % (resource, id)
+            )
+            synchronous_run = False
+
         sub_containers = get_containers_no_images(
             container_id=id, data_source=data_source, resource=resource
         )
@@ -1580,7 +1608,6 @@ def delete_container(ids, resource, data_source, update_cache, synchronous_run=F
                     "%s/%s, delete results is %s"
                     % (counter, len(sub_containers["results"]["results"]), res__2)
                 )
-
         attribute = "%s_id" % resource
         image_delet_query = delete_container_query.substitute(
             attribute=attribute, id=id, data_source=data_source
