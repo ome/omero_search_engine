@@ -4,7 +4,7 @@ Test delete and index container
 For example, search the Gene Symbol=pax6
 https://idr-testing.openmicroscopy.org/search/?key=Gene+Symbol&value=pax6&operator=equals
 * In this search there are results that come from project **idr0114-lindsay-hdbr/experimentA**, its is id=**2151**
-* Delete this project using **delete_container.sh** script, then update the cache manually if the flag to update automatically is ``false``. This process may take time depending on the number of containers inside the data source .
+* When deleting a project using the **delete_container.sh** script,  the cache will also be deleted. The cache will have to be manually created i if the flag to update the cache automatically is set to ``false``. This process may take time depending on the number of containers inside the data source .
 * Perform the same search and then the results should not contain any image from this project
 * This project should be re-indexed and the data source cache updated using **index_container_from_database.sh** script. Then search again, the results from this project should be displayed.
 
