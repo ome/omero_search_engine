@@ -704,6 +704,8 @@ def index_container_from_database(
 
     if update_cache:
         update_data_source_cache(data_source)
+    else:
+        delete_data_source_cache(data_source)
 
     # backup the index data
     if backup:
