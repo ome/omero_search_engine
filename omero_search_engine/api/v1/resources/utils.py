@@ -1567,9 +1567,10 @@ def delete_container(ids, resource, data_source, update_cache, synchronous_run=F
             search_omero_app.logger.info(
                 "Due to the high number of images in the %s with ID=%s, "
                 "an asynchronous delete operation is highly advised. "
-                "\nInitiating asynchronous deletion." % (resource, id)
+                "\nPlease rerun with asynchronous deletion enable (-s False)."
+                % (resource, id)
             )
-            synchronous_run = False
+            return
 
         sub_containers = get_containers_no_images(
             container_id=id, data_source=data_source, resource=resource
