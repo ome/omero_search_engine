@@ -349,7 +349,7 @@ class QueryRunner(
                             main_or_attribute[res], items_, res
                         )
                     else:
-                        main_or_attribute[res] = combine_add_conds(
+                        main_or_attribute[res] = combine_conditions(
                             main_or_attribute[res], items_, res
                         )
         if len(self.or_query_group) > 0 and len(image_or_queries) == 0:
@@ -372,7 +372,7 @@ class QueryRunner(
                     if not main_and_attribute.get(resource):
                         main_and_attribute[resource] = new_cond
                     else:
-                        main_and_attribute[resource] = combine_add_conds(
+                        main_and_attribute[resource] = combine_conditions(
                             main_and_attribute[resource], new_cond, resource
                         )
                 else:
@@ -394,7 +394,7 @@ class QueryRunner(
                         if not main_and_attribute.get(resource):
                             main_and_attribute[resource] = new_cond
                         else:
-                            main_and_attribute[resource] = combine_add_conds(
+                            main_and_attribute[resource] = combine_conditions(
                                 main_and_attribute[resource], new_cond, resource
                             )
                     else:
@@ -402,7 +402,7 @@ class QueryRunner(
 
         for res, main_list in main_and_attribute.items():
             if res in main_or_attribute:
-                m_list = combine_add_conds(main_list, main_or_attribute[res], res)
+                m_list = combine_conditions(main_list, main_or_attribute[res], res)
                 main_or_attribute[res] = m_list
             else:
                 main_or_attribute[res] = main_list
@@ -604,7 +604,7 @@ def search_query(
         }
 
 
-def combine_add_conds(curnt_cond, new_cond, resource):
+def combine_conditions(curnt_cond, new_cond, resource):
     returned_cond = []
     cons = []
     for c_cond in curnt_cond:
@@ -655,7 +655,7 @@ def process_search_results(results, resource, columns_def):
     returned_results = {}
 
     if not results.get("results") or len(results["results"]) == 0:
-        returned_results["Error"] = "3. Your query returns no results"
+        returned_results["Error"] = "Your query returns no results"
         return returned_results
     cols = []
     values = []

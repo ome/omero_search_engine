@@ -27,14 +27,13 @@ from watchdog.events import FileSystemEventHandler
 import threading
 import time
 
-# from omero_search_engine.database.database_connector import DatabaseConnector
 from omero_search_engine.__version__ import __version__
 
 from configurations.configuration import (
     configLooader,
     load_configuration_variables_from_file,
     set_database_connection_variables,
-    get_configure_file,
+    get_configuration_file,
 )
 from logging.handlers import RotatingFileHandler
 
@@ -47,8 +46,7 @@ template = {
     )  # noqa
 }
 
-act_config_name = "development"
-
+environment_config_name = "development"
 
 main_folder = os.path.dirname(os.path.realpath(__file__))
 
@@ -93,12 +91,12 @@ class ConfigHandler(FileSystemEventHandler):
 
 
 def create_app(config_name=None):
-    global act_config_name
+    global environment_config_name
     if not config_name:
-        config_name = act_config_name
+        config_name = environment_config_name
     else:
         print("re-assign...")
-        act_config_name = config_name
+        environment_config_name = config_name
     app_config = configLooader.get(config_name)
     load_configuration_variables_from_file(app_config)
     set_database_connection_variables(app_config)
@@ -147,7 +145,7 @@ def create_app(config_name=None):
 def start_watcher():
     observer = Observer()
     observer.schedule(
-        ConfigHandler(), path=os.path.dirname(get_configure_file()), recursive=False
+        ConfigHandler(), path=os.path.dirname(get_configuration_file()), recursive=False
     )
     observer.start()
     try:
@@ -162,8 +160,6 @@ def start_watcher():
 
 watcher_thread = threading.Thread(target=start_watcher, daemon=True)
 watcher_thread.start()
-
-# create_app()
 
 from omero_search_engine.api.v1.resources import (  # noqa
     resources as resources_routers_blueprint_v1,

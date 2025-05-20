@@ -391,7 +391,7 @@ def handle_file_2(lock, global_counter, val):
     insert_resource_data_from_df(df, resource, data_source, lock)
 
 
-def conver_to_searchengine_fromat(file_name, resource):
+def convert_to_searchengine_format(file_name, resource):
     ext_ = file_name.split(".")[-1]
     new_file_name = file_name.replace(".%s" % ext_, "_.%s" % ext_)
     df = pd.read_csv(file_name)
@@ -460,7 +460,7 @@ def insert_resource_data(folder, resource, data_source, from_json, need_convert=
     f_con = 0
     if os.path.isfile(folder):
         if need_convert:
-            folder = conver_to_searchengine_fromat(folder, resource)
+            folder = convert_to_searchengine_format(folder, resource)
         files_list = [folder]
     elif os.path.isdir(folder):
         files_list = get_file_list(folder)

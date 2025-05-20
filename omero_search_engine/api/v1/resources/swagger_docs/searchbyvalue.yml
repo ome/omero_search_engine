@@ -18,7 +18,7 @@ parameters:
     description: filter by study name
     in: query
     type: string
-    required: False
+    required: false
   - name: operator
     description: operator, default equals
     in: query

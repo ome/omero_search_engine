@@ -613,11 +613,14 @@ def get_index_data_from_csv_files(
 )
 def convert_to_searchengine_format(file_name=None, resource=None):
     from omero_search_engine.cache_functions.elasticsearch.transform_data import (
-        conver_to_searchengine_fromat,
+        convert_to_searchengine_format,
     )
 
-    converted_file_name = conver_to_searchengine_fromat(file_name, resource)
-    print(converted_file_name)
+    converted_file_name = convert_to_searchengine_format(file_name, resource)
+    search_omero_app.logger.info(
+        "The file has been successfully converted. "
+        "The name of the converted file is: %s" % converted_file_name
+    )
 
 
 @manager.command

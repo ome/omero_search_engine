@@ -116,7 +116,7 @@ def update_config_file(updated_configuration, data_source=False):
 
 def config_datasource(configuration, updated_configuration):
     changed = False
-    Found = False
+    found = False
     if (
         updated_configuration.get("CSV")
         and updated_configuration.get("CSV").get("type") == "CSV"
@@ -126,26 +126,26 @@ def config_datasource(configuration, updated_configuration):
                 data_source.get("name").lower()
                 == updated_configuration.get("name").lower()
             ):
-                Found = True
+                found = True
                 for k, v in updated_configuration["CSV"].items():
                     if v == "CSV":
                         continue
                     if data_source["CSV"].get(k) != v:
                         data_source["CSV"][k] = v
                         changed = True
-        if not Found:
+        if not found:
             configuration.get("DATA_SOURCES").append(updated_configuration)
             changed = True
     else:
         for data_source in configuration.get("DATA_SOURCES"):
             if data_source["name"].lower() == updated_configuration["name"].lower():
-                Found = True
+                found = True
                 for k, v in updated_configuration["DATABASE"].items():
                     if data_source["DATABASE"][k] != v:
                         data_source["DATABASE"][k] = v
                         changed = True
                 break
-        if not Found:
+        if not found:
             configuration.get("DATA_SOURCES").append(updated_configuration)
             changed = True
     return changed
@@ -193,7 +193,7 @@ def delete_data_source_configuration(data_source_name):
             yaml.dump(configuration, f)
 
 
-def get_configure_file():
+def get_configuration_file():
     home_folder = os.path.expanduser("~")
     INSTANCE_CONFIG = os.path.join(home_folder, ".app_config.yml")
     DEPLOYED_CONFIG = r"/etc/searchengine/.app_config.yml"
@@ -215,7 +215,7 @@ def get_configure_file():
 
 class app_config(object):
     # the configuration can be loadd from yml file later
-    INSTANCE_CONFIG = get_configure_file()
+    INSTANCE_CONFIG = get_configuration_file()
 
     """
     home_folder = os.path.expanduser("~")

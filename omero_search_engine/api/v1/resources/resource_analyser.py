@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# from encodings.cp866 import decoding_table
-
 # Copyright (C) 2022 University of Dundee & Open Microscopy Environment.
 # All rights reserved.
 #
@@ -718,11 +716,7 @@ def get_resource_attributes(
             query = key_values_buckets_template_with_data_source.substitute(
                 resource=resource, data_source=json.dumps(data_s)
             )
-            # else:
-            #    query = key_values_buckets_template_2.substitute(resource=resource)
-            res = connect_elasticsearch(
-                es_index, query
-            )  # es.search(index=es_index, body=query)
+            res = connect_elasticsearch(es_index, query)
 
             hits = res["hits"]["hits"]
             if len(hits) > 0:
@@ -733,34 +727,32 @@ def get_resource_attributes(
                 query = key_values_buckets_template_with_data_source.substitute(
                     resource=table, data_source=json.dumps(data_s)
                 )
-                # else:
-                #    query = key_values_buckets_template_2.substitute(resource=table)
-                res = connect_elasticsearch(
-                    es_index, query
-                )  # .search(index=es_index, body=query)
+
+                res = connect_elasticsearch(es_index, query)
                 hits = res["hits"]["hits"]
                 if len(hits) > 0:
                     returned_results_[table] = hits[0]["_source"]["name"]
 
     if mode == "searchterms":
         restricted_search_terms = get_restircted_search_terms()
-        restircted_resources = {}
+        restricted_resources = {}
+
         for returned_result in returned_results:
             for k, val in returned_result.items():
                 if k in restricted_search_terms:
                     search_terms = list(set(restricted_search_terms[k]) & set(val))
                     if len(search_terms) > 0:
-                        if k not in restircted_resources:
-                            restircted_resources[k] = search_terms
+                        if k not in restricted_resources:
+                            restricted_resources[k] = search_terms
                         else:
                             for term in search_terms:
-                                if term not in restircted_resources[k]:
-                                    restircted_resources[k].append(term)
+                                if term not in restricted_resources[k]:
+                                    restricted_resources[k].append(term)
         # restircted_resources[k] = restircted_resources[k] + search_terms
-        returned_results.append(restircted_resources)
+        returned_results.append(restricted_resources)
         if "project" in returned_results:
             returned_results_["project"].append("name")
-        return restircted_resources
+        return restricted_resources
 
     return returned_results
 
