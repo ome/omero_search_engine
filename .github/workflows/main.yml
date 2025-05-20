@@ -54,7 +54,7 @@ jobs:
           # configure elasticsearch
           python manage.py set_elasticsearch_configuration -e localhost:${{ job.services.elasticsearch.ports[9200] }}
           # download and extract the database backup file           
-          wget https://downloads.openmicroscopy.org/images/omero_db_searchengine.zip -P app_data
+          wget https://downloads.openmicroscopy.org/public-resources/omero_db_searchengine.zip -P app_data
           unzip app_data/omero_db_searchengine.zip -d app_data/          
           # run  restore omero database
           python manage.py restore_postgresql_database
@@ -63,7 +63,7 @@ jobs:
           # set up the seond database
           rm app_data/omero_db_searchengine.zip
           rm app_data/omero.pgdump
-          wget https://github.com/khaledk2/ice-archh-64/releases/download/new_re_db/omero_train.zip -P app_data
+          wget https://downloads.openmicroscopy.org/public-resources/omero_train.zip -P app_data
           unzip app_data/omero_train.zip -d app_data/
           rm app_data/omero_train.zip
           python manage.py set_database_configuration -u localhost -s  ${{ job.services.postgres.ports[5432] }} -n postgress -p passwprd -w omero_train -d omero_train -b omero_train.pgdump
@@ -75,7 +75,7 @@ jobs:
           # set csv data source
           python manage.py set_data_source_files -n test_csv
           # download images csv file
-          wget https://github.com/khaledk2/ice-archh-64/releases/download/test_csv/test_images.zip -P app_data
+          wget https://downloads.openmicroscopy.org/public-resources/test_images.zip -P app_data
           unzip app_data/test_images.zip -d app_data/
           rm app_data/test_images.zip
           python manage.py get_index_data_from_csv_files -d test_csv  -f app_data/test_images.csv -r image -u True
