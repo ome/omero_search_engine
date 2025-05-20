@@ -254,7 +254,8 @@ def set_default_datasource(default_data_source=None):
     if default_data_source:
         update_config_file({"DEFAULT_DATASOURCE": default_data_source})
     else:
-        search_omero_app.logger.info("No attribute is provided")
+        search_omero_app.logger.info("No attribute provided")
+
 
 
 @manager.command
@@ -298,7 +299,8 @@ def set_data_source_files(
 
 @manager.command
 @manager.option("-n", "--new_data_source_name", help="new data source name")
-@manager.option("-c", "--current_data_source_name", help="orginal data source name")
+@manager.option("-c", "--current_data_source_name", help="original data source name")
+
 def rename_data_source(current_data_source_name=None, new_data_source_name=None):
     if not current_data_source_name or not new_data_source_name:
         search_omero_app.logger.info(

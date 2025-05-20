@@ -36,9 +36,9 @@ The application should have the access attributes (e.g, URL, username, password,
 
   * The data should be extracted from the IDR/OMERO database using some SQL queries and saved to CSV files using :omero_search_engine:`sql_to_csv.py <omero_search_engine/cache_functions/elasticsearch/sql_to_csv.py>`
   * The image index data is generated in a large file, so it is recommended that the user splits it into several files to facilitate the processing of the data and its insertion into the index e.g. ``split -l 2600000 images.csv``.
-  * ``create_index``: Create the Elasticsearch indices no data have been previously added, it can be used to create a single index or all the indices; the default is creating all the indices.
+  * ``create_index``: Create the Elasticsearch indices no data have been previously added, it can be used to create a single index or all the indices; the default is to create all the indices.
   * The user should add a new data source (CSV) using the ''set_data_source_files'' command inside :omero_search_engine:`manage.py <manage.py>`
-  * ``get_index_data_from_csv_files`` is used to read the data, to format it then to push the data to the resource Elasticsearch index. The user can provide a single file (CSV format) or folder, in the later the indexer will use all the files inside the folder.
+  * ``get_index_data_from_csv_files`` is used to read the data, to format it then to push the data to the resource Elasticsearch index. The user can provide a single file (CSV format) or folder. If a folder is specified, the indexer will use all the CSV files inside the folder.
 
 Application installation using Docker
 =====================================
@@ -60,7 +60,7 @@ Ubuntu and Rocky Linux 9 images are provided.
   * It will be used to save the configuration file so the user can configure his instance
   * Additionally, it will be used to save the logs files and other cached data.
 
-* An example of running the docker run command for a Rocky Linux 9 image which maps the ``etc/searchengine`` folder to the user home folder in order to save the log files as well as mapping the application configuration file ::
+* Below is an example of the docker run command for a Rocky Linux 9 image mapping the ``etc/searchengine`` folder to the user home folder in order to save the log files as well as mapping the application configuration file ::
 
     $ docker run --rm -p 5577:5577 -d  -v $HOME/:/etc/searchengine/  searchengine
 

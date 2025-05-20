@@ -126,7 +126,7 @@ def search_index_for_value(e_index, query, get_size=False):
 def search_index_for_values_get_all_buckets(e_index, query):
     """
     Perform search the elasticsearch using value and
-    return all the key values which this value has been used,
+    return all the key values where this value has been used,
     it will include the number of records.
     It is relatively slow, but it might be due
     to the Elasticsearch hosting machine
@@ -1118,7 +1118,7 @@ def get_resource_keys(resource, data_source):
 
 
 # Return sub container using a container attribute
-# for example get the no of  sub  containers e.g. datasets names,
+# for example get the number of sub-containers e.g. datasets names,
 # inside a container, e.g. project using name.
 container_returned_sub_container_template = Template(
     """

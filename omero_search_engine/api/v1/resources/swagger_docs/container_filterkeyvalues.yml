@@ -31,7 +31,7 @@ The query:
 
 The user needs to specify
 - the container name, e.g. "idr0043-uhlen-humanproteinatlas/experimentA"
-- the key which its values is needed, e.g. "gene symbol"
+- the key e.g. "Gene Symbol"
 
 the results should contain buckets like this:
 {
