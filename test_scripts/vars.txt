@@ -18,3 +18,8 @@ TASK_ID=9kfkEIVNQNafmYyAlpiy9g:239972
 data_base_url=192.168.2.160
 # this shoould be replaced by the database user password
 data_base_user_bassword=data_base_user_bassword
+database_port_number=5432
+database_user_name=omeroreadonly
+working_data_source=omero_train
+database_name=omero_train
+backup_file_name=omero_train.pgdump
