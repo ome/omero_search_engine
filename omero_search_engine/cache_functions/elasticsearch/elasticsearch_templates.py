@@ -248,6 +248,20 @@ key_value_buckets_info_template = {
             "total_buckets": {"type": "long"},
             "total_items": {"type": "long"},
             "total_items_in_saved_buckets": {"type": "long"},
+            "Attribute_vector": {
+                "type": "dense_vector",
+                "dims": 384,
+            },
+            "value_vector": {
+                "type": "dense_vector",
+                "dims": 384,
+                "index": True,
+            },
+            "Attribute_value_vector": {
+                "type": "dense_vector",
+                "dims": 384,
+                "index": True,
+            },
         }
     },
 }

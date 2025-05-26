@@ -1723,6 +1723,59 @@ def delete_data_source_contents(data_source):
     search_omero_app.logger.info("start time %s , end time %s" % (st, en))
     return found
 
+def query_vector(data_source, query_text):
+    from sentence_transformers import SentenceTransformer
+    import datetime
+
+    start_time = datetime.datetime.now()
+    model = SentenceTransformer("all-MiniLM-L6-v2")
+    start_time_lmodel_loaded = datetime.datetime.now()
+
+    query_vector_q = model.encode(query_text).tolist()
+    time_query_encoded = datetime.datetime.now()
+
+    query_body = {
+        "query": {
+            "script_score": {
+                "query": {"match_all": {}},
+                "script": {
+                    "source": "cosineSimilarity(params.queryVector, "
+                    "'Attribute_value_vector') + 1.0",
+                    "params": {"queryVector": query_vector_q},
+                },
+            }
+        }
+    }
+
+    es = search_omero_app.config.get("es_connector")
+    es_index = "key_value_buckets_information"
+    from elasticsearch.exceptions import RequestError
+
+    try:
+        response = es.search(index=es_index, body=query_body)
+    except RequestError as e:
+        print("Elasticsearch request failed:", e.info)
+        raise
+
+    time_back_from_search_engine = datetime.datetime.now()
+    print(
+        start_time,
+        start_time_lmodel_loaded,
+        time_query_encoded,
+        time_back_from_search_engine,
+    )
+
+    query_results = []
+    for hit in response["hits"]["hits"]:
+        query_results.append(
+            "Number of %ss: %s"
+            % (hit["_source"]["resource"], hit["_source"]["items_in_the_bucket"])
+            + ", "
+            + hit["_source"]["Attribute"]
+            + " is "
+            + hit["_source"]["Value"]
+        )
+    return query_results
 
 delete_container_query = Template(
     """
