@@ -23,6 +23,8 @@ It is derived from some Omero tables depending on the resource.
 For example for the project, it combines project,
 projectannotationlink and annotation_mapvalue.
 """
+from omero_search_engine import search_omero_app
+
 non_image_template = {
     "settings": {
         "analysis": {
@@ -194,7 +196,7 @@ key_values_resource_cache_template = {
     },
 }
 
-key_value_buckets_info_template = {
+key_value_buckets_info_template_v = {
     "settings": {
         "analysis": {
             "normalizer": {
@@ -266,8 +268,75 @@ key_value_buckets_info_template = {
     },
 }
 
+key_value_buckets_info_template_N = {
+    "settings": {
+        "analysis": {
+            "normalizer": {
+                "valuesnormalizer": {"type": "custom", "filter": ["lowercase"]}
+            }
+        },
+        # "number_of_replicas": 1
+        "index.auto_expand_replicas": "0-all",
+    },
+    "mappings": {
+        "properties": {
+            "doc_type": {"type": "keyword"},
+            "id": {
+                "type": "keyword",
+            },
+            "data_source": {
+                "type": "text",
+                "fields": {"keyvalue": {"type": "keyword"}},
+            },
+            "resource": {
+                "type": "text",
+                "fields": {
+                    "keyresource": {"type": "keyword"},
+                    "keyresourcenormalize": {
+                        "type": "keyword",
+                        "normalizer": "valuesnormalizer",
+                    },
+                },
+            },
+            "Attribute": {
+                "type": "text",
+                "fields": {
+                    "keyname": {"type": "keyword"},
+                    "keynamenormalize": {
+                        "type": "keyword",
+                        "normalizer": "valuesnormalizer",
+                    },
+                },
+            },
+            "Value": {
+                "type": "text",
+                "fields": {
+                    "keyvalue": {"type": "keyword"},
+                    "keyvaluenormalize": {
+                        "type": "keyword",
+                        "normalizer": "valuesnormalizer",
+                    },
+                },
+            },
+            "items_in_the_bucket": {"type": "long"},
+            "total_buckets": {"type": "long"},
+            "total_items": {"type": "long"},
+            "total_items_in_saved_buckets": {"type": "long"},
+        }
+    },
+}
+
+
+if search_omero_app.config.get("INDEX_VECTOR"):
+    key_value_buckets_info_template = key_value_buckets_info_template_v
+else:
+    key_value_buckets_info_template = key_value_buckets_info_template_N
+
 """
+
+if search_omero_app.config.get("INDEX_VECTOR"):
 Template contains list of attributes for each resource"""
+
 
 key_values_resource_cache_template = {
     "settings": {
