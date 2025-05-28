@@ -43,8 +43,6 @@ import multiprocessing
 from functools import partial
 
 import json
-from sentence_transformers import SentenceTransformer
-
 
 def create_index(es_index, template):
     es = search_omero_app.config.get("es_connector")
@@ -1076,6 +1074,7 @@ def get_buckets(key, data_source, resource, es_index, lock=None):
 def prepare_bucket_index_data(results, res_table, data_source, es_index):
     data_to_be_inserted = []
     if search_omero_app.config.get("INDEX_VECTOR"):
+        from sentence_transformers import SentenceTransformer
         search_omero_app.logger.info("Please wait, loading the model")
         model = SentenceTransformer("all-MiniLM-L6-v2")
         search_omero_app.logger.info("Please wait, preparing the data")
