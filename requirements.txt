@@ -42,4 +42,4 @@ celery==5.5.3
 redis==5.2.1
 deepdiff==8.6.1
 sentence-transformers==4.1.0
-
+##sentence-transformers==4.1.0
