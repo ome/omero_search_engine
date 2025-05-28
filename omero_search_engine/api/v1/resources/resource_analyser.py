@@ -1262,3 +1262,58 @@ def get_containets_using_id_or_name(
 def return_containers_images(data_source=None):
     data = get_containets_using_id_or_name(returned_data_source=data_source)
     return {"Error": None, "results": {"results": data}}
+
+
+def dump_data(data_source="idr"):
+    from utils import search_resource_annotation
+    containers=return_containers_images(data_source)
+    ## todo save to json file
+    #print (containers)
+    for container in containers["results"]["results"]:
+        print (container["type"], container["name"])
+        sub_containers=get_containers_no_images(
+            container["name"],
+            container["id"],
+            None,
+            resource=container["type"],
+            data_source=data_source
+        )
+        container_type=container["type"]
+        container_id=container["id"]
+        # toDo create su-folcder,
+        #  make it working folder
+        #  save sub-container json file using file name
+        for sub_container in sub_containers["results"]["results"]:
+            print (sub_container["name"], sub_container["resource"])
+            # toDo query for all images inside the each sub-container
+            # the query using sub-container name and container name and data source name
+            # Save the results to a json file
+            query = {"and_filters": [], "or_filters": [[]]}
+            main_attributes_query = {"and_main_attributes": [{"name": "%s_id"%container_type, "value": container_id, "operator": "equals"},
+                                                             {"name": "%s_name"%sub_container["resource"], "value": sub_container["name"],
+                                                              "operator": "equals"},
+                                                             {"name": "data_source", "value": data_source,
+                                                              "operator": "equals"}]}
+            query_details = {"query_details": query, "main_attributes": main_attributes_query}
+
+
+            results=search_resource_annotation(
+                "image",
+                query_details,
+                raw_elasticsearch_query=None,
+                bookmark=None,
+                pagination_dict=None,
+                return_containers=False,
+                data_source=data_source,
+            )
+            print(query_details)
+            print ("DONE")
+            #print (results)
+            return
+
+
+            pr
+
+'''
+
+'''

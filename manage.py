@@ -765,6 +765,10 @@ def set_automatic_refresh(automatic_refresh="True"):
     automatic_refresh = json.loads((automatic_refresh.lower()))
     update_config_file({"AUTOMATIC_REFRESH": automatic_refresh})
 
+@manager.command
+def dump_searchengine_data():
+    from omero_search_engine.api.v1.resources.resource_analyser import dump_data
+    dump_data()
 
 if __name__ == "__main__":
     from flask_script import Command
