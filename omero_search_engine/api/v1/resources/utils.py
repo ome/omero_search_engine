@@ -1723,6 +1723,7 @@ def delete_data_source_contents(data_source):
     search_omero_app.logger.info("start time %s , end time %s" % (st, en))
     return found
 
+
 def query_vector(data_source, query_text):
     from sentence_transformers import SentenceTransformer
     import datetime
@@ -1766,16 +1767,29 @@ def query_vector(data_source, query_text):
     )
 
     query_results = []
+    base_url = search_omero_app.config.get("BASE_URL")
     for hit in response["hits"]["hits"]:
         query_results.append(
-            "Number of %ss: %s"
-            % (hit["_source"]["resource"], hit["_source"]["items_in_the_bucket"])
-            + ", "
-            + hit["_source"]["Attribute"]
-            + " is "
-            + hit["_source"]["Value"]
+            {
+                "item": "Number of %ss: %s"
+                % (hit["_source"]["resource"], hit["_source"]["items_in_the_bucket"])
+                + ", "
+                + hit["_source"]["Attribute"]
+                + " is "
+                + hit["_source"]["Value"]
+                + " in %s datasource" % hit["_source"]["data_source"]
+                + ", score is: %s" % hit["_score"],
+                "url": "%s%s/search/?key=%s&value=%s"
+                % (
+                    base_url,
+                    hit["_source"]["resource"],
+                    hit["_source"]["Attribute"],
+                    hit["_source"]["Value"],
+                ),
+            }
         )
     return query_results
+
 
 delete_container_query = Template(
     """
