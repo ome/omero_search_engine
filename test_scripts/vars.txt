@@ -1,5 +1,5 @@
 # the searchengine docker image which supports the multi-data sources and deletion, reindexing of containers
-SEARCHENGINE_IMAGE=khaledk2/searchengine:multisource
+SEARCHENGINE_IMAGE=replace_with_a _ocker_image_that_supports_multiple_data_sources
 USER_NAME=elastic
 PASSWORD=es_password
 # should be replaced by the container id
