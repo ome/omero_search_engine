@@ -28,7 +28,11 @@ image_ext = "/resources/image/searchannotation/"
 image_page_ext = "/resources/image/searchannotation_page/"
 # search engine url
 base_url = "http://127.0.0.1:5577/api/v1/"
-
+"""
+If SearchEngine is not installed locally or if the user prefers
+ to run the example using IDR, they can proceed with:
+base_url = "https://idr.openmicroscopy.org/searchengine/api/v1/"
+"""
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 

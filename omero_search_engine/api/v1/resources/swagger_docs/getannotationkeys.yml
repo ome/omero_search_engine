@@ -11,6 +11,12 @@ parameters:
   - name : mode
     in: query
     enum: ['searchterms']
+  - name: data_source
+    in: query
+    type: string
+    required: false
+    description: If a specific data source is provided, results will be retrieved from that source. Otherwise, the default data source will be used. If there is no default data source configured, results will be gathered from all available sources.
+
 
 definitions:
   resource:

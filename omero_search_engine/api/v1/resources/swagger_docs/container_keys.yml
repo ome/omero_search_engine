@@ -18,6 +18,12 @@ parameters:
     in: query
     type: boolean
     required: false
+  - name: data_source
+    in: query
+    type: string
+    required: false
+    description: If a specific data source is provided, results will be retrieved from that source. Otherwise, the default data source will be used. If no default data source is not configured, results will be gathered from all available sources.
+
 responses:
   200:
     description: A JSON contains the search results

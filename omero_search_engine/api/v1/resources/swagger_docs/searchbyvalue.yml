@@ -1,0 +1,48 @@
+A searchengine endpoint to accept search by value only (no key is provided), for example, find all the images which have value = "Homo sapiens".
+---
+tags:
+ - Search by value
+
+parameters:
+  - name: resource_table
+    in: path
+    type: string
+    enum: ['image', 'project', 'screen', 'well', 'plate']
+    required: true
+  - name: value
+    description: the attribute value
+    in: query
+    type: string
+    required: true
+  - name: study
+    description: filter by study name
+    in: query
+    type: string
+    required: false
+  - name: operator
+    description: operator, default equals
+    in: query
+    type: string
+    enum: ['equals', 'not_equals', 'contains', 'not_contains']
+  - name: case_sensitive
+    description: case sensitive query, default False
+    in: query
+    type: boolean
+  - name: bookmark
+    description: bookmark is used to call the next page if the number of results is bigger than 1000, it returns with each result page.
+    in: query
+    type: integer
+  - name: data_source
+    in: query
+    type: string
+    required: false
+    description: If a specific data source is provided, results will be retrieved from that source. Otherwise, the default data source will be used. If there is no default data source configured, results will be gathered from all available sources.
+  - name: return_containers
+    in: query
+    type: boolean
+    required: false
+responses:
+  200:
+    description: A JSON containing the search results
+    examples:
+      results: []

@@ -1,0 +1,57 @@
+A searchengine endpoint to return the available sub-container in a container (e.g. dataset in project).
+A query can be provided to return only the search results.
+This a query example:
+{
+  "resource": "image",
+  "query_details": {
+    "and_filters": [
+      {
+        "name": "Organism",
+        "value": "homo sapiens",
+        "operator": "equals",
+        "resource": "image"
+      },
+      {
+        "name": "Gene symbol",
+        "value": "AC240274.1",
+        "operator": "contains",
+        "resource": "image"
+      },
+      {
+        "name": "Organism part",
+        "value": "Brain",
+        "operator": "equals",
+        "resource": "image"
+      }
+    ],
+    "or_filters": [
+
+    ],
+    "case_sensitive": false
+  }
+}
+and the user should provide the container name, e.g. idr0043-uhlen-humanproteinatlas/experimentA
+
+This will return the dataset inside the project with several images in each, this is within the search results.
+---
+tags:
+  - Available sub-containers inside a container
+parameters:
+  - name: data
+    in: body
+    required: false
+  - name: container_name
+    description: The container name
+    in: query
+    type: string
+    required: true
+  - name: data_source
+    in: query
+    type: string
+    required: false
+    description: If a specific data source is provided, results will be retrieved from that source. Otherwise, the default data source will be used. If there is no default data source configured, results will be gathered from all available sources.
+responses:
+  200:
+    description: A JSON containing the search results
+    examples:
+      results: []

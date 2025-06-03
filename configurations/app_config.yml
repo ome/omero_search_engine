@@ -1,17 +1,25 @@
-DATABASE_SERVER_URI : "127.0.0.1"
-DATABASE_USER : "database_user"
-DATABASE_PORT: 5432
-DATABASE_PASSWORD : "password"
-DATABASE_NAME : "omero"
 CACHE_FOLDER : "path/to/folder/app_data"
 SECRET_KEY : "fsdasdh3424vvcsd467fgh"
 ASYNCHRONOUS_SEARCH : True
 ELASTICSEARCH_URL : "https://localhost:9200"
 IDR_TEST_FILE_URL : "https://raw.githubusercontent.com/IDR/idr.openmicroscopy.org/master/_data/studies.tsv"
 PAGE_SIZE : 1000
-CACHE_ROWS : 10000
-MAX_RETUNED_ITEMS : 1700000
+CACHE_ROWS : 1000
+MAX_RETUNED_ITEMS : 1000
 ELASTICSEARCH_BACKUP_FOLDER: "path/to/elasticsearch/backup/folder"
 verify_certs: False
 ELASTIC_PASSWORD: elasticsearch_user_password
 BASE_FOLDER: /etc/searchengine/
+#NO_PROCESSES: 1mana
+DATA_SOURCES:
+    - name: idr
+      DATABASE:
+          DATABASE_NAME: omero
+          DATABASE_USER: database_user
+          DATABASE_PASSWORD: password
+          DATABASE_SERVER_URI: 127.0.0.1
+          DATABASE_PORT: 5432
+          DATABASE_BACKUP_FILE: database.sql
+DEFAULT_DATASOURCE: default_datasource
+AUTOMATIC_REFRESH: True
+NOT_INDEX_VECTOR: True

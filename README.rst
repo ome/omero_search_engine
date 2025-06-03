@@ -9,6 +9,17 @@ OMERO Search Engine
 --------------------
 
 * OMERO search engine app is used to search metadata (``key-value`` pairs).
+* It leverages Elasticsearch, a distributed, free, and open-source search and analytics engine designed for large data volumes.
+* Most of the search operators are supported, e.g. equals, not equals, contains.
+* It allows users to run complex queries on the data using ‘and’ and ‘or’.
+* It enables search for images, projects, screens, plates and datasets.
+* It enables search for any attribute value, even when the specific attribute is unknown.
+
+* It supports indexing data from database servers, database backups, and CSV files. Support for JSON is currently being developed.
+
+* It supports searching data from multiple data sources.
+* Once indexed, data from any source becomes readily searchable.
+* The search results can be restricted to one or multiple data sources.
 
 * The search engine query is a dict that has three parts:
 
@@ -161,9 +172,12 @@ OMERO Search Engine
   * It creates the elasticsearch indices for each resource
   * It queries the OMERO database after receiving the data, processes, and pushes it to the Elasticsearch indices.
   * This process takes a relatively long time depending on the hosting machine specs. The user can adjust how many rows can be processed per call to the OMERO database:
-    * Set the no. of rows using the ``set_cache_rows_number`` method inside ``manage.py``, the following example will set the number to 1000::
+    * Set the number of rows using the ``set_cache_rows_number`` method inside `manage.py <manage.py>`_, the following example will set the number to 1000::
+
         
         $ python manage.py set_cache_rows_number -s 10000
+* The system supports restoring a database from a backup using the ``restore_postgresql_database`` method inside `manage.py <manage.py>`_.
+
 * The data can be also moved using SQL queries which generate the CSV files; the queries are in `sql_to_csv.py <omero_search_engine/cache_functions/elasticsearch/sql_to_csv.py>`_
 
 For the configuration and installation instructions, please read the following document `configuration_installation <docs/configuration/configuration_installation.rst>`_

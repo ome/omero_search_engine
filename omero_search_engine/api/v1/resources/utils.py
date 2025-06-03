@@ -18,6 +18,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import copy
+import datetime
+import logging
 import os
 import sys
 import json
@@ -27,6 +29,7 @@ from omero_search_engine import search_omero_app
 from string import Template
 from app_data.data_attrs import annotation_resource_link
 
+contain_list = ["contains", "not_contains"]
 main_dir = os.path.abspath(os.path.dirname(__file__))
 mm = main_dir.replace("omero_search_engine/api/v2/resources", "")
 sys.path.append(mm)
@@ -90,6 +93,10 @@ should ==> OR
 # It supports not two operators, equals and not_equals
 main_attribute_query_template = Template(
     """{"bool":{"must":{"match":{"$attribute.keyvalue":"$value"}}}}"""
+)
+
+main_attribute_query_in_template = Template(
+    """{"bool":{"must":{"terms":{"$attribute.keyvalue": $value }}}}"""
 )
 # Search main attribute which has long data type
 # ends with "_id" in the image index (template)
@@ -161,7 +168,7 @@ case_sensitive_wildcard_value_condition_template = Template(
 # Used for contains and not contains
 case_insensitive_wildcard_value_condition_template = Template(
     """
-{"wildcard": {"key_values.value.keyvaluenormalize":"$wild_card_value"}}"""
+{"wildcard": {"key_values.value.keyvaluenormalize":"$wild_card_value" }}"""
 )
 case_sensitive_range_value_condition_template = Template(
     """
@@ -218,7 +225,13 @@ def elasticsearch_query_builder(
             for clause in main_attributes.get("and_main_attributes"):
                 if isinstance(clause, list):
                     for attribute in clause:
-                        if (
+                        if attribute["operator"].strip() == "in":
+                            # it is assuming that in operator value is a list
+                            main_dd = main_attribute_query_in_template.substitute(
+                                attribute=attribute["name"].strip(),
+                                value=json.dumps(attribute["value"]),
+                            )
+                        elif (
                             attribute["name"].endswith("_id")
                             or attribute["name"] == "id"
                         ):
@@ -233,13 +246,23 @@ def elasticsearch_query_builder(
                                 attribute=attribute["name"].strip(),
                                 value=str(attribute["value"]).strip(),
                             )
-                        if attribute["operator"].strip() == "equals":
+                        if (
+                            attribute["operator"].strip() == "equals"
+                            or attribute["operator"].strip() == "in"
+                        ):
                             nested_must_part.append(main_dd)
                         elif attribute["operator"].strip() == "not_equals":
                             nested_must_not_part.append(main_dd)
+
                 else:
                     attribute = clause
-                    if attribute["name"].endswith("_id") or attribute["name"] == "id":
+                    if attribute["operator"].strip() == "in":
+                        # it is assuming that in operator value is a list
+                        main_dd = main_attribute_query_in_template.substitute(
+                            attribute=attribute["name"].strip(),
+                            value=json.dumps(attribute["value"]),
+                        )
+                    elif attribute["name"].endswith("_id") or attribute["name"] == "id":
                         main_dd = main_attribute_query_template_id.substitute(
                             attribute=attribute["name"].strip(),
                             value=str(attribute["value"]).strip(),
@@ -249,7 +272,10 @@ def elasticsearch_query_builder(
                             attribute=attribute["name"].strip(),
                             value=str(attribute["value"]).strip(),
                         )
-                    if attribute["operator"].strip() == "equals":
+                    if (
+                        attribute["operator"].strip() == "equals"
+                        or attribute["operator"].strip() == "in"
+                    ):
                         nested_must_part.append(main_dd)
                     elif attribute["operator"].strip() == "not_equals":
                         nested_must_not_part.append(main_dd)
@@ -313,7 +339,11 @@ def elasticsearch_query_builder(
         for filter in and_filter:
             search_omero_app.logger.info("FILTER %s" % filter)
             try:
-                key = filter["name"].strip()
+                key = filter.get("name")
+                if key:
+                    key = key.strip()
+                # value = filter["value"].strip()
+
                 operator = filter["operator"].strip()
                 if operator in operators_required_list_data_type:
                     if isinstance(filter["value"], list):
@@ -345,11 +375,12 @@ def elasticsearch_query_builder(
                             value=value
                         )
                     )
-                    _nested_must_part.append(
-                        case_sensitive_must_name_condition_template.substitute(
-                            name=key
-                        )  # noqa
-                    )
+                    if key:
+                        _nested_must_part.append(
+                            case_sensitive_must_name_condition_template.substitute(
+                                name=key
+                            )  # noqa
+                        )
 
                 else:
                     _nested_must_part.append(
@@ -357,11 +388,12 @@ def elasticsearch_query_builder(
                             value=value
                         )
                     )
-                    _nested_must_part.append(
-                        case_insensitive_must_name_condition_template.substitute(  # noqa
-                            name=key
+                    if key:
+                        _nested_must_part.append(
+                            case_insensitive_must_name_condition_template.substitute(  # noqa
+                                name=key
+                            )
                         )
-                    )
 
                 nested_must_part.append(
                     nested_keyvalue_pair_query_template.substitute(
@@ -400,28 +432,46 @@ def elasticsearch_query_builder(
 
             if operator == "not_in":
                 if case_sensitive:
-                    nested_must_part.append(
-                        nested_query_template_must_must_not.substitute(
-                            must_not_part=case_sensitive_must_in_value_condition_template.substitute(  # noqa
-                                value=value
-                            ),
-                            must_part=case_sensitive_must_name_condition_template.substitute(  # noqa
-                                name=key
-                            ),
+                    if key:
+                        nested_must_part.append(
+                            nested_query_template_must_must_not.substitute(
+                                must_not_part=case_sensitive_must_in_value_condition_template.substitute(  # noqa
+                                    value=value
+                                ),
+                                must_part=case_sensitive_must_name_condition_template.substitute(  # noqa
+                                    name=key
+                                ),
+                            )
                         )
-                    )
+                    else:
+                        nested_must_part.append(
+                            nested_query_template_must_must_not.substitute(
+                                must_not_part=case_sensitive_must_in_value_condition_template.substitute(  # noqa
+                                    value=value
+                                ),
+                            )
+                        )
 
                 else:
-                    nested_must_part.append(
-                        nested_query_template_must_must_not.substitute(
-                            must_not_part=case_insensitive_must_in_value_condition_template.substitute(  # noqa
-                                value=value
-                            ),
-                            must_part=case_insensitive_must_name_condition_template.substitute(  # noqa
-                                name=key
-                            ),
+                    if key:
+                        nested_must_part.append(
+                            nested_query_template_must_must_not.substitute(
+                                must_not_part=case_insensitive_must_in_value_condition_template.substitute(  # noqa
+                                    value=value
+                                ),
+                                must_part=case_insensitive_must_name_condition_template.substitute(  # noqa
+                                    name=key
+                                ),
+                            )
                         )
-                    )
+                    else:
+                        nested_must_part.append(
+                            nested_query_template_must_must_not.substitute(
+                                must_not_part=case_insensitive_must_in_value_condition_template.substitute(  # noqa
+                                    value=value
+                                ),
+                            )
+                        )
 
             if operator == "contains":
                 value = "*{value}*".format(value=adjust_value(value))
@@ -432,11 +482,12 @@ def elasticsearch_query_builder(
                             wild_card_value=value
                         )
                     )
-                    _nested_must_part.append(
-                        case_sensitive_must_name_condition_template.substitute(
-                            name=key
-                        )  # noqa
-                    )
+                    if key:
+                        _nested_must_part.append(
+                            case_sensitive_must_name_condition_template.substitute(
+                                name=key
+                            )  # noqa
+                        )
 
                 else:
                     _nested_must_part.append(
@@ -444,11 +495,12 @@ def elasticsearch_query_builder(
                             wild_card_value=value
                         )
                     )
-                    _nested_must_part.append(
-                        case_insensitive_must_name_condition_template.substitute(  # noqa
-                            name=key
+                    if key:
+                        _nested_must_part.append(
+                            case_insensitive_must_name_condition_template.substitute(  # noqa
+                                name=key
+                            )
                         )
-                    )
 
                 nested_must_part.append(
                     nested_keyvalue_pair_query_template.substitute(
@@ -460,64 +512,103 @@ def elasticsearch_query_builder(
                 if operator == "not_contains":
                     value = "*{value}*".format(value=adjust_value(value))
                     if case_sensitive:
-                        nested_must_part.append(
-                            nested_query_template_must_must_not.substitute(
-                                must_not_part=case_sensitive_wildcard_value_condition_template.substitute(  # noqa
-                                    wild_card_value=value
-                                ),
-                                must_part=case_sensitive_must_name_condition_template.substitute(  # noqa
-                                    name=key
-                                ),
+                        if key:
+                            nested_must_part.append(
+                                nested_keyvalue_pair_query_template.substitute(
+                                    nested=case_sensitive_wildcard_value_condition_template.substitute(  # noqa
+                                        wild_card_value=value
+                                    ),
+                                    must_part=case_sensitive_must_name_condition_template.substitute(  # noqa
+                                        name=key
+                                    ),
+                                )
                             )
-                        )
+                        else:
+                            nested_must_not_part.append(
+                                nested_keyvalue_pair_query_template.substitute(
+                                    nested=case_sensitive_wildcard_value_condition_template.substitute(  # noqa
+                                        wild_card_value=value
+                                    ),
+                                )
+                            )
 
                     else:
-                        nested_must_part.append(
-                            nested_query_template_must_must_not.substitute(
-                                must_not_part=case_insensitive_wildcard_value_condition_template.substitute(  # noqa
-                                    wild_card_value=value
-                                ),
-                                must_part=case_insensitive_must_name_condition_template.substitute(  # noqa
-                                    name=key
-                                ),
+                        if key:
+                            nested_must_part.append(
+                                nested_query_template_must_must_not.substitute(
+                                    must_not_part=case_insensitive_wildcard_value_condition_template.substitute(  # noqa
+                                        wild_card_value=value
+                                    ),
+                                    must_part=case_insensitive_must_name_condition_template.substitute(  # noqa
+                                        name=key
+                                    ),
+                                )
                             )
-                        )
-
+                        else:
+                            nested_must_part.append(
+                                nested_query_template_must_must_not.substitute(
+                                    must_not_part=case_insensitive_wildcard_value_condition_template.substitute(  # noqa
+                                        wild_card_value=value
+                                    ),
+                                    must_part=[],
+                                )
+                            )
                 else:
                     if case_sensitive:
-                        nested_must_part.append(
-                            nested_query_template_must_must_not.substitute(
-                                must_not_part=case_sensitive_must_value_condition_template.substitute(  # noqa
-                                    value=value
-                                ),
-                                must_part=case_sensitive_must_name_condition_template.substitute(  # noqa
-                                    name=key
-                                ),
+                        if key:
+                            nested_must_part.append(
+                                nested_query_template_must_must_not.substitute(
+                                    must_not_part=case_sensitive_must_value_condition_template.substitute(  # noqa
+                                        value=value
+                                    ),
+                                    must_part=case_sensitive_must_name_condition_template.substitute(  # noqa
+                                        name=key
+                                    ),
+                                )
                             )
-                        )
-
+                        else:
+                            nested_must_part.append(
+                                nested_query_template_must_must_not.substitute(
+                                    must_not_part=case_sensitive_wildcard_value_condition_template.substitute(  # noqa
+                                        wild_card_value=value
+                                    ),
+                                    must_part="",
+                                )
+                            )
                     else:
-                        nested_must_part.append(
-                            nested_query_template_must_must_not.substitute(
-                                must_not_part=case_insensitive_must_value_condition_template.substitute(  # noqa
-                                    value=value
-                                ),
-                                must_part=case_insensitive_must_name_condition_template.substitute(  # noqa
-                                    name=key
-                                ),
+                        if key:
+                            nested_must_part.append(
+                                nested_query_template_must_must_not.substitute(
+                                    must_not_part=case_insensitive_must_value_condition_template.substitute(  # noqa
+                                        value=value
+                                    ),
+                                    must_part=case_insensitive_must_name_condition_template.substitute(  # noqa
+                                        name=key
+                                    ),
+                                )
                             )
-                        )
+                        else:
+
+                            nested_must_part.append(
+                                nested_query_template_must_must_not.substitute(
+                                    must_not_part=case_insensitive_wildcard_value_condition_template.substitute(  # noqa
+                                        wild_card_value=value
+                                    ),
+                                    must_part="",
+                                )
+                            )
 
             elif operator in ["lt", "lte", "gt", "gte"]:
                 # nested_must_part.append(nested_keyvalue_pair_query_template.substitute(nested=must_name_condition_template.substitute(name=key))) # noqa
                 if case_sensitive:
-                    nested_must_part.append(
-                        nested_keyvalue_pair_query_template.substitute(
-                            nested=case_sensitive_must_name_condition_template.substitute(  # noqa
-                                name=key
+                    if key:
+                        nested_must_part.append(
+                            nested_keyvalue_pair_query_template.substitute(
+                                nested=case_sensitive_must_name_condition_template.substitute(  # noqa
+                                    name=key
+                                )
                             )
                         )
-                    )
 
                     nested_must_part.append(
                         nested_keyvalue_pair_query_template.substitute(
@@ -527,13 +618,14 @@ def elasticsearch_query_builder(
                         )
                     )
                 else:
-                    nested_must_part.append(
-                        nested_keyvalue_pair_query_template.substitute(
-                            nested=case_insensitive_must_name_condition_template.substitute(  # noqa
-                                name=key
+                    if key:
+                        nested_must_part.append(
+                            nested_keyvalue_pair_query_template.substitute(
+                                nested=case_insensitive_must_name_condition_template.substitute(  # noqa
+                                    name=key
+                                )
                             )
                         )
-                    )
 
                     nested_must_part.append(
                         nested_keyvalue_pair_query_template.substitute(
@@ -555,7 +647,9 @@ def elasticsearch_query_builder(
                 shoud_not_value = []
                 # should_names = []
                 try:
-                    key = or_filter["name"].strip()
+                    key = or_filter.get("name")
+                    if key:
+                        key = key.strip()
                     value = or_filter["value"].strip()
                     operator = or_filter["operator"].strip()
                 except Exception:
@@ -564,7 +658,7 @@ def elasticsearch_query_builder(
                         name, value and operator keywords."
                     )
 
-                if key not in added_keys:
+                if key and key not in added_keys:
                     added_keys.append(key)
 
                 if operator == "equals":
@@ -574,22 +668,24 @@ def elasticsearch_query_builder(
                                 value=value
                             )
                         )
-                        should_values.append(
-                            case_sensitive_must_name_condition_template.substitute(
-                                name=key
+                        if key:
+                            should_values.append(
+                                case_sensitive_must_name_condition_template.substitute(
+                                    name=key
+                                )
                             )
-                        )
                     else:
                         should_values.append(
                             case_insensitive_must_value_condition_template.substitute(  # noqa
                                 value=value
                             )
                         )
-                        should_values.append(
-                            case_insensitive_must_name_condition_template.substitute(
-                                name=key
+                        if key:
+                            should_values.append(
+                                case_insensitive_must_name_condition_template.substitute(  # noqa
+                                    name=key
+                                )
                             )
-                        )
                 elif operator == "contains":
                     value = "*{value}*".format(value=value)
                     if case_sensitive:
@@ -598,22 +694,24 @@ def elasticsearch_query_builder(
                                 wild_card_value=value
                             )
                         )
-                        should_values.append(
-                            case_sensitive_must_name_condition_template.substitute(
-                                name=key
+                        if key:
+                            should_values.append(
+                                case_sensitive_must_name_condition_template.substitute(
+                                    name=key
+                                )
                             )
-                        )
                     else:
                         should_values.append(
                             case_insensitive_wildcard_value_condition_template.substitute(  # noqa
                                 wild_card_value=value
                             )
                         )
-                        should_values.append(
-                            case_insensitive_must_name_condition_template.substitute(
-                                name=key
+                        if key:
+                            should_values.append(
+                                case_insensitive_must_name_condition_template.substitute(  # noqa
+                                    name=key
+                                )
                             )
-                        )
                 elif operator in ["not_equals", "not_contains"]:
                     if operator == "not_contains":
                         value = "*{value}*".format(value=value)
@@ -623,22 +721,24 @@ def elasticsearch_query_builder(
                                     wild_card_value=value
                                 )
                             )
-                            shoud_not_value.append(
-                                case_sensitive_must_name_condition_template.substitute(
-                                    name=key
+                            if key:
+                                shoud_not_value.append(
+                                    case_sensitive_must_name_condition_template.substitute(  # noqa
+                                        name=key
+                                    )
                                 )
-                            )
                         else:
                             shoud_not_value.append(
                                 case_insensitive_wildcard_value_condition_template.substitute(  # noqa
                                     wild_card_value=value
                                 )
                             )
-                            shoud_not_value.append(
-                                case_insensitive_must_name_condition_template.substitute(  # noqa
-                                    name=key
+                            if key:
+                                shoud_not_value.append(
+                                    case_insensitive_must_name_condition_template.substitute(  # noqa
+                                        name=key
+                                    )
                                 )
-                            )
                     else:
                         if case_sensitive:
                             shoud_not_value.append(
@@ -646,22 +746,24 @@ def elasticsearch_query_builder(
                                     value=value
                                 )
                             )
-                            shoud_not_value.append(
-                                case_sensitive_must_name_condition_template.substitute(
-                                    name=key
+                            if key:
+                                shoud_not_value.append(
+                                    case_sensitive_must_name_condition_template.substitute(  # noqa
+                                        name=key
+                                    )
                                 )
-                            )
                         else:
                             shoud_not_value.append(
                                 case_insensitive_must_value_condition_template.substitute(  # noqa
                                     value=value
                                 )
                             )
-                            shoud_not_value.append(
-                                case_insensitive_must_name_condition_template.substitute(  # noqa
-                                    name=key
+                            if key:
+                                shoud_not_value.append(
+                                    case_insensitive_must_name_condition_template.substitute(  # noqa
+                                        name=key
+                                    )
                                 )
-                            )
                 elif operator in ["lt", "lte", "gt", "gte"]:
                     if case_sensitive:
                         should_values.append(
@@ -669,22 +771,24 @@ def elasticsearch_query_builder(
                                 operator=operator, value=value
                             )
                         )
-                        should_values.append(
-                            case_sensitive_must_name_condition_template.substitute(
-                                name=key
+                        if key:
+                            should_values.append(
+                                case_sensitive_must_name_condition_template.substitute(
+                                    name=key
+                                )
                             )
-                        )
                 else:
                     should_values.append(
                         case_insensitive_range_value_condition_template.substitute(  # noqa
                             operator=operator, value=value
                         )
                     )
-                    should_values.append(
-                        case_insensitive_must_name_condition_template.substitute(
-                            name=key
+                    if key:
+                        should_values.append(
+                            case_insensitive_must_name_condition_template.substitute(
+                                name=key
+                            )
                         )
-                    )
                     # must_value_condition
                 ss = ",".join(should_values)
                 ff = nested_keyvalue_pair_query_template.substitute(nested=ss)
@@ -733,11 +837,15 @@ def elasticsearch_query_builder(
 
 
 def check_single_filter(res_table, filter, names, organism_converter):
-    key = filter["name"]
+    key = filter.get("name")
     value = filter["value"]
     operator = filter["operator"]
-    if operator != "contains" and operator != "not_contains":
-        key_ = [name for name in names if name.casefold() == key.casefold()]
+    if operator not in contain_list:
+        if key:
+            for names_ in names:
+                key_ = [name for name in names_ if name.casefold() == key.casefold()]
+        else:
+            key_ = []
         if len(key_) == 1:
             filter["name"] = key_[0]
             if filter["name"] == "Organism":
@@ -906,41 +1014,78 @@ def get_pagination(total_pages, next_bookmark, pagination_dict):
 
 
 def search_index_using_search_after(
-    e_index, query, bookmark_, pagination_dict, return_containers, ret_type=None
-):
+    e_index,
+    query,
+    bookmark_,
+    pagination_dict,
+    return_containers,
+    data_source=None,
+    ret_type=None,
+    random_results=0,
+) -> object:
     returned_results = []
     if bookmark_ and not pagination_dict:
-        add_paination = False
+        add_pagination = False
     else:
-        add_paination = True
-
+        add_pagination = True
+    if not data_source:
+        data_source = get_data_sources()
     es = search_omero_app.config.get("es_connector")
     if return_containers:
-        res = es.search(index=e_index, body=query)
-        if len(res["hits"]["hits"]) == 0:
-            search_omero_app.logger.info("No result is found")
-            return returned_results
-        keys_counts = res["aggregations"]["key_count"]["buckets"]
-        idrs = []
-        for ek in keys_counts:
-            idrs.append(ek["key"])
-            res_res = get_studies_titles(ek["key"], ret_type)
-            res_res["image count"] = ek["doc_count"]
-            returned_results.append(res_res)
+        #####
+        for data_s in data_source:
+            query2 = copy.deepcopy(query)
+            main_dd = main_attribute_query_in_template.substitute(
+                attribute="data_source",
+                value=json.dumps([data_s]),
+            )
+            # query["query"]["bool"]["must"][0] = json.loads(main_dd)
+            if "must" in query2["query"]["bool"]:
+                query2["query"]["bool"]["must"].append(json.loads(main_dd))
+            else:
+                query2["query"]["bool"]["must"] = [json.loads(main_dd)]
+            res = es.search(index=e_index, body=query2)
+            if len(res["hits"]["hits"]) == 0:
+                search_omero_app.logger.info("No result found")
+                continue
+            keys_counts = res["aggregations"]["key_count"]["buckets"]
+            idrs = []
+            for ek in keys_counts:
+                idrs.append(ek["key"])
+                res_res = get_studies_titles(ek["key"], ret_type, data_s)
+                res_res["image count"] = ek["doc_count"]
+                if data_source:
+                    res_res["data_source"] = data_s
+                returned_results.append(res_res)
 
         return returned_results
     page_size = search_omero_app.config.get("PAGE_SIZE")
     res = es.count(index=e_index, body=query)
     size = res["count"]
     search_omero_app.logger.info("Total: %s" % size)
-    query["size"] = page_size
-    if size % page_size == 0:
-        add_to_page = 0
+    if random_results > 0:
+        query["sort"] = [
+            {
+                "_script": {
+                    "type": "number",
+                    "script": {"source": "Math.random()"},
+                    "order": "asc",
+                }
+            }
+        ]
+        query["explain"] = True
+        query["size"] = random_results
     else:
-        add_to_page = 1
-    no_of_pages = (int)(size / page_size) + add_to_page
-    search_omero_app.logger.info("No of pages: %s" % no_of_pages)
-    query["sort"] = [{"id": "asc"}]
+        query["size"] = page_size
+
+        if size % page_size == 0:
+            add_to_page = 0
+        else:
+            add_to_page = 1
+        no_of_pages = (int)(size / page_size) + add_to_page
+        search_omero_app.logger.info("Number of pages: %s" % no_of_pages)
+        query["sort"] = [{"id": "asc"}]
+
     if not bookmark_ and pagination_dict:
         bookmark_ = get_bookmark(pagination_dict)
     if not bookmark_:
@@ -963,15 +1108,23 @@ def search_index_using_search_after(
             search_omero_app.logger.info("No result is found")
             return returned_results
         bookmark = [res["hits"]["hits"][-1]["sort"][0]]
-    results_dict = {
-        "results": returned_results,
-        "total_pages": no_of_pages,
-        "bookmark": bookmark,
-        "size": size,
-    }
-    if add_paination:
-        pagination_dict = get_pagination(no_of_pages, bookmark, pagination_dict)
-        results_dict["pagination"] = pagination_dict
+    if random_results == 0:
+        results_dict = {
+            "results": returned_results,
+            "total_pages": no_of_pages,
+            "bookmark": bookmark,
+            "size": size,
+        }
+        if add_pagination:
+            pagination_dict = get_pagination(no_of_pages, bookmark, pagination_dict)
+            results_dict["pagination"] = pagination_dict
+
+    else:
+        results_dict = {
+            "results": returned_results,
+            "bookmark": bookmark,
+            "size": size,
+        }
     return results_dict
 
 
@@ -979,10 +1132,50 @@ def handle_query(table_, query):
     pass
 
 
-def search_resource_annotation_return_conatines_only(
-    table_, query, raw_elasticsearch_query=None, page=None, bookmark=None
+def search_resource_annotation_return_containers_only(
+    query,
+    data_source,
+    return_columns,
+    return_containers,
 ):
-    pass
+    from omero_search_engine.api.v1.resources.query_handler import (
+        determine_search_results_,
+    )
+
+    all_data_sources = get_data_sources()
+    if not data_source:
+        data_sources = all_data_sources
+    else:
+        data_sources = data_source.split(",")
+        for data_s in data_sources:
+            if data_s and data_s.strip().lower() not in all_data_sources:
+                return "'%s' is not a data source" % data_s
+
+    results = {}
+    for data_s in data_sources:
+        res = determine_search_results_(
+            query, data_s, return_columns, return_containers
+        )
+
+        if type(res) is dict and len(res) > 0:
+            if len(res) == 1 and res.get("Error"):
+                logging.info(
+                    "Data source %s Error: %s" % (data_s, results.get("Error"))
+                )
+                continue
+            elif len(results) == 0:
+                results = res
+            else:
+                search_omero_app.logger.info("Adding RESULTS FOUND FOR %s" % data_s)
+                results["results"]["results"] = (
+                    results["results"]["results"] + res["results"]["results"]
+                )
+        else:
+            search_omero_app.logger.info(
+                "No results found from the data source: %s" % data_s
+            )
+
+    return results
 
 
 def search_resource_annotation(
@@ -992,140 +1185,180 @@ def search_resource_annotation(
     bookmark=None,
     pagination_dict=None,
     return_containers=False,
+    data_source=None,
+    random_results=0,
 ):
     """
     @table_: the resource table, e.g. image. project, etc.
-    @query: the a dict contains the three filters (or, and and  not) items
+    @query: the dict contains the three filters (or, and and  not) items
     @raw_elasticsearch_query: raw query sending directly to elasticsearch
     """
-    try:
-        res_index = resource_elasticsearchindex.get(table_)
-        if not res_index:
-            return build_error_message(
-                "{table_} is not a valid resurce".format(table_=table_)
-            )
-        query_details = query.get("query_details")
-
-        start_time = time.time()
-        if not raw_elasticsearch_query:
-            query_details = query.get("query_details")
-            main_attributes = query.get("main_attributes")
-            if not query_details and main_attributes and len(main_attributes) > 0:
-                pass
-
-            elif (
-                not query
-                or len(query) == 0
-                or not query_details
-                or len(query_details) == 0
-                or isinstance(query_details, str)
-            ):
-                print("Error ")
-                return build_error_message(
-                    "{query} is not a valid query".format(query=query)
-                )
-            and_filters = query_details.get("and_filters")
-            or_filters = query_details.get("or_filters")
-            case_sensitive = query_details.get("case_sensitive")
-            # check and fid if possible names and values inside
-            # filters conditions
-            check_filters(table_, [and_filters, or_filters], case_sensitive)
-            query_string = elasticsearch_query_builder(
-                and_filters, or_filters, case_sensitive, main_attributes
-            )
-            # query_string has to be string, if it is a dict,
-            # something went wrong and the message inside the dict
-            # which will be returned to the sender:
-            if isinstance(query_string, dict):
-                return query_string
-
-            search_omero_app.logger.info("Query %s" % query_string)
-            query = json.loads(query_string, strict=False)
-            raw_query_to_send_back = json.loads(query_string, strict=False)
-        else:
-            query = raw_elasticsearch_query
-            raw_query_to_send_back = copy.copy(raw_elasticsearch_query)
-        if return_containers:
-            # code to return the containers only
-            # It will call the projects container first then
-            # search within screens
-            query["aggs"] = json.loads(
-                count_attr_template.substitute(field="project_name.keyvalue")
-            )
-            query["_source"] = {"includes": [""]}
-            res = search_index_using_search_after(
-                res_index,
-                query,
-                bookmark,
-                pagination_dict,
-                return_containers,
-                "project",
-            )
-            query["aggs"] = json.loads(
-                count_attr_template.substitute(field="screen_name.keyvalue")
-            )
-
-            res_2 = search_index_using_search_after(
-                res_index, query, bookmark, pagination_dict, return_containers, "screen"
-            )
-            # Combines the containers results
-            studies = res + res_2
-            res = {"results": studies}
-        else:
-            res = search_index_using_search_after(
-                res_index, query, bookmark, pagination_dict, return_containers
-            )
-        notice = ""
-        end_time = time.time()
-        query_time = "%.2f" % (end_time - start_time)
-        return {
-            "results": res,
-            "query_details": query_details,
-            "resource": table_,
-            "server_query_time": query_time,
-            "raw_elasticsearch_query": raw_query_to_send_back,
-            "notice": notice,
-        }
-    except Exception as e:
-        search_omero_app.logger.info("Query %s" % str(query))
-        search_omero_app.logger.info("==>>>Error: %s" % str(e))
+    # try:
+    res_index = resource_elasticsearchindex.get(table_)
+    if not res_index:
         return build_error_message(
-            "Something went wrong, please check your query and try again later."
+            "{table_} is not a valid resource".format(table_=table_)
         )
+    query_details = query.get("query_details")
+    start_time = time.time()
+    if not raw_elasticsearch_query:
+        query_details = query.get("query_details")
+        main_attributes = query.get("main_attributes")
+        if not query_details and main_attributes and len(main_attributes) > 0:
+            pass
+
+        elif (
+            not query
+            or len(query) == 0
+            or not query_details
+            or len(query_details) == 0
+            or isinstance(query_details, str)
+        ):
+            logging.info("Error ")
+            return build_error_message(
+                "{query} is not a valid query".format(query=query)
+            )
+        if data_source and data_source != "all":
+            data_sources = get_data_sources()
+            if type(data_source) is str:
+                data_source = [itm.strip() for itm in data_source.split(",")]
+            for data_s in data_source:
+                if data_s and data_s.strip().lower() not in data_sources:
+                    return "'%s' is not a data source" % data_s
+            clause = {}
+            clause["name"] = "data_source"
+            clause["value"] = data_source
+            clause["operator"] = "in"
+            if main_attributes and len(main_attributes) > 0:
+                if main_attributes.get("and_main_attributes"):
+                    main_attributes.get("and_main_attributes").append(clause)
+                else:
+                    main_attributes["and_main_attributes"] = [clause]
+            else:
+                main_attributes = {}
+                main_attributes["and_main_attributes"] = [clause]
+
+        and_filters = query_details.get("and_filters")
+        or_filters = query_details.get("or_filters")
+        case_sensitive = query_details.get("case_sensitive")
+        query_string = elasticsearch_query_builder(
+            and_filters, or_filters, case_sensitive, main_attributes
+        )
+        # query_string has to be a string, if it is a dict,
+        # something went wrong and the message inside the dict
+        # will be returned to the sender:
+        if isinstance(query_string, dict):
+            return query_string
+
+        # search_omero_app.logger.info("Query %s" % query_string)
+
+        from ast import literal_eval
+
+        try:
+            query = literal_eval(query_string)
+            raw_query_to_send_back = literal_eval(query_string)
+        except Exception as ex:
+            raise Exception("Failed to load the query, error: %s" % str(ex))
+    else:
+        query = raw_elasticsearch_query
+        raw_query_to_send_back = copy.copy(raw_elasticsearch_query)
+    if return_containers:
+        # code to return the containers only
+        # It will call the projects container first then
+        # search within screens
+        query["aggs"] = json.loads(
+            count_attr_template.substitute(field="project_name.keyvalue")
+        )
+        query["_source"] = {"includes": [""]}
+        res = search_index_using_search_after(
+            res_index,
+            query,
+            bookmark,
+            pagination_dict,
+            return_containers,
+            data_source=data_source,
+            ret_type="project",
+            random_results=random_results,
+        )
+        query["aggs"] = json.loads(
+            count_attr_template.substitute(field="screen_name.keyvalue")
+        )
+        res_2 = search_index_using_search_after(
+            res_index,
+            query,
+            bookmark,
+            pagination_dict,
+            return_containers,
+            data_source=data_source,
+            ret_type="screen",
+        )
+        # Combines the containers results
+        studies = res + res_2
+        res = {"results": studies}
+    else:
+        res = search_index_using_search_after(
+            res_index,
+            query,
+            bookmark,
+            pagination_dict,
+            return_containers,
+            data_source=data_source,
+            random_results=random_results,
+        )
+    notice = ""
+    end_time = time.time()
+    query_time = "%.2f" % (end_time - start_time)
+    return {
+        "results": res,
+        "query_details": query_details,
+        "resource": table_,
+        "server_query_time": query_time,
+        "raw_elasticsearch_query": raw_query_to_send_back,
+        "notice": notice,
+    }
 
 
-def get_studies_titles(idr_name, resource):
+def get_studies_titles(idr_name, resource, data_source=None):
     """
     use the res_raw_query to return the study title (publication and study)
     """
     study_title = {}
     res_index = resource_elasticsearchindex.get(resource)
-    resource_query = json.loads(res_raw_query.substitute(idr=idr_name))
-    resourse_res = search_index_using_search_after(
-        res_index, resource_query, None, None, None
-    )
-    for item_ in resourse_res["results"]:
-        study_title["id"] = item_.get("id")
-        study_title["name"] = item_.get("name")
-        study_title["type"] = resource
-        # study_title["description"] = item_.get("description")
-        for value in item_.get("key_values"):
-            if value.get("name"):
-                value["key"] = value["name"]
-                del value["name"]
-        study_title["key_values"] = item_.get("key_values")
+    resourse_res = []
+    try:
+        resource_query = json.loads(res_raw_query.substitute(idr=idr_name))
+        resourse_res = search_index_using_search_after(
+            res_index, resource_query, None, None, None, data_source
+        )
+    except Exception as ex:
+        search_omero_app.logger.info(
+            "Error for name %s and datasource %s, error message: %s "
+            % (idr_name, data_source, str(ex))
+        )
+    if len(resourse_res) > 0:
+        for item_ in resourse_res["results"]:
+            study_title["id"] = item_.get("id")
+            study_title["name"] = item_.get("name")
+            study_title["type"] = resource
+            for value in item_.get("key_values"):
+                if value.get("name"):
+                    value["key"] = value["name"]
+                    del value["name"]
+            study_title["key_values"] = item_.get("key_values")
     return study_title
 
 
-def get_filter_list(filter):
+def get_filter_list(filter, org_type):
     import copy
 
     new_or_filter = []
     f1 = copy.deepcopy(filter)
     f1["resource"] = "project"
+    f1["org_type"] = org_type
     new_or_filter.append(f1)
     f2 = copy.deepcopy(filter)
     f2["resource"] = "screen"
+    f2["org_type"] = org_type
     new_or_filter.append(f2)
     return new_or_filter
 
@@ -1140,7 +1373,7 @@ def adjust_query_for_container(query):
         if and_filters:
             for filter in and_filters:
                 if filter.get("resource") == "container":
-                    new_or_filters.append(get_filter_list(filter))
+                    new_or_filters.append(get_filter_list(filter, "and"))
                     to_delete_and_filter.append(filter)
 
         or_filters = query_details.get("or_filters")
@@ -1149,11 +1382,11 @@ def adjust_query_for_container(query):
                 if isinstance(filter, list):
                     for filter_ in filter:
                         if filter_.get("resource") == "container":
-                            new_or_filters.append(get_filter_list(filter_))
+                            new_or_filters.append(get_filter_list(filter_, "or"))
                             to_delete_or_filter.append(filter_)
                 else:
                     if filter.get("resource") == "container":
-                        new_or_filters.append(get_filter_list(filter))
+                        new_or_filters.append(get_filter_list(filter, "or"))
                         to_delete_or_filter.append(filter)
         else:
             or_filters = []
@@ -1172,3 +1405,362 @@ def adjust_query_for_container(query):
 
         for filter in new_or_filters:
             or_filters.append(filter)
+        tt = []
+        for o_f in or_filters:
+            if len(o_f) == 0:
+                tt.append(o_f)
+        for f in tt:
+            or_filters.remove(f)
+
+
+def get_data_sources():
+    data_sources = []
+    for data_source in search_omero_app.config.database_connectors.keys():
+        data_sources.append(data_source)
+    for data_source in search_omero_app.config.get("FILES").keys():
+        data_sources.append(data_source)
+    return data_sources
+
+
+def check_empty_string(string_to_check):
+    if string_to_check:
+        string_to_check = string_to_check.strip()
+    return string_to_check
+
+
+def get_all_index_data(res_table, data_source):
+    query_return_all_data = {
+        "query_details": {"and_filters": [], "or_filters": [], "case_sensitive": False}
+    }
+    res = search_resource_annotation(
+        res_table,
+        query_return_all_data,
+        return_containers=False,
+        data_source=data_source,
+    )
+    return res
+
+
+##################
+def get_number_image_inside_container(resource, res_id, data_source):
+    and_filters = []
+    main_attributes = {
+        "and_main_attributes": [
+            {
+                "name": "%s_id" % resource,
+                "value": res_id,
+                "operator": "equals",
+                "resource": "image",
+            },
+            {
+                "name": "data_source",
+                "value": data_source,
+                "operator": "equals",
+                "resource": "image",
+            },
+        ]
+    }
+    or_filters = []
+    query = {"and_filters": and_filters, "or_filters": or_filters}
+
+    query_data = {
+        "query_details": query,
+        "main_attributes": main_attributes,
+    }
+
+    returned_results = search_resource_annotation("image", query_data)
+    if returned_results.get("results"):
+        if returned_results.get("results").get("size"):
+            searchengine_results = returned_results["results"]["size"]
+    else:
+        searchengine_results = 0
+
+    return searchengine_results
+
+
+def get_working_data_source(requested_datasource):
+    data_sources = get_data_sources()
+    default_datasource = search_omero_app.config.get("DEFAULT_DATASOURCE")
+    requested_datasource = check_empty_string(requested_datasource)
+    if requested_datasource:
+        requested_datasource = [
+            item.strip() for item in requested_datasource.split(",")
+        ]
+        return ",".join(requested_datasource)
+    elif default_datasource:
+        return default_datasource
+    else:
+        return ",".join(data_sources)
+
+
+def delete_data_source_cache(data_source):
+    es = search_omero_app.config.get("es_connector")
+    search_omero_app.logger.info("delete cache for data source %s" % data_source)
+    delete_cache = delete_cache_query.substitute(data_source=data_source)
+    es_index = "key_value_buckets_information"
+    es_index_2 = "key_values_resource_cached"
+    try:
+        res_1 = es.delete_by_query(
+            index=es_index, body=json.loads(delete_cache), request_timeout=1000
+        )
+        search_omero_app.logger.info("delete cache result 1 %s" % res_1)
+        res_2 = es.delete_by_query(
+            index=es_index_2, body=json.loads(delete_cache), request_timeout=1000
+        )
+        search_omero_app.logger.info("delete cache result 2 %s" % res_2)
+    # Trigger caching for  the data source
+    except Exception as e:
+        search_omero_app.logger.info(
+            "Error deleting cache for data source %s, error message is %s"
+            % (data_source, str(e))
+        )
+
+
+def get_number_of_images_inside_container(resource_table, data_source, id):
+    name_result = get_all_index_data(resource_table, data_source)
+    no_images_co = 0
+    for res in name_result["results"]["results"]:
+        if res.get("id") == int(id):
+            no_images_co = get_number_image_inside_container(
+                resource_table, id, data_source
+            )
+            break
+    return no_images_co
+
+
+def update_data_source_cache(data_source, res=None, delete_current_cache=True):
+    from omero_search_engine.cache_functions.elasticsearch.transform_data import (
+        save_key_value_buckets,
+    )
+
+    delete_data_source_cache(data_source)
+    search_omero_app.logger.info("Trigger caching for data source %s" % data_source)
+    save_key_value_buckets(res, data_source, False, False)
+
+
+def delete_container(ids, resource, data_source, update_cache, synchronous_run=False):
+    """
+    Delete a container (project or screen) from the searchengine
+     Also delete all images inside it and cache the data
+     delete cache and create it again
+     the data source caching should be re-created
+    """
+    # "request_cache": false,
+    st = datetime.datetime.now()
+
+    from omero_search_engine.api.v1.resources.resource_analyser import (
+        get_containers_no_images,
+    )
+
+    es = search_omero_app.config.get("es_connector")
+    ids = ids.split(",")
+    for id in ids:
+        no_images = get_number_of_images_inside_container(resource, data_source, id)
+        if no_images == 0:
+            search_omero_app.logger.info(
+                "The requested %s with ID=%s does not correspond to any existing one."
+                % (resource, id)
+            )
+            return
+        elif no_images > 740000 and synchronous_run:
+            # This number has been approximately estimated through trial and error.
+            search_omero_app.logger.info(
+                "Due to the high number of images in the %s with ID=%s, "
+                "an asynchronous delete operation is highly advised. "
+                "\nPlease rerun with asynchronous deletion enable (-s False)."
+                % (resource, id)
+            )
+            return
+
+        sub_containers = get_containers_no_images(
+            container_id=id, data_source=data_source, resource=resource
+        )
+        if (
+            type(sub_containers) is not str
+            and sub_containers.get("results")
+            and sub_containers.get("results").get("results")
+        ):
+            counter = 0
+            idss = {}
+            for res in sub_containers["results"]["results"]:
+                counter += 1
+                if idss.get(res["resource"]):
+                    idss[res["resource"]].append(str(res["id"]))
+                else:
+                    idss[res["resource"]] = [str(res["id"])]
+
+            for resou, ids in idss.items():
+                if not resource_elasticsearchindex.get(resou):
+                    continue
+
+                sub_container_delet_query = delete_container_query.substitute(
+                    attribute="id", id=(",").join(ids), data_source=data_source
+                )
+                # check
+                # res__2 = delete_container_res = es.delete_by_query(
+                res__2 = es.delete_by_query(
+                    index=resource_elasticsearchindex[resou],
+                    body=json.loads(sub_container_delet_query),
+                    request_cache=False,
+                    wait_for_completion=synchronous_run,
+                    error_trace=True,
+                )
+                search_omero_app.logger.info(
+                    "%s/%s, delete results is %s"
+                    % (counter, len(sub_containers["results"]["results"]), res__2)
+                )
+        attribute = "%s_id" % resource
+        image_delet_query = delete_container_query.substitute(
+            attribute=attribute, id=id, data_source=data_source
+        )
+
+        container_delet_query = delete_container_query.substitute(
+            attribute="id", id=int(id), data_source=data_source
+        )
+
+        # Delete container
+        search_omero_app.logger.info(
+            "Delete %s with Id %s from data source: %s" % (resource, id, data_source)
+        )
+        delete_container_res = es.delete_by_query(
+            index=resource_elasticsearchindex[resource],
+            body=json.loads(container_delet_query),
+            request_cache=False,
+            wait_for_completion=synchronous_run,
+            error_trace=True,
+        )
+        search_omero_app.logger.info("Delete results: %s" % delete_container_res)
+
+        # Delete images inside the container
+        search_omero_app.logger.info("Delete images inside the  %s" % resource)
+        delete_image_res = es.delete_by_query(
+            index=resource_elasticsearchindex["image"],
+            body=json.loads(image_delet_query),
+            request_cache=False,
+            wait_for_completion=synchronous_run,
+            error_trace=True,
+        )
+        search_omero_app.logger.info("Delete results: %s" % delete_image_res)
+
+    if update_cache and synchronous_run:
+        # update the cache for the data source
+        update_data_source_cache(data_source)
+    else:
+        delete_data_source_cache(data_source)
+    en = datetime.datetime.now()
+    search_omero_app.logger.info("Start at: %s" % st)
+    search_omero_app.logger.info("Ends at: %s" % en)
+
+
+def delete_data_source_contents(data_source):
+    found = False
+    if not data_source:
+        search_omero_app.logger.info("Data source is not provided")
+        return found
+    data_sources = get_data_sources()
+    for d_s in data_sources:
+        if d_s.lower() == data_source.lower():
+            found = True
+            break
+    if not found:
+        search_omero_app.logger.info("Data source %s is not found" % data_source)
+        return found
+
+    st = datetime.datetime.now()
+    resources_index = ["image", "project", "screen", "well", "plate"]
+    query = delete_datasource_query.substitute(data_source=data_source)
+    es = search_omero_app.config.get("es_connector")
+    for res in resources_index:
+        #  Not enough active copies to meet shard count of
+        try:
+            search_omero_app.logger.info("Please wait while deleting  %s" % res)
+            delete_sub_res = es.delete_by_query(
+                index=resource_elasticsearchindex[res],
+                body=json.loads(query),
+                refresh=True,
+                wait_for_active_shards="all",
+                wait_for_completion=False,
+                slices="auto",
+                scroll="10m",
+                # requests_per_second=-1,
+            )
+            search_omero_app.logger.info(
+                "Delete results for %s is %s" % (res, delete_sub_res)
+            )
+            es.indices.refresh(index=resource_elasticsearchindex[res])
+        except Exception as ex:
+            search_omero_app.logger.info(
+                "Error while deleting  %s, error is %s" % (res, ex)
+            )
+
+    # delete data source cache
+    delete_cache = delete_cache_query.substitute(data_source=data_source)
+    es_index = ["key_value_buckets_information", "key_values_resource_cached"]
+    for e_inxex in es_index:
+        try:
+            search_omero_app.logger.info(
+                "Deleting cache inside %s for data source %s" % (e_inxex, data_source)
+            )
+            res_1 = es.delete_by_query(
+                index=e_inxex,
+                body=json.loads(delete_cache),
+                request_timeout=1000,
+                refresh=True,
+                wait_for_active_shards="all",
+                wait_for_completion=False,
+                slices="auto",
+                scroll="10m",
+            )
+            es.indices.refresh(index=es_index)
+            search_omero_app.logger.info("delete cache result 1 %s" % res_1)
+        except Exception as ex:
+            search_omero_app.logger.info(
+                "Error while deleting cache inside  %s, error is %s" % (e_inxex, ex)
+            )
+
+    en = datetime.datetime.now()
+
+    search_omero_app.logger.info("start time %s , end time %s" % (st, en))
+    return found
+
+
+delete_container_query = Template(
+    """
+{"query":{
+      "bool":{"must":[{
+               "bool":{
+                  "must":{
+                     "terms":{
+                        "$attribute":[$id]}}}},{
+               "bool":{
+                  "must":{
+                     "match":{
+                        "data_source.keyvalue":"$data_source"
+                     }}}}]}}}
+"""
+)
+
+delete_cache_query = Template(
+    """
+{"query":{"bool":{"must":[{"bool":{
+                  "must":{
+                     "match":{
+                        "data_source.keyvalue":"$data_source"
+                     }}}}]}}}
+"""
+)
+
+delete_datasource_query = Template(
+    """
+        {
+   "query":{
+      "bool":{
+         "must":[
+            {
+               "bool":{
+                  "must":{
+                     "match":{
+                        "data_source.keyvalue":"$data_source"
+                     }}}}]}}}
+"""
+)

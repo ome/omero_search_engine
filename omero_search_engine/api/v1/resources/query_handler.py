@@ -37,31 +37,65 @@ mapping_names = {
 
 res_and_main_attributes = None
 res_or_main_attributes = None
+data_sources = []
 
 
-def check_get_names(idr_, resource, attribute, return_exact=False):
+def reset_global_values():
+    global res_and_main_attributes, res_or_main_attributes, data_sources
+    res_and_main_attributes = None
+    res_or_main_attributes = None
+    data_sources = []
+
+
+def check_get_names(idr_, resource, attribute, data_source, return_exact=False):
     # check the idr name and return the resource and possible values
+    global data_sources
     if idr_:
         idr_ = idr_.strip()
     pr_names = get_resource_names(resource)
+    pr_names = get_resource_names(resource=resource)
+    all_act_names = []
     if pr_names:
         if not return_exact:
-            act_name = [
-                name["id"]
-                for name in pr_names
-                if name[attribute] and idr_.lower() in name[attribute].lower()
-            ]
+            for data_source_, pr_names_ in pr_names.items():
+                if (
+                    data_source
+                    and data_source != "all"
+                    and data_source_.lower() not in data_source
+                ):
+                    continue
+                act_name = [
+                    {"id": name["id"], "data_source": data_source_}
+                    for name in pr_names_
+                    if name[attribute] and idr_.lower() in name[attribute].lower()
+                ]
+                all_act_names = all_act_names + act_name
         else:
-            act_name = [
-                name["id"]
-                for name in pr_names
-                if name[attribute] and idr_.lower() == name[attribute].lower()
-            ]
-        return act_name
+            # This should be modified to query a specific data source
+            for data_source_, pr_names_ in pr_names.items():
+                if (
+                    data_source
+                    and data_source != "all"
+                    and data_source_.lower() not in data_source
+                ):
+                    continue
+                act_name = [
+                    {"id": name["id"], "data_source": data_source_}
+                    for name in pr_names_
+                    if name[attribute] and idr_.lower() in name[attribute].lower()
+                ]
+                all_act_names = all_act_names + act_name
+        returned_act_names = []
+        for act in all_act_names:
+            returned_act_names.append(act["id"])
+            if act["data_source"] not in data_sources:
+                data_sources.append(act["data_source"])
+
+        return returned_act_names
 
 
 class QueryItem(object):
-    def __init__(self, filter, adjust_res=True):
+    def __init__(self, filter, data_source, adjust_res=True):
         """
         define query and adjust resource if it is needed,
         e.g. name is provided
@@ -75,6 +109,8 @@ class QueryItem(object):
         self.name = filter.get("name")
         self.value = filter.get("value")
         self.operator = filter.get("operator")
+        self.data_source = data_source
+        self.org_type = filter.get("org_type")
         if filter.get("set_query_type") and filter.get("query_type"):
             self.query_type = filter.get("query_type")
         else:
@@ -93,7 +129,9 @@ class QueryItem(object):
             if mapping_names[self.resource].get(self.name):
                 self.name = mapping_names[self.resource].get(self.name)
                 if self.operator == "contains" or self.operator == "not_contains":
-                    ac_value = check_get_names(self.value, self.resource, self.name)
+                    ac_value = check_get_names(
+                        self.value, self.resource, self.name, self.data_source
+                    )
                     if len(ac_value) == 0:
                         self.value = -1
                     elif len(ac_value) == 1:
@@ -106,11 +144,11 @@ class QueryItem(object):
                         self.operator = "not_equals"
                 else:
                     ac_value = check_get_names(
-                        self.value, self.resource, self.name, True
+                        self.value, self.resource, self.name, self.data_source, True
                     )
-                    if len(ac_value) == 1:
+                    if ac_value and len(ac_value) == 1:
                         self.value = ac_value[0]
-                    elif len(ac_value) == 0:
+                    elif not ac_value or len(ac_value) == 0:
                         self.value = -1
                     else:
                         self.value = ac_value
@@ -190,6 +228,7 @@ class QueryRunner(
         columns_def,
         return_columns,
         return_containers,
+        data_source,
     ):
         self.or_query_group = or_query_group
         self.and_query_group = and_query_group
@@ -202,6 +241,7 @@ class QueryRunner(
         self.additional_image_conds = []
         self.return_columns = return_columns
         self.return_containers = return_containers
+        self.data_source = data_source
 
     def get_image_non_image_query(self):
         res = None
@@ -219,8 +259,16 @@ class QueryRunner(
                 checked_list.append(resource)
                 query = {}
                 query["main_attribute"] = main
+                for k, v in main.items():
+                    org_type = None
+                    for v_ in v:
+                        org_type = v_.org_type
+                        if org_type:
+                            break
+                    if org_type:
+                        break
                 res = self.run_query(query, resource)
-                new_cond = get_ids(res, resource)
+                new_cond = get_ids(res, resource, self.data_source, org_type)
                 if new_cond:
                     if not main_or_attribute_.get(resource):
                         main_or_attribute_[resource] = new_cond
@@ -233,6 +281,10 @@ class QueryRunner(
                 ):
                     return {"Error": "Your query returns no results"}
             for res, items_ in main_or_attribute_.items():
+                for it_ in items_:
+                    org_type = it_.org_type
+                    if org_type:
+                        break
                 if res not in main_or_attribute:
                     main_or_attribute[res] = items_
                 else:
@@ -254,8 +306,19 @@ class QueryRunner(
                         continue
                     query = {}
                     query["or_filters"] = or_query
+                    for con_ in or_query:
+                        org_type = con_.org_type
+                        if org_type:
+                            break
                     res = self.run_query(query, resource)
-                    new_cond = get_ids(res, resource)
+                    if type(res) is str:
+                        return res
+                    for con_ in or_query:
+                        org_type = con_.org_type
+                        if org_type:
+                            break
+
+                    new_cond = get_ids(res, resource, self.data_source, org_type)
                     if new_cond:
                         if not main_or_attribute_.get(resource):
                             main_or_attribute_[resource] = new_cond
@@ -276,28 +339,40 @@ class QueryRunner(
                 if res not in main_or_attribute:
                     main_or_attribute[res] = items_
                 else:
-                    main_or_attribute[res] = combine_conds(
-                        main_or_attribute[res], items_, res
-                    )
-
+                    for it_ in items_:
+                        org_type = it_.org_type
+                        if org_type:
+                            break
+                    if org_type == "and":
+                        #######
+                        main_or_attribute[res] = combine_conds(
+                            main_or_attribute[res], items_, res
+                        )
+                    else:
+                        main_or_attribute[res] = combine_conditions(
+                            main_or_attribute[res], items_, res
+                        )
         if len(self.or_query_group) > 0 and len(image_or_queries) == 0:
             no_conds = 0
             for res, item in main_or_attribute.items():
                 no_conds += len(item)
             if no_conds == 0:
-                return {"Error": "Your query returns no results"}
+                return {
+                    "Error": "6. Your query returns no results for %s"
+                    % self.data_source
+                }
         # check and main attributes
         for and_it in self.and_query_group:
             for resource, main in and_it.main_attribute.items():
                 query = {}
                 query["main_attribute"] = main
                 res = self.run_query(query, resource)
-                new_cond = get_ids(res, resource)
+                new_cond = get_ids(res, resource, self.data_source, "and")
                 if new_cond:
                     if not main_and_attribute.get(resource):
                         main_and_attribute[resource] = new_cond
                     else:
-                        main_and_attribute[resource] = combine_conds(
+                        main_and_attribute[resource] = combine_conditions(
                             main_and_attribute[resource], new_cond, resource
                         )
                 else:
@@ -314,12 +389,12 @@ class QueryRunner(
                     query = {}
                     query["and_filters"] = and_query
                     res = self.run_query(query, resource)
-                    new_cond = get_ids(res, resource)
+                    new_cond = get_ids(res, resource, self.data_source, "and")
                     if new_cond:
                         if not main_and_attribute.get(resource):
                             main_and_attribute[resource] = new_cond
                         else:
-                            main_and_attribute[resource] = combine_conds(
+                            main_and_attribute[resource] = combine_conditions(
                                 main_and_attribute[resource], new_cond, resource
                             )
                     else:
@@ -327,7 +402,7 @@ class QueryRunner(
 
         for res, main_list in main_and_attribute.items():
             if res in main_or_attribute:
-                m_list = combine_conds(main_list, main_or_attribute[res], res)
+                m_list = combine_conditions(main_list, main_or_attribute[res], res)
                 main_or_attribute[res] = m_list
             else:
                 main_or_attribute[res] = main_list
@@ -342,9 +417,7 @@ class QueryRunner(
 
     def run_query(self, query_, resource):
         main_attributes = {}
-
         query = {"and_filters": [], "or_filters": []}
-
         if query_.get("and_filters"):
             for qu in query_.get("and_filters"):
                 if isinstance(qu, list):
@@ -404,31 +477,61 @@ class QueryRunner(
         # res = search_query(query, resource, bookmark,
         #                    self.raw_elasticsearch_query,
         #                    main_attributes,return_containers=self.return_containers)
-        global res_and_main_attributes, res_or_main_attributes
+        global res_and_main_attributes, res_or_main_attributes, data_sources
         if res_and_main_attributes:
-            main_attributes["and_main_attributes"] = (
-                main_attributes.get("and_main_attributes") + res_and_main_attributes
-            )
+            if main_attributes.get("and_main_attributes"):
+                main_attributes["and_main_attributes"] = (
+                    main_attributes.get("and_main_attributes") + res_and_main_attributes
+                )
+            else:
+                main_attributes["and_main_attributes"] = res_and_main_attributes
         if resource == "image" and self.return_containers:
-            res = search_query(
-                query,
-                resource,
-                bookmark,
-                pagination_dict,
-                self.raw_elasticsearch_query,
-                main_attributes,
-                return_containers=self.return_containers,
-            )
-        else:
-            res = search_query(
-                query,
-                resource,
-                bookmark,
-                pagination_dict,
-                self.raw_elasticsearch_query,
-                main_attributes,
-            )
+            if len(data_sources) > 0:
+                res = search_query(
+                    query,
+                    resource,
+                    bookmark,
+                    pagination_dict,
+                    self.raw_elasticsearch_query,
+                    main_attributes,
+                    return_containers=self.return_containers,
+                    # data_source=self.data_source,
+                    data_source=",".join(data_sources),
+                )
+            else:
+                res = search_query(
+                    query,
+                    resource,
+                    bookmark,
+                    pagination_dict,
+                    self.raw_elasticsearch_query,
+                    main_attributes,
+                    return_containers=self.return_containers,
+                    data_source=self.data_source,
+                )
 
+        else:
+            if len(data_sources) > 0:
+                res = search_query(
+                    query,
+                    resource,
+                    bookmark,
+                    pagination_dict,
+                    self.raw_elasticsearch_query,
+                    main_attributes,
+                    # data_source=self.data_source,
+                    data_source=",".join(data_sources),
+                )
+            else:
+                res = search_query(
+                    query,
+                    resource,
+                    bookmark,
+                    pagination_dict,
+                    self.raw_elasticsearch_query,
+                    main_attributes,
+                    data_source=self.data_source,
+                )
         if resource != "image":
             return res
         elif self.return_columns:
@@ -445,17 +548,18 @@ def search_query(
     raw_elasticsearch_query,
     main_attributes=None,
     return_containers=False,
+    data_source=None,
 ):
     search_omero_app.logger.info(
         "-------------------------------------------------"
     )  # noqa
-    search_omero_app.logger.info(query)
-    search_omero_app.logger.info(main_attributes)
+    # search_omero_app.logger.info("1. query: %s" % query)
+    search_omero_app.logger.info("2. main_attributes: %s " % main_attributes)
     search_omero_app.logger.info(resource)
     search_omero_app.logger.info(
         "-------------------------------------------------"
     )  # noqa
-    search_omero_app.logger.info(("%s, %s") % (resource, query))
+    search_omero_app.logger.info(("2: resource: %s, 2: query: %s") % (resource, query))
     if not main_attributes:
         q_data = {"query": {"query_details": query}}
     elif resource == "image":
@@ -474,14 +578,21 @@ def search_query(
                 bookmark=bookmark,
                 pagination_dict=pagination_dict,
                 return_containers=return_containers,
+                data_source=data_source,
             )
         else:
             # Should have a method to search the elasticsearch and
             # returns the containers only,
             # It is hard coded in the util search_annotation method.
             ress = search_resource_annotation(
-                resource, q_data.get("query"), return_containers=return_containers
+                resource,
+                q_data.get("query"),
+                return_containers=return_containers,
+                data_source=data_source,
             )
+        if type(ress) is str:
+            return ress
+
         ress["Error"] = "none"
         return ress
     except Exception as ex:
@@ -493,6 +604,18 @@ def search_query(
         }
 
 
+def combine_conditions(curnt_cond, new_cond, resource):
+    returned_cond = []
+    cons = []
+    for c_cond in curnt_cond:
+        cons.append(c_cond.value)
+        returned_cond.append(c_cond)
+    for cond in new_cond:
+        if cond.value not in cons:
+            returned_cond.append(cond)
+    return returned_cond
+
+
 def combine_conds(curnt_cond, new_cond, resource):
     returned_cond = []
     cons = []
@@ -501,11 +624,10 @@ def combine_conds(curnt_cond, new_cond, resource):
     for cond in new_cond:
         if cond.value in cons:
             returned_cond.append(cond)
-
     return returned_cond
 
 
-def get_ids(results, resource):
+def get_ids(results, resource, data_source, org_type):
     ids = []
     if results.get("results") and results.get("results").get("results"):
         for item in results["results"]["results"]:
@@ -515,7 +637,8 @@ def get_ids(results, resource):
             qur_item["value"] = item["id"]
             qur_item["operator"] = "equals"
             qur_item["resource"] = resource
-            qur_item_ = QueryItem(qur_item)
+            qur_item["org_type"] = org_type
+            qur_item_ = QueryItem(qur_item, data_source)
             ids.append(qur_item_)
     else:
         qur_item = {}
@@ -523,7 +646,7 @@ def get_ids(results, resource):
         qur_item["value"] = -1
         qur_item["operator"] = "equals"
         qur_item["resource"] = resource
-        qur_item_ = QueryItem(qur_item)
+        qur_item_ = QueryItem(qur_item, data_source)
         ids.append(qur_item_)
     return ids
 
@@ -630,14 +753,18 @@ def process_search_results(results, resource, columns_def):
     return returned_results
 
 
-def determine_search_results_(query_, return_columns=False, return_containers=False):
+def determine_search_results_(
+    query_, data_source="all", return_columns=False, return_containers=False
+):
     from omero_search_engine.api.v1.resources.utils import build_error_message
 
+    reset_global_values()
     if query_.get("query_details"):
         case_sensitive = query_.get("query_details").get("case_sensitive")
     else:
         case_sensitive = False
-
+    if data_source:
+        data_source = data_source.split(",")
     bookmark = query_.get("bookmark")
     pagination_dict = query_.get("pagination")
     raw_elasticsearch_query = query_.get("raw_elasticsearch_query")
@@ -649,13 +776,12 @@ def determine_search_results_(query_, return_columns=False, return_containers=Fa
     if main_attributes:
         res_and_main_attributes = main_attributes.get("and_main_attributes")
         res_or_main_attributes = main_attributes.get("or_main_attributes")
-
     columns_def = query_.get("columns_def")
     or_query_groups = []
     if and_filters and len(and_filters) > 0:
         and_query_group = QueryGroup("and_filters")
         for filter in and_filters:
-            q_item = QueryItem(filter)
+            q_item = QueryItem(filter, data_source)
             # Check the name value and, if it is a list,
             # it will create a new or filter for them and move it
             # Please note it is working for and filter when there is not
@@ -682,6 +808,9 @@ def determine_search_results_(query_, return_columns=False, return_containers=Fa
                         new_fil["operator"] = filter["operator"]
                         new_fil["set_query_type"] = True
                         new_fil["query_type"] = q_item.query_type
+                        new_fil["data_source"] = data_source
+                        if filter.get("org_type"):
+                            new_fil["org_type"] = filter.get("org_type")
                         new_or_filter.append(new_fil)
                 else:
                     q_item.name = "id"
@@ -697,9 +826,10 @@ def determine_search_results_(query_, return_columns=False, return_containers=Fa
             or_query_groups.append(or_query_group)
             if isinstance(filters_, list):
                 for filter in filters_:
-                    q_item = QueryItem(filter)
-                    if q_item.query_type == "main_attribute" and (
-                        filter["name"] == "description"
+                    q_item = QueryItem(filter, data_source)
+                    if (
+                        q_item.query_type == "main_attribute"
+                        and filter["name"] == "description"
                     ):
                         return build_error_message(
                             "This release does not support search by description."
@@ -716,7 +846,9 @@ def determine_search_results_(query_, return_columns=False, return_containers=Fa
                                 new_fil["operator"] = filter["operator"]
                                 new_fil["set_query_type"] = True
                                 new_fil["query_type"] = q_item.query_type
-                                _q_item = QueryItem(new_fil)
+                                if filter.get("org_type"):
+                                    new_fil["org_type"] = filter.get("org_type")
+                                _q_item = QueryItem(new_fil, data_source)
                                 or_query_group.add_query(_q_item)
                         else:
                             q_item.name = "id"
@@ -736,6 +868,7 @@ def determine_search_results_(query_, return_columns=False, return_containers=Fa
         columns_def,
         return_columns,
         return_containers,
+        data_source,
     )
     query_results = query_runner.get_image_non_image_query()
     return query_results
@@ -749,25 +882,46 @@ def simple_search(
     bookmark,
     resource,
     study,
+    data_source,
     return_containers=False,
+    random_results=0,
 ):
+    reset_global_values()
     if not operator:
         operator = "equals"
-    and_filters = [
-        {"name": key, "value": value, "operator": operator, "resource": resource}
-    ]
+    if key:
+        and_filters = [
+            {"name": key, "value": value, "operator": operator, "resource": resource}
+        ]
+    else:
+        and_filters = [{"value": value, "operator": operator, "resource": resource}]
+
     query_details = {"and_filters": and_filters}
     if bookmark:
         bookmark = [bookmark]
     query_details["bookmark"] = [bookmark]
     query_details["case_sensitive"] = case_sensitive
     if not study:
-        return search_resource_annotation(
-            resource,
-            {"query_details": query_details},
-            bookmark=bookmark,
-            return_containers=return_containers,
-        )
+        if return_containers:
+            from omero_search_engine.api.v1.resources.utils import (
+                search_resource_annotation_return_containers_only,
+            )
+
+            return search_resource_annotation_return_containers_only(
+                {"query_details": query_details},
+                data_source,
+                None,
+                True,
+            )
+        else:
+            return search_resource_annotation(
+                resource,
+                {"query_details": query_details},
+                bookmark=bookmark,
+                return_containers=return_containers,
+                data_source=data_source,
+                random_results=random_results,
+            )
     else:
         and_filters.append(
             {
@@ -777,7 +931,21 @@ def simple_search(
                 "resource": "project",
             }
         )
-        return determine_search_results_({"query_details": query_details})
+        if return_containers:
+            from omero_search_engine.api.v1.resources.utils import (
+                search_resource_annotation_return_containers_only,
+            )
+
+            search_resource_annotation_return_containers_only(
+                query_details,
+                data_source,
+                None,
+                True,
+            )
+        else:
+            return determine_search_results_(
+                {"query_details": query_details}, data_source=data_source
+            )
 
 
 def add_local_schemas_to(resolver, schema_folder, base_uri, schema_ext=".json"):
@@ -802,7 +970,6 @@ def add_local_schemas_to(resolver, schema_folder, base_uri, schema_ext=".json"):
 
 
 def query_validator(query):
-    print("TRoz", query)
     main_dir = os.path.abspath(os.path.dirname(__file__))
     query_schema_file = os.path.join(main_dir, "schemas", "query_data.json")
     base_uri = "file:" + abspath("") + "/"

@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
 # Copyright (C) 2022 University of Dundee & Open Microscopy Environment.
 # All rights reserved.
 #
@@ -26,11 +25,12 @@ from omero_search_engine.api.v1.resources.utils import (
     resource_elasticsearchindex,
     build_error_message,
     adjust_value,
+    get_data_sources,
 )
 import math
 from flask import jsonify, Response
 
-key_number_search_template = Template(
+key_number_search_template_ = Template(
     """
 {"size":0,"aggs":{"value_search":{"nested":{"path":"key_values"},
 "aggs":{"value_filter":{"filter":{"terms":
@@ -38,6 +38,15 @@ key_number_search_template = Template(
 "aggs":{"required_values":{"cardinality":
 {"field":"key_values.value.keyvalue","precision_threshold":4000
 }}}}}}}}"""
+)
+
+key_number_search_template = Template(
+    """
+{"size":0,"query":{ "bool": {"must": {"match":
+{"data_source.keyvalue":"$data_source"}}}},
+"aggs":{"value_search":{"nested":{"path":"key_values"},"aggs":{"value_filter":{"filter":{"terms":{
+"key_values.name.keyword":["$key"]}},"aggs":{"required_values":{"cardinality":{
+"field":"key_values.value.keyvalue","precision_threshold":4000}}}}}}}}"""
 )
 
 search_by_value_only = Template(
@@ -86,7 +95,8 @@ key_search_template = Template(
 
 values_for_key_template = Template(
     """
-{"size":0,
+{"size":0, "query":{ "bool" : {"must": {"match":{
+"data_source.keyvalue":"$data_source"}}}},
 "aggs":{"name_search":{"nested":{ "path":"key_values"},
 "aggs":{"value_filter":{"filter":{
 "terms":{"key_values.name.keyword":["$key"]}},"aggs":{"required_values":{
@@ -98,11 +108,11 @@ values_for_key_template = Template(
 
 def search_index_for_value(e_index, query, get_size=False):
     """
-    Perform search the elastcisearch using value and
-    return all the key values whihch this value has been used,
-    it will include the number of records.
-    It is relatively slow but it might be due
-    to the elasticsearcg hosting machine
+    Perform a search in the indexed data using a specific value and return
+    all associated key-value pairs where this value has been used.
+    The results will also include the number of records found.
+    The search process may be relatively slow, potentially due to the performance
+     of the Elasticsearch hosting machine.
     """
     es = search_omero_app.config.get("es_connector")
     if get_size:
@@ -113,11 +123,11 @@ def search_index_for_value(e_index, query, get_size=False):
 
 def search_index_for_values_get_all_buckets(e_index, query):
     """
-    Perform search the elastcisearch using value and
-    return all the key values whihch this value has been used,
+    Perform search the elasticsearch using value and
+    return all the key values where this value has been used,
     it will include the number of records.
-    It is relatively slow but it might be due
-    to the elasticsearcg hosting machine
+    It is relatively slow, but it might be due
+    to the Elasticsearch hosting machine
     """
     page_size = 9999
     bookmark = 0
@@ -193,8 +203,8 @@ def search_value_for_resource_(table_, value):
     return {"data": returned_results, "total_number": total_number}
 
 
-def get_number_of_buckets(key, res_index):
-    query = key_number_search_template.substitute(key=key)
+def get_number_of_buckets(key, data_source, res_index):
+    query = key_number_search_template.substitute(key=key, data_source=data_source)
     res = search_index_for_value(res_index, query)
     number_of_buckets = (
         res.get("aggregations")
@@ -210,10 +220,14 @@ def get_number_of_buckets(key, res_index):
     return number_of_buckets, number_of_images
 
 
-def get_all_values_for_a_key(table_, key):
+def get_all_values_for_a_key(table_, data_source, key):
     res_index = resource_elasticsearchindex.get(table_)
-    query = key_number_search_template.substitute(key=key)
-    res = search_index_for_value(res_index, query)
+    query = key_number_search_template.substitute(key=key, data_source=data_source)
+    try:
+        res = search_index_for_value(res_index, query)
+    except Exception as ex:
+        search_omero_app.logger.info("Query: %s Error: %s" % (query, str(ex)))
+        raise ex
     number_of_buckets = (
         res.get("aggregations")
         .get("value_search")
@@ -232,7 +246,9 @@ def get_all_values_for_a_key(table_, key):
     total_ret = 0
     while co < total:
         search_omero_app.logger.info("processing: %s / %s" % ((co + 1), total))
-        query = values_for_key_template.substitute(key=key, total=total, cur=co)
+        query = values_for_key_template.substitute(
+            key=key, total=total, cur=co, data_source=data_source
+        )
         res = search_index_for_value(res_index, query)
         results.append(res)
         total_ret += len(
@@ -269,19 +285,21 @@ def get_all_values_for_a_key(table_, key):
     }
 
 
-def get_values_for_a_key(table_, key):
+def get_values_for_a_key(table_, key, data_source):
     """
     search the index to get the available values for a key
     and get values number for the key
     """
     total_number = 0
     res_index = resource_elasticsearchindex.get(table_)
-    number_of_buckets, number_of_images = get_number_of_buckets(key, res_index)
+    number_of_buckets, number_of_images = get_number_of_buckets(
+        key, data_source, res_index
+    )
     query = key_search_template.substitute(key=key)
     start_time = time.time()
     res = search_index_for_value(res_index, query)
     query_time = "%.2f" % (time.time() - start_time)
-    print("TIME ...", query_time)
+    print("Query time: %s" % query_time)
     returned_results = []
     if res.get("aggregations"):
         for bucket in (
@@ -298,6 +316,7 @@ def get_values_for_a_key(table_, key):
             returned_results.append(singe_row)
             singe_row["Key"] = key
             singe_row["Value"] = value
+            singe_row["data_source"] = data_source
             singe_row["Number of %ss" % table_] = value_no
     return {
         "data": returned_results,
@@ -315,8 +334,10 @@ def prepare_search_results(results, size=0):
     for hit in results["hits"]["hits"]:
         res = hit["_source"]
         resource = res.get("resource")
-        # ignore organism key in the results
+        # ignore
+        # key in the results
         # please see (https://github.com/ome/omero_search_engine/issues/45)
+        #
         # This will be checked later.
         if (
             resource == "image"
@@ -326,6 +347,7 @@ def prepare_search_results(results, size=0):
             continue
         row = {}
         returned_results.append(row)
+        row["data_source"] = res["data_source"]
         row["Key"] = res["Attribute"]
         row["Value"] = res["Value"]
         row["Number of %ss" % resource] = res.get("items_in_the_bucket")
@@ -364,6 +386,7 @@ def prepare_search_results_buckets(results_):
             res = hit["_source"]
             row["Key"] = res["Attribute"]
             row["Value"] = res["Value"]
+            row["data_source"] = res["data_source"]
             resource = res.get("resource")
             row["Number of %ss" % resource] = res.get("items_in_the_bucket")
             total_number += res["items_in_the_bucket"]
@@ -375,8 +398,8 @@ def prepare_search_results_buckets(results_):
     }
 
 
-def get_key_values_return_contents(name, resource, csv):
-    resource_keys = query_cashed_bucket(name, resource)
+def get_key_values_return_contents(name, resource, data_source, csv):
+    resource_keys = query_cached_bucket(name, resource, data_source)
     # if a csv flag is true thenm iut will send a CSV file
     # which contains the results otherwise it will return a JSON file
     if csv:
@@ -419,8 +442,8 @@ def get_key_values_return_contents(name, resource, csv):
     return jsonify(resource_keys)
 
 
-def query_cashed_bucket_part_value_keys(
-    name, value, resource, es_index="key_value_buckets_information"
+def query_cached_bucket_part_value_keys(
+    name, value, data_source, resource, es_index="key_value_buckets_information"
 ):
     """
     Search for and obtain the available values for an attribute and part of the
@@ -432,9 +455,17 @@ def query_cashed_bucket_part_value_keys(
     if name:
         name = name.strip()
     value = adjust_value(value)
+    if data_source and data_source.strip() and data_source.lower() != "all":
+        data_source = [itm.strip().lower() for itm in data_source.split(",")]
+    else:
+        data_source = get_data_sources()
+
     if resource != "all":
         query = key_part_values_buckets_template.substitute(
-            name=name, value=value, resource=resource
+            name=name,
+            value=value,
+            resource=resource,
+            data_source=json.dumps(data_source),
         )
         res = search_index_for_values_get_all_buckets(es_index, query)
         returned_results = prepare_search_results_buckets(res)
@@ -447,19 +478,32 @@ def query_cashed_bucket_part_value_keys(
             if table == "image1":
                 continue
             query = key_part_values_buckets_template.substitute(
-                name=name, value=value, resource=table
+                name=name,
+                value=value,
+                resource=table,
+                data_source=json.dumps(data_source),
             )
             res = search_index_for_values_get_all_buckets(es_index, query)
             returned_results[table] = prepare_search_results_buckets(res)
         return returned_results
 
 
-def query_cashed_bucket(name, resource, es_index="key_value_buckets_information"):
+def query_cached_bucket(
+    name, resource, data_source, es_index="key_value_buckets_information"
+):
     # returns possible matches for a specific resource
+    if data_source and data_source.strip() and data_source.lower() != "all":
+        data_source = [itm.strip().lower() for itm in data_source.split(",")]
+    else:
+        data_source = get_data_sources()
+
     if name:
         name = name.strip()
+
     if resource != "all":
-        query = key_values_buckets_template.substitute(name=name, resource=resource)
+        query = key_values_buckets_template.substitute(
+            name=name, resource=resource, data_source=json.dumps(data_source)
+        )
         res = search_index_for_values_get_all_buckets(es_index, query)
         returned_results = prepare_search_results_buckets(res)
         return returned_results
@@ -467,7 +511,9 @@ def query_cashed_bucket(name, resource, es_index="key_value_buckets_information"
         # search all resources for all possible matches
         returned_results = {}
         for table in resource_elasticsearchindex:
-            query = key_values_buckets_template.substitute(name=name, resource=table)
+            query = key_values_buckets_template.substitute(
+                name=name, resource=table, data_source=json.dumps(data_source)
+            )
             res = search_index_for_values_get_all_buckets(es_index, query)
             returned_results[table] = prepare_search_results_buckets(res)
         return returned_results
@@ -480,20 +526,25 @@ def query_cashed_bucket_value(value, es_index="key_value_buckets_information"):
 
 
 def search_value_for_resource(
-    table_, value, bookmarks=None, es_index="key_value_buckets_information"
+    table_, value, data_source, bookmarks=None, es_index="key_value_buckets_information"
 ):
     """
     send the request to elasticsearch and format the results
-    It support wildcard operations only
+    It supports wildcard operations only
     """
     value = adjust_value(value)
 
+    if data_source and data_source.lower() != "all":
+        data_source = [itm.strip().lower() for itm in data_source.split(",")]
+    else:
+        data_source = get_data_sources()
+
     if table_ != "all":
         query = resource_key_values_buckets_template.substitute(
-            value=value, resource=table_
+            value=value, resource=table_, data_source=json.dumps(data_source)
         )
         size_query = resource_key_values_buckets_size_template.substitute(
-            value=value, resource=table_
+            value=value, resource=table_, data_source=json.dumps(data_source)
         )
         # Get the total number of the results.
         res = search_index_for_value(es_index, size_query, True)
@@ -513,10 +564,10 @@ def search_value_for_resource(
                 continue
             # res = es.count(index=e_index, body=query)
             query = resource_key_values_buckets_template.substitute(
-                value=value, resource=table
+                value=value, resource=table, data_source=json.dumps(data_source)
             )
             size_query = resource_key_values_buckets_size_template.substitute(
-                value=value, resource=table_
+                value=value, resource=table_, data_source=json.dumps(data_source)
             )
             # Get the total number of the results.
             res = search_index_for_value(es_index, size_query, True)
@@ -531,26 +582,27 @@ Search using key and resource
 """
 key_values_buckets_template = Template(
     """
-{"query":{"bool":{"must":[{"bool":{
-"must":{"match":{"Attribute.keyrnamenormalize":"$name"}}}},{
-"bool": {"must": {"match":
-{"resource.keyresource": "$resource"}}}}]}}}"""
+{
+"query":{"bool":{"must":[{"bool":{
+"must":{"match":{"Attribute.keynamenormalize":"$name"}}}},{"bool":{"must":{
+"match":{"resource.keyresource":"$resource"}}}
+},{"bool":{"must":{"terms":{"data_source.keyvalue":$data_source}
+}}}]}}}
+"""
 )
 
 """
 Search using key, part of the value and resource
 """
 key_part_values_buckets_template = Template(
-    """
-{"query":{"bool":{"must":[{"bool":{
-"must":[{"match":{"Attribute.keyrnamenormalize":"$name"}},
-{"wildcard":{"Value.keyvaluenormalize":"*$value*"}}
-]
-}},{
-"bool": {"must": [
-{"match":{"resource.keyresource": "$resource"}}
-]}}]}}}"""
+    """{"query":{"bool":{"must":[{"bool":{"must":[{
+"match":{"Attribute.keynamenormalize":"$name"}},
+{"wildcard":{"Value.keyvaluenormalize":"*$value*"}
+}]}},{"bool":{"must":[{"match":{"resource.keyresource":"$resource"}
+}]}},{"bool":{"must":{"terms":{"data_source.keyvalue":$data_source}}}}]}}}
+"""
 )
+
 
 # "fields": ["Attribute","Value","items_in_the_bucket",
 # "total_items_in_saved_buckets","total_buckets","total_items"],
@@ -570,8 +622,7 @@ key_values_search_buckets_template = Template(
     """
 {"query":{"bool":{"must":[{"bool":{
 "must":{"match":{"Value.keyvalue":"$value"}}}},{
-"bool": {"must": {"match":
-{"resource.keyresource": "$resource"}}}}]}},"size": 9999}"""
+"bool": {"must": {"match":{"resource.keyresource": "$resource"}}}}]}},"size": 9999}"""
 )
 
 """
@@ -588,36 +639,32 @@ value_all_buckets_template = Template(
 resource_key_values_buckets_size_template = Template(
     """
 {"query":{"bool":{"must":[{"bool":{
-"must":{"wildcard":{"Value.keyvaluenormalize":"*$value*"}}}},{
-"bool": {"must": {"match":
-{"resource.keyresource": "$resource"}}}}]}}}"""
+"must":{"wildcard":{"Value.keyvaluenormalize":"*$value*"}}}},{"bool":{
+"must":{"terms":{"data_source.keyvalue":$data_source}}}},{
+"bool": {"must": {"match":{"resource.keyresource": "$resource"}}}}]}}}"""
 )
 
-resource_key_values_buckets_template = Template(
+resource_key_values_buckets_template = Template(  # noqa
     """
 {"query":{"bool":{"must":[{"bool":{
 "must":{"wildcard":{"Value.keyvaluenormalize":"*$value*"}}}},{
-"bool": {"must": {"match":
-{"resource.keyresource": "$resource"}}}}]}},
-"size": 9999, "sort":[{ "_script": {
-        "script": "doc['Value.keyvaluenormalize'].value.length()",
-        "type": "number",
-        "order": "asc"
-    }},{"items_in_the_bucket": "desc"}, {"id": "asc"}]}"""
+"bool": {"must": {"match":{"resource.keyresource": "$resource"}}}},{"bool":{
+"must":{"terms":{ "data_source.keyvalue":$data_source}}}}]}},
+"size": 9999, "sort":[{ "_script": {"script": "doc['Value.keyvaluenormalize'].value.length()","type": "number","order": "asc"}},{"items_in_the_bucket": "desc"}, {"id": "asc"}]}"""  # noqa
 )
 
 key_values_buckets_template_2 = Template(
-    """
-{"query":{"bool":{"must":[{"bool":{"must":{"match":{
-"resource.keyresource":"$resource"}}}}]}}} """
-)
+    """{"query":{"bool":{"must":[{"bool":{"must":{"match":{"resource.keyresource":"$resource"}}}}]}}} """  # noqa
+)  # noqa
 
+key_values_buckets_template_with_data_source = Template(
+    """
+{"query":{"bool":{"must":[{"bool":{"must":{"match":{"resource.keyresource":"$resource"}}}},{"bool": {"must":{"match": {"data_source.keyvalue":$data_source}}}}]}}} """  # noqa
+)
 key_values_buckets_template_search_name = Template(
     """
-{"query":{"bool":{"must":[{"bool":{"must":{"match":{
-"resource.keyresource":"$resource"}}}},{"bool": {"must":
-{"wildcard": {"resourcename.keyresourcename":"*$name*"}}}}]}}} """
-)
+{"query":{"bool":{"must":[{"bool":{"must":{"match":{"resource.keyresource":"$resource"}}}},{"bool": {"must":{"wildcard": {"resourcename.keyresourcename":"*$name*"}}}}]}}} """  # noqa
+)  # noqa
 
 
 def connect_elasticsearch(es_index, query, count=False):
@@ -643,7 +690,9 @@ def get_restircted_search_terms():
     return restricted_search_terms
 
 
-def get_resource_attributes(resource, mode=None, es_index="key_values_resource_cach"):
+def get_resource_attributes(
+    resource, data_source=None, mode=None, es_index="key_values_resource_cached"
+):
     """
     return the available attributes for one or all resources
     """
@@ -653,36 +702,57 @@ def get_resource_attributes(resource, mode=None, es_index="key_values_resource_c
             to return the common search terms,\
             you may remove it to return all the keys."
         )
-    returned_results = {}
-    if resource != "all":
-        query = key_values_buckets_template_2.substitute(resource=resource)
-        res = connect_elasticsearch(
-            es_index, query
-        )  # es.search(index=es_index, body=query)
-        hits = res["hits"]["hits"]
-        if len(hits) > 0:
-            returned_results[resource] = hits[0]["_source"]["name"]
-    else:
-        for table in resource_elasticsearchindex:
-            query = key_values_buckets_template_2.substitute(resource=table)
-            res = connect_elasticsearch(
-                es_index, query
-            )  # .search(index=es_index, body=query)
+    returned_results = []
+    if data_source and data_source.lower() != "all":
+        data_source = [itm.strip().lower() for itm in data_source.split(",")]
+    all_data_sources = get_data_sources()
+    for data_s in all_data_sources:
+        if data_source and data_source != "all" and data_s.lower() not in data_source:
+            continue
+        returned_results_ = {}
+        returned_results_["data_source"] = data_s
+        returned_results.append(returned_results_)
+        if resource != "all":
+            query = key_values_buckets_template_with_data_source.substitute(
+                resource=resource, data_source=json.dumps(data_s)
+            )
+            res = connect_elasticsearch(es_index, query)
+
             hits = res["hits"]["hits"]
             if len(hits) > 0:
-                returned_results[table] = hits[0]["_source"]["name"]
+                returned_results_[resource] = hits[0]["_source"]["name"]
+
+        else:
+            for table in resource_elasticsearchindex:
+                query = key_values_buckets_template_with_data_source.substitute(
+                    resource=table, data_source=json.dumps(data_s)
+                )
+
+                res = connect_elasticsearch(es_index, query)
+                hits = res["hits"]["hits"]
+                if len(hits) > 0:
+                    returned_results_[table] = hits[0]["_source"]["name"]
 
     if mode == "searchterms":
         restricted_search_terms = get_restircted_search_terms()
-        restircted_resources = {}
-        for k, val in returned_results.items():
-            if k in restricted_search_terms:
-                search_terms = list(set(restricted_search_terms[k]) & set(val))
-                if len(search_terms) > 0:
-                    restircted_resources[k] = search_terms
-        returned_results = restircted_resources
+        restricted_resources = {}
+
+        for returned_result in returned_results:
+            for k, val in returned_result.items():
+                if k in restricted_search_terms:
+                    search_terms = list(set(restricted_search_terms[k]) & set(val))
+                    if len(search_terms) > 0:
+                        if k not in restricted_resources:
+                            restricted_resources[k] = search_terms
+                        else:
+                            for term in search_terms:
+                                if term not in restricted_resources[k]:
+                                    restricted_resources[k].append(term)
+        # restircted_resources[k] = restircted_resources[k] + search_terms
+        returned_results.append(restricted_resources)
         if "project" in returned_results:
-            returned_results["project"].append("name")
+            returned_results_["project"].append("name")
+        return restricted_resources
 
     return returned_results
 
@@ -743,93 +813,172 @@ def get_resource_attribute_values(
     return returned_results
 
 
-def get_resource_names(resource, name=None, description=False):
+def get_resource_names(
+    resource,
+    name=None,
+    description=False,
+    data_source=None,
+    return_orginal_format=False,
+):
     """
     return resources names attributes
     It works for projects and screens but can be extended.
     """
+    if data_source and data_source != "all":
+        data_source = data_source.split(",")
+    else:
+        data_source = get_data_sources()
     if description:
         return build_error_message(
             "This release does not support search by description."
         )
-
-    if resource != "all":
-        returned_results = get_the_results(resource, name, description)
-    else:
-        returned_results = {}
-        ress = ["project", "screen"]
-        for res in ress:
-            returned_results[res] = get_the_results(res, name, description)
-
-    return returned_results
-
-
-def get_the_results(resource, name, description, es_index="key_values_resource_cach"):
     returned_results = {}
-    query = key_values_buckets_template_2.substitute(resource=resource)
+    if resource != "all":
+
+        for data_s in data_source:
+            returned_results = {
+                **returned_results,
+                **get_the_results(resource, name, description, json.dumps(data_s)),
+            }
+    else:
+        for data_s in data_source:
+            ress = ["project", "screen"]
+            for res in ress:
+                if res in returned_results:
+                    returned_results[res] = {
+                        **returned_results[res],
+                        **get_the_results(res, name, description, json.dumps(data_s)),
+                    }
+                else:
+                    returned_results[res] = get_the_results(
+                        res, name, description, json.dumps(data_s)
+                    )
+
+    if not return_orginal_format:
+        return returned_results
+    else:
+        if resource != "all":
+            org_results_format = []
+            for data_source_, res_res in returned_results.items():
+                for ress in res_res:
+                    ress["data_source"] = data_source_
+                    org_results_format.append(ress)
+        else:
+            org_results_format = {}
+            for resource_, results in returned_results.items():
+                org_results_format_list = []
+                org_results_format[resource_] = org_results_format_list
+                for data_source_, ress in results.items():
+                    for res in ress:
+                        res["data_source"] = data_source_
+                        org_results_format_list.append(res)
+        return org_results_format
+
+
+def get_the_results(
+    resource, name, description, data_source, es_index="key_values_resource_cached"
+):
+    returned_results = {}
+    if data_source:
+        query = key_values_buckets_template_with_data_source.substitute(
+            resource=resource, data_source=data_source
+        )
+    else:
+        query = key_values_buckets_template_2.substitute(resource=resource)
     results_ = connect_elasticsearch(
         es_index, query
     )  # .search(index=es_index, body=query)
     hits = results_["hits"]["hits"]
-
     if len(hits) > 0:
-        # print (hits[0]["_source"])
-        if name and not description:
-            returned_results = [
-                item
-                for item in hits[0]["_source"]["resourcename"]
-                if item.get("name") and name.lower() in item.get("name").lower()
-            ]
-        elif name and description:
-            returned_results = [
-                item
-                for item in hits[0]["_source"]["resourcename"]
-                if (item.get("name") and name.lower() in item.get("name").lower())
-                or (
-                    item.get("description")
-                    and name.lower() in item.get("description").lower()
-                )
-            ]
-        else:
-            returned_results = [item for item in hits[0]["_source"]["resourcename"]]
-
+        for hit in hits:
+            if "resourcename" not in hit["_source"]:
+                continue
+            if len(hits) > 0:
+                if name and not description:
+                    returned_results[hit["_source"]["data_source"]] = [
+                        item
+                        for item in hit["_source"]["resourcename"]
+                        if item.get("name") and name.lower() in item.get("name").lower()
+                    ]
+                elif name and description:
+                    returned_results[hit["_source"]["data_resource"]] = [
+                        item
+                        for item in hit["_source"]["resourcename"]
+                        if (
+                            item.get("name")
+                            and name.lower() in item.get("name").lower()
+                        )
+                        or (
+                            item.get("description")
+                            and name.lower() in item.get("description").lower()
+                        )
+                    ]
+                else:
+                    returned_results[hit["_source"]["data_source"]] = [
+                        item for item in hit["_source"]["resourcename"]
+                    ]
     # remove container description from the results,
     # should be added again later after cleaning up the description
 
-    for item in returned_results:
-        del item["description"]
-
+    for k, item in returned_results.items():
+        if len(item) > 0:
+            del item[0]["description"]
     return returned_results
 
 
-def get_container_values_for_key(table_, container_name, csv, key=None):
+def get_container_values_for_key(
+    table_, container_name, csv, ret_data_source=None, key=None, query=None
+):
     returned_results = []
     pr_names = get_resource_names("all")
-    for resourse, names in pr_names.items():
-        act_name = [
-            {"id": name["id"], "name": name["name"]}
-            for name in names
-            if name["name"] and container_name.lower() in name["name"].lower()
-        ]
-        if len(act_name) > 0:
-            for id in act_name:
-                if resourse != table_:
-                    res = process_container_query(
-                        table_, resourse + "_id", id["id"], key, table_
-                    )
-                else:
-                    res = process_container_query(table_, "id", id["id"], key, table_)
-                if len(res) > 0:
-                    returned_results.append(
-                        {"name": id["name"], "type": resourse, "results": res}
-                    )
+    if ret_data_source:
+        ret_data_source = [itm.strip().lower() for itm in ret_data_source.split(",")]
+    for resourse, names_ in pr_names.items():
+        for data_source, names in names_.items():
+            if ret_data_source:
+                if data_source.lower() not in ret_data_source:
+                    continue
+            act_name = [
+                {"id": name["id"], "name": name["name"]}
+                for name in names
+                if name["name"] and container_name.lower() in name["name"].lower()
+            ]
+            if len(act_name) > 0:
+                for id in act_name:
+                    if resourse != table_:
+                        res = process_container_query(
+                            table_,
+                            resourse + "_id",
+                            id["id"],
+                            key,
+                            table_,
+                            query,
+                            data_source,
+                        )
+                    else:
+                        res = process_container_query(
+                            table_, "id", id["id"], key, table_, query, data_source
+                        )
+                    if len(res) > 0:
+                        returned_results.append(
+                            {
+                                "name": id["name"],
+                                "type": resourse,
+                                "data_source": data_source,
+                                "results": res,
+                            }
+                        )
     if csv:
         if key:
             containers = [
                 ",".join(["Container", "Type", "Key", "Value", "No of %s" % table_])
             ]
         else:
-            containers = [",".join(["Container", "Type", "Key", "No of %s" % table_])]
+            containers = [
+                ",".join(
+                    ["Container", "Type", "data_source", "Key", "No of %s" % table_]
+                )
+            ]
         for r_results in returned_results:
             reso = r_results.get("name")
             type = r_results.get("type")
@@ -840,6 +989,7 @@ def get_container_values_for_key(table_, container_name, csv, key=None):
                             [
                                 reso,
                                 type,
+                                data_source,
                                 res.get("key"),
                                 res.get("value"),
                                 str(res.get("no_%s" % table_)),
@@ -865,23 +1015,37 @@ def get_container_values_for_key(table_, container_name, csv, key=None):
     return jsonify(returned_results)
 
 
-def process_container_query(table_, attribute_name, container_id, key, resourse):
+def process_container_query(
+    table_, attribute_name, container_id, key, resourse, query=None, data_source=None
+):
     from omero_search_engine.api.v1.resources.utils import elasticsearch_query_builder
 
     res_index = resource_elasticsearchindex.get(table_)
     main_attributes = {
         "and_main_attributes": [
-            {"name": attribute_name, "value": container_id, "operator": "equals"}
+            {"name": attribute_name, "value": container_id, "operator": "equals"},
         ]
     }
-    query_ = elasticsearch_query_builder([], [], False, main_attributes=main_attributes)
+    if data_source:
+        main_attributes["and_main_attributes"].append(
+            {"name": "data_source", "value": data_source, "operator": "equals"}
+        )
+    if query:
+        and_filter = query.get("query_details").get("and_filters")
+        or_filters = query.get("query_details").get("or_filters")
+    else:
+        and_filter = []
+        or_filters = []
+    query_ = elasticsearch_query_builder(
+        and_filter, or_filters, False, main_attributes=main_attributes
+    )
     query = json.loads(query_)
     if key:
         query["aggs"] = json.loads(
             container_project_values_key_template.substitute(key=key.strip())
         )
     else:
-        query["aggs"] = container_project_keys_template
+        query["aggs"] = json.loads(container_project_keys_template)
     query["_source"] = {"includes": [""]}
     res = search_index_for_value(res_index, query)
     if key:
@@ -914,22 +1078,187 @@ container_project_values_key_template = Template(
    {"terms": {"field": "key_values.value.keyvalue","size": 10000}}}}}}}"""
 )
 
-
 """
 Get all the keys bucket"""
-container_project_keys_template = {
-    "keys_search": {
-        "nested": {"path": "key_values"},
-        "aggs": {
-            "required_values": {
-                "cardinality": {
-                    "field": "key_values.name.keynamenormalize",
-                    "precision_threshold": 4000,
-                },
-            },
-            "uniquesTerms": {
-                "terms": {"field": "key_values.name.keynamenormalize", "size": 10000}
-            },
-        },
-    }
+container_project_keys_template = """
+{"keys_search": {"nested": {"path": "key_values"},
+"aggs": {"required_values": {"cardinality": {"field":
+"key_values.name.keynamenormalize","precision_threshold": 4000
+}},"uniquesTerms": {"terms": {"field":
+"key_values.name.keynamenormalize", "size": 10000}}}}}"""
+
+resource_keys_template = Template(
+    """
+{"size":0,"query":{ "bool" : {"must": {"match":{
+"data_source.keyvalue":"$data_source"}}}},
+"aggs":{"value_search":{"nested":{"path":"key_values"},
+"aggs":{"required_values":{"cardinality":{
+"field":"key_values.name.keyword","precision_threshold":4000}}},
+"aggs": {"required_name": {
+"terms": {"field": "key_values.name.keyword","size": 9999}}}}}}
+"""
+)
+
+
+def get_resource_keys(resource, data_source):
+    res_index = resource_elasticsearchindex.get(resource)
+    res = search_index_for_value(
+        res_index,
+        json.loads(resource_keys_template.substitute(data_source=data_source)),
+    )
+    return res["aggregations"]["value_search"]["required_name"]["buckets"]
+
+
+# Return sub container using a container attribute
+# for example get the number of sub-containers e.g. datasets names,
+# inside a container, e.g. project using name.
+container_returned_sub_container_template = Template(
+    """
+    {
+   "values":{
+      "filter":{
+         "terms":{
+            "$container_attribute_name":[
+               "$container_attribute_value"
+            ]
+         }
+      },
+      "aggs":{
+         "required_values":{
+            "cardinality":{
+               "field":"$returned_sub_container",
+               "precision_threshold":4000
+            }
+         },
+         "uniquesTerms":{
+            "terms":{
+               "field":"$returned_sub_container",
+               "size":10000
+            }
+         }
+      }
+   }
 }
+"""
+)
+
+
+def get_containers_no_images(
+    container_name=None,
+    container_id=None,
+    query_details=None,
+    resource=None,
+    data_source=None,
+):
+    if container_name:
+        target = "name"
+    elif container_id:
+        target = "id"
+
+    returned_results = []
+    containers_subcontainers = {"project": ["dataset"], "screen": ["well", "plate"]}
+    act_names = get_containets_using_id_or_name(
+        container_name=container_name,
+        container_id=container_id,
+        returned_data_source=data_source,
+    )
+
+    if len(act_names) == 0:
+        return "Container %s is not found" % container_name
+    for act_name in act_names:
+        container_name = act_name["name"]
+        contianer = act_name["type"]
+        if resource and contianer != resource:
+            continue
+        data_source_ = act_name["data_source"]
+        if contianer.lower() in containers_subcontainers:
+            sub_containers = containers_subcontainers[contianer.lower()]
+        else:
+            return "Container %s is not supported" % contianer
+        res_index = resource_elasticsearchindex.get("image")
+        for sub_container in sub_containers:
+            if target == "name":
+                aggs_part = container_returned_sub_container_template.substitute(
+                    container_attribute_name="%s_name.keyvalue" % contianer,
+                    container_attribute_value="%s" % container_name,
+                    returned_sub_container="%s_name.keyvalue" % sub_container,
+                )
+            elif target == "id":
+                aggs_part = container_returned_sub_container_template.substitute(
+                    container_attribute_name="%s_name.keyvalue" % contianer,
+                    container_attribute_value="%s" % container_name,
+                    returned_sub_container="%s_id" % sub_container,
+                )
+            if not query_details:
+                query = {}
+            else:
+                and_filters = query_details.get("and_filters")
+                or_filters = query_details.get("or_filters")
+                case_sensitive = query_details.get("case_sensitive")
+                main_attributes = query_details.get("main_attributes")
+                from omero_search_engine.api.v1.resources.utils import (
+                    elasticsearch_query_builder,
+                )
+
+                query_string = elasticsearch_query_builder(
+                    and_filters, or_filters, case_sensitive, main_attributes
+                )
+                query = json.loads(query_string)
+                # query builder should be called
+
+            query["aggs"] = json.loads(aggs_part)
+            res = search_index_for_value(res_index, query)
+            buckets = res["aggregations"]["values"]["uniquesTerms"]["buckets"]
+            for bucket in buckets:
+                returned_results.append(
+                    {
+                        "image count": bucket["doc_count"],
+                        "%s" % target: bucket["key"],
+                        "data_source": data_source_,
+                        "resource": sub_container,
+                    }
+                )
+    return {"Error": None, "results": {"results": returned_results}}
+
+
+def get_containets_using_id_or_name(
+    container_name=None, container_id=None, returned_data_source=None
+):
+    if returned_data_source:
+        returned_data_source = returned_data_source.split(",")
+    act_names = []  # {}
+    pr_names = get_resource_names("all")
+    for resourse, names_ in pr_names.items():
+        for data_source, names in names_.items():
+            act_names_1 = [
+                {
+                    "id": name["id"],
+                    "name": name["name"],
+                    "data_source": data_source,
+                    "image count": name["no_images"],
+                    "type": resourse,
+                }
+                for name in names
+                if (
+                    not container_name
+                    and not container_id
+                    or (
+                        name.get("name")
+                        and container_name
+                        and container_name.lower() in name.get("name").lower()
+                    )
+                    or (
+                        container_id
+                        and name["id"]
+                        and int(container_id) == int(name["id"])
+                    )
+                )
+                and (not returned_data_source or data_source in returned_data_source)
+            ]
+            act_names = act_names + act_names_1
+    return act_names
+
+
+def return_containers_images(data_source=None):
+    data = get_containets_using_id_or_name(returned_data_source=data_source)
+    return {"Error": None, "results": {"results": data}}

@@ -1,5 +1,17 @@
 {
    "complex_test_cases":{
+          "query_image_and_value_only":[
+           [
+               "hela",
+               "kif1"
+            ]
+        ],
+            "query_image_or_value_only":[
+               [
+               "pdxdc1",
+               "pdx1"
+                  ]
+            ],
       "query_image_and":[
          [
             [

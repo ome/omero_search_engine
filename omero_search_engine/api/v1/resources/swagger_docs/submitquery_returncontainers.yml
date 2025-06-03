@@ -2,6 +2,7 @@ A searchengine endpoint to accept complex query but it will return the container
 API endpoint to search the annotation (key/value pair), the main difference between this endpoint and searchannotation is this one can be used to search different resources and return the container (screen or project) which includes the images which satisfy the search conditions.
 The container can be used as a resource instead of a project or screen if the user is not sure about the container type.
 The query data has a similar format to the query for searchannotation.
+If no query is provided, it will return all the available containers.
 Example:
 
   {
@@ -60,10 +61,13 @@ parameters:
     required: false
   - name: data
     in: body
-    required: true
+    required: false
     #examples:
-
-
+  - name: data_source
+    in: query
+    type: string
+    required: false
+    description: If a specific data source is provided, results will be retrieved from that source. Otherwise, the default data source will be used. If there is no default data source configured, results will be gathered from all available sources.
 
 responses:
   200:

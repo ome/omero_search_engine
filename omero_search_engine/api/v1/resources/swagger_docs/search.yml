@@ -13,7 +13,7 @@ parameters:
     description: the resource attribute
     in: query
     type: string
-    required: true
+    required: False
   - name: value
     description: the attribute value
     in: query
@@ -23,7 +23,7 @@ parameters:
     description: filter by study name
     in: query
     type: string
-    required: False
+    required: false
   - name: operator
     description: operator, default equals
     in: query
@@ -41,6 +41,17 @@ parameters:
     in: query
     type: boolean
     required: false
+  - name: data_source
+    in: query
+    type: string
+    required: false
+    description: If a specific data source is provided, results will be retrieved from that source. Otherwise, the default data source will be used. If there is no default data source configured, results will be gathered from all available sources.
+  - name: random_results
+    in: query
+    type: integer
+    required: false
+    default: 0
+    description: If the value is greater than 0, it will return a randomised list of the query results, the size of the list is equal to the provided value.
 responses:
   200:
     description: A JSON contains the search results
