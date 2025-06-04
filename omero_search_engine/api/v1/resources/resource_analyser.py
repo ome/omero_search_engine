@@ -1263,9 +1263,25 @@ def return_containers_images(data_source=None):
     data = get_containets_using_id_or_name(returned_data_source=data_source)
     return {"Error": None, "results": {"results": data}}
 
+def create_container_folder(parent_folder, container_name=None):
+    if not os.path.isdir(parent_folder):
+        os.mkdir(parent_folder)
+    if container_name:
+        folder = os.path.join(parent_folder, container_name)
+        if not os.path.isdir(folder):
+            os.makedirs(folder,exist_ok=True)
+        return folder
 
 def dump_data(data_source="idr"):
-    from utils import search_resource_annotation
+    start_time = time.time()
+    totaLrecords=0
+    dublicated = []
+    parent_folder='/mnt/data/data_dump'
+    folders={}
+    projects_folder=create_container_folder(parent_folder, "projects")
+    folders ["project"]=projects_folder
+    screens_folder=create_container_folder(parent_folder, "screens")
+    folders["screen"] = screens_folder
     containers=return_containers_images(data_source)
     ## todo save to json file
     #print (containers)
@@ -1280,23 +1296,31 @@ def dump_data(data_source="idr"):
         )
         container_type=container["type"]
         container_id=container["id"]
+        container_name = container["name"]
+        print (folders[container_type],container_name)
+        print ("=================================================")
+        container_folder= create_container_folder (folders[container_type],container_name)
         # toDo create su-folcder,
         #  make it working folder
         #  save sub-container json file using file name
         for sub_container in sub_containers["results"]["results"]:
-            print (sub_container["name"], sub_container["resource"])
-            # toDo query for all images inside the each sub-container
-            # the query using sub-container name and container name and data source name
-            # Save the results to a json file
-            query = {"and_filters": [], "or_filters": [[]]}
-            main_attributes_query = {"and_main_attributes": [{"name": "%s_id"%container_type, "value": container_id, "operator": "equals"},
-                                                             {"name": "%s_name"%sub_container["resource"], "value": sub_container["name"],
-                                                              "operator": "equals"},
-                                                             {"name": "data_source", "value": data_source,
-                                                              "operator": "equals"}]}
+            file_name = os.path.join(container_folder, "%s.json" % sub_container["name"].replace("/", "_"))
+            if os.path.isfile(file_name):
+                continue
+            else:
+                query = {"and_filters": [], "or_filters": [[]]}
+                main_attributes_query = {"and_main_attributes": [
+                    {"name": "%s_id" % container_type, "value": container_id, "operator": "equals"},
+                    {"name": "%s_name" % sub_container["resource"], "value": sub_container["name"],
+                     "operator": "equals"},
+                    {"name": "data_source", "value": data_source,
+                     "operator": "equals"}]}
+
+                results=get_sub_container_data(query, main_attributes_query, data_source,dublicated )
+                save_results_file(results, file_name)
+                totaLrecords += len(results)
+            '''
             query_details = {"query_details": query, "main_attributes": main_attributes_query}
-
-
             results=search_resource_annotation(
                 "image",
                 query_details,
@@ -1306,14 +1330,150 @@ def dump_data(data_source="idr"):
                 return_containers=False,
                 data_source=data_source,
             )
-            print(query_details)
-            print ("DONE")
-            #print (results)
-            return
+            
+            #print(query_details)
+            #print
+            try:
+                print (results.get("results").keys())
+            except:
+                print (results)
+                print (query_details)
+                print (container_name)
+                print ("ERROR...")
+                continue
+            print (len(results.get("results").get("results")))
+            print (results.get("results").get("size"))
+            if results.get("results").get("size") > 1000:
+                print(results.get("results").get("size"))
+                print(results.get("results").get("bookmark"))
+                '''
 
 
-            pr
 
-'''
+    end_time= time.time()
+    print (start_time, end_time)
+    print (totaLrecords)
 
-'''
+
+def get_bookmark(pagination_dict):
+    next_page = pagination_dict["next_page"]
+    for page_rcd in pagination_dict["page_records"]:
+        if page_rcd["page"] == next_page:
+            return page_rcd["bookmark"]
+
+
+def get_sub_container_data(query, main_attributes, data_source ,dublicated ):
+    from utils import search_resource_annotation
+    received_results_data = []
+    query_details = {"query_details": query, "main_attributes": main_attributes}
+    returned_results = search_resource_annotation(
+        "image",
+        query_details,
+        raw_elasticsearch_query=None,
+        bookmark=None,
+        pagination_dict=None,
+        return_containers=False,
+        data_source=data_source,
+    )
+
+
+    if not returned_results.get("results") or len(returned_results["results"]) == 0:
+        search_omero_app.logger.info("Your query returns no results")
+        return []
+
+    search_omero_app.logger.info("Query results:")
+    total_results = returned_results["results"]["size"]
+    search_omero_app.logger.info("Total no of result records %s" % total_results)
+    search_omero_app.logger.info(
+        "Server query time: %s seconds" % returned_results["server_query_time"]
+    )
+    search_omero_app.logger.info(
+        "Included results in the current page %s"
+        % len(returned_results["results"]["results"])
+    )
+
+    for res in returned_results["results"]["results"]:
+        received_results_data.append(res)
+
+    received_results = len(returned_results["results"]["results"])
+    # set the bookmark to used in the next the page,
+    # if the number of pages is greater than 1
+    # get the total number of pages
+    total_pages = returned_results["results"]["total_pages"]
+    pagination_dict = returned_results["results"].get("pagination")
+
+    page = pagination_dict["current_page"]
+
+    search_omero_app.logger.info(
+        "page: %s, received results: %s"
+        % (
+            (str(page) + "/" + str(total_pages)),
+            (str(received_results) + "/" + str(total_results)),
+        )
+    )
+    # it is not used in the request, it is used to comapre requests using
+    # pagination and bookmark
+    bookmark = get_bookmark(pagination_dict)
+    page = pagination_dict["next_page"]
+    ids = []
+    while page:
+        query_data = {
+            "query": {"query_details": returned_results["query_details"]},
+            "pagination": pagination_dict,
+        }
+        query_data_json = json.dumps(query_data)
+        returned_results = search_resource_annotation(
+            "image",
+            query_details,
+            raw_elasticsearch_query=None,
+            bookmark=None,
+            pagination_dict=None,
+            return_containers=False,
+            data_source=data_source,
+        )
+
+
+        # bookmark = returned_results["results"].get("bookmark")
+        pagination_dict = returned_results["results"].get("pagination")
+
+        received_results = received_results + len(
+            returned_results["results"]["results"]
+        )
+        for res in returned_results["results"]["results"]:
+            if res["id"] in ids:
+                #print (len(received_results_data),", TOZ:",main_attributes)
+                #print (returned_results["results"]["size"])
+                dublicated.append(res["id"])
+                #for rr in received_results_data:
+                #    type(rr)
+                #    if rr["id"]==res["id"]:
+                #
+                #        print (rr)
+                #        print ("=======================================================================================")
+
+                #raise Exception("Image id %s is added before." % res["id"],", name//l " ,res["name"], res["project_name"], res["screen_name"])
+            #else:
+            ids.append(res["id"])
+            received_results_data.append(res)
+
+        search_omero_app.logger.info(
+            "bookmark: %s, page: %s, received results: %s"
+            % (
+                bookmark,
+                (str(page) + "/" + str(total_pages)),
+                (str(received_results) + "/" + str(total_results)),
+            )
+        )
+        if received_results >= total_results:
+            break
+        page = pagination_dict.get("next_page")
+        bookmark = get_bookmark(pagination_dict)
+
+    search_omero_app.logger.info("Total received results: %s" % len(received_results_data))
+    return received_results_data
+            
+
+def save_results_file(results, file_name="results.json"):
+    with open(file_name, "w") as outfile:
+        outfile.write(json.dumps(results, indent=4))
+
