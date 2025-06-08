@@ -1,5 +1,5 @@
 # the searchengine docker image which supports the multi-data sources and deletion, reindexing of containers
-SEARCHENGINE_IMAGE=khaledk2/searchengine:multisource
+SEARCHENGINE_IMAGE=replace_with_a _ocker_image_that_supports_multiple_data_sources
 USER_NAME=elastic
 PASSWORD=es_password
 # should be replaced by the container id
@@ -15,14 +15,14 @@ SYNCHRONOUS_RUN=True
 UPDATE_CACHE=False
 # the task ID is used to follow up asynchronous deleting containers, it will be the results of run asynchronous delete
 TASK_ID=9kfkEIVNQNafmYyAlpiy9g:239972
-data_base_url=192.168.2.160
+DATABASE_URL=192.168.2.160
 # this shoould be replaced by the database user password
-data_base_user_bassword=data_base_user_bassword
-database_port_number=5432
-database_user_name=omeroreadonly
-working_data_source=omero_train
-database_name=omero_train
-backup_file_name=omero_train.pgdump
+DATABASE_USER_PASSWORD=data_base_user_bassword
+DATABASE_PORT_NUMBER=5432
+DATABASE_USERNAME=omeroreadonly
+WORKING_DATA_SOURCE=omero_train
+DATABASE_NAME=omero_train
+BACKUP_FILE_NAME=omero_train.pgdump
 NEW_DATA_SOURCE=test_csv
 NEW_DATA_SOURCE_IMAGES_CVS=/etc/searchengine/test_images.csv
 NEW_DATA_SOURCE_PROJECTS_CVS=/etc/searchengine/test_projects.csv
