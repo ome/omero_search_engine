@@ -1272,20 +1272,27 @@ def create_container_folder(parent_folder, container_name=None):
             os.makedirs(folder,exist_ok=True)
         return folder
 
-def dump_data(data_source="idr"):
+def dump_data(target_folder,id, resource, data_source="idr"):
     start_time = time.time()
     totaLrecords=0
     dublicated = []
-    parent_folder='/mnt/data/data_dump'
+    if not target_folder:
+        target_folder= '/tmp'
     folders={}
-    projects_folder=create_container_folder(parent_folder, "projects")
+    found=False
+    projects_folder=create_container_folder(target_folder, "projects")
     folders ["project"]=projects_folder
-    screens_folder=create_container_folder(parent_folder, "screens")
+    screens_folder=create_container_folder(target_folder, "screens")
     folders["screen"] = screens_folder
     containers=return_containers_images(data_source)
     ## todo save to json file
     #print (containers)
     for container in containers["results"]["results"]:
+        if resource and id:
+            if container["id"] ==int(id) and  container["type"] ==resource:
+                found=True
+            else:
+                continue
         print (container["type"], container["name"])
         sub_containers=get_containers_no_images(
             container["name"],
@@ -1300,7 +1307,7 @@ def dump_data(data_source="idr"):
         print (folders[container_type],container_name)
         print ("=================================================")
         container_folder= create_container_folder (folders[container_type],container_name)
-        # toDo create su-folcder,
+        #  create su-folcder,
         #  make it working folder
         #  save sub-container json file using file name
         for sub_container in sub_containers["results"]["results"]:
@@ -1347,6 +1354,8 @@ def dump_data(data_source="idr"):
                 print(results.get("results").get("size"))
                 print(results.get("results").get("bookmark"))
                 '''
+        if found:
+            break
 
 
 
