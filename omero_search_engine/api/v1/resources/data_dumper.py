@@ -22,74 +22,93 @@ from resource_analyser import return_containers_images, get_containers_no_images
 import os
 import json
 
+
 def create_container_folder(parent_folder, container_name=None):
     if not os.path.isdir(parent_folder):
         os.mkdir(parent_folder)
     if container_name:
         folder = os.path.join(parent_folder, container_name)
         if not os.path.isdir(folder):
-            os.makedirs(folder,exist_ok=True)
+            os.makedirs(folder, exist_ok=True)
         return folder
 
-def dump_data(target_folder,id, resource, over_write, data_source="idr"):
+
+def dump_data(target_folder, id, resource, over_write, data_source="idr"):
     from datetime import datetime
+
     start_time = datetime.now()
-    totalrecords=0
+    totalrecords = 0
     duplicated = []
     if not target_folder:
-        target_folder= '/tmp'
-    folders={}
-    found=False
-    projects_folder=create_container_folder(target_folder, "projects")
-    folders ["project"]=projects_folder
-    screens_folder=create_container_folder(target_folder, "screens")
+        target_folder = "/tmp"
+    folders = {}
+    found = False
+    projects_folder = create_container_folder(target_folder, "projects")
+    folders["project"] = projects_folder
+    screens_folder = create_container_folder(target_folder, "screens")
     folders["screen"] = screens_folder
-    containers=return_containers_images(data_source)
+    containers = return_containers_images(data_source)
     ## todo save to json file
     for container in containers["results"]["results"]:
         if resource and id:
-             if container["id"] ==int(id) and  container["type"] ==resource:
-                found=True
-             else:
+            if container["id"] == int(id) and container["type"] == resource:
+                found = True
+            else:
                 continue
-        print (container["type"], container["name"])
-        sub_containers=get_containers_no_images(
+        print(container["type"], container["name"])
+        sub_containers = get_containers_no_images(
             container["name"],
             container["id"],
             None,
             resource=container["type"],
-            data_source=data_source
+            data_source=data_source,
         )
-        container_type=container["type"]
-        container_id=container["id"]
+        container_type = container["type"]
+        container_id = container["id"]
         container_name = container["name"]
-        container_folder= create_container_folder (folders[container_type],container_name)
+        container_folder = create_container_folder(
+            folders[container_type], container_name
+        )
         #  create su-folcder,
         #  make it working folder
         #  save sub-container json file using file name
         for sub_container in sub_containers["results"]["results"]:
-            file_name = os.path.join(container_folder, "%s.json" % sub_container["name"].replace("/", "_"))
+            file_name = os.path.join(
+                container_folder, "%s.json" % sub_container["name"].replace("/", "_")
+            )
             if not over_write and os.path.isfile(file_name):
                 continue
-            #else:
+            # else:
             query = {"and_filters": [], "or_filters": [[]]}
-            main_attributes_query = {"and_main_attributes": [
-                {"name": "%s_id" % container_type, "value": container_id, "operator": "equals"},
-                {"name": "%s_name" % sub_container["resource"], "value": sub_container["name"],
-                 "operator": "equals"},
-                {"name": "data_source", "value": data_source,
-                 "operator": "equals"}]}
+            main_attributes_query = {
+                "and_main_attributes": [
+                    {
+                        "name": "%s_id" % container_type,
+                        "value": container_id,
+                        "operator": "equals",
+                    },
+                    {
+                        "name": "%s_name" % sub_container["resource"],
+                        "value": sub_container["name"],
+                        "operator": "equals",
+                    },
+                    {"name": "data_source", "value": data_source, "operator": "equals"},
+                ]
+            }
 
-            #results=get_sub_container_data(query, main_attributes_query, data_source,dublicated )
-            results=get_subcontainer_data(query, main_attributes_query, data_source, duplicated)
+            # results=get_sub_container_data(query, main_attributes_query, data_source,dublicated )
+            results = get_subcontainer_data(
+                query, main_attributes_query, data_source, duplicated
+            )
             save_results_file(results, file_name)
             totalrecords += len(results)
         if found:
             break
 
-    end_time= datetime.now()
-    search_omero_app.logger.info ("Elapsed time: : %s"%(end_time- start_time))
-    search_omero_app.logger.info ("Total images: %s"%totalrecords)
+    end_time = datetime.now()
+    search_omero_app.logger.info("Elapsed time: : %s" % (end_time - start_time))
+    search_omero_app.logger.info("Total images: %s" % totalrecords)
+
 
 def get_bookmark(pagination_dict):
     next_page = pagination_dict["next_page"]
@@ -97,8 +116,10 @@ def get_bookmark(pagination_dict):
         if page_rcd["page"] == next_page:
             return page_rcd["bookmark"]
 
+
 def get_subcontainer_data(query, main_attributes, data_source, duplicated):
     from utils import search_resource_annotation
+
     received_results_data = []
     query_data = {"query_details": query, "main_attributes": main_attributes}
 
@@ -114,7 +135,7 @@ def get_subcontainer_data(query, main_attributes, data_source, duplicated):
 
     if not returned_results.get("results") or len(returned_results["results"]) == 0:
         search_omero_app.logger.info("Your query returns no results")
-        search_omero_app.logger.info (returned_results)
+        search_omero_app.logger.info(returned_results)
 
         return []
 
@@ -150,7 +171,11 @@ def get_subcontainer_data(query, main_attributes, data_source, duplicated):
     page = pagination_dict["next_page"]
     ids = []
     while page:
-        query_data = {"query_details": query, "main_attributes": main_attributes, "pagination": pagination_dict,}
+        query_data = {
+            "query_details": query,
+            "main_attributes": main_attributes,
+            "pagination": pagination_dict,
+        }
         returned_results = search_resource_annotation(
             "image",
             query_data,
@@ -160,7 +185,7 @@ def get_subcontainer_data(query, main_attributes, data_source, duplicated):
             return_containers=False,
             data_source=data_source,
         )
-        #if returned_results.get("results"):
+        # if returned_results.get("results"):
         pagination_dict = returned_results["results"].get("pagination")
 
         received_results = received_results + len(
@@ -185,8 +210,11 @@ def get_subcontainer_data(query, main_attributes, data_source, duplicated):
         page = pagination_dict.get("next_page")
         bookmark = get_bookmark(pagination_dict)
 
-    search_omero_app.logger.info("Total received results: %s" % len(received_results_data))
+    search_omero_app.logger.info(
+        "Total received results: %s" % len(received_results_data)
+    )
     return received_results_data
+
 
 def save_results_file(results, file_name="results.json"):
     with open(file_name, "w") as outfile:
