@@ -48,7 +48,6 @@ def dump_data(target_folder, id, resource, over_write, data_source="idr"):
     screens_folder = create_container_folder(target_folder, "screens")
     folders["screen"] = screens_folder
     containers = return_containers_images(data_source)
-    ## todo save to json file
     for container in containers["results"]["results"]:
         if resource and id:
             if container["id"] == int(id) and container["type"] == resource:
@@ -96,7 +95,6 @@ def dump_data(target_folder, id, resource, over_write, data_source="idr"):
                 ]
             }
 
-            # results=get_sub_container_data(query, main_attributes_query, data_source,dublicated )
             results = get_subcontainer_data(
                 query, main_attributes_query, data_source, duplicated
             )
