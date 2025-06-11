@@ -765,14 +765,22 @@ def set_automatic_refresh(automatic_refresh="True"):
     automatic_refresh = json.loads((automatic_refresh.lower()))
     update_config_file({"AUTOMATIC_REFRESH": automatic_refresh})
 
+
 @manager.command
 @manager.option("-d", "--data_source", help="data source")
 @manager.option("-t", "--target_folder", help="folder to save the files to")
 @manager.option("-r", "--resource", help="resource name,  i.e. project or screen")
 @manager.option("-i", "--id", help="resource id")
-def dump_searchengine_data(data_source=None, target_folder=None, id=None, resource=None):
-    from omero_search_engine.api.v1.resources.resource_analyser import dump_data
-    dump_data(target_folder,  id, resource, data_source)
+@manager.option("-o", "--over_write", help="Over written current data if True, default")
+def dump_searchengine_data(
+    data_source=None, target_folder=None, id=None, resource=None, over_write="True"
+):
+    from omero_search_engine.api.v1.resources.data_dumper import dump_data
+
+    over_write = json.loads(over_write.lower())
+
+    dump_data(target_folder, id, resource, over_write, data_source)
+
 
 if __name__ == "__main__":
     from flask_script import Command
