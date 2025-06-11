@@ -772,14 +772,25 @@ def set_automatic_refresh(automatic_refresh="True"):
 @manager.option("-r", "--resource", help="resource name,  i.e. project or screen")
 @manager.option("-i", "--id", help="resource id")
 @manager.option("-o", "--over_write", help="Over written current data if True, default")
+@manager.option(
+    "-b",
+    "--bb_formate",
+    help="write csv file format instead of json if the value is true",
+)
 def dump_searchengine_data(
-    data_source=None, target_folder=None, id=None, resource=None, over_write="True"
+    data_source=None,
+    target_folder=None,
+    id=None,
+    resource=None,
+    over_write="True",
+    bb_formate="False",
 ):
     from omero_search_engine.api.v1.resources.data_dumper import dump_data
 
     over_write = json.loads(over_write.lower())
+    bb_formate = json.loads(bb_formate.lower())
 
-    dump_data(target_folder, id, resource, over_write, data_source)
+    dump_data(target_folder, id, resource, over_write, bb_formate, data_source)
 
 
 if __name__ == "__main__":

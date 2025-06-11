@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
 # Copyright (C) 2025 University of Dundee & Open Microscopy Environment.
 # All rights reserved.
 #
@@ -33,7 +32,7 @@ def create_container_folder(parent_folder, container_name=None):
         return folder
 
 
-def dump_data(target_folder, id, resource, over_write, data_source="idr"):
+def dump_data(target_folder, id, resource, over_write, bbf_format, data_source="idr"):
     from datetime import datetime
 
     start_time = datetime.now()
@@ -72,9 +71,15 @@ def dump_data(target_folder, id, resource, over_write, data_source="idr"):
         #  make it working folder
         #  save sub-container json file using file name
         for sub_container in sub_containers["results"]["results"]:
-            file_name = os.path.join(
-                container_folder, "%s.json" % sub_container["name"].replace("/", "_")
-            )
+            if bbf_format:
+                file_name = os.path.join(
+                    container_folder, "%s.csv" % sub_container["name"].replace("/", "_")
+                )
+            else:
+                file_name = os.path.join(
+                    container_folder,
+                    "%s.json" % sub_container["name"].replace("/", "_"),
+                )
             if not over_write and os.path.isfile(file_name):
                 continue
             # else:
@@ -98,7 +103,10 @@ def dump_data(target_folder, id, resource, over_write, data_source="idr"):
             results = get_subcontainer_data(
                 query, main_attributes_query, data_source, duplicated
             )
-            save_results_file(results, file_name)
+            if bbf_format:
+                write_BBF(results, container_type, file_name)
+            else:
+                save_results_file(results, file_name)
             totalrecords += len(results)
         if found:
             break
@@ -217,3 +225,59 @@ def get_subcontainer_data(query, main_attributes, data_source, duplicated):
 def save_results_file(results, file_name="results.json"):
     with open(file_name, "w") as outfile:
         outfile.write(json.dumps(results, indent=4))
+
+
+def write_BBF(results, resource, file_name):
+    import pandas as pd
+
+    to_ignore_list = {
+        "project": [
+            "dataset_id",
+            "dataset_name",
+            "doc_type",
+            "experiment",
+            "group_id",
+            "image_size",
+            "owner_id",
+            "plate_id",
+            "plate_name",
+            "screen_name",
+            "screen_id",
+            "well_id",
+            "wellsample_id",
+        ],
+        "screen": [
+            "dataset_id",
+            "dataset_name",
+            "doc_type",
+            "experiment",
+            "group_id",
+            "image_size",
+            "owner_id",
+            "dataset_name",
+            "project_id",
+            "project_name",
+            "well_id",
+            "wellsample_id",
+        ],
+    }
+    col_converter = {"image_url": "File Path", "thumb_url": "Thumbnail"}
+    lines = []
+    for row_ in results:
+        line = {}
+        lines.append(line)
+        for name, item in row_.items():
+            if name in to_ignore_list[resource]:
+                continue
+            if name == "key_values" and len(item) > 0:
+                for row in item:
+                    line[row["name"]] = row["value"]
+            else:
+                if name in col_converter:
+                    line[col_converter[name]] = item
+                else:
+                    line[name] = item
+
+    df = pd.DataFrame(lines)
+    df.to_csv(file_name)
+    print(len(lines))
