@@ -1724,6 +1724,62 @@ def delete_data_source_contents(data_source):
     return found
 
 
+def write_BBF(results, resource, file_name):
+    import pandas as pd
+
+    to_ignore_list = {
+        "project": [
+            "dataset_id",
+            "dataset_name",
+            "doc_type",
+            "experiment",
+            "group_id",
+            "image_size",
+            "owner_id",
+            "plate_id",
+            "plate_name",
+            "screen_name",
+            "screen_id",
+            "well_id",
+            "wellsample_id",
+        ],
+        "screen": [
+            "dataset_id",
+            "dataset_name",
+            "doc_type",
+            "experiment",
+            "group_id",
+            "image_size",
+            "owner_id",
+            "dataset_name",
+            "project_id",
+            "project_name",
+            "well_id",
+            "wellsample_id",
+        ],
+    }
+    col_converter = {"image_url": "File Path", "thumb_url": "Thumbnail"}
+    lines = []
+    for row_ in results:
+        line = {}
+        lines.append(line)
+        for name, item in row_.items():
+            if name in to_ignore_list[resource]:
+                continue
+            if name == "key_values" and len(item) > 0:
+                for row in item:
+                    line[row["name"]] = row["value"]
+            else:
+                if name in col_converter:
+                    line[col_converter[name]] = item
+                else:
+                    line[name] = item
+
+    df = pd.DataFrame(lines)
+    df.to_csv(file_name)
+    print(len(lines))
+
+
 delete_container_query = Template(
     """
 {"query":{
