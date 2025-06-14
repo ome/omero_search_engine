@@ -19,6 +19,7 @@
 
 from . import resources
 from flask import request, jsonify, make_response
+
 import json
 from omero_search_engine.api.v1.resources.utils import (
     search_resource_annotation,
@@ -38,7 +39,7 @@ from omero_search_engine.api.v1.resources.resource_analyser import (
     query_cached_bucket_part_value_keys,
     return_containers_images,
 )
-from omero_search_engine.api.v1.resources.utils import get_resource_annotation_table
+from omero_search_engine.api.v1.resources.utils import get_resource_annotation_table, create_bff_file_response, write_BBF
 from omero_search_engine.api.v1.resources.query_handler import (
     determine_search_results_,
     simple_search,
@@ -413,6 +414,7 @@ def submit_query():
         return jsonify(build_error_message("No query is provided"))
     adjust_query_for_container(query)
     return_columns = request.args.get("return_columns")
+    return_bff = request.args.get("return_bff")
     data_source = get_working_data_source(request.args.get("data_source"))
     if return_columns:
         try:
@@ -421,11 +423,16 @@ def submit_query():
             return_columns = False
     validation_results = query_validator(query)
     if validation_results == "OK":
-        return jsonify(
-            determine_search_results_(
-                query, data_source=data_source, return_columns=return_columns
-            )
+        results = determine_search_results_(
+            query, data_source=data_source, return_columns=return_columns
         )
+        if return_bff:
+            resource="image"
+            file_contents = write_BBF(results.get("results").get("results"), return_contents=return_bff)
+            return create_bff_file_response(file_contents, resource)
+        else:
+            return jsonify(results)
+
     else:
         return jsonify(build_error_message(validation_results))
 
@@ -438,6 +445,7 @@ def search(resource_table):
     key = request.args.get("key")
     value = request.args.get("value")
     study = request.args.get("study")
+    return_bff = request.args.get("return_bff")
     case_sensitive = request.args.get("case_sensitive")
     operator = request.args.get("operator")
     bookmark = request.args.get("bookmark")
@@ -467,6 +475,11 @@ def search(resource_table):
         return_containers,
         random_results=random_results,
     )
+    if return_bff:
+        resource = "image"
+        from utils import write_BBF
+        file_contents = write_BBF(results.get("results").get("results"), return_contents=return_bff)
+        return create_bff_file_response(file_contents, resource)
     return jsonify(results)
 
 
@@ -608,3 +621,17 @@ def container_key_values_filter(resource_table):
         key=key,
         query=query,
     )
+
+
+@resources.route("/search_bff_query/", methods=["GET"])
+def bff_query():
+    import jsonurl_py as jsonurl
+    raw_query = request.query_string.decode()
+    import re
+    match = re.search(r"q=([^&]*)", raw_query)
+    query = match.group(1) if match else ""
+    query = jsonurl.loads(query)
+    print(query)
+    return jsonify(query)
+
+#(((key:Gene+Symbol,value:pdxk,operator:equals,resource:image),(key:Gene+Symbol,value:pdxp,operator:equals,resource:image)),(key:Publication+Title,value:rnf168+binds+and+amplifies+ubiquitin+conjugates+on+damaged+chromosomes+to+allow+accumulation+of+repair+proteins.,operator:contains,resource:container),(key:Organism,value:homo+sapiens,operator:equals,resource:container))
