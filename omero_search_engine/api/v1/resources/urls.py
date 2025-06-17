@@ -39,7 +39,11 @@ from omero_search_engine.api.v1.resources.resource_analyser import (
     query_cached_bucket_part_value_keys,
     return_containers_images,
 )
-from omero_search_engine.api.v1.resources.utils import get_resource_annotation_table, create_bff_file_response, write_BBF
+from omero_search_engine.api.v1.resources.utils import (
+    get_resource_annotation_table,
+    create_bff_file_response,
+    write_BBF,
+)
 from omero_search_engine.api.v1.resources.query_handler import (
     determine_search_results_,
     simple_search,
@@ -427,9 +431,16 @@ def submit_query():
             query, data_source=data_source, return_columns=return_columns
         )
         if return_bff:
-            resource="image"
-            file_contents = write_BBF(results.get("results").get("results"), return_contents=return_bff)
-            return create_bff_file_response(file_contents, resource)
+            resource = "image"
+            file_contents = write_BBF(
+                results.get("results").get("results"), return_contents=return_bff
+            )
+            return create_bff_file_response(
+                file_contents,
+                results.get("results").get("bookmark"),
+                results.get("results").get("pagination"),
+                resource,
+            )
         else:
             return jsonify(results)
 
@@ -478,8 +489,13 @@ def search(resource_table):
     if return_bff:
         resource = "image"
         from utils import write_BBF
-        file_contents = write_BBF(results.get("results").get("results"), return_contents=return_bff)
-        return create_bff_file_response(file_contents, resource)
+
+        file_contents = write_BBF(
+            results.get("results").get("results"), return_contents=return_bff
+        )
+        bookmark = results.get("results").get("bookmark")
+        pagination = results.get("results").get("pagination")
+        return create_bff_file_response(file_contents, bookmark, pagination, resource)
     return jsonify(results)
 
 
@@ -626,12 +642,15 @@ def container_key_values_filter(resource_table):
 @resources.route("/search_bff_query/", methods=["GET"])
 def bff_query():
     import jsonurl_py as jsonurl
+
     raw_query = request.query_string.decode()
     import re
+
     match = re.search(r"q=([^&]*)", raw_query)
     query = match.group(1) if match else ""
     query = jsonurl.loads(query)
     print(query)
     return jsonify(query)
 
-#(((key:Gene+Symbol,value:pdxk,operator:equals,resource:image),(key:Gene+Symbol,value:pdxp,operator:equals,resource:image)),(key:Publication+Title,value:rnf168+binds+and+amplifies+ubiquitin+conjugates+on+damaged+chromosomes+to+allow+accumulation+of+repair+proteins.,operator:contains,resource:container),(key:Organism,value:homo+sapiens,operator:equals,resource:container))
+
+# (((key:Gene+Symbol,value:pdxk,operator:equals,resource:image),(key:Gene+Symbol,value:pdxp,operator:equals,resource:image)),(key:Publication+Title,value:rnf168+binds+and+amplifies+ubiquitin+conjugates+on+damaged+chromosomes+to+allow+accumulation+of+repair+proteins.,operator:contains,resource:container),(key:Organism,value:homo+sapiens,operator:equals,resource:container))

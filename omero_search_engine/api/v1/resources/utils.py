@@ -28,7 +28,7 @@ import time
 from omero_search_engine import search_omero_app
 from string import Template
 from app_data.data_attrs import annotation_resource_link
-from flask import  Response
+from flask import Response
 
 contain_list = ["contains", "not_contains"]
 main_dir = os.path.abspath(os.path.dirname(__file__))
@@ -1727,9 +1727,10 @@ def delete_data_source_contents(data_source):
 
 def write_BBF(results, file_name=None, return_contents=False):
     import pandas as pd
+
     print("=====================================")
-    print (type(results))
-    print ("=====================================")
+    print(type(results))
+    print("=====================================")
 
     to_ignore_list = {
         "project": [
@@ -1767,15 +1768,15 @@ def write_BBF(results, file_name=None, return_contents=False):
     for row_ in results:
         line = {}
         lines.append(line)
-        print (row_)
-        print ("========================")
+        print(row_)
+        print("========================")
         if row_.get("project_id"):
-            resource="project"
+            resource = "project"
         else:
-            resource="screen"
+            resource = "screen"
         for name, item in row_.items():
-            print (name)
-            print ("###############################")
+            print(name)
+            print("###############################")
             if name in to_ignore_list[resource]:
                 continue
             if name == "key_values" and len(item) > 0:
@@ -1794,16 +1795,19 @@ def write_BBF(results, file_name=None, return_contents=False):
     print(len(lines))
 
 
-def create_bff_file_response(file_contents,resource):
+def create_bff_file_response(file_contents, bookmark, paginationm, resource):
     file_name = "bff"
     return Response(
         file_contents,
         mimetype="text/csv",
         headers={
             "Content-disposition": "attachment; filename=%s_%s.csv"
-                                   % (file_name, resource)
+            % (file_name, resource),
+            "bookmark": bookmark,
+            "paginationm": paginationm,
         },
     )
+
 
 delete_container_query = Template(
     """
