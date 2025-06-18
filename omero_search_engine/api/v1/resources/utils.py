@@ -1795,7 +1795,7 @@ def write_BBF(results, file_name=None, return_contents=False):
     print(len(lines))
 
 
-def create_bff_file_response(file_contents, bookmark, paginationm, resource):
+def create_bff_file_response(file_contents, bookmark, pagination, resource):
     file_name = "bff"
     return Response(
         file_contents,
@@ -1804,7 +1804,7 @@ def create_bff_file_response(file_contents, bookmark, paginationm, resource):
             "Content-disposition": "attachment; filename=%s_%s.csv"
             % (file_name, resource),
             "bookmark": bookmark,
-            "paginationm": paginationm,
+            "pagination": pagination,
         },
     )
 
