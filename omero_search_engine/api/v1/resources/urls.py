@@ -637,21 +637,3 @@ def container_key_values_filter(resource_table):
         key=key,
         query=query,
     )
-
-
-"""
-@resources.route("/search_bff_query/", methods=["GET"])
-def bff_query():
-    import jsonurl_py as jsonurl
-
-    raw_query = request.query_string.decode()
-    import re
-
-    match = re.search(r"q=([^&]*)", raw_query)
-    query = match.group(1) if match else ""
-    query = jsonurl.loads(query)
-    print(query)
-    return jsonify(query)
-
-"""
-# (((key:Gene+Symbol,value:pdxk,operator:equals,resource:image),(key:Gene+Symbol,value:pdxp,operator:equals,resource:image)),(key:Publication+Title,value:rnf168+binds+and+amplifies+ubiquitin+conjugates+on+damaged+chromosomes+to+allow+accumulation+of+repair+proteins.,operator:contains,resource:container),(key:Organism,value:homo+sapiens,operator:equals,resource:container))
