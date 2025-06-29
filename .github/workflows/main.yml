@@ -42,8 +42,8 @@ jobs:
       #test the app before bulding the image
       - name: Install dependencies and test
         run: |
-          apt update
-          apt install -y python3-pip 
+          apt-get update
+          apt-get install -y python3-pip 
           # python3 -m pip install --upgrade pip
           pip3 install -r requirements.txt
           export FLASK_APP=commands.py
