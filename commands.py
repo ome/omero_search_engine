@@ -177,7 +177,7 @@ def get_index_data_from_database(resource, data_source, backup):
 
         # validate the indexing
 
-        test_indexing_search_query("app_data/test_index_data.json", data_source_, "False", "True")
+        test_indexing_search_query_("app_data/test_index_data.json", data_source_, False, True)
 
 
     # backup the index data
@@ -457,6 +457,9 @@ def test_indexing_search_query(
     if the data file, it will use sample file from
     (test_index_data.json) app_data folder
     """
+    test_indexing_search_query_( json_file,source,deep_check,check_studies,)
+
+def test_indexing_search_query_( json_file,source,deep_check,check_studies)
     from omero_search_engine.validation.results_validator import (
         validate_queries,
         test_no_images,
@@ -473,6 +476,8 @@ def test_indexing_search_query(
         test_no_images(source)
     get_omero_stats()
     get_no_images_sql_containers(data_source=source)
+
+
 
 ##################################
 @search_omero_app.cli.command("restore_elasticsearch_data")
