@@ -154,7 +154,7 @@ def config_datasource(configuration, updated_configuration):
 def rename_datasource(data_source_name, new_data_source_name):
     changed = False
     with open(app_config.INSTANCE_CONFIG) as f:
-        configuration = yaml.load(f)
+        configuration = yaml.load(f, Loader=yaml.Loader)
     for data_source in configuration.get("DATA_SOURCES"):
         if data_source.get("name").lower() == data_source_name.lower():
             data_source["name"] = new_data_source_name
@@ -177,7 +177,7 @@ def rename_datasource(data_source_name, new_data_source_name):
 def delete_data_source_configuration(data_source_name):
     changed = False
     with open(app_config.INSTANCE_CONFIG) as f:
-        configuration = yaml.load(f)
+        configuration = yaml.load(f, Loader=yaml.Loader)
     for data_source in configuration.get("DATA_SOURCES"):
         if data_source.get("name").lower() == data_source_name.lower():
             configuration.get("DATA_SOURCES").remove(data_source)
