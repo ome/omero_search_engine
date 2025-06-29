@@ -1,6 +1,6 @@
 #!/bin/sh
 NAME="omero_search_engine"
-USER root
+# USER root
 APPPATH=/searchengine
 SOCKFILE=/etc/searchengine/sock3 #change this to project_dir/sock (new file will be created)
 echo "Starting $NAME as `whoami`"
@@ -16,7 +16,8 @@ test -d $LOGSDIR || mkdir -p $LOGSDIR
 user=$USER
 echo "Start Gunicorn ...."
 echo "$HOME"
-echo pwd
+echo $PWD
+echo $APPPATH
 cd $APPPATH
 if [ -z  "$@" ]; then
   exec gunicorn "omero_search_engine:create_app('production')" -b 0.0.0.0:5577 --timeout 0 --name "$NAME"   --bind=unix:$SOCKFILE  --log-file=$LOGSDIR/logs/engine_gunilog.log --access-logfile=$LOGSDIR/logs/engine_access.log -error-logfile=$LOGSDIR/logs/engine_logs/engine_error.log  --workers 4

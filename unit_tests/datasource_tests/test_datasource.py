@@ -47,7 +47,7 @@ class BasicTestCase(unittest.TestCase):
         pass
 
     def test_delete_index_one_container(self):
-        from manage import (
+        from commands import (
             delete_data_source,
         )
 

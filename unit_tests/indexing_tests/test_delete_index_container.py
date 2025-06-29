@@ -57,7 +57,7 @@ class BasicTestCase(unittest.TestCase):
         pass
 
     def test_delete_index_one_container(self):
-        from manage import (
+        from commands import (
             index_container_from_database,
             delete_containers,
         )
@@ -90,7 +90,7 @@ class BasicTestCase(unittest.TestCase):
         self.assertEqual(cur_res["name"], container["name"])
 
     def test_delete_index_other_container(self):
-        from manage import (
+        from commands import (
             index_container_from_database,
             delete_containers,
         )

@@ -89,7 +89,7 @@ def set_database_connection_variables(config):
 def update_config_file(updated_configuration, data_source=False):
     is_changed = False
     with open(app_config.INSTANCE_CONFIG) as f:
-        configuration = yaml.load(f)
+        configuration = yaml.load(f, Loader=yaml.Loader)
     if not data_source:
         found = []
         for key, value in updated_configuration.items():

@@ -21,7 +21,9 @@ from flask import Flask, make_response, request
 import os
 import logging
 from elasticsearch import Elasticsearch
-from flasgger import Swagger, LazyString, LazyJSONEncoder
+from flasgger import Swagger, LazyJSONEncoder
+from flask_babel import LazyString
+
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 import threading
