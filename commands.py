@@ -177,7 +177,7 @@ def get_index_data_from_database(resource, data_source, backup):
 
         # validate the indexing
 
-        test_indexing_search_query("app_data/test_index_data.json", data_source_, False, True)
+        test_indexing_search_query("app_data/test_index_data.json", data_source_, "False", "True")
 
 
     # backup the index data
