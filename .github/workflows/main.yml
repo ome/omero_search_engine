@@ -35,16 +35,14 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - name: Set up Python 3.9
+      - name: Set up Python 3.12
         uses: actions/setup-python@v4
         with:
-          python-version: 3.9
+          python-version: 3.12
       #test the app before bulding the image
       - name: Install dependencies and test
         run: |
-          # apt-get update
-          apt-get install -y python3-pip 
-          # python3 -m pip install --upgrade pip
+          python3 -m pip install --upgrade pip
           pip3 install -r requirements.txt
           export FLASK_APP=commands.py
           # Configure database url    
