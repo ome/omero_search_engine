@@ -57,15 +57,14 @@ class BasicTestCase(unittest.TestCase):
         pass
 
     def test_delete_index_one_container(self):
-        from commands import (
-            index_container_from_database,
-            delete_containers,
-        )
 
         ids_ = list(containers_n.keys())
         data_source = containers_n[ids_[0]]["data_source"]
         resource = containers_n[ids_[0]]["type"]
-        delete_containers(resource, data_source, ",".join(ids_), "True", "True")
+        from omero_search_engine.api.v1.resources.utils import delete_container
+
+        delete_container(",".join(ids_), resource, data_source, True, True)
+
         containers_ad = return_containers_images(
             data_source,
         )
@@ -73,8 +72,16 @@ class BasicTestCase(unittest.TestCase):
         for id, container in containers_n.items():
             for con1 in containers_ad["results"]["results"]:
                 self.assertNotEquals(int(con1["id"]), int(id))
-        index_container_from_database(
-            resource, data_source, ",".join(ids_), "False", "True"
+        from omero_search_engine.cache_functions.elasticsearch.transform_data import (
+            index_container_from_database_,
+        )
+
+        index_container_from_database_(
+            resource,
+            data_source,
+            ",".join(ids_),
+            False,
+            True,
         )
 
         containers_ad = return_containers_images(data_source)
@@ -94,7 +101,6 @@ class BasicTestCase(unittest.TestCase):
             index_container_from_database,
         )
         from omero_search_engine.api.v1.resources.utils import delete_container
-
 
         ids_ = list(container_m.keys())
         data_source = container_m[ids_[0]]["data_source"]

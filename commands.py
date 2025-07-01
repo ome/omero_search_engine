@@ -698,35 +698,18 @@ def index_container_from_database(
     update_cache,
     number_of_processors,
 ):
-    resources_index = {
-        "project": ["image", "project"],
-        "screen": ["image", "screen", "well", "plate"],
-    }
     from omero_search_engine.cache_functions.elasticsearch.transform_data import (
-        index_containers_from_database,
+        index_container_from_database_,
     )
 
-    # from omero_search_engine.api.v1.resources.utils import update_data_source_cache
-
-    import time
-
-    for res in resources_index[resource]:
-        index_containers_from_database(
-            resource, res, id, data_source, number_of_processors
-        )
-        time.sleep(60)
-
-    if update_cache:
-        from omero_search_engine.api.v1.resources.utils import update_data_source_cache
-
-        update_data_source_cache(data_source)
-    else:
-        delete_data_source_cache(data_source)
-
-    # backup the index data
-    if backup:
-        backup_elasticsearch_data()
-    time.sleep(60)
+    index_container_from_database_(
+        resource,
+        data_source,
+        id,
+        backup,
+        update_cache,
+        number_of_processors,
+    )
 
 
 @search_omero_app.cli.command("update_data_source_cache")
