@@ -1519,12 +1519,13 @@ def delete_data_source_cache(data_source):
 def get_number_of_images_inside_container(resource_table, data_source, id):
     name_result = get_all_index_data(resource_table, data_source)
     no_images_co = 0
-    for res in name_result["results"]["results"]:
-        if res.get("id") == int(id):
-            no_images_co = get_number_image_inside_container(
-                resource_table, id, data_source
-            )
-            break
+    if name_result.get("results") and name_result.get("results").get("results"):
+        for res in name_result["results"]["results"]:
+            if res.get("id") == int(id):
+                no_images_co = get_number_image_inside_container(
+                    resource_table, id, data_source
+                )
+                break
     return no_images_co
 
 
