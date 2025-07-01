@@ -1554,13 +1554,14 @@ def delete_container(ids, resource, data_source, update_cache, synchronous_run=F
     )
 
     es = search_omero_app.config.get("es_connector")
+    search_omero_app.logger.info("====>>>>>Ids are  %s and resource is %s in data source %s"%(ids, resource, data_source))
     ids = ids.split(",")
-    for id in ids:
-        no_images = get_number_of_images_inside_container(resource, data_source, id)
+    for id_ in ids:
+        no_images = get_number_of_images_inside_container(resource, data_source, id_)
         if no_images == 0:
             search_omero_app.logger.info(
                 "The requested %s with ID=%s does not correspond to any existing one."
-                % (resource, id)
+                % (resource, id_)
             )
             return
         elif no_images > 740000 and synchronous_run:

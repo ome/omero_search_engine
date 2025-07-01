@@ -62,7 +62,7 @@ class BasicTestCase(unittest.TestCase):
         data_source = containers_n[ids_[0]]["data_source"]
         resource = containers_n[ids_[0]]["type"]
         from omero_search_engine.api.v1.resources.utils import delete_container
-
+        print("ids are %s"%",".join(ids_))
         delete_container(",".join(ids_), resource, data_source, True, True)
 
         containers_ad = return_containers_images(
