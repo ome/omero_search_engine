@@ -92,13 +92,14 @@ class BasicTestCase(unittest.TestCase):
     def test_delete_index_other_container(self):
         from commands import (
             index_container_from_database,
-            delete_containers,
         )
+        from omero_search_engine.api.v1.resources.utils import delete_container
+
 
         ids_ = list(container_m.keys())
         data_source = container_m[ids_[0]]["data_source"]
         resource = container_m[ids_[0]]["type"]
-        delete_containers(resource, data_source, ",".join(ids_), "True", "True")
+        delete_container(resource, data_source, ",".join(ids_), True, True)
         containers_ad = return_containers_images(
             data_source,
         )
