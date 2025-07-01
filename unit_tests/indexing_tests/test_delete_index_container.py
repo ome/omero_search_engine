@@ -112,7 +112,7 @@ class BasicTestCase(unittest.TestCase):
         # test delete container
         for id, container in containers_n.items():
             for con1 in containers_ad["results"]["results"]:
-                self.assertNotEquals(int(con1["id"]), int(id))
+                self.assertNotEqual(int(con1["id"]), int(id))
         index_container_from_database(
             resource, data_source, ",".join(ids_), "False", "True"
         )
