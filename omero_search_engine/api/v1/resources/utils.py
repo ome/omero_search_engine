@@ -1573,12 +1573,12 @@ def delete_container(ids, resource, data_source, update_cache, synchronous_run=F
                 "Due to the high number of images in the %s with ID=%s, "
                 "an asynchronous delete operation is highly advised. "
                 "\nPlease rerun with asynchronous deletion enable (-s False)."
-                % (resource, id)
+                % (resource, id_)
             )
             return
 
         sub_containers = get_containers_no_images(
-            container_id=id, data_source=data_source, resource=resource
+            container_id=id_, data_source=data_source, resource=resource
         )
         if (
             type(sub_containers) is not str
@@ -1616,16 +1616,16 @@ def delete_container(ids, resource, data_source, update_cache, synchronous_run=F
                 )
         attribute = "%s_id" % resource
         image_delet_query = delete_container_query.substitute(
-            attribute=attribute, id=id, data_source=data_source
+            attribute=attribute, id=id_, data_source=data_source
         )
 
         container_delet_query = delete_container_query.substitute(
-            attribute="id", id=id, data_source=data_source
+            attribute="id", id=id_, data_source=data_source
         )
 
         # Delete container
         search_omero_app.logger.info(
-            "Delete %s with Id %s from data source: %s" % (resource, id, data_source)
+            "Delete %s with Id %s from data source: %s" % (resource, id_, data_source)
         )
         delete_container_res = es.delete_by_query(
             index=resource_elasticsearchindex[resource],
