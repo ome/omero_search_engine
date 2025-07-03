@@ -98,8 +98,8 @@ class BasicTestCase(unittest.TestCase):
         self.assertEqual(cur_res["name"], container["name"])
 
     def test_delete_index_other_container(self):
-        from commands import (
-            index_container_from_database,
+        from omero_search_engine.cache_functions.elasticsearch.transform_data import (
+            index_container_from_database_,
         )
         from omero_search_engine.api.v1.resources.utils import delete_container
 
@@ -114,9 +114,15 @@ class BasicTestCase(unittest.TestCase):
         for id, container in containers_n.items():
             for con1 in containers_ad["results"]["results"]:
                 self.assertNotEqual(int(con1["id"]), int(id))
-        index_container_from_database(
-            resource, data_source, ",".join(ids_), "False", "True"
+
+        index_container_from_database_(
+            resource,
+            data_source,
+            ",".join(ids_),
+            False,
+            True,
         )
+
         # for id in containers_n:
         #    #index_container_from_database(resource, data_source,
         #    ",".join(ids_), "False", "True")
