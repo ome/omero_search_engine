@@ -1554,7 +1554,10 @@ def delete_container(ids, resource, data_source, update_cache, synchronous_run=F
     )
 
     es = search_omero_app.config.get("es_connector")
-    search_omero_app.logger.info("====>>>>>Ids are  %s and resource is %s in data source %s"%(ids, resource, data_source))
+    search_omero_app.logger.info(
+        "====>>>>>Ids are  %s and resource is %s in data source %s"
+        % (ids, resource, data_source)
+    )
     ids = ids.split(",")
     for id_ in ids:
         no_images = get_number_of_images_inside_container(resource, data_source, id_)
