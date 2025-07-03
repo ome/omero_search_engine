@@ -1620,7 +1620,7 @@ def delete_container(ids, resource, data_source, update_cache, synchronous_run=F
         )
 
         container_delet_query = delete_container_query.substitute(
-            attribute="id", id=int(id), data_source=data_source
+            attribute="id", id=id, data_source=data_source
         )
 
         # Delete container
