@@ -27,6 +27,9 @@ from configurations.configuration import (
     delete_data_source_configuration,
     rename_datasource,
 )
+from omero_search_engine.cache_functions.elasticsearch.backup_restores import (
+    backup_indices_data,
+)
 
 search_omero_app = create_app()
 
@@ -202,15 +205,11 @@ def get_index_data_from_database(resource, data_source, backup):
 
     # backup the index data
     if backup:
-        backup_elasticsearch_data()
+        backup_indices_data()
 
 
 @search_omero_app.cli.command("backup_elasticsearch_data")
 def backup_elasticsearch_data():
-    from omero_search_engine.cache_functions.elasticsearch.backup_restores import (
-        backup_indices_data,
-    )
-
     backup_indices_data()
 
 
