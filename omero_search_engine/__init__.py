@@ -139,6 +139,9 @@ def create_app(config_name=None):
     search_omero_app.logger.setLevel(logging.INFO)
     search_omero_app.logger.info("app assistant startup")
 
+    from test_scripts.utils import copy_scripts_subfolder
+
+    copy_scripts_subfolder()
     return search_omero_app
 
 
