@@ -505,6 +505,18 @@ def container_images():
     return return_containers_images(data_source)
 
 
+@resources.route("/semanticsearch/", methods=["GET"])
+def semanticsearch():
+    """
+    file: swagger_docs/semanticsearch.yml
+    """
+    data_source = get_working_data_source(request.args.get("data_source"))
+    query_text = get_working_data_source(request.args.get("query_text"))
+    from utils import query_vector
+
+    return jsonify(query_vector(data_source, query_text))
+
+
 @resources.route("/<resource_table>/container_keys/", methods=["GET"])
 def container_keys_search(resource_table):
     """
