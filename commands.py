@@ -731,7 +731,7 @@ def index_container_from_database(
 
 
 @search_omero_app.cli.command("update_data_source_cache")
-@click.option("-d", "--working_data_source", default=None, help="data source")
+@click.option("-d", "--data_source", default=None, help="data source")
 def update_data_source_cache(data_source):
     from omero_search_engine.api.v1.resources.utils import update_data_source_cache
 
@@ -742,7 +742,7 @@ def update_data_source_cache(data_source):
 
 
 @search_omero_app.cli.command("delete_data_source_cache")
-@click.option("-d", "--working_data_source", default=None, help="data source")
+@click.option("-d", "--data_source", default=None, help="data source")
 def delete_data_source_cache(data_source):
     if not data_source:
         print("Data source is required")
