@@ -109,7 +109,8 @@ def get_all_indexes():
 
 def get_all_indexes_from_elasticsearch():
     es = search_omero_app.config.get("es_connector")
-    all_indexes = es.indices.get("*")
+    indices = es.cat.indices(format="json")
+    all_indexes = [index["index"] for index in indices]
     return all_indexes
 
 

@@ -111,11 +111,10 @@ def create_app(config_name=None):
     es_connector = Elasticsearch(
         app_config.ELASTICSEARCH_URL.split(","),
         verify_certs=app_config.verify_certs,
-        timeout=130,
+        request_timeout=130,
         max_retries=20,
         retry_on_timeout=True,
         connections_per_node=10,
-        scheme="https",
         http_auth=("elastic", ELASTIC_PASSWORD),
     )
     search_omero_app.config.database_connectors = app_config.database_connectors
