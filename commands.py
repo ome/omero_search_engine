@@ -509,9 +509,13 @@ def restore_elasticsearch_data():
     from omero_search_engine.cache_functions.elasticsearch.backup_restores import (
         restore_indices_data,
     )
+    from omero_search_engine.cache_functions.elasticsearch.transform_data import (  # noqa
+        delete_index,
+    )
+
+    delete_index("all", None)
 
     # first delete the current indices
-    delete_es_index("all")
     restore_indices_data()
 
 
