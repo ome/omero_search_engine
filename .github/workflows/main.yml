@@ -53,7 +53,7 @@ jobs:
           echo $PGPASSWORD
           psql -h localhost -U postgress -p ${{ job.services.postgres.ports[5432] }} -c 'CREATE DATABASE omero'
           # configure elasticsearch
-          flask set_elasticsearch_configuration -e localhost:${{ job.services.elasticsearch.ports[9200] }}
+          flask set_elasticsearch_configuration -e https://localhost:${{ job.services.elasticsearch.ports[9200] }}
           # download and extract the database backup file           
           wget https://downloads.openmicroscopy.org/public-resources/omero_db_searchengine.zip -P app_data
           unzip app_data/omero_db_searchengine.zip -d app_data/          
