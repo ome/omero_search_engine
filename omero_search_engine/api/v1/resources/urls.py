@@ -420,7 +420,7 @@ def submit_query():
     return_columns = request.args.get("return_columns")
     return_bff = request.args.get("return_bff")
     if return_bff:
-        return_bff=json.loads(return_bff)
+        return_bff = json.loads(return_bff)
     data_source = get_working_data_source(request.args.get("data_source"))
     if return_columns:
         try:
