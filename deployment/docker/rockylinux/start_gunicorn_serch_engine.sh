@@ -1,6 +1,5 @@
 #!/bin/sh
 NAME="omero_search_engine"
-# USER root
 APPPATH=/searchengine
 SOCKFILE=/etc/searchengine/sock3 #change this to project_dir/sock (new file will be created)
 echo "Starting $NAME as `whoami`"
