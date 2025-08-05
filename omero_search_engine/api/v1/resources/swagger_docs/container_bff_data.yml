@@ -1,0 +1,24 @@
+A searchengine endpoint to return the the BFF csv file for a container
+---
+tags:
+  - CSV file for a container, formatted in BFF
+parameters:
+  - name: container_name
+    description: The container name
+    in: query
+    type: string
+    required: true
+  - name: container_type
+    description: The container type (project or screen)
+    in: query
+    type: string
+    required: true
+  - name: data_source
+    description: Data source
+    in: query
+    type: string
+    required: false
+
+responses:
+  200:
+    description: A CSV file with BFF format

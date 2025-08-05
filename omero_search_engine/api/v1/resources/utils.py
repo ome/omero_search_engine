@@ -1764,3 +1764,42 @@ delete_datasource_query = Template(
                      }}}}]}}}
 """
 )
+
+
+def get_bff_csv_file_data(container_type, container_name, data_source):
+    import os
+
+    data_folder = search_omero_app.config.get("DATA_DUMP_FOLDER")
+    if not data_source:
+        data_source = search_omero_app.config.get("DEFAULT_DATASOURCE")
+    if container_type.lower() == "project":
+        file_path = "%s%s/csv_bff/projects/%s" % (
+            data_folder,
+            data_source,
+            container_name,
+        )
+    elif container_type.lower() == "screen":
+        file_path = "%s%s/csv_bff/screens/%s" % (
+            data_folder,
+            data_source,
+            container_name,
+        )
+    else:
+        return "Container type '%s' is not supported" % container_type
+    file_name_ = "%s.csv" % container_name.replace("/", "_")
+    file_name = os.path.join(file_path, file_name_)
+    if not os.path.exists(file_name):
+        import pandas as pd
+        import glob
+
+        files_list = glob.glob("%s/*.csv" % file_path)
+        df_list = []
+        # append all files together
+        for file in files_list:
+            df_ = pd.read_csv(file)
+            df_list.append(df_)
+        all_df = pd.concat(df_list)
+        all_df.to_csv(file_name, index=False)
+    from flask import send_file
+
+    return send_file(file_name, as_attachment=True, download_name=file_name_)
