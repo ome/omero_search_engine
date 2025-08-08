@@ -419,8 +419,17 @@ def submit_query():
     adjust_query_for_container(query)
     return_columns = request.args.get("return_columns")
     return_bff = request.args.get("return_bff")
+    from omero_search_engine import search_omero_app
+
+    # get the original page size
+    page_size = search_omero_app.config.get("PAGE_SIZE")
     if return_bff:
         return_bff = json.loads(return_bff)
+        # Temporary increase the results limits to MAX_PAGE_SIZE
+        if return_bff:
+            search_omero_app.config["PAGE_SIZE"] = search_omero_app.config.get(
+                "MAX_PAGE_SIZE"
+            )
     data_source = get_working_data_source(request.args.get("data_source"))
     if return_columns:
         try:
@@ -433,6 +442,8 @@ def submit_query():
             query, data_source=data_source, return_columns=return_columns
         )
         if return_bff:
+            # Restore the original page size
+            search_omero_app.config["PAGE_SIZE"] = page_size
             resource = "image"
             file_contents = write_BBF(
                 results.get("results").get("results"), return_contents=return_bff
@@ -464,6 +475,18 @@ def search(resource_table):
     bookmark = request.args.get("bookmark")
     data_source = get_working_data_source(request.args.get("data_source"))
     random_results = request.args.get("random_results")
+    from omero_search_engine import search_omero_app
+
+    # get the original page size
+    page_size = search_omero_app.config.get("PAGE_SIZE")
+    if return_bff:
+        return_bff = json.loads(return_bff)
+        # Temporary increase the results limits to MAX_PAGE_SIZE
+        if return_bff:
+            search_omero_app.config["PAGE_SIZE"] = search_omero_app.config.get(
+                "MAX_PAGE_SIZE"
+            )
+    data_source = get_working_data_source(request.args.get("data_source"))
     if random_results:
         if not random_results.isdigit():
             return build_error_message(
@@ -489,6 +512,8 @@ def search(resource_table):
         random_results=random_results,
     )
     if return_bff:
+        # restore the original page size
+        search_omero_app.config["PAGE_SIZE"] = page_size
         resource = "image"
         from utils import write_BBF
 
