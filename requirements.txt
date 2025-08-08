@@ -5,7 +5,7 @@ certifi==2025.6.15
 charset-normalizer==3.4.2
 click==8.2.1
 elastic-transport==8.17.1
-elasticsearch==9.0.2
+elasticsearch==9.1.0
 flasgger==0.9.7.1
 Flask==3.1.1
 flask-babel==4.0.0
@@ -36,4 +36,5 @@ tzdata==2025.2
 update==0.0.1
 urllib3==1.26.20
 watchdog==6.0.0
+
 Werkzeug==3.1.3
