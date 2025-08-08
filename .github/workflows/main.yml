@@ -24,7 +24,7 @@ jobs:
           --health-timeout 5s
           --health-retries 5
       elasticsearch:
-        image: elasticsearch:9.1.1
+        image: elastic/elasticsearch:9.1.1
         ports:
           - 9200/tcp
         env:
