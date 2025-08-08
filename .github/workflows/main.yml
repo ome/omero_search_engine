@@ -13,7 +13,7 @@ jobs:
         image: postgres:17
         env:
           POSTGRES_USER: postgress
-          POSTGRES_PASSWORD: passwprd
+          POSTGRES_PASSWORD: password
           POSTGRES_DB: postgress
           max_wal_size: 4GB
         ports:
@@ -48,8 +48,8 @@ jobs:
           # Configure database url    
           # rename data source 
           flask rename_data_source -c idr -n omero1          
-          flask set_database_configuration -u localhost -s  ${{ job.services.postgres.ports[5432] }} -n postgress -p passwprd -w omero1 -d omero -b omero.pgdump
-          export PGPASSWORD=passwprd;
+          flask set_database_configuration -u localhost -s  ${{ job.services.postgres.ports[5432] }} -n postgress -p password -w omero1 -d omero -b omero.pgdump
+          export PGPASSWORD=password;
           echo $PGPASSWORD
           psql -h localhost -U postgress -p ${{ job.services.postgres.ports[5432] }} -c 'CREATE DATABASE omero'
           # configure elasticsearch
@@ -57,17 +57,17 @@ jobs:
           # download and extract the database backup file           
           wget https://downloads.openmicroscopy.org/public-resources/omero_db_searchengine.zip -P app_data
           unzip app_data/omero_db_searchengine.zip -d app_data/          
-          # run  restore omero database
+          #  Restore OMERO database
           flask restore_postgresql_database
           # run indexing indexing
           flask get_index_data_from_database -b False
-          # set up the seond database
+          # Set up the second database
           rm app_data/omero_db_searchengine.zip
           rm app_data/omero.pgdump
           wget https://downloads.openmicroscopy.org/public-resources/omero_train.zip -P app_data
           unzip app_data/omero_train.zip -d app_data/
           rm app_data/omero_train.zip
-          flask set_database_configuration -u localhost -s  ${{ job.services.postgres.ports[5432] }} -n postgress -p passwprd -w omero_train -d omero_train -b omero_train.pgdump
+          flask set_database_configuration -u localhost -s  ${{ job.services.postgres.ports[5432] }} -n postgress -p password -w omero_train -d omero_train -b omero_train.pgdump
           echo $PGPASSWORD
           psql -h localhost -U postgress -p ${{ job.services.postgres.ports[5432] }} -c 'CREATE DATABASE omero_train'
           flask restore_postgresql_database -s omero_train
@@ -75,7 +75,7 @@ jobs:
           rm app_data/omero_train.pgdump
           # set csv data source
           flask set_data_source_files -n test_csv
-          # download images csv file
+          # download the images CSV file
           wget https://downloads.openmicroscopy.org/public-resources/test_images.zip -P app_data
           unzip app_data/test_images.zip -d app_data/
           rm app_data/test_images.zip
