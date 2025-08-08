@@ -1849,3 +1849,15 @@ delete_datasource_query = Template(
                      }}}}]}}}
 """
 )
+
+
+def change_es_maximum_results_rows():
+    es = search_omero_app.config.get("es_connector")
+    alias_dict = es.indices.get_alias(index="*")
+    index_list = [idx for idx in alias_dict.keys() if not idx.startswith(".")]
+
+    for index in index_list:
+        es.indices.put_settings(
+            index=index, body={"index": {"max_result_window": 30000}}
+        )
+        print(f"Updated {index}")
