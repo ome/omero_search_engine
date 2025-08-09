@@ -12,7 +12,7 @@ jobs:
       postgres:
         image: postgres:17
         env:
-          POSTGRES_USER: postgress
+          POSTGRES_USER: postgres
           POSTGRES_PASSWORD: password
           POSTGRES_DB: postgress
           max_wal_size: 4GB
@@ -48,10 +48,10 @@ jobs:
           # Configure database url    
           # rename data source 
           flask rename_data_source -c idr -n omero1          
-          flask set_database_configuration -u localhost -s  ${{ job.services.postgres.ports[5432] }} -n postgress -p password -w omero1 -d omero -b omero.pgdump
+          flask set_database_configuration -u localhost -s  ${{ job.services.postgres.ports[5432] }} -n postgres -p password -w omero1 -d omero -b omero.pgdump
           export PGPASSWORD=password;
           echo $PGPASSWORD
-          psql -h localhost -U postgress -p ${{ job.services.postgres.ports[5432] }} -c 'CREATE DATABASE omero'
+          psql -h localhost -U postgres -p ${{ job.services.postgres.ports[5432] }} -c 'CREATE DATABASE omero'
           # configure elasticsearch
           flask set_elasticsearch_configuration -e https://localhost:${{ job.services.elasticsearch.ports[9200] }}
           # download and extract the database backup file           
@@ -67,9 +67,9 @@ jobs:
           wget https://downloads.openmicroscopy.org/public-resources/omero_train.zip -P app_data
           unzip app_data/omero_train.zip -d app_data/
           rm app_data/omero_train.zip
-          flask set_database_configuration -u localhost -s  ${{ job.services.postgres.ports[5432] }} -n postgress -p password -w omero_train -d omero_train -b omero_train.pgdump
+          flask set_database_configuration -u localhost -s  ${{ job.services.postgres.ports[5432] }} -n postgres -p password -w omero_train -d omero_train -b omero_train.pgdump
           echo $PGPASSWORD
-          psql -h localhost -U postgress -p ${{ job.services.postgres.ports[5432] }} -c 'CREATE DATABASE omero_train'
+          psql -h localhost -U postgres -p ${{ job.services.postgres.ports[5432] }} -c 'CREATE DATABASE omero_train'
           flask restore_postgresql_database -s omero_train
           flask get_index_data_from_database -b False -d omero_train
           rm app_data/omero_train.pgdump
