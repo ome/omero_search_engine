@@ -31,11 +31,9 @@ def create_container_folder(parent_folder, container_name=None):
             os.makedirs(folder, exist_ok=True)
         return folder
 
-
 def dump_data(target_folder, id, resource, over_write, bbf_format, data_source="idr"):
     from datetime import datetime
     from omero_search_engine.api.v1.resources.utils import get_working_data_source
-
     data_source = get_working_data_source(data_source)
     start_time = datetime.now()
     totalrecords = 0
@@ -56,6 +54,7 @@ def dump_data(target_folder, id, resource, over_write, bbf_format, data_source="
             else:
                 continue
         print(container["type"], container["name"])
+
         sub_containers = get_containers_no_images(
             container["name"],
             container["id"],
@@ -73,6 +72,7 @@ def dump_data(target_folder, id, resource, over_write, bbf_format, data_source="
         #  make it working folder
         #  save sub-container json file using file name
         for sub_container in sub_containers["results"]["results"]:
+            print (sub_container)
             if bbf_format:
                 file_name = os.path.join(
                     container_folder, "%s.csv" % sub_container["name"].replace("/", "_")
@@ -102,9 +102,13 @@ def dump_data(target_folder, id, resource, over_write, bbf_format, data_source="
                 ]
             }
 
+            print (main_attributes_query)
+
+
             results = get_subcontainer_data(
                 query, main_attributes_query, data_source, duplicated
             )
+            print (len(results))
             if bbf_format:
                 write_BBF(results, container_type, file_name)
             else:
@@ -167,7 +171,6 @@ def get_subcontainer_data(query, main_attributes, data_source, duplicated):
     pagination_dict = returned_results["results"].get("pagination")
 
     page = pagination_dict["current_page"]
-
     search_omero_app.logger.info(
         "page: %s, received results: %s"
         % (
@@ -177,6 +180,7 @@ def get_subcontainer_data(query, main_attributes, data_source, duplicated):
     )
     bookmark = get_bookmark(pagination_dict)
     page = pagination_dict["next_page"]
+    print (bookmark)
     ids = []
     while page:
         query_data = {
@@ -188,7 +192,7 @@ def get_subcontainer_data(query, main_attributes, data_source, duplicated):
             "image",
             query_data,
             raw_elasticsearch_query=None,
-            bookmark=None,
+            bookmark=bookmark,
             pagination_dict=None,
             return_containers=False,
             data_source=data_source,
@@ -215,8 +219,12 @@ def get_subcontainer_data(query, main_attributes, data_source, duplicated):
                 (str(received_results) + "/" + str(total_results)),
             )
         )
-        page = pagination_dict.get("next_page")
+        if pagination_dict:
+            page = pagination_dict.get("next_page")
+        else:
+            break
         bookmark = get_bookmark(pagination_dict)
+
 
     search_omero_app.logger.info(
         "Total received results: %s" % len(received_results_data)
@@ -231,7 +239,6 @@ def save_results_file(results, file_name="results.json"):
 
 def write_BBF(results, resource, file_name):
     import pandas as pd
-
     to_ignore_list = {
         "project": [
             "dataset_id",
@@ -265,9 +272,11 @@ def write_BBF(results, resource, file_name):
     }
     col_converter = {"image_url": "File Path", "thumb_url": "Thumbnail"}
     lines = []
+    count =0
     for row_ in results:
         line = {}
         lines.append(line)
+        count+=1
         for name, item in row_.items():
             if name in to_ignore_list[resource]:
                 continue
@@ -279,7 +288,6 @@ def write_BBF(results, resource, file_name):
                     line[col_converter[name]] = item
                 else:
                     line[name] = item
-
     df = pd.DataFrame(lines)
     df.to_csv(file_name)
     print(len(lines))
