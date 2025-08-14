@@ -117,6 +117,8 @@ def dump_data(target_folder, id, resource, over_write, bbf_format, data_source="
             totalrecords += len(results)
         if found:
             break
+        if bbf_format:
+            get_bff_csv_file_data_(container_type, container_name, data_source)
 
     end_time = datetime.now()
     search_omero_app.logger.info("Elapsed time: : %s" % (end_time - start_time))
@@ -219,11 +221,8 @@ def get_subcontainer_data(query, main_attributes, data_source, duplicated):
                 (str(page) + "/" + str(total_pages)),
                 (str(received_results) + "/" + str(total_results)),
             )
-        )
-        if pagination_dict:
-            page = pagination_dict.get("next_page")
-        else:
-            break
+        )        
+        page = pagination_dict.get("next_page")              
         bookmark = get_bookmark(pagination_dict)
 
     search_omero_app.logger.info(
