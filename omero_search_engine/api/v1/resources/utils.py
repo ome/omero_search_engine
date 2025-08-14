@@ -1798,8 +1798,9 @@ def get_bff_csv_file_data(container_type, container_name, data_source):
         for file in files_list:
             df_ = pd.read_csv(file)
             df_list.append(df_)
-        all_df = pd.concat(df_list)
-        all_df.to_csv(file_name, index=False)
+        if len(df_list) > 0:
+            all_df = pd.concat(df_list)
+            all_df.to_csv(file_name, index=False)
     from flask import send_file
 
     return send_file(file_name, as_attachment=True, download_name=file_name_)
