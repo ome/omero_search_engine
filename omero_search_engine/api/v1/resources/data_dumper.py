@@ -221,8 +221,8 @@ def get_subcontainer_data(query, main_attributes, data_source, duplicated):
                 (str(page) + "/" + str(total_pages)),
                 (str(received_results) + "/" + str(total_results)),
             )
-        )        
-        page = pagination_dict.get("next_page")              
+        )
+        page = pagination_dict.get("next_page")
         bookmark = get_bookmark(pagination_dict)
 
     search_omero_app.logger.info(
