@@ -194,7 +194,7 @@ def get_subcontainer_data(query, main_attributes, data_source, duplicated):
             query_data,
             raw_elasticsearch_query=None,
             bookmark=bookmark,
-            pagination_dict=None,
+            pagination_dict=pagination_dict,
             return_containers=False,
             data_source=data_source,
         )
