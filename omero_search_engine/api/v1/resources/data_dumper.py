@@ -34,7 +34,7 @@ def create_container_folder(parent_folder, container_name=None):
 
 def dump_data(target_folder, id, resource, over_write, bbf_format, data_source="idr"):
     from datetime import datetime
-    from omero_search_engine.api.v1.resources.utils  import (
+    from omero_search_engine.api.v1.resources.utils import (
         get_working_data_source,
         get_bff_csv_file_data_,
     )
