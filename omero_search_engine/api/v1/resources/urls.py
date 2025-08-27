@@ -664,3 +664,27 @@ def container_key_values_filter(resource_table):
         key=key,
         query=query,
     )
+
+
+@resources.route("/container_bff_data/", methods=["GET"])
+def get_container_bff_data():
+    """
+    file: swagger_docs/container_bff_data.yml
+    """
+    supported_file_types = ["csv", "parquet"]
+    container_type = request.args.get("container_type")
+    container_name = request.args.get("container_name")  #
+    data_source = request.args.get("data_source")
+    file_type = request.args.get("file_type")
+    if not file_type:
+        file_type = "parquet"
+    if file_type.lower() not in supported_file_types:
+        return "File type '%s' is not supported" % file_type
+
+    if not container_name or not container_type:
+        return "Both container type and name are required attributes."
+    from utils import get_bff_csv_file_data
+
+    return get_bff_csv_file_data(
+        container_type, container_name, file_type.lower(), data_source
+    )

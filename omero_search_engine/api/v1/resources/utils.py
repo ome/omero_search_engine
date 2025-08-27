@@ -1861,3 +1861,26 @@ def change_es_maximum_results_rows():
             index=index, body={"index": {"max_result_window": 30000}}
         )
         print(f"Updated {index}")
+
+
+def get_bff_csv_file_data(container_type, container_name, file_type, data_source):
+
+    if not data_source:
+        data_source = search_omero_app.config.get("DEFAULT_DATASOURCE")
+    if container_type.lower() == "project":
+        file_path = "/projects/%s" % (container_name,)
+    elif container_type.lower() == "screen":
+        file_path = "/screens/%s" % (container_name,)
+    else:
+        return "Container type '%s' is not supported" % container_type
+    if file_type == "csv":
+        file_name_ = "%s.csv" % container_name.replace("/", "_")
+    else:
+        file_name_ = "%s.parquet" % container_name.replace("/", "_")
+
+    response = Response()
+    response.headers["Content-Type"] = "application/octet-stream"
+    response.headers["Content-Disposition"] = f'attachment; filename="{file_name_}"'
+    response.headers["X-Accel-Redirect"] = f"/send_file/{file_path}/{file_name_}"
+
+    return response
