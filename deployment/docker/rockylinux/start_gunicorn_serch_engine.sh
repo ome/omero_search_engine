@@ -19,8 +19,8 @@ echo "$HOME"
 echo pwd
 cd $APPPATH
 if [ -z  "$@" ]; then
-  exec gunicorn "omero_search_engine:create_app('production')" -b 0.0.0.0:5577 --timeout 0 --name "$NAME"   --bind=unix:$SOCKFILE  --log-file=$LOGSDIR/logs/engine_gunilog.log --access-logfile=$LOGSDIR/logs/engine_access.log -error-logfile=$LOGSDIR/logs/engine_logs/engine_error.log  --workers 4
+  exec gunicorn "omero_search_engine:create_app('production')" -b 0.0.0.0:5577 --timeout 0 --name "$NAME"   --bind=unix:$SOCKFILE  --log-file=$LOGSDIR/logs/engine_gunilog.log --access-logfile=$LOGSDIR/logs/engine_access.log -error-logfile=$LOGSDIR/logs/engine_logs/engine_error.log  --workers 8
 else
   echo Run with SCRIPT_NAME=$@
-  SCRIPT_NAME=/"$@"/ exec gunicorn "omero_search_engine:create_app('production')" -b 0.0.0.0:5577 --timeout 0 --name "$NAME"   --bind=unix:$SOCKFILE  --log-file=$LOGSDIR/logs/engine_gunilog.log --access-logfile=$LOGSDIR/logs/engine_access.log -error-logfile=$LOGSDIR/logs/engine_logs/engine_error.log  --workers 4
+  SCRIPT_NAME=/"$@"/ exec gunicorn "omero_search_engine:create_app('production')" -b 0.0.0.0:5577 --timeout 0 --name "$NAME"   --bind=unix:$SOCKFILE  --log-file=$LOGSDIR/logs/engine_gunilog.log --access-logfile=$LOGSDIR/logs/engine_access.log -error-logfile=$LOGSDIR/logs/engine_logs/engine_error.log  --workers 8
 fi
