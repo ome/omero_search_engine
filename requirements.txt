@@ -33,4 +33,4 @@ wcwidth==0.2.5
 Werkzeug==1.0.1
 bump2version==1.0.1
 watchdog==6.0.0
-fastparquet==2024.11.0
+fastparquet
