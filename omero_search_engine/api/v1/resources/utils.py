@@ -1519,12 +1519,13 @@ def delete_data_source_cache(data_source):
 def get_number_of_images_inside_container(resource_table, data_source, id):
     name_result = get_all_index_data(resource_table, data_source)
     no_images_co = 0
-    for res in name_result["results"]["results"]:
-        if res.get("id") == int(id):
-            no_images_co = get_number_image_inside_container(
-                resource_table, id, data_source
-            )
-            break
+    if name_result.get("results") and name_result.get("results").get("results"):
+        for res in name_result["results"]["results"]:
+            if res.get("id") == int(id):
+                no_images_co = get_number_image_inside_container(
+                    resource_table, id, data_source
+                )
+                break
     return no_images_co
 
 
@@ -1553,13 +1554,17 @@ def delete_container(ids, resource, data_source, update_cache, synchronous_run=F
     )
 
     es = search_omero_app.config.get("es_connector")
+    search_omero_app.logger.info(
+        "====>>>>>Ids are  %s and resource is %s in data source %s"
+        % (ids, resource, data_source)
+    )
     ids = ids.split(",")
-    for id in ids:
-        no_images = get_number_of_images_inside_container(resource, data_source, id)
+    for id_ in ids:
+        no_images = get_number_of_images_inside_container(resource, data_source, id_)
         if no_images == 0:
             search_omero_app.logger.info(
                 "The requested %s with ID=%s does not correspond to any existing one."
-                % (resource, id)
+                % (resource, id_)
             )
             return
         elif no_images > 740000 and synchronous_run:
@@ -1568,12 +1573,12 @@ def delete_container(ids, resource, data_source, update_cache, synchronous_run=F
                 "Due to the high number of images in the %s with ID=%s, "
                 "an asynchronous delete operation is highly advised. "
                 "\nPlease rerun with asynchronous deletion enable (-s False)."
-                % (resource, id)
+                % (resource, id_)
             )
             return
 
         sub_containers = get_containers_no_images(
-            container_id=id, data_source=data_source, resource=resource
+            container_id=id_, data_source=data_source, resource=resource
         )
         if (
             type(sub_containers) is not str
@@ -1611,16 +1616,16 @@ def delete_container(ids, resource, data_source, update_cache, synchronous_run=F
                 )
         attribute = "%s_id" % resource
         image_delet_query = delete_container_query.substitute(
-            attribute=attribute, id=id, data_source=data_source
+            attribute=attribute, id=id_, data_source=data_source
         )
 
         container_delet_query = delete_container_query.substitute(
-            attribute="id", id=int(id), data_source=data_source
+            attribute="id", id=id_, data_source=data_source
         )
 
         # Delete container
         search_omero_app.logger.info(
-            "Delete %s with Id %s from data source: %s" % (resource, id, data_source)
+            "Delete %s with Id %s from data source: %s" % (resource, id_, data_source)
         )
         delete_container_res = es.delete_by_query(
             index=resource_elasticsearchindex[resource],

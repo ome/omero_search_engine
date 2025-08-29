@@ -14,5 +14,6 @@ elif [ -z  "$@" ] || [ "$@" = "run_app" ]; then
   bash start_gunicorn_serch_engine.sh
 else
   echo "$@"
-  python3 manage.py "$@"
+  export FLASK_APP=commands.py
+  flask "$@"
 fi

@@ -47,12 +47,17 @@ class BasicTestCase(unittest.TestCase):
         pass
 
     def test_delete_index_one_container(self):
-        from manage import (
-            delete_data_source,
-        )
+        from configurations.configuration import delete_data_source_configuration
 
         data_source = "omero_train"
-        delete_data_source(data_source)
+        from omero_search_engine.api.v1.resources.utils import (
+            delete_data_source_contents,
+        )
+
+        found = delete_data_source_contents(data_source)
+        if found:
+            delete_data_source_configuration(data_source)
+
         from omero_search_engine.api.v1.resources.utils import get_data_sources
         import time
 
