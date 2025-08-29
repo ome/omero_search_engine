@@ -452,7 +452,10 @@ def cache_key_value_index(resource, data_source, create_index, only_values):
     "-d",
     "--deep_check",
     default=False,
-    help="compare all the images from both search engine and database server, default is False so it will compare the number of images and the first searchengine page",  # noqa
+    help="compare all the images from both search engine and database server, "
+    "default is False so it will compare the number of images "
+    "and the first searchengine page",
+    # noqa
 )
 @click.option(
     "-s",
@@ -509,13 +512,12 @@ def restore_elasticsearch_data():
     from omero_search_engine.cache_functions.elasticsearch.backup_restores import (
         restore_indices_data,
     )
-    from omero_search_engine.cache_functions.elasticsearch.transform_data import (  # noqa
+    from omero_search_engine.cache_functions.elasticsearch.transform_data import (  # noqapip
         delete_index,
     )
 
-    delete_index("all", None)
-
     # first delete the current indices
+    delete_index("all")
     restore_indices_data()
 
 
@@ -781,4 +783,55 @@ def set_automatic_refresh(automatic_refresh):
     update_config_file({"AUTOMATIC_REFRESH": automatic_refresh})
 
 
+@search_omero_app.cli.command("dump_searchengine_data")
+@click.option("-d", "--data_source", default=None, help="data source")
+@click.option("-t", "--target_folder", default=None, help="folder to save the files to")
+@click.option(
+    "-r", "--resource", default=None, help="resource name,  i.e. project or screen"
+)
+@click.option("-i", "--id", default=None, help="resource id")
+@click.option(
+    "-o",
+    "--over_write",
+    default=True,
+    help="Over written current data if True, default",
+)
+@click.option(
+    "-b",
+    "--bb_formate",
+    default=False,
+    help="write csv file format instead of json if the value is true",
+)
+def dump_searchengine_data(
+    data_source,
+    target_folder,
+    id,
+    resource,
+    over_write,
+    bb_formate,
+):
+    from omero_search_engine.api.v1.resources.data_dumper import dump_data
+
+    dump_data(target_folder, id, resource, over_write, bb_formate, data_source)
+
+
+@search_omero_app.cli.command("create_container_csv")
+@click.option("-d", "--data_source", default=None, help="data source")
+@click.option("-t", "--container_type", default=None, help="container_type")
+@click.option("-n", "--container_name", default=None, help="container_name")
+def create_container_csv(data_source, container_type, container_name):
+    from omero_search_engine.api.v1.resources.utils import get_bff_csv_file_data_
+
+    get_bff_csv_file_data_(container_type, container_name, data_source)
+
+
 # export FLASK_APP=commands.py
+
+
+@search_omero_app.cli.command("update_es_maximum_results")
+def update_es_maximum_results():
+    from omero_search_engine.api.v1.resources.utils import (
+        change_es_maximum_results_rows,
+    )
+
+    change_es_maximum_results_rows()

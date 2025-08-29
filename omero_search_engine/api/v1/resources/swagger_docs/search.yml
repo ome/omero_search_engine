@@ -41,6 +41,11 @@ parameters:
     in: query
     type: boolean
     required: false
+  - name: return_bff
+    description: return csv file with BFF format
+    in: query
+    type: boolean
+    required: false
   - name: data_source
     in: query
     type: string

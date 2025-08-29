@@ -19,6 +19,7 @@
 
 from . import resources
 from flask import request, jsonify, make_response
+
 import json
 from omero_search_engine.api.v1.resources.utils import (
     search_resource_annotation,
@@ -38,7 +39,11 @@ from omero_search_engine.api.v1.resources.resource_analyser import (
     query_cached_bucket_part_value_keys,
     return_containers_images,
 )
-from omero_search_engine.api.v1.resources.utils import get_resource_annotation_table
+from omero_search_engine.api.v1.resources.utils import (
+    get_resource_annotation_table,
+    create_bff_file_response,
+    write_BBF,
+)
 from omero_search_engine.api.v1.resources.query_handler import (
     determine_search_results_,
     simple_search,
@@ -413,6 +418,18 @@ def submit_query():
         return jsonify(build_error_message("No query is provided"))
     adjust_query_for_container(query)
     return_columns = request.args.get("return_columns")
+    return_bff = request.args.get("return_bff")
+    from omero_search_engine import search_omero_app
+
+    # get the original page size
+    page_size = search_omero_app.config.get("PAGE_SIZE")
+    if return_bff:
+        return_bff = json.loads(return_bff)
+        # Temporary increase the results limits to MAX_PAGE_SIZE
+        if return_bff:
+            search_omero_app.config["PAGE_SIZE"] = search_omero_app.config.get(
+                "MAX_PAGE_SIZE"
+            )
     data_source = get_working_data_source(request.args.get("data_source"))
     if return_columns:
         try:
@@ -421,11 +438,25 @@ def submit_query():
             return_columns = False
     validation_results = query_validator(query)
     if validation_results == "OK":
-        return jsonify(
-            determine_search_results_(
-                query, data_source=data_source, return_columns=return_columns
-            )
+        results = determine_search_results_(
+            query, data_source=data_source, return_columns=return_columns
         )
+        if return_bff:
+            # Restore the original page size
+            search_omero_app.config["PAGE_SIZE"] = page_size
+            resource = "image"
+            file_contents = write_BBF(
+                results.get("results").get("results"), return_contents=return_bff
+            )
+            return create_bff_file_response(
+                file_contents,
+                results.get("results").get("bookmark"),
+                results.get("results").get("pagination"),
+                resource,
+            )
+        else:
+            return jsonify(results)
+
     else:
         return jsonify(build_error_message(validation_results))
 
@@ -438,11 +469,24 @@ def search(resource_table):
     key = request.args.get("key")
     value = request.args.get("value")
     study = request.args.get("study")
+    return_bff = request.args.get("return_bff")
     case_sensitive = request.args.get("case_sensitive")
     operator = request.args.get("operator")
     bookmark = request.args.get("bookmark")
     data_source = get_working_data_source(request.args.get("data_source"))
     random_results = request.args.get("random_results")
+    from omero_search_engine import search_omero_app
+
+    # get the original page size
+    page_size = search_omero_app.config.get("PAGE_SIZE")
+    if return_bff:
+        return_bff = json.loads(return_bff)
+        # Temporary increase the results limits to MAX_PAGE_SIZE
+        if return_bff:
+            search_omero_app.config["PAGE_SIZE"] = search_omero_app.config.get(
+                "MAX_PAGE_SIZE"
+            )
+    data_source = get_working_data_source(request.args.get("data_source"))
     if random_results:
         if not random_results.isdigit():
             return build_error_message(
@@ -467,6 +511,18 @@ def search(resource_table):
         return_containers,
         random_results=random_results,
     )
+    if return_bff:
+        # restore the original page size
+        search_omero_app.config["PAGE_SIZE"] = page_size
+        resource = "image"
+        from utils import write_BBF
+
+        file_contents = write_BBF(
+            results.get("results").get("results"), return_contents=return_bff
+        )
+        bookmark = results.get("results").get("bookmark")
+        pagination = results.get("results").get("pagination")
+        return create_bff_file_response(file_contents, bookmark, pagination, resource)
     return jsonify(results)
 
 
@@ -607,4 +663,28 @@ def container_key_values_filter(resource_table):
         ret_data_source=data_source,
         key=key,
         query=query,
+    )
+
+
+@resources.route("/container_bff_data/", methods=["GET"])
+def get_container_bff_data():
+    """
+    file: swagger_docs/container_bff_data.yml
+    """
+    supported_file_types = ["csv", "parquet"]
+    container_type = request.args.get("container_type")
+    container_name = request.args.get("container_name")  #
+    data_source = request.args.get("data_source")
+    file_type = request.args.get("file_type")
+    if not file_type:
+        file_type = "parquet"
+    if file_type.lower() not in supported_file_types:
+        return "File type '%s' is not supported" % file_type
+
+    if not container_name or not container_type:
+        return "Both container type and name are required attributes."
+    from utils import get_bff_csv_file_data
+
+    return get_bff_csv_file_data(
+        container_type, container_name, file_type.lower(), data_source
     )

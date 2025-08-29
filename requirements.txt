@@ -36,6 +36,5 @@ tzdata==2025.2
 update==0.0.1
 urllib3==1.26.20
 watchdog==6.0.0
-
+fastparquet==2024.11.0
 Werkzeug==3.1.3
-

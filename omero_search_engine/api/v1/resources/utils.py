@@ -28,6 +28,7 @@ import time
 from omero_search_engine import search_omero_app
 from string import Template
 from app_data.data_attrs import annotation_resource_link
+from flask import Response
 
 contain_list = ["contains", "not_contains"]
 main_dir = os.path.abspath(os.path.dirname(__file__))
@@ -1729,6 +1730,90 @@ def delete_data_source_contents(data_source):
     return found
 
 
+def write_BBF(results, file_name=None, return_contents=False):
+    import pandas as pd
+
+    print("=====================================")
+    print(type(results))
+    print("=====================================")
+
+    to_ignore_list = {
+        "project": [
+            "dataset_id",
+            "dataset_name",
+            "doc_type",
+            "experiment",
+            "group_id",
+            "image_size",
+            "owner_id",
+            "plate_id",
+            "plate_name",
+            "screen_name",
+            "screen_id",
+            "well_id",
+            "wellsample_id",
+        ],
+        "screen": [
+            "dataset_id",
+            "dataset_name",
+            "doc_type",
+            "experiment",
+            "group_id",
+            "image_size",
+            "owner_id",
+            "dataset_name",
+            "project_id",
+            "project_name",
+            "well_id",
+            "wellsample_id",
+        ],
+    }
+    col_converter = {"image_url": "File Path", "thumb_url": "Thumbnail"}
+    lines = []
+    for row_ in results:
+        line = {}
+        lines.append(line)
+        print(row_)
+        print("========================")
+        if row_.get("project_id"):
+            resource = "project"
+        else:
+            resource = "screen"
+        for name, item in row_.items():
+            print(name)
+            print("###############################")
+            if name in to_ignore_list[resource]:
+                continue
+            if name == "key_values" and len(item) > 0:
+                for row in item:
+                    line[row["name"]] = row["value"]
+            else:
+                if name in col_converter:
+                    line[col_converter[name]] = item
+                else:
+                    line[name] = item
+
+    df = pd.DataFrame(lines)
+    if return_contents:
+        return df.to_csv()
+    df.to_csv(file_name)
+    print(len(lines))
+
+
+def create_bff_file_response(file_contents, bookmark, pagination, resource):
+    file_name = "bff"
+    return Response(
+        file_contents,
+        mimetype="text/csv",
+        headers={
+            "Content-disposition": "attachment; filename=%s_%s.csv"
+            % (file_name, resource),
+            "bookmark": bookmark,
+            "pagination": pagination,
+        },
+    )
+
+
 delete_container_query = Template(
     """
 {"query":{
@@ -1769,3 +1854,80 @@ delete_datasource_query = Template(
                      }}}}]}}}
 """
 )
+
+
+def change_es_maximum_results_rows():
+    es = search_omero_app.config.get("es_connector")
+    alias_dict = es.indices.get_alias(index="*")
+    index_list = [idx for idx in alias_dict.keys() if not idx.startswith(".")]
+
+    for index in index_list:
+        es.indices.put_settings(
+            index=index, body={"index": {"max_result_window": 30000}}
+        )
+        print(f"Updated {index}")
+
+
+def get_bff_csv_file_data(container_type, container_name, file_type, data_source):
+
+    if not data_source:
+        data_source = search_omero_app.config.get("DEFAULT_DATASOURCE")
+    if container_type.lower() == "project":
+        file_path = "/projects/%s" % (container_name,)
+    elif container_type.lower() == "screen":
+        file_path = "/screens/%s" % (container_name,)
+    else:
+        return "Container type '%s' is not supported" % container_type
+    if file_type == "csv":
+        file_name_ = "%s.csv" % container_name.replace("/", "_")
+    else:
+        file_name_ = "%s.parquet" % container_name.replace("/", "_")
+    # file_name = os.path.join(file_path, file_name_)
+    response = Response()
+    response.headers["Content-Type"] = "application/octet-stream"
+    response.headers["Content-Disposition"] = f'attachment; filename="{file_name_}"'
+    response.headers["X-Accel-Redirect"] = f"/send_file/{file_path}/{file_name_}"
+    return response
+
+
+def get_bff_csv_file_data_(container_type, container_name, data_source):
+    import os
+
+    data_folder = search_omero_app.config.get("DATA_DUMP_FOLDER")
+    if not data_source:
+        data_source = search_omero_app.config.get("DEFAULT_DATASOURCE")
+    if container_type.lower() == "project":
+        file_path = "%s%s/csv_bff/projects/%s" % (
+            data_folder,
+            data_source,
+            container_name,
+        )
+    elif container_type.lower() == "screen":
+        file_path = "%s%s/csv_bff/screens/%s" % (
+            data_folder,
+            data_source,
+            container_name,
+        )
+    else:
+        return "Container type '%s' is not supported" % container_type
+    file_name_ = "%s.csv" % container_name.replace("/", "_")
+    file_name = os.path.join(file_path, file_name_)
+    print("File name: %s" % file_name)
+    if not os.path.exists(file_name):
+        import pandas as pd
+        import glob
+
+        files_list = glob.glob("%s/*.csv" % file_path)
+        df_list = []
+        # append all files together
+        for file in files_list:
+            df_ = pd.read_csv(file)
+            df_list.append(df_)
+        if len(df_list) > 0:
+            all_df = pd.concat(df_list)
+            all_df.to_csv(file_name, index=False)
+            all_df.to_parquet(
+                "%s.parquet" % file_name.replace(".csv", ""),
+                engine="fastparquet",
+                index=False,
+            )

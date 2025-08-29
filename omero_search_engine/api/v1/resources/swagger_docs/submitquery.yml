@@ -100,6 +100,10 @@ parameters:
     description: return additional columns to help display the results in a table
     in: query
     type: boolean
+  - name: return_bff
+    description: return csv file with BFF format
+    in: query
+    type: boolean
     required: false
   - name: data
     in: body
