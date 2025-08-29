@@ -109,7 +109,8 @@ def get_all_indexes():
 
 def get_all_indexes_from_elasticsearch():
     es = search_omero_app.config.get("es_connector")
-    all_indexes = es.indices.get("*")
+    indices = es.cat.indices(format="json")
+    all_indexes = [index["index"] for index in indices]
     return all_indexes
 
 
@@ -1093,3 +1094,45 @@ def prepare_bucket_index_data(results, res_table, data_source, es_index):
 def determine_cashed_bucket(attribute, resource, es_indrx):
     res = query_cached_bucket(attribute, resource, es_indrx)
     search_omero_app.logger.info(res)
+
+
+def index_container_from_database_(
+    resource,
+    data_source,
+    id,
+    backup,
+    update_cache,
+    number_of_processors=2,
+):
+    resources_index = {
+        "project": ["image", "project"],
+        "screen": ["image", "screen", "well", "plate"],
+    }
+
+    # from omero_search_engine.api.v1.resources.utils import update_data_source_cache
+
+    import time
+
+    for res in resources_index[resource]:
+        index_containers_from_database(
+            resource, res, id, data_source, number_of_processors
+        )
+        time.sleep(60)
+
+    if update_cache:
+        from omero_search_engine.api.v1.resources.utils import update_data_source_cache
+
+        update_data_source_cache(data_source)
+    else:
+        from omero_search_engine.api.v1.resources.utils import delete_data_source_cache
+
+        delete_data_source_cache(data_source)
+
+    # backup the index data
+    if backup:
+        from omero_search_engine.cache_functions.elasticsearch.backup_restores import (
+            backup_indices_data,
+        )
+
+        backup_indices_data()
+    time.sleep(60)

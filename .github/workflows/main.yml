@@ -7,13 +7,13 @@ on:
     branches: [ main ]
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     services:
       postgres:
         image: postgres:17
         env:
-          POSTGRES_USER: postgress
-          POSTGRES_PASSWORD: passwprd
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
           POSTGRES_DB: postgress
           max_wal_size: 4GB
         ports:
@@ -24,7 +24,7 @@ jobs:
           --health-timeout 5s
           --health-retries 5
       elasticsearch:
-        image: elasticsearch:8.8.1
+        image: elastic/elasticsearch:9.1.1
         ports:
           - 9200/tcp
         env:
@@ -35,54 +35,55 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - name: Set up Python 3.9
+      - name: Set up Python 3.12
         uses: actions/setup-python@v4
         with:
-          python-version: 3.9
+          python-version: 3.12
       #test the app before bulding the image
       - name: Install dependencies and test
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt;
+          python3 -m pip install --upgrade pip
+          pip3 install -r requirements.txt
+          export FLASK_APP=commands.py
           # Configure database url    
           # rename data source 
-          python manage.py rename_data_source -c idr -n omero1          
-          python manage.py set_database_configuration -u localhost -s  ${{ job.services.postgres.ports[5432] }} -n postgress -p passwprd -w omero1 -d omero -b omero.pgdump
-          export PGPASSWORD=passwprd;
+          flask rename_data_source -c idr -n omero1          
+          flask set_database_configuration -u localhost -s  ${{ job.services.postgres.ports[5432] }} -n postgres -p password -w omero1 -d omero -b omero.pgdump
+          export PGPASSWORD=password;
           echo $PGPASSWORD
-          psql -h localhost -U postgress -p ${{ job.services.postgres.ports[5432] }} -c 'CREATE DATABASE omero'
+          psql -h localhost -U postgres -p ${{ job.services.postgres.ports[5432] }} -c 'CREATE DATABASE omero'
           # configure elasticsearch
-          python manage.py set_elasticsearch_configuration -e localhost:${{ job.services.elasticsearch.ports[9200] }}
+          flask set_elasticsearch_configuration -e https://localhost:${{ job.services.elasticsearch.ports[9200] }}
           # download and extract the database backup file           
           wget https://downloads.openmicroscopy.org/public-resources/omero_db_searchengine.zip -P app_data
           unzip app_data/omero_db_searchengine.zip -d app_data/          
-          # run  restore omero database
-          python manage.py restore_postgresql_database
+          #  Restore OMERO database
+          flask restore_postgresql_database
           # run indexing indexing
-          python manage.py get_index_data_from_database -b False
-          # set up the seond database
+          flask get_index_data_from_database -b False
+          # Set up the second database
           rm app_data/omero_db_searchengine.zip
           rm app_data/omero.pgdump
           wget https://downloads.openmicroscopy.org/public-resources/omero_train.zip -P app_data
           unzip app_data/omero_train.zip -d app_data/
           rm app_data/omero_train.zip
-          python manage.py set_database_configuration -u localhost -s  ${{ job.services.postgres.ports[5432] }} -n postgress -p passwprd -w omero_train -d omero_train -b omero_train.pgdump
+          flask set_database_configuration -u localhost -s  ${{ job.services.postgres.ports[5432] }} -n postgres -p password -w omero_train -d omero_train -b omero_train.pgdump
           echo $PGPASSWORD
-          psql -h localhost -U postgress -p ${{ job.services.postgres.ports[5432] }} -c 'CREATE DATABASE omero_train'
-          python manage.py restore_postgresql_database -s omero_train
-          python manage.py get_index_data_from_database -b False -d omero_train
+          psql -h localhost -U postgres -p ${{ job.services.postgres.ports[5432] }} -c 'CREATE DATABASE omero_train'
+          flask restore_postgresql_database -s omero_train
+          flask get_index_data_from_database -b False -d omero_train
           rm app_data/omero_train.pgdump
           # set csv data source
-          python manage.py set_data_source_files -n test_csv
-          # download images csv file
+          flask set_data_source_files -n test_csv
+          # download the images CSV file
           wget https://downloads.openmicroscopy.org/public-resources/test_images.zip -P app_data
           unzip app_data/test_images.zip -d app_data/
           rm app_data/test_images.zip
-          python manage.py get_index_data_from_csv_files -d test_csv  -f app_data/test_images.csv -r image -u True
+          flask get_index_data_from_csv_files -d test_csv  -f app_data/test_images.csv -r image -u True
           # run tests          
-          python -m unittest discover -s unit_tests/indexing_tests
-          python -m unittest discover -s unit_tests/queries_tests         
-          python -m unittest discover -s unit_tests/datasource_tests
+          python3 -m unittest discover -s unit_tests/indexing_tests
+          python3 -m unittest discover -s unit_tests/queries_tests         
+          python3 -m unittest discover -s unit_tests/datasource_tests
 
 
   upload:

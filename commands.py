@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import json
 
-# Copyright (C) 2022 University of Dundee & Open Microscopy Environment.
+# Copyright (C) 2025 University of Dundee & Open Microscopy Environment.
 # All rights reserved.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -19,40 +18,46 @@ import json
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
+import click
+from omero_search_engine import create_app
 
-from omero_search_engine import search_omero_app, create_app
-from flask_script import Manager
+# from flask_script import Manager
 from configurations.configuration import (
     update_config_file,
     delete_data_source_configuration,
     rename_datasource,
 )
+from omero_search_engine.cache_functions.elasticsearch.backup_restores import (
+    backup_indices_data,
+)
 
-manager = Manager(search_omero_app)
+search_omero_app = create_app()
 
 
-@manager.command
+@search_omero_app.cli.command("show_saved_indices")
 def show_saved_indices():
     from omero_search_engine.cache_functions.elasticsearch.transform_data import (  # noqa
         get_all_indexes,
     )
 
     all_indexes = get_all_indexes()
-    return all_indexes
+    click.echo(all_indexes)
 
 
-@manager.command
-@manager.option(
+@search_omero_app.cli.command("delete_es_index")
+@click.option(
     "-r",
     "--resource",
+    default="all",
     help="resource name, deleting all the indexes for all the resources is the default",  # noqa
 )
-@manager.option(
+@click.option(
     "-e",
     "--es_index",
+    default=None,
     help="elastic index name, if it is provided, it will delete and return",
 )
-def delete_es_index(resource="all", es_index=None):
+def delete_es_index(resource, es_index):
     from omero_search_engine.cache_functions.elasticsearch.transform_data import (  # noqa
         delete_index,
     )
@@ -60,13 +65,14 @@ def delete_es_index(resource="all", es_index=None):
     delete_index(resource, es_index)
 
 
-@manager.command
-@manager.option(
+@search_omero_app.cli.command("delete_all_data_from_es_index")
+@click.option(
     "-r",
     "--resource",
+    default=None,
     help="resource name, deleting all data from the its related index",
 )
-def delete_all_data_from_es_index(resource="None"):
+def delete_all_data_from_es_index(resource):
     from omero_search_engine.cache_functions.elasticsearch.transform_data import (
         delete_data_from_index,
     )
@@ -74,11 +80,13 @@ def delete_all_data_from_es_index(resource="None"):
     delete_data_from_index(resource)
 
 
-@manager.command
-@manager.option("-r", "--resource", help="resource name, e.g. image")
-@manager.option("-d", "--data_folder", help="Folder contains the data files")
-@manager.option("-f", "--from_json", help="Folder contains the data files")
-def add_resource_data_to_es_index(resource=None, data_folder=None, from_json=False):
+@search_omero_app.cli.command("add_resource_data_to_es_index")
+@click.option("-r", "--resource", default=None, help="resource name, e.g. image")
+@click.option(
+    "-d", "--data_folder", default=None, help="Folder contains the data files"
+)
+@click.option("-f", "--from_json", default=False, help="Folder contains the data files")
+def add_resource_data_to_es_index(resource, data_folder, from_json):
     """
     Insert data inside elastic search index by getting the data from csv files
     """
@@ -97,13 +105,14 @@ def add_resource_data_to_es_index(resource=None, data_folder=None, from_json=Fal
     insert_resource_data(data_folder, resource, from_json)
 
 
-@manager.command
-@manager.option(
+@search_omero_app.cli.command("create_index")
+@click.option(
     "-r",
     "--resource",
+    default="all",
     help="resource name, creating all the indexes for all the resources is the default",  # noqa
 )
-def create_index(resource="all"):
+def create_index(resource):
     """
     Create Elasticsearch index for each resource
     """
@@ -114,39 +123,39 @@ def create_index(resource="all"):
     create_omero_indexes(resource)
 
 
-def sql_results_to_panda():
-    pass
-
-
-@manager.command
-@manager.option(
+@search_omero_app.cli.command("restore_postgresql_database")
+@click.option(
     "-s",
     "--source",
+    default="all",
     help="data source name, restore all the data sources by default",  # noqa
 )
-def restore_postgresql_database(source="all"):
+def restore_postgresql_database(source):
     from omero_search_engine.database.utils import restore_database
 
     restore_database(source)
 
 
-@manager.command
-@manager.option(
+@search_omero_app.cli.command("get_index_data_from_database")
+@click.option(
     "-r",
     "--resource",
+    default="all",
     help="resource name, creating all the indexes for all the resources is the default",  # noqa
 )
-@manager.option(
+@click.option(
     "-d",
     "--data_source",
+    default="all",
     help="data source name, indexing all the data sources by default",  # noqa
 )
-@manager.option(
-    "-d",
+@click.option(
+    "-b",
     "--backup",
+    default=True,
     help="if True, backup will be called ",  # noqa
 )
-def get_index_data_from_database(resource="all", data_source="all", backup="True"):
+def get_index_data_from_database(resource, data_source, backup):
     """
     insert data in Elasticsearch index for each resource
     It gets the data from postgres database server
@@ -158,9 +167,7 @@ def get_index_data_from_database(resource="all", data_source="all", backup="True
         get_insert_data_to_index,
         save_key_value_buckets,
     )
-    import json
 
-    backup = json.loads(backup.lower())
     if not data_source:
         print("Data source is required to process")
         return
@@ -192,32 +199,37 @@ def get_index_data_from_database(resource="all", data_source="all", backup="True
 
         # validate the indexing
 
-        test_indexing_search_query(
-            source=data_source_, deep_check=False, check_studies=True
+        test_indexing_search_query_(
+            "app_data/test_index_data.json", data_source_, False, True
         )
 
     # backup the index data
     if backup:
-        backup_elasticsearch_data()
+        backup_indices_data()
+
+
+@search_omero_app.cli.command("backup_elasticsearch_data")
+def backup_elasticsearch_data():
+    backup_indices_data()
 
 
 # set configurations
-@manager.command
-@manager.option("-u", "--url", help="database server url")
-@manager.option("-s", "--server_port_number", help="database port number")
-@manager.option("-d", "--database", help="database name")
-@manager.option("-n", "--name", help="database usernname")
-@manager.option("-b", "--backup_filename", help="database backup filename")
-@manager.option("-p", "--password", help="database username password")
-@manager.option("-w", "--working_data_source", help="data source")
+@search_omero_app.cli.command("set_database_configuration")
+@click.option("-u", "--url", default=None, help="database server url")
+@click.option("-s", "--server_port_number", default=None, help="database port number")
+@click.option("-d", "--database", default=None, help="database name")
+@click.option("-n", "--name", default=None, help="database usernname")
+@click.option("-b", "--backup_filename", default=None, help="database backup filename")
+@click.option("-p", "--password", default=None, help="database username password")
+@click.option("-w", "--working_data_source", default=None, help="data source")
 def set_database_configuration(
-    working_data_source=None,
-    url=None,
-    server_port_number=None,
-    database=None,
-    backup_filename=None,
-    name=None,
-    password=None,
+    working_data_source,
+    url,
+    server_port_number,
+    database,
+    backup_filename,
+    name,
+    password,
 ):
     if not working_data_source:
         print("Data source is required to process")
@@ -248,35 +260,45 @@ def set_database_configuration(
         )
 
 
-@manager.command
-@manager.option("-d", "--default_data_source", help="Default data source")
-def set_default_datasource(default_data_source=None):
+@search_omero_app.cli.command("set_default_datasource")
+@click.option("-d", "--default_data_source", default=None, help="Default data source")
+def set_default_datasource(default_data_source):
     if default_data_source:
         update_config_file({"DEFAULT_DATASOURCE": default_data_source})
     else:
         search_omero_app.logger.info("No attribute provided")
 
 
-@manager.command
-@manager.option("-n", "--name", help="data source name")
-@manager.option(
+################################################################
+@search_omero_app.cli.command("set_data_source_files")
+@click.option("-n", "--name", default=None, help="data source name")
+@click.option(
     "-i",
     "--images_folder",
+    default=None,
     help="path to a folder containing the CSV files containing the image data ",
 )
-@manager.option(
-    "-p", "--projects_file", help="path to a file containing the projects data"
+@click.option(
+    "-p",
+    "--projects_file",
+    default=None,
+    help="path to a file containing the projects data",
 )
-@manager.option(
-    "-s", "--screens_file", help="path to a file containing the screens data"
+@click.option(
+    "-s",
+    "--screens_file",
+    default=None,
+    help="path to a file containing the screens data",
 )
-@manager.option("-o", "--origin_type ", help=" data source origin  type; supports CSV")
+@click.option(
+    "-o", "--origin_type", default=None, help="data source origin  type; supports CSV"
+)
 def set_data_source_files(
-    name=None,
-    images_folder=None,
-    projects_file=None,
-    screens_file=None,
-    origin_type="CSV",
+    name,
+    images_folder,
+    projects_file,
+    screens_file,
+    origin_type,
 ):
     source = {}
     if not name:
@@ -296,10 +318,15 @@ def set_data_source_files(
     update_config_file(source, True)
 
 
-@manager.command
-@manager.option("-n", "--new_data_source_name", help="new data source name")
-@manager.option("-c", "--current_data_source_name", help="original data source name")
-def rename_data_source(current_data_source_name=None, new_data_source_name=None):
+###############################################################################
+
+
+@search_omero_app.cli.command("rename_data_source")
+@click.option("-n", "--new_data_source_name", default=None, help="new data source name")
+@click.option(
+    "-c", "--current_data_source_name", default=None, help="original data source name"
+)
+def rename_data_source(current_data_source_name, new_data_source_name):
     if not current_data_source_name or not new_data_source_name:
         search_omero_app.logger.info(
             "Existing data source name and new data source name are required"
@@ -308,116 +335,101 @@ def rename_data_source(current_data_source_name=None, new_data_source_name=None)
     rename_datasource(current_data_source_name, new_data_source_name)
 
 
-@manager.command
-@manager.option("-e", "--elasticsearch_url", help="elasticsearch url")
-def set_elasticsearch_configuration(elasticsearch_url=None):
+@search_omero_app.cli.command("set_elasticsearch_configuration")
+@click.option("-e", "--elasticsearch_url", default=None, help="elasticsearch url")
+def set_elasticsearch_configuration(elasticsearch_url):
     if elasticsearch_url:
         update_config_file({"ELASTICSEARCH_URL": elasticsearch_url})
     else:
         search_omero_app.logger.info("No attribute is provided")
 
 
-@manager.command
-@manager.option("-e", "--elasticsearch_password", help="set elasticsearch password")
-def set_elasticsearch_password(elasticsearch_password=None):
-    if elasticsearch_password:
-        update_config_file({"ELASTIC_PASSWORD": elasticsearch_password})
-    else:
-        search_omero_app.logger.info("No attribute is provided")
-
-
-@manager.command
-@manager.option("-v", "--verify_certs", help="set elasticsearch password")
-def set_verify_certs(verify_certs=None):
+@search_omero_app.cli.command("set_verify_certs")
+@click.option("-v", "--verify_certs", default=None, help="set verify certs")
+def set_verify_certs(verify_certs):
     if verify_certs:
         update_config_file({"verify_certs": verify_certs})
     else:
         search_omero_app.logger.info("No attribute is provided")
 
 
-@manager.command
-@manager.option("-c", "--cache_folder", help="cache folder path")
-def set_cache_folder(cache_folder=None):
-    if cache_folder:
-        update_config_file({"CACHE_FOLDER": cache_folder})
-    else:
-        search_omero_app.logger.info("No attribute is provided")
-
-
-@manager.command
-@manager.option("-b", "--backup_folder", help="path to elasticsearch backup folder")
-def set_elasticsearch_backup_folder(backup_folder=None):
+@search_omero_app.cli.command("set_elasticsearch_backup_folder")
+@click.option(
+    "-b", "--backup_folder", default=None, help="path to elasticsearch backup folder"
+)
+def set_elasticsearch_backup_folder(backup_folder):
     if backup_folder:
         update_config_file({"ELASTICSEARCH_BACKUP_FOLDER": backup_folder})
     else:
         search_omero_app.logger.info("No elasticsearch backup folder is provided")
 
 
-@manager.command
-@manager.option("-i", "--idr_url", help="URL for idr test file")
-def set_idr_test_file(idr_url=None):
+@search_omero_app.cli.command("set_idr_test_file")
+@click.option("-i", "--idr_url", default=None, help="URL for idr test file")
+def set_idr_test_file(idr_url):
     if idr_url:
         update_config_file({"IDR_TEST_FILE_URL": idr_url})
     else:
         search_omero_app.logger.info("No attribute is provided")
 
 
-@manager.command
-@manager.option("-n", "--number_cache_rows", help="cache folder path")
-def set_cache_rows_number(number_cache_rows=None):
+@search_omero_app.cli.command("set_cache_rows_number")
+@click.option("-n", "--number_cache_rows", default=None, help="cache folder path")
+def set_cache_rows_number(number_cache_rows):
     if number_cache_rows and number_cache_rows.isdigit():
         update_config_file({"CACHE_ROWS": int(number_cache_rows)})
     else:
         search_omero_app.logger.info("No of cached rows has to be an integer")
 
 
-@manager.command
-@manager.option("-s", "--secret_key", help="cache folder path")
-def set_searchengine_secret_key(secret_key=None):
+@search_omero_app.cli.command("set_searchengine_secret_key")
+@click.option("-s", "--secret_key", default=None, help="cache folder path")
+def set_searchengine_secret_key(secret_key):
     if secret_key:
         update_config_file({"SECRET_KEY": secret_key})
     else:
         search_omero_app.logger.info("No value is provided")
 
 
-@manager.command
-@manager.option("-s", "--page_size", help="Page size")
-def set_max_page(page_size=None):
+@search_omero_app.cli.command("set_max_page")
+@click.option("-s", "--page_size", default=None, help="Page size")
+def set_max_page(page_size):
     if page_size and page_size.isdigit():
         update_config_file({"PAGE_SIZE": int(page_size)})
     else:
         search_omero_app.logger.info("No valid attribute is provided")
 
 
-@manager.command
-@manager.option("-n", "--no_processes", help="no_processes")
-def set_no_processes(no_processes=None):
+@search_omero_app.cli.command("set_no_processes")
+@click.option("-n", "--no_processes", default=None, help="no_processes")
+def set_no_processes(no_processes):
     if no_processes and no_processes.isdigit():
         update_config_file({"NO_PROCESSES": int(no_processes)})
     else:
         search_omero_app.logger.info("No valid attribute is provided")
 
 
-@manager.command
-@manager.option(
+@search_omero_app.cli.command("cache_key_value_index")
+@click.option(
     "-d",
     "--data_source",
+    default="all",
     help="data source name, the default is all",  # noqa
 )
-@manager.option(
+@click.option(
     "-r",
     "--resource",
+    default=None,
     help="resource name, creating all the indexes for all the resources is the default",  # noqa
 )
-@manager.option(
+@click.option(
     "-c",
     "--create_index",
+    default=None,
     help="creating the elastic search index if set to True",  # noqa
 )
-@manager.option("-o", "--only_values", help="creating cached values only ")
-def cache_key_value_index(
-    resource=None, data_source="all", create_index=None, only_values=None
-):
+@click.option("-o", "--only_values", default=None, help="creating cached values only ")
+def cache_key_value_index(resource, data_source, create_index, only_values):
     """
     Cache the value bucket for each value for each resource
     """
@@ -428,24 +440,34 @@ def cache_key_value_index(
     save_key_value_buckets(resource, data_source, create_index, only_values)
 
 
-@manager.command
-@manager.option("-j", "--json_file", help="creating cached values only ")
-@manager.option("-c", "--check_studies", help="check studies from idr ")
-@manager.option(
+@search_omero_app.cli.command("test_indexing_search_query")
+@click.option(
+    "-j",
+    "--json_file",
+    default="app_data/test_index_data.json",
+    help="creating cached values only ",
+)
+@click.option("-c", "--check_studies", default=False, help="check studies from idr ")
+@click.option(
     "-d",
     "--deep_check",
-    help="compare all the images from both search engine and database server, default is False so it will compare the number of images and the first searchengine page",  # noqa
+    default=False,
+    help="compare all the images from both search engine and database server, "
+    "default is False so it will compare the number of images "
+    "and the first searchengine page",
+    # noqa
 )
-@manager.option(
+@click.option(
     "-s",
     "--source",
+    default=None,
     help="data source name, testing  all the data sources by default",  # noqa
 )
 def test_indexing_search_query(
-    json_file="app_data/test_index_data.json",
-    source=None,
-    deep_check=False,
-    check_studies=False,
+    json_file,
+    source,
+    deep_check,
+    check_studies,
 ):
     """
     test the indexing and the searchengine query functions
@@ -457,6 +479,15 @@ def test_indexing_search_query(
     if the data file, it will use sample file from
     (test_index_data.json) app_data folder
     """
+    test_indexing_search_query_(
+        json_file,
+        source,
+        deep_check,
+        check_studies,
+    )
+
+
+def test_indexing_search_query_(json_file, source, deep_check, check_studies):
     from omero_search_engine.validation.results_validator import (
         validate_queries,
         test_no_images,
@@ -475,30 +506,25 @@ def test_indexing_search_query(
     get_no_images_sql_containers(data_source=source)
 
 
-@manager.command
-def backup_elasticsearch_data():
-    from omero_search_engine.cache_functions.elasticsearch.backup_restores import (
-        backup_indices_data,
-    )
-
-    backup_indices_data()
-
-
-@manager.command
+##################################
+@search_omero_app.cli.command("restore_elasticsearch_data")
 def restore_elasticsearch_data():
     from omero_search_engine.cache_functions.elasticsearch.backup_restores import (
         restore_indices_data,
     )
+    from omero_search_engine.cache_functions.elasticsearch.transform_data import (  # noqapip
+        delete_index,
+    )
 
     # first delete the current indices
-    delete_es_index("all")
+    delete_index("all")
     restore_indices_data()
 
 
-@manager.command
-@manager.option("-s", "--screen_name", help="Screen name, or part of it")
-@manager.option("-p", "--project_name", help="Project name, or part of it")
-def data_validator(screen_name=None, project_name=None):
+@search_omero_app.cli.command("data_validator")
+@click.option("-s", "--screen_name", default=None, help="Screen name, or part of it")
+@click.option("-p", "--project_name", default=None, help="Project name, or part of it")
+def data_validator(screen_name, project_name):
     """
     Checking key-value pair for trailing and heading space.
     It also checks the key-value pair duplication.
@@ -533,7 +559,7 @@ def data_validator(screen_name=None, project_name=None):
     print("start: %s, start1: %s, start2: %s, end: %s" % (start, start1, start2, end))
 
 
-@manager.command
+@search_omero_app.cli.command("test_container_key_value")
 def test_container_key_value():
     from omero_search_engine.validation.results_validator import (
         check_container_keys_vakues,
@@ -542,43 +568,43 @@ def test_container_key_value():
     check_container_keys_vakues()
 
 
-@manager.command
-@manager.option(
+@search_omero_app.cli.command("get_index_data_from_csv_files")
+@click.option(
     "-d",
     "--datasource",
+    default=None,
     help="data source name, indexing all the data sources by default",  # noqa
 )
-@manager.option(
+@click.option(
     "-f",
     "--folder",
+    default=None,
     help="data folder containing the CSV files",  # noqa
 )
-@manager.option(
+@click.option(
     "-r",
     "--resource",
+    default="image",
     help="resource name, creating all the indexes for all the resources by default",  # noqa
 )
-@manager.option(
+@click.option(
     "-n",
     "--need_convert",
+    default=False,
     help="if the CSV files are generating from CSV templates, this attribute must be true",  # noqa
 )
-@manager.option("-u", "--update_cache", help="update the cache")
+@click.option("-u", "--update_cache", default=False, help="update the cache")
 def get_index_data_from_csv_files(
-    datasource=None,
-    folder=None,
-    resource="image",
-    need_convert="False",
-    update_cache="False",
+    datasource,
+    folder,
+    resource,
+    need_convert,
+    update_cache,
 ):
     from omero_search_engine.cache_functions.elasticsearch.transform_data import (
         insert_resource_data,
         # save_key_value_buckets,
     )
-    import json
-
-    update_cache = json.loads(update_cache.lower())
-    need_convert = json.loads(need_convert.lower())
 
     insert_resource_data(
         folder=folder,
@@ -593,6 +619,8 @@ def get_index_data_from_csv_files(
 
     time.sleep(60)
     if update_cache:
+        from omero_search_engine.api.v1.resources.utils import update_data_source_cache
+
         update_data_source_cache(datasource)
     else:
         from omero_search_engine.api.v1.resources.utils import delete_data_source_cache
@@ -600,18 +628,20 @@ def get_index_data_from_csv_files(
         delete_data_source_cache(datasource)
 
 
-@manager.command
-@manager.option(
+@search_omero_app.cli.command("convert_to_searchengine_format")
+@click.option(
     "-f",
     "--file_name",
+    default=None,
     help="The CSV file name",  # noqa
 )
-@manager.option(
+@click.option(
     "-r",
     "--resource",
+    default=None,
     help="resource name, creating all the indexes for all the resources by default",  # noqa
 )
-def convert_to_searchengine_format(file_name=None, resource=None):
+def convert_to_searchengine_format(file_name, resource):
     from omero_search_engine.cache_functions.elasticsearch.transform_data import (
         convert_to_searchengine_format,
     )
@@ -623,27 +653,33 @@ def convert_to_searchengine_format(file_name=None, resource=None):
     )
 
 
-@manager.command
-@manager.option("-r", "--resource", help="resource name, i.e. project or screen")
-@manager.option(
+@search_omero_app.cli.command("delete_containers")
+@click.option(
+    "-r", "--resource", default=None, help="resource name, i.e. project or screen"
+)
+@click.option(
     "-d",
     "--synchronous_run",
+    default=False,
     help="synchronous run, either True of False, "
     "it should be False for large containers",
 )
-@manager.option("-s", "--data_source", help="data_source name, i.e. project or screen")
-@manager.option(
+@click.option(
+    "-s", "--data_source", default=None, help="data_source name, i.e. project or screen"
+)
+@click.option(
     "-i",
     "--id",
+    default=None,
     help="Resource id, if more than one then should use comma to separate them",
 )
-@manager.option("-u", "--update_cache", help="update the cache")
+@click.option("-u", "--update_cache", default=False, help="update the cache")
 def delete_containers(
-    resource=None,
-    data_source=None,
-    id=None,
-    update_cache="False",
-    synchronous_run="False",
+    resource,
+    data_source,
+    id,
+    update_cache,
+    synchronous_run,
 ):
     """
     delete a container (project or screen)
@@ -652,73 +688,57 @@ def delete_containers(
 
     """
     from omero_search_engine.api.v1.resources.utils import delete_container
-    import json
 
-    ###
-    synchronous_run = json.loads(synchronous_run.lower())
-    update_cache = json.loads(update_cache.lower())
-    ###
     delete_container(id, resource, data_source, update_cache, synchronous_run)
 
 
-@manager.command
-@manager.command
-@manager.option("-r", "--resource", help="resource name, e.g. image")
-@manager.option("-d", "--data_source", help="data_source name, i.e. project or screen")
-@manager.option(
+@search_omero_app.cli.command("index_container_from_database")
+@click.command
+@click.option("-r", "--resource", default=None, help="resource name, e.g. image")
+@click.option(
+    "-d", "--data_source", default=None, help="data_source name, i.e. project or screen"
+)
+@click.option(
     "-i",
     "--id",
+    default=None,
     help="Resource id, if more than one then use comma to  separate the values",
 )
-@manager.option(
+@click.option(
     "-b",
     "--backup",
+    default=False,
     help="if True, backup will be called ",  # noqa
 )
-@manager.option("-u", "--update_cache", help="update the cache")
-@manager.option("-n", "--number_of_processors", help="Number of parallel processes")
+@click.option("-u", "--update_cache", default=False, help="update the cache")
+@click.option(
+    "-n", "--number_of_processors", default=2, help="Number of parallel processes"
+)
 def index_container_from_database(
-    resource=None,
-    data_source=None,
-    id=None,
-    backup="False",
-    update_cache="False",
-    number_of_processors=2,
+    resource,
+    data_source,
+    id,
+    backup,
+    update_cache,
+    number_of_processors,
 ):
-    resources_index = {
-        "project": ["image", "project"],
-        "screen": ["image", "screen", "well", "plate"],
-    }
     from omero_search_engine.cache_functions.elasticsearch.transform_data import (
-        index_containers_from_database,
+        index_container_from_database_,
     )
 
-    # from omero_search_engine.api.v1.resources.utils import update_data_source_cache
-    import json
-    import time
-
-    backup = json.loads(backup.lower())
-    update_cache = json.loads(update_cache.lower())
-    no_processors = int(number_of_processors)
-
-    for res in resources_index[resource]:
-        index_containers_from_database(resource, res, id, data_source, no_processors)
-        time.sleep(60)
-
-    if update_cache:
-        update_data_source_cache(data_source)
-    else:
-        delete_data_source_cache(data_source)
-
-    # backup the index data
-    if backup:
-        backup_elasticsearch_data()
-    time.sleep(60)
+    index_container_from_database_(
+        resource,
+        data_source,
+        id,
+        backup,
+        update_cache,
+        number_of_processors,
+    )
 
 
-@manager.command
-@manager.option("-d", "--working_data_source", help="data source")
-def update_data_source_cache(data_source=None):
+@search_omero_app.cli.command("update_data_source_cache")
+@click.option("-d", "--data_source", default=None, help="data source")
+def update_data_source_cache(data_source):
     from omero_search_engine.api.v1.resources.utils import update_data_source_cache
 
     if not data_source:
@@ -727,9 +747,9 @@ def update_data_source_cache(data_source=None):
     update_data_source_cache(data_source)
 
 
-@manager.command
-@manager.option("-d", "--working_data_source", help="data source")
-def delete_data_source_cache(data_source=None):
+@search_omero_app.cli.command("delete_data_source_cache")
+@click.option("-d", "--data_source", default=None, help="data source")
+def delete_data_source_cache(data_source):
     if not data_source:
         print("Data source is required")
         return
@@ -738,9 +758,9 @@ def delete_data_source_cache(data_source=None):
     delete_data_source_cache(data_source)
 
 
-@manager.command
-@manager.option("-d", "--data_source", help="data source")
-def delete_data_source(data_source=None):
+@search_omero_app.cli.command("delete_data_source")
+@click.option("-d", "--data_source", default=None, help="data source")
+def delete_data_source(data_source):
     if not data_source:
         print("Data source is required")
         return
@@ -751,51 +771,67 @@ def delete_data_source(data_source=None):
         delete_data_source_configuration(data_source)
 
 
-@manager.command
-@manager.option(
+@search_omero_app.cli.command("set_automatic_refresh")
+@click.option(
     "-a",
     "--automatic_refresh",
+    default=True,
     help="set automatic refresh, if true any change of "
-    "the configuration file will be reloaded at runtime",
+    "the configuration file will be reloaded at runtime, default  is true",
 )
-def set_automatic_refresh(automatic_refresh="True"):
-    if not automatic_refresh:
-        print("Error, no attribute value provided")
-
-    automatic_refresh = json.loads((automatic_refresh.lower()))
+def set_automatic_refresh(automatic_refresh):
     update_config_file({"AUTOMATIC_REFRESH": automatic_refresh})
 
 
-@manager.command
-@manager.option("-d", "--data_source", help="data source")
-@manager.option("-t", "--target_folder", help="folder to save the files to")
-@manager.option("-r", "--resource", help="resource name,  i.e. project or screen")
-@manager.option("-i", "--id", help="resource id")
-@manager.option("-o", "--over_write", help="Over written current data if True, default")
-@manager.option(
+@search_omero_app.cli.command("dump_searchengine_data")
+@click.option("-d", "--data_source", default=None, help="data source")
+@click.option("-t", "--target_folder", default=None, help="folder to save the files to")
+@click.option(
+    "-r", "--resource", default=None, help="resource name,  i.e. project or screen"
+)
+@click.option("-i", "--id", default=None, help="resource id")
+@click.option(
+    "-o",
+    "--over_write",
+    default=True,
+    help="Over written current data if True, default",
+)
+@click.option(
     "-b",
     "--bb_formate",
+    default=False,
     help="write csv file format instead of json if the value is true",
 )
 def dump_searchengine_data(
-    data_source=None,
-    target_folder=None,
-    id=None,
-    resource=None,
-    over_write="True",
-    bb_formate="False",
+    data_source,
+    target_folder,
+    id,
+    resource,
+    over_write,
+    bb_formate,
 ):
     from omero_search_engine.api.v1.resources.data_dumper import dump_data
-
-    over_write = json.loads(over_write.lower())
-    bb_formate = json.loads(bb_formate.lower())
 
     dump_data(target_folder, id, resource, over_write, bb_formate, data_source)
 
 
-if __name__ == "__main__":
-    from flask_script import Command
+@search_omero_app.cli.command("create_container_csv")
+@click.option("-d", "--data_source", default=None, help="data source")
+@click.option("-t", "--container_type", default=None, help="container_type")
+@click.option("-n", "--container_name", default=None, help="container_name")
+def create_container_csv(data_source, container_type, container_name):
+    from omero_search_engine.api.v1.resources.utils import get_bff_csv_file_data_
 
-    Command.capture_all_args = False
-    create_app()
-    manager.run()
+    get_bff_csv_file_data_(container_type, container_name, data_source)
+
+
+# export FLASK_APP=commands.py
+
+
+@search_omero_app.cli.command("update_es_maximum_results")
+def update_es_maximum_results():
+    from omero_search_engine.api.v1.resources.utils import (
+        change_es_maximum_results_rows,
+    )
+
+    change_es_maximum_results_rows()

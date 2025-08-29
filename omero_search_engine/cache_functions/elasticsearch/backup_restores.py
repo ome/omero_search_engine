@@ -7,7 +7,7 @@ def get_backup_repository(es):
     repository_folder = os.path.join(Backup_folder, "backup_data")
     search_omero_app.logger.info("Backup folder: %s" % repository_folder)
     snap_body = {"type": "fs", "settings": {"location": repository_folder}}
-    es.snapshot.create_repository(repository="repository", body=snap_body)
+    es.snapshot.create_repository(name="repository", body=snap_body)
 
 
 def backup_indices_data():
