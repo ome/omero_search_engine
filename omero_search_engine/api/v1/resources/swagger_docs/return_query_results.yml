@@ -1,7 +1,7 @@
 Return the query results
 ---
 tags:
- -  Check job query status
+ -  Return query results
 parameters:
   - name: query_id
     in: query
