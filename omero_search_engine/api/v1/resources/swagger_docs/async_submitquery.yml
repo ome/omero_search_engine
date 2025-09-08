@@ -1,4 +1,4 @@
-A searchengine endpoint to accept complex query
+A ansync searchengine endpoint to accept complex query
 API endpoint to search the annotation (key/value pair), the main difference between this endpoint and searchannotation is this one can be used to search different resources and return the images which satisfy the search conditions.
 The container can be used as a resource instead of a project or screen if the user is not sure about the container type.
 The query data has a similar format to the query for searchannotation.
@@ -93,18 +93,9 @@ Example of using pagination:
 
 ---
 tags:
- - Mixed Complex query
+ - Async Mixed Complex query
 
 parameters:
-  - name: return_columns
-    description: return additional columns to help display the results in a table
-    in: query
-    type: boolean
-  - name: return_bff
-    description: return csv file with BFF format
-    in: query
-    type: boolean
-    required: false
   - name: data
     in: body
     required: true
@@ -114,11 +105,6 @@ parameters:
     required: false
     description: If a specific data source is provided, results will be retrieved from that source. Otherwise, the default data source will be used. If there is no default data source configured, results will be gathered from all available sources.
 
-  - name: asynchronize_run
-    description: query will be performed in asynchronize mode  when set to true
-    in: query
-    type: boolean
-    required: false
     #examples:
     #  query: {
     #    "resource": "image",

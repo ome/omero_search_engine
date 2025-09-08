@@ -106,10 +106,8 @@ def dump_data(target_folder, id, resource, over_write, bbf_format, data_source="
                     {"name": "data_source", "value": data_source, "operator": "equals"},
                 ]
             }
-
             print(main_attributes_query)
-
-            results = get_subcontainer_data(
+            results = get_all_query_results(
                 query, main_attributes_query, data_source, duplicated
             )
             print(len(results))
@@ -122,7 +120,6 @@ def dump_data(target_folder, id, resource, over_write, bbf_format, data_source="
             break
 
         if bbf_format:
-            print("###############################################toz")
             get_bff_csv_file_data_(container_type, container_name, data_source)
 
     end_time = datetime.now()
@@ -137,11 +134,12 @@ def get_bookmark(pagination_dict):
             return page_rcd["bookmark"]
 
 
-def get_subcontainer_data(query, main_attributes, data_source, duplicated):
+def get_all_query_results(query, main_attributes, data_source, duplicated):
     from utils import search_resource_annotation
 
-    received_results_data = []
     query_data = {"query_details": query, "main_attributes": main_attributes}
+
+    received_results_data = []
 
     returned_results = search_resource_annotation(
         "image",
@@ -299,3 +297,64 @@ def write_BBF(results, resource, file_name):
     df = pd.DataFrame(lines)
     df.to_csv(file_name)
     print(len(lines))
+
+
+def get_current_page_bookmark(pagination_dict):
+    current_page = pagination_dict["current_page"]
+    book_mark = None
+    for page_rcd in pagination_dict["page_records"]:
+        if page_rcd["page"] == current_page:
+            book_mark = page_rcd["bookmark"]
+    return current_page, book_mark
+
+
+def call_omero_searchengine_lib_return_results(query, datasource, total_results):
+    print(datasource)
+    if not datasource:
+        import sys
+
+        sys.exit()
+    from omero_search_engine.api.v1.resources.query_handler import (
+        determine_search_results_,
+    )
+
+    returned_results = determine_search_results_(query, data_source=datasource)
+    # global page, total_pages, pagination_dict, next_page
+    if len(returned_results["results"]) == 0:
+        search_omero_app.logger.info.info("Your query returns no results")
+        return []
+    # the next page of the results
+    pagination_dict = returned_results["results"].get("pagination")
+    page, bookmark = get_current_page_bookmark(pagination_dict)
+    total_results += returned_results["results"]["results"]
+    return bookmark, pagination_dict
+
+
+def get_submitquery_results(query, datasource):
+    total_results = []
+    count = 1
+    bookmark, pagination_dict = call_omero_searchengine_lib_return_results(
+        query, datasource, total_results
+    )
+    total_pages = pagination_dict.get("total_pages")
+    next_page = pagination_dict.get("next_page")
+    page = pagination_dict.get("current_page")
+    search_omero_app.logger.info(
+        "page: %s, / %s received results: %s " % (page, total_pages, len(total_results))
+    )
+    while next_page:  # len(received_results) < total_results:
+        count += 1
+        query["pagination"] = pagination_dict
+
+        bookmark, pagination_dict = call_omero_searchengine_lib_return_results(
+            query, datasource, total_results
+        )
+        total_pages = pagination_dict.get("total_pages")
+        next_page = pagination_dict.get("next_page")
+        page = pagination_dict.get("current_page")
+
+        search_omero_app.logger.info(
+            "bookmark: %s, page: %s, / %s received results: %s"
+            % (bookmark, page, total_pages, len(total_results))
+        )
+    return total_results

@@ -1,0 +1,19 @@
+Check the status of asyn query job
+---
+tags:
+ -  Check job query status
+parameters:
+  - name: query_id
+    in: query
+    type: string
+    required: true
+
+responses:
+  200:
+    description: A JSON contains resource attributes
+    examples:
+      resource:
+        - Gene In Validation Screen"
+        - GO Molecular Function"
+    schema:
+      $ref: '#/definitions/resource'

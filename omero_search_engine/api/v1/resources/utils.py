@@ -1733,10 +1733,6 @@ def delete_data_source_contents(data_source):
 def write_BBF(results, file_name=None, return_contents=False):
     import pandas as pd
 
-    print("=====================================")
-    print(type(results))
-    print("=====================================")
-
     to_ignore_list = {
         "project": [
             "dataset_id",
@@ -1773,15 +1769,11 @@ def write_BBF(results, file_name=None, return_contents=False):
     for row_ in results:
         line = {}
         lines.append(line)
-        print(row_)
-        print("========================")
         if row_.get("project_id"):
             resource = "project"
         else:
             resource = "screen"
         for name, item in row_.items():
-            print(name)
-            print("###############################")
             if name in to_ignore_list[resource]:
                 continue
             if name == "key_values" and len(item) > 0:
@@ -1797,6 +1789,13 @@ def write_BBF(results, file_name=None, return_contents=False):
     if return_contents:
         return df.to_csv()
     df.to_csv(file_name)
+    df.columns = [str(c) if c is not None else "Unnamed" for c in df.columns]
+
+    df.to_parquet(
+        "%s.parquet" % file_name.replace(".csv", ""),
+        engine="fastparquet",
+        index=False,
+    )
     print(len(lines))
 
 
@@ -1868,16 +1867,17 @@ def change_es_maximum_results_rows():
         print(f"Updated {index}")
 
 
+# /data/data_dump/idr/csv_bff
 def get_bff_csv_file_data(container_type, container_name, file_type, data_source):
 
     if not data_source:
         data_source = search_omero_app.config.get("DEFAULT_DATASOURCE")
     if container_type.lower() == "project":
-        file_path = "/projects/%s" % (container_name,)
+        file_path = f"{data_source}/csv_bff/projects/{container_name}"
     elif container_type.lower() == "screen":
-        file_path = "/screens/%s" % (container_name,)
+        file_path = f"{data_source}/csv_bff/screens/{container_name}"
     else:
-        return "Container type '%s' is not supported" % container_type
+        return f"Container type '{container_type}' is not supported"
     if file_type == "csv":
         file_name_ = "%s.csv" % container_name.replace("/", "_")
     else:
@@ -1886,7 +1886,9 @@ def get_bff_csv_file_data(container_type, container_name, file_type, data_source
     response = Response()
     response.headers["Content-Type"] = "application/octet-stream"
     response.headers["Content-Disposition"] = f'attachment; filename="{file_name_}"'
-    response.headers["X-Accel-Redirect"] = f"/send_file/{file_path}/{file_name_}"
+    response.headers["X-Accel-Redirect"] = (
+        f"/searchengine/send_file/{file_path}/{file_name_}"
+    )
     return response
 
 

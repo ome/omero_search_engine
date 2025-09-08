@@ -29,6 +29,10 @@ from watchdog.events import FileSystemEventHandler
 import threading
 import time
 
+from celery import Celery
+
+# from celery.schedules import crontab
+
 from omero_search_engine.__version__ import __version__
 
 from configurations.configuration import (
@@ -54,6 +58,7 @@ main_folder = os.path.dirname(os.path.realpath(__file__))
 
 
 search_omero_app = Flask(__name__)
+celery_app = Celery()
 
 search_omero_app.json_encoder = LazyJSONEncoder
 
@@ -92,6 +97,50 @@ class ConfigHandler(FileSystemEventHandler):
             print("ERROR:   ===>>> %s" % e)
 
 
+# create celery app
+def make_celery(app, config):
+    global celery_app
+    celery_app = Celery(
+        "tasks",
+        broker="redis://%s:%s/0" % (config.REDIS_URL, config.REDIS_PORT),
+        backend="redis://%s:%s/0" % (config.REDIS_URL, config.REDIS_PORT),
+    )
+
+    celery_app.conf.update(app.config)
+
+    class ContextTask(celery_app.Task):
+        def __call__(self, *args, **kwargs):
+            with app.app_context():
+                return self.run(*args, **kwargs)
+
+    celery_app.Task = ContextTask
+    return celery_app
+
+
+def config_the_app(config_name=None):
+    app_config = configLooader.get(config_name)
+    load_configuration_variables_from_file(app_config)
+    set_database_connection_variables(app_config)
+    search_omero_app.config.from_object(app_config)
+    search_omero_app.app_context()
+    search_omero_app.app_context().push()
+    search_omero_app.app_context()
+    search_omero_app.app_context().push()
+    ELASTIC_PASSWORD = app_config.ELASTIC_PASSWORD
+    es_connector = Elasticsearch(
+        app_config.ELASTICSEARCH_URL.split(","),
+        verify_certs=app_config.verify_certs,
+        request_timeout=130,
+        max_retries=20,
+        retry_on_timeout=True,
+        connections_per_node=10,
+        http_auth=("elastic", ELASTIC_PASSWORD),
+    )
+    search_omero_app.config.database_connectors = app_config.database_connectors
+    print(search_omero_app.config.database_connectors)
+    search_omero_app.config["es_connector"] = es_connector
+
+
 def create_app(config_name=None):
     global environment_config_name
     if not config_name:
@@ -120,6 +169,7 @@ def create_app(config_name=None):
     search_omero_app.config.database_connectors = app_config.database_connectors
     print(search_omero_app.config.database_connectors)
     search_omero_app.config["es_connector"] = es_connector
+    # celery_app = make_celery(search_omero_app, app_config)
     log_folder = os.path.join(os.path.expanduser("~"), "logs")
     if not os.path.exists(log_folder):
         os.mkdir(log_folder)
