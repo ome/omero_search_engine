@@ -1,8 +1,6 @@
 import os
 import redis
 import json
-import time
-from celery import Celery
 
 from elasticsearch import Elasticsearch
 
