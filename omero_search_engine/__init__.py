@@ -54,7 +54,7 @@ main_folder = os.path.dirname(os.path.realpath(__file__))
 
 
 search_omero_app = Flask(__name__)
-#celery_app = Celery()
+# celery_app = Celery()
 
 search_omero_app.json_encoder = LazyJSONEncoder
 
@@ -74,6 +74,7 @@ swagger = Swagger(search_omero_app, template=template)
 
 app_config = load_configuration_variables_from_file(config_)
 
+
 class ConfigHandler(FileSystemEventHandler):
     def on_modified(self, event):
         self.reload_configuration_from_file(event)
@@ -89,7 +90,6 @@ class ConfigHandler(FileSystemEventHandler):
                     create_app()
         except Exception as e:
             print("ERROR:   ===>>> %s" % e)
-
 
 
 def config_the_app(config_name=None):
@@ -197,6 +197,7 @@ search_omero_app.register_blueprint(
     resources_routers_blueprint_v1, url_prefix="/api/v1/resources"
 )
 
+
 # add it to account for CORS
 @search_omero_app.after_request
 def after_request(response):
@@ -204,6 +205,7 @@ def after_request(response):
     # header['Access-Control-Allow-Origin'] = '*'
     header["Access-Control-Allow-Headers"] = "*"
     return response
+
 
 # added to let the user know the proper extension they should use
 @search_omero_app.errorhandler(404)

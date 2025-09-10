@@ -1,4 +1,3 @@
-
 from celery import Celery
 
 from configurations.configuration import (
@@ -27,9 +26,9 @@ def make_celery(beat=None):
         celery_app.conf.beat_schedule = {
             f"{beat}-every-hour": {
                 "task": beat,
-                #"schedule": 30.0,
-                'schedule': timedelta(hours=1),
-                "args": ()
+                # "schedule": 30.0,
+                "schedule": timedelta(hours=1),
+                "args": (),
             }
         }
     return celery_app, app_config

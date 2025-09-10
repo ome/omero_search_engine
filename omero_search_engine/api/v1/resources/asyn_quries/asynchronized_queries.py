@@ -13,6 +13,7 @@ from omero_search_engine.api.v1.resources.asyn_quries.make_celery import make_ce
 celery_app, app_config = make_celery()
 search_omero_app.config.from_object(app_config)
 
+
 def load_the_app_config():
     search_omero_app.app_context()
     search_omero_app.app_context().push()
@@ -44,10 +45,12 @@ def check_jobs_queue():
         if query_data.status == "SUCCESS" or query_data.status == "FAILURE":
             print(query_data["headers"]["id"], query_data["headers"]["task"])
 
+
 def get_query_file_name(job_id):
     file_path = f"{app_config.DATA_DUMP_FOLDER}{app_config.QUIRES_FOLDER}"
     file_name = os.path.join(file_path, f"{job_id}.csv")
     return file_name
+
 
 @celery_app.task(bind=True, queue="queries")
 def add_query(self, query, data_source, submit_query=False):
@@ -74,8 +77,10 @@ def add_query(self, query, data_source, submit_query=False):
         "parquet": f"{self.request.id}.parquet",
     }
 
+
 def check_singel_task(task_id):
     from celery.result import AsyncResult
+
     res = AsyncResult(task_id, app=celery_app)
     print(
         "Task state:", res.state
@@ -108,4 +113,3 @@ def check_tasks_status():
         )
 
     return results
-
