@@ -8,17 +8,10 @@ from elasticsearch import Elasticsearch
 
 from omero_search_engine import search_omero_app
 
-from configurations.configuration import (
-    configLooader,
-    load_configuration_variables_from_file,
-    set_database_connection_variables,
-)
+from omero_search_engine.api.v1.resources.asyn_quries.make_celery import make_celery
 
-app_config = configLooader.get("development")
-load_configuration_variables_from_file(app_config)
-set_database_connection_variables(app_config)
+celery_app, app_config = make_celery()
 search_omero_app.config.from_object(app_config)
-
 
 def load_the_app_config():
     search_omero_app.app_context()
@@ -39,17 +32,6 @@ def load_the_app_config():
     search_omero_app.config["es_connector"] = es_connector
 
 
-celery_app = Celery(
-    # app.import_name,
-    # backend=config.CELERY_RESULT_BACKEND,
-    # broker=config.CELERY_BROKER_URL
-    "tasks",
-    broker="redis://%s:%s/0" % (app_config.REDIS_URL, app_config.REDIS_PORT),
-    backend="redis://%s:%s/0" % (app_config.REDIS_URL, app_config.REDIS_PORT),
-)
-
-
-# @celery_app.task(name ="check_queries_queue")
 def check_jobs_queue():
     search_omero_app.config.get("REDIS_URL")
     # app_config.REDIS_URL, app_config.REDIS_PORT
@@ -62,24 +44,15 @@ def check_jobs_queue():
         if query_data.status == "SUCCESS" or query_data.status == "FAILURE":
             print(query_data["headers"]["id"], query_data["headers"]["task"])
 
-
-# celery -A synchronized_queries worker -n queries_worker1@%h
-# -Q queries --concurrency=1 --loglevel=info
-
-
 def get_query_file_name(job_id):
     file_path = f"{app_config.DATA_DUMP_FOLDER}{app_config.QUIRES_FOLDER}"
     file_name = os.path.join(file_path, f"{job_id}.csv")
     return file_name
 
-
 @celery_app.task(bind=True, queue="queries")
 def add_query(self, query, data_source, submit_query=False):
     load_the_app_config()
-    print(data_source, query)
-    time.sleep(1)
     file_name = get_query_file_name(self.request.id)
-    print(file_name)
     from omero_search_engine.api.v1.resources.data_dumper import (
         get_all_query_results,
         get_submitquery_results,
@@ -101,10 +74,8 @@ def add_query(self, query, data_source, submit_query=False):
         "parquet": f"{self.request.id}.parquet",
     }
 
-
 def check_singel_task(task_id):
     from celery.result import AsyncResult
-
     res = AsyncResult(task_id, app=celery_app)
     print(
         "Task state:", res.state
@@ -137,3 +108,4 @@ def check_tasks_status():
         )
 
     return results
+

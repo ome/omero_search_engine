@@ -7,6 +7,8 @@ test -f /etc/searchengine/.app_config.yml || cp /searchengine/configurations/app
 #Check the script input
 if [[ $@ == celery* ]] ; then
   bash run_celery.sh
+elif [[ $@ == beat* ]] ; then
+  bash run_celery_beat.sh
 elif [[ $@ == run_app* ]] ; then
   url_perfix=${@/run_app/}
   echo using prefix: $url_perfix

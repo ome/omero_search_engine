@@ -29,10 +29,6 @@ from watchdog.events import FileSystemEventHandler
 import threading
 import time
 
-from celery import Celery
-
-# from celery.schedules import crontab
-
 from omero_search_engine.__version__ import __version__
 
 from configurations.configuration import (
@@ -58,7 +54,7 @@ main_folder = os.path.dirname(os.path.realpath(__file__))
 
 
 search_omero_app = Flask(__name__)
-celery_app = Celery()
+#celery_app = Celery()
 
 search_omero_app.json_encoder = LazyJSONEncoder
 
@@ -74,11 +70,9 @@ search_omero_app.config["SWAGGER"] = {
     "termsOfService": "https://github.com/ome/omero_search_engine/blob/main/LICENSE.txt",  # noqa
 }
 
-
 swagger = Swagger(search_omero_app, template=template)
 
 app_config = load_configuration_variables_from_file(config_)
-
 
 class ConfigHandler(FileSystemEventHandler):
     def on_modified(self, event):
@@ -96,25 +90,6 @@ class ConfigHandler(FileSystemEventHandler):
         except Exception as e:
             print("ERROR:   ===>>> %s" % e)
 
-
-# create celery app
-def make_celery(app, config):
-    global celery_app
-    celery_app = Celery(
-        "tasks",
-        broker="redis://%s:%s/0" % (config.REDIS_URL, config.REDIS_PORT),
-        backend="redis://%s:%s/0" % (config.REDIS_URL, config.REDIS_PORT),
-    )
-
-    celery_app.conf.update(app.config)
-
-    class ContextTask(celery_app.Task):
-        def __call__(self, *args, **kwargs):
-            with app.app_context():
-                return self.run(*args, **kwargs)
-
-    celery_app.Task = ContextTask
-    return celery_app
 
 
 def config_the_app(config_name=None):
@@ -169,7 +144,6 @@ def create_app(config_name=None):
     search_omero_app.config.database_connectors = app_config.database_connectors
     print(search_omero_app.config.database_connectors)
     search_omero_app.config["es_connector"] = es_connector
-    # celery_app = make_celery(search_omero_app, app_config)
     log_folder = os.path.join(os.path.expanduser("~"), "logs")
     if not os.path.exists(log_folder):
         os.mkdir(log_folder)
@@ -223,7 +197,6 @@ search_omero_app.register_blueprint(
     resources_routers_blueprint_v1, url_prefix="/api/v1/resources"
 )
 
-
 # add it to account for CORS
 @search_omero_app.after_request
 def after_request(response):
@@ -231,7 +204,6 @@ def after_request(response):
     # header['Access-Control-Allow-Origin'] = '*'
     header["Access-Control-Allow-Headers"] = "*"
     return response
-
 
 # added to let the user know the proper extension they should use
 @search_omero_app.errorhandler(404)

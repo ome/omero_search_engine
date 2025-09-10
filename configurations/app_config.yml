@@ -27,3 +27,5 @@ ALLOWED_ASYNCHRONIZED_PROCESS: 8
 REDIS_URL: 127.0.0.1
 REDIS_PORT: 6379
 QUIRES_FOLDER: path/to/queries/folder
+# quires files time to live in days
+QUIRES_TTL: 7
