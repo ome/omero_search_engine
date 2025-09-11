@@ -835,3 +835,15 @@ def update_es_maximum_results():
     )
 
     change_es_maximum_results_rows()
+
+
+@search_omero_app.cli.command("set_QUIRES_TTL")
+@click.option(
+    "-q", "--quires_ttl", default=None, help="quires files time to live in days"
+)
+def set_QUIRES_TTL(quires_ttl):
+    print("hello")
+    try:
+        update_config_file({"QUIRES_TTL": float(quires_ttl)})
+    except Exception as ex:
+        print(f"QUIRES_TTL value has to numerical value, error: {ex}")
