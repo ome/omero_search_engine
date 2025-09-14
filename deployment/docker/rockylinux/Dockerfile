@@ -13,6 +13,7 @@ RUN dnf clean all && rm -rf /var/cache/yum
 RUN mkdir /searchengine
 ADD  deployment/docker/rockylinux/start_gunicorn_serch_engine.sh /searchengine
 ADD  deployment/docker/rockylinux/run_app.sh /searchengine
+ADD  deployment/docker/rockylinux/run_celery_beat.sh /searchengine
 ADD .  /searchengine
 RUN cd /searchengine
 RUN mkdir /etc/searchengine

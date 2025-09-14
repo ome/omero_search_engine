@@ -1789,7 +1789,7 @@ def write_BBF(results, file_name=None, return_contents=False):
     if return_contents:
         return df.to_csv()
     df.to_csv(file_name)
-    df.columns = [str(c) if c is not None else "Unnamed" for c in df.columns]
+    df.columns = [f"col_{i}" if c is None else str(c) for i, c in enumerate(df.columns)]
 
     df.to_parquet(
         "%s.parquet" % file_name.replace(".csv", ""),
