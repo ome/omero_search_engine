@@ -833,8 +833,8 @@ def return_query_results():
     return (
         jsonify(
             {
-                "error": "Query status for (query id ='%s') is %s"
-                % (query_id, results.get("status"))
+                "error": f"Query status for (query id ='{query_id})' "
+                f"is {results.get('status')}"
             }
         ),
         500,
