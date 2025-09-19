@@ -806,11 +806,36 @@ def return_query_results():
                     f'attachment; filename="{file_name}"'
                 )
                 response.headers["X-Accel-Redirect"] = (
-                    f"/searchengine/send_file/{quires_folder}/{file_name}"
+                    f"/send_file/{quires_folder}{file_name}"
                 )
                 return response
-        return f"query results is : {results.get("Result")}"
-    return f"Query status for (query id ='{query_id}') " f"is {results.get("status")}"
 
-
-# Unindent does not match any outer indentation level
+            else:
+                return (
+                    jsonify(
+                        {
+                            "error": f"The results file for this Query (query id "
+                            f"='{query_id}') is missing"
+                        }
+                    ),
+                    500,
+                )
+        else:
+            return (
+                jsonify(
+                    {
+                        "error": f"Query (query id ={query_id}') is "
+                        f"{results.get("status")} did not return any results"
+                    }
+                ),
+                500,
+            )
+    return (
+        jsonify(
+            {
+                "error": "Query status for (query id ='%s') is %s"
+                % (query_id, results.get("status"))
+            }
+        ),
+        500,
+    )
