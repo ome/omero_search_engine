@@ -1,3 +1,4 @@
+import copy
 import os
 import redis
 import json
@@ -10,6 +11,7 @@ from omero_search_engine.api.v1.resources.asyn_quries.make_celery import make_ce
 
 celery_app, app_config = make_celery()
 search_omero_app.config.from_object(app_config)
+r = redis.Redis(host=app_config.REDIS_URL, port=app_config.REDIS_PORT, db=0)
 
 
 def load_the_app_config():
@@ -36,9 +38,9 @@ def check_jobs_queue():
     # app_config.REDIS_URL, app_config.REDIS_PORT
     reds = redis.Redis(host=app_config.REDIS_URL, port=app_config.REDIS_PORT, db=0)
 
-    qureies = reds.lrange("celery", 0, -1)
+    queries = reds.lrange("celery", 0, -1)
 
-    for query in qureies:
+    for query in queries:
         query_data = json.loads(query)
         if query_data.status == "SUCCESS" or query_data.status == "FAILURE":
             print(query_data["headers"]["id"], query_data["headers"]["task"])
@@ -53,12 +55,16 @@ def get_query_file_name(job_id):
 @celery_app.task(bind=True, queue="queries")
 def add_query(self, query, data_source, submit_query=False):
     load_the_app_config()
+    task_id = self.request.id
+
     file_name = get_query_file_name(self.request.id)
     from omero_search_engine.api.v1.resources.data_dumper import (
         get_all_query_results,
         get_submitquery_results,
     )
     from omero_search_engine.api.v1.resources.utils import write_BBF
+
+    query_details = copy.deepcopy(query.get("query_details"))
 
     if not submit_query:
         all_results = get_all_query_results(query, {}, data_source, [])
@@ -69,11 +75,15 @@ def add_query(self, query, data_source, submit_query=False):
         return "The query returned no results"
     write_BBF(results=all_results, file_name=file_name)
     print(len(all_results))
-    return {
+    results = {
         "total_results": len(all_results),
         "csv": f"{self.request.id}.csv",
         "parquet": f"{self.request.id}.parquet",
+        "query": query_details,
+        "data_source": data_source,
     }
+    r.rpush("tasks_ids", task_id)
+    return results
 
 
 def check_singel_task(task_id):
@@ -92,22 +102,30 @@ def check_singel_task(task_id):
         return {"status": res.state}
 
 
-def check_tasks_status():
+def check_tasks_status(query=None):
+    from deepdiff import DeepDiff
 
-    r = redis.Redis(host=app_config.REDIS_URL, port=app_config.REDIS_PORT, db=0)
-    tasks = r.lrange("task_ids", 0, -1)
-    print("Tasks: ", tasks)
+    # r = redis.Redis(host=app_config.REDIS_URL, port=app_config.REDIS_PORT, db=0)
+    tasks = r.lrange("tasks_ids", 0, -1)
     results = []
-
     for tid in tasks:
         tid = tid.decode()
         res = celery_app.AsyncResult(tid)
-        results.append(
-            {
-                "id": tid,
-                "state": res.state,
-                "result": res.result if res.ready() else None,
-            }
-        )
-
-    return results
+        if not query:
+            results.append(
+                {
+                    "id": tid,
+                    "state": res.state,
+                    "result": res.result if res.ready() else None,
+                }
+            )
+        else:
+            diff = DeepDiff(
+                query.get("query_details"), res.result.get("query"), ignore_order=True
+            )
+            if len(diff) == 0:
+                return tid
+    if not query:
+        return results
+    else:
+        return None

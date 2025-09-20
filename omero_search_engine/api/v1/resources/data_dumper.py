@@ -321,8 +321,8 @@ def call_omero_searchengine_lib_return_results(query, datasource, total_results)
     returned_results = determine_search_results_(query, data_source=datasource)
     # global page, total_pages, pagination_dict, next_page
     if len(returned_results["results"]) == 0:
-        search_omero_app.logger.info.info("Your query returns no results")
-        return []
+        search_omero_app.logger.info("Your query returns no results")
+        return None, None
     # the next page of the results
     pagination_dict = returned_results["results"].get("pagination")
     page, bookmark = get_current_page_bookmark(pagination_dict)
@@ -336,6 +336,8 @@ def get_submitquery_results(query, datasource):
     bookmark, pagination_dict = call_omero_searchengine_lib_return_results(
         query, datasource, total_results
     )
+    if not bookmark and not pagination_dict:
+        return []
     total_pages = pagination_dict.get("total_pages")
     next_page = pagination_dict.get("next_page")
     page = pagination_dict.get("current_page")

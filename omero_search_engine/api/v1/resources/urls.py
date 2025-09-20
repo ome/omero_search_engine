@@ -472,7 +472,6 @@ def submit_query():
         return jsonify(build_error_message(validation_results))
 
 
-##############################
 @resources.route("/async_submitquery/", methods=["POST"])
 def async_submitquery():
     """
@@ -490,8 +489,18 @@ def async_submitquery():
     if validation_results == "OK":
         from omero_search_engine.api.v1.resources.asyn_quries.asynchronized_queries import (  # noqa
             add_query,
+            check_tasks_status,
         )
 
+        exist_query_id = check_tasks_status(query)
+        if exist_query_id:
+            return jsonify(
+                {
+                    "message ": "Exiting query, please use the attached query id "
+                    "to retrieve the results",
+                    "existing query id": exist_query_id,
+                }
+            )
         job = add_query.apply_async((query, data_source, True), queue="queries")
         # res=add_query.apply_async(("query", "args"), queue="queries")
         return jsonify({"query_id": job.id})
@@ -500,7 +509,6 @@ def async_submitquery():
         return jsonify(build_error_message(validation_results))
 
 
-#############################
 @resources.route("/<resource_table>/search/", methods=["GET"])
 def search(resource_table):
     """
@@ -793,7 +801,7 @@ def return_query_results():
     results = check_query_status(query_id)
     # file_name=os.path.join(app_config.JOBS_FOLDER, f"{job_id}.csv")
     if results.get("status") == "SUCCESS":
-        if results.get("Result"):
+        if results.get("Result") and not isinstance(results.get("Result"), str):
             file_name = results.get("Result").get(file_type.lower())
             if file_name:
                 from omero_search_engine import search_omero_app
