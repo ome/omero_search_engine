@@ -86,7 +86,7 @@ def add_query(self, query, data_source, submit_query=False):
     return results
 
 
-def check_singel_task(task_id):
+def check_single_task(task_id):
     from celery.result import AsyncResult
 
     res = AsyncResult(task_id, app=celery_app)
@@ -97,12 +97,12 @@ def check_singel_task(task_id):
         return {"status": "SUCCESS", "Result": res.result}
 
     elif res.failed():
-        return {"status": "FAILURE", "Result": res.result}
+        return {"status": "FAILURE"}
     else:
         return {"status": res.state}
 
 
-def check_tasks_status(query=None):
+def check_tasks_status(query=None, data_source=None):
     from deepdiff import DeepDiff
 
     # r = redis.Redis(host=app_config.REDIS_URL, port=app_config.REDIS_PORT, db=0)
@@ -119,11 +119,18 @@ def check_tasks_status(query=None):
                     "result": res.result if res.ready() else None,
                 }
             )
-        else:
+        elif res.result and res.result.get("query"):
             diff = DeepDiff(
                 query.get("query_details"), res.result.get("query"), ignore_order=True
             )
-            if len(diff) == 0:
+            if (
+                len(diff) == 0
+                and data_source
+                and res.result.get("data_source")
+                and res.result.get("data_source").lower() == data_source.lower()
+            ) or (
+                len(diff) == 0 and not data_source and not res.result.get("data_source")
+            ):
                 return tid
     if not query:
         return results

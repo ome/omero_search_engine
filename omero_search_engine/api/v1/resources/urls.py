@@ -492,7 +492,7 @@ def async_submitquery():
             check_tasks_status,
         )
 
-        exist_query_id = check_tasks_status(query)
+        exist_query_id = check_tasks_status(query, data_source)
         if exist_query_id:
             return jsonify(
                 {
@@ -772,10 +772,10 @@ def get_container_bff_data():
 
 def check_query_status(query_id):
     from omero_search_engine.api.v1.resources.asyn_quries.asynchronized_queries import (
-        check_singel_task,
+        check_single_task,
     )
 
-    results = check_singel_task(query_id)
+    results = check_single_task(query_id)
     return results
 
 
@@ -833,7 +833,7 @@ def return_query_results():
                 jsonify(
                     {
                         "error": f"Query (query id ={query_id}') is "
-                        f"{results.get("status")} did not return any results"
+                        f"{results.get("status")}, it did not return any results"
                     }
                 ),
                 500,
