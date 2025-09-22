@@ -1886,9 +1886,7 @@ def get_bff_csv_file_data(container_type, container_name, file_type, data_source
     response = Response()
     response.headers["Content-Type"] = "application/octet-stream"
     response.headers["Content-Disposition"] = f'attachment; filename="{file_name_}"'
-    response.headers["X-Accel-Redirect"] = (
-        f"/searchengine/send_file/{file_path}/{file_name_}"
-    )
+    response.headers["X-Accel-Redirect"] = f"/send_file/{file_path}/{file_name_}"
     return response
 
 
