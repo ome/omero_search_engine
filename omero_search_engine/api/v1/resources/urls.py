@@ -496,9 +496,9 @@ def async_submitquery():
         if exist_query_id:
             return jsonify(
                 {
-                    "message ": "Exiting query, please use the attached query id "
+                    "message ": "Existing query, please use the attached query id "
                     "to retrieve the results",
-                    "existing query id": exist_query_id,
+                    "query_id": exist_query_id,
                 }
             )
         job = add_query.apply_async((query, data_source, True), queue="queries")
