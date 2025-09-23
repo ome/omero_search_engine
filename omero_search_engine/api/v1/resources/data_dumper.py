@@ -58,6 +58,9 @@ def dump_data(target_folder, id, resource, over_write, bbf_format, data_source="
                 found = True
             else:
                 continue
+        if resource and not id:
+            if container["type"] != resource:
+                continue
         print(container["type"], container["name"])
 
         sub_containers = get_containers_no_images(
@@ -116,11 +119,11 @@ def dump_data(target_folder, id, resource, over_write, bbf_format, data_source="
             else:
                 save_results_file(results, file_name)
             totalrecords += len(results)
-        if found:
-            break
 
         if bbf_format:
             get_bff_csv_file_data_(container_type, container_name, data_source)
+        if found:
+            break
 
     end_time = datetime.now()
     search_omero_app.logger.info("Elapsed time: : %s" % (end_time - start_time))

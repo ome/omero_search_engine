@@ -145,7 +145,6 @@ case_sensitive_must_in_value_condition_template = Template(
 {"terms": {"key_values.value.keyvalue":$value}}"""
 )
 
-
 nested_keyvalue_pair_query_template = Template(
     """
 {"nested": {"path": "key_values",
@@ -185,9 +184,7 @@ should_term_template = Template(
 "minimum_should_match" : $minimum_should_match ,"boost" : 1.0 }}"""
 )  # ==> or
 
-
 query_template = Template("""{"query": {"bool": {$query}}}""")
-
 
 # This template is added to the query to return the count of an attribute
 count_attr_template = Template(
@@ -1869,7 +1866,6 @@ def change_es_maximum_results_rows():
 
 # /data/data_dump/idr/csv_bff
 def get_bff_csv_file_data(container_type, container_name, file_type, data_source):
-
     if not data_source:
         data_source = search_omero_app.config.get("DEFAULT_DATASOURCE")
     if container_type.lower() == "project":
@@ -1921,13 +1917,24 @@ def get_bff_csv_file_data_(container_type, container_name, data_source):
         df_list = []
         # append all files together
         for file in files_list:
-            df_ = pd.read_csv(file)
+            if os.path.getsize(file) == 0:
+                continue
+
+            df_ = pd.read_csv(file, dtype=str)
             df_list.append(df_)
         if len(df_list) > 0:
             all_df = pd.concat(df_list)
+            all_df = all_df.dropna(axis=1, how="all")
             all_df.to_csv(file_name, index=False)
+            all_df.columns = [
+                f"col_{i}" if c is None else str(c)
+                for i, c in enumerate(all_df.columns)
+            ]
+
             all_df.to_parquet(
                 "%s.parquet" % file_name.replace(".csv", ""),
                 engine="fastparquet",
                 index=False,
             )
+        else:
+            print("IT is zero ")
