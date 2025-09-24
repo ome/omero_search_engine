@@ -39,6 +39,7 @@ def dump_data(target_folder, id, resource, over_write, bbf_format, data_source="
         get_bff_csv_file_data_,
     )
 
+    main_containers = {"project": [], "screen": []}
     data_source = get_working_data_source(data_source)
     start_time = datetime.now()
     totalrecords = 0
@@ -61,7 +62,10 @@ def dump_data(target_folder, id, resource, over_write, bbf_format, data_source="
         if resource and not id:
             if container["type"] != resource:
                 continue
-        print(container["type"], container["name"])
+        if "/" not in container["name"]:
+            names_list = main_containers[container["type"]]
+            names_list.append(container["name"])
+            main_containers[container["type"]] = names_list
 
         sub_containers = get_containers_no_images(
             container["name"],
@@ -76,9 +80,6 @@ def dump_data(target_folder, id, resource, over_write, bbf_format, data_source="
         container_folder = create_container_folder(
             folders[container_type], container_name
         )
-        #  create su-folcder,
-        #  make it working folder
-        #  save sub-container json file using file name
         for sub_container in sub_containers["results"]["results"]:
             print(sub_container)
             if bbf_format:
@@ -119,15 +120,53 @@ def dump_data(target_folder, id, resource, over_write, bbf_format, data_source="
             else:
                 save_results_file(results, file_name)
             totalrecords += len(results)
-
         if bbf_format:
             get_bff_csv_file_data_(container_type, container_name, data_source)
         if found:
             break
-
+    combine_sub_containers(main_containers, target_folder)
     end_time = datetime.now()
     search_omero_app.logger.info("Elapsed time: : %s" % (end_time - start_time))
     search_omero_app.logger.info("Total images: %s" % totalrecords)
+    # print(main_containers)
+
+
+def combine_sub_containers(main_containers, target_folder):
+    import pandas as pd
+
+    for resource, conatiner_names in main_containers.items():
+        for container_name in conatiner_names:
+            container_folder = create_container_folder(f"{resource}s", container_name)
+            resource_path = os.path.join(target_folder, container_folder)
+            if os.path.exists(resource_path):
+                file_name = os.path.join(
+                    target_folder, container_folder, "%s.csv" % container_name
+                )
+                subfolders = [
+                    entry.name for entry in os.scandir(resource_path) if entry.is_dir()
+                ]
+                df_list = []
+                for subfolder in subfolders:
+                    file = os.path.join(
+                        resource_path, subfolder, f"{container_name}_{subfolder}.csv"
+                    )
+                    if os.path.exists(file):
+                        df_list.append(pd.read_csv(file, dtype=str))
+
+                print(subfolders, resource_path, file_name)
+                if len(df_list) > 0:
+                    all_df = pd.concat(df_list)
+                    all_df.to_csv(file_name, index=False)
+                    all_df.columns = [
+                        f"col_{i}" if c is None else str(c)
+                        for i, c in enumerate(all_df.columns)
+                    ]
+
+                    all_df.to_parquet(
+                        "%s.parquet" % file_name.replace(".csv", ""),
+                        engine="fastparquet",
+                        index=False,
+                    )
 
 
 def get_bookmark(pagination_dict):
