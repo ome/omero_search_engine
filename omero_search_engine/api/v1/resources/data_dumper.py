@@ -342,11 +342,15 @@ def write_BBF(results, resource, file_name):
 
 
 def get_current_page_bookmark(pagination_dict):
-    current_page = pagination_dict["current_page"]
+    if pagination_dict:
+        current_page = pagination_dict["current_page"]
+    else:
+        current_page=1
     book_mark = None
-    for page_rcd in pagination_dict["page_records"]:
-        if page_rcd["page"] == current_page:
-            book_mark = page_rcd["bookmark"]
+    if pagination_dict:
+        for page_rcd in pagination_dict["page_records"]:
+            if page_rcd["page"] == current_page:
+                book_mark = page_rcd["bookmark"]
     return current_page, book_mark
 
 
