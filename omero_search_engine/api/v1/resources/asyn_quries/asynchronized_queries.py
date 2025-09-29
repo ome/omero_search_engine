@@ -31,6 +31,7 @@ def load_the_app_config():
     )
     search_omero_app.config.database_connectors = app_config.database_connectors
     search_omero_app.config["es_connector"] = es_connector
+    search_omero_app.config["PAGE_SIZE"] = search_omero_app.config.get("MAX_PAGE_SIZE")
 
 
 def check_jobs_queue():
