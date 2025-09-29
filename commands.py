@@ -847,3 +847,20 @@ def set_QUIRES_TTL(quires_ttl):
         update_config_file({"QUIRES_TTL": float(quires_ttl)})
     except Exception as ex:
         print(f"QUIRES_TTL value has to numerical value, error: {ex}")
+
+
+@search_omero_app.cli.command("set_MAX_RESULTS_FOR_ASYNC_QUERY")
+@click.option(
+    "-m",
+    "--max_results_for_async_query",
+    default=None,
+    help="max no of returned results for async query",
+)
+def set_MAX_RESULTS_FOR_ASYNC_QUERY(max_results_for_async_query):
+    print("hello")
+    try:
+        update_config_file(
+            {"MAX_RESULTS_FOR_ASYNC_QUERY": int(max_results_for_async_query)}
+        )
+    except Exception as ex:
+        print(f"MAX_RESULTS_FOR_ASYNC_QUERY value has to integer value, error: {ex}")

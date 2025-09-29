@@ -386,7 +386,9 @@ def get_submitquery_results(query, datasource):
     search_omero_app.logger.info(
         "page: %s, / %s received results: %s " % (page, total_pages, len(total_results))
     )
-    while next_page:  # len(received_results) < total_results:
+    while next_page and len(total_results) <= search_omero_app.config.get(
+        "MAX_RESULTS_FOR_ASYNC_QUERY"
+    ):  # len(received_results) < total_results:
         count += 1
         query["pagination"] = pagination_dict
 
