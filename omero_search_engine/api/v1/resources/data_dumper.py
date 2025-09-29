@@ -345,7 +345,7 @@ def get_current_page_bookmark(pagination_dict):
     if pagination_dict:
         current_page = pagination_dict["current_page"]
     else:
-        current_page=1
+        current_page = 1
     book_mark = None
     if pagination_dict:
         for page_rcd in pagination_dict["page_records"]:
