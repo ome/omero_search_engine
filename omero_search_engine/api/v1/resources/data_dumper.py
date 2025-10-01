@@ -376,8 +376,9 @@ def call_omero_searchengine_lib_return_results(query, datasource, total_results)
     return bookmark, pagination_dict
 
 
-def get_submitquery_results(query, datasource):
+def get_submitquery_results(query, datasource, folder_name=None):
     total_results = []
+    total = 0
     count = 1
     bookmark, pagination_dict = call_omero_searchengine_lib_return_results(
         query, datasource, total_results
@@ -390,21 +391,62 @@ def get_submitquery_results(query, datasource):
     search_omero_app.logger.info(
         "page: %s, / %s received results: %s " % (page, total_pages, len(total_results))
     )
-    while next_page and len(total_results) <= search_omero_app.config.get(
+    filename = os.path.join(folder_name, f"{count}.csv")
+    # write_BBF(total_results, resource, file_name)
+    from omero_search_engine.api.v1.resources.utils import write_BBF
+
+    write_BBF(
+        results=total_results,
+        file_name=filename,
+        return_contents=False,
+        save_parquer=False,
+    )
+    total = total + len(total_results)
+    while next_page and total <= search_omero_app.config.get(
         "MAX_RESULTS_FOR_ASYNC_QUERY"
-    ):  # len(received_results) < total_results:
+    ):
+        # and len(total_results) <= search_omero_app.config.get(
+        # "MAX_RESULTS_FOR_ASYNC_QUERY"
+        # )):  # len(received_results) < total_results:
+        total_results = []
         count += 1
         query["pagination"] = pagination_dict
-
         bookmark, pagination_dict = call_omero_searchengine_lib_return_results(
             query, datasource, total_results
         )
+        filename = os.path.join(folder_name, f"{count}.csv")
+        with open(filename, "w") as f:
+            json.dump(total_results, f, indent=4)
         total_pages = pagination_dict.get("total_pages")
         next_page = pagination_dict.get("next_page")
         page = pagination_dict.get("current_page")
-
+        write_BBF(
+            results=total_results,
+            file_name=filename,
+            return_contents=False,
+            save_parquer=False,
+        )
+        # write_BBF(total_results, filename)
+        total = total + len(total_results)
         search_omero_app.logger.info(
             "bookmark: %s, page: %s, / %s received results: %s"
-            % (bookmark, page, total_pages, len(total_results))
+            % (bookmark, page, total_pages, total)
         )
-    return total_results
+
+    return total
+
+
+def read_total_files(folder_name):
+    import glob
+    import pandas as pd
+
+    files_list = glob.glob("%s/*.json" % folder_name)
+    df_list = []
+    for file in files_list:
+        if os.path.getsize(file) == 0:
+            continue
+        df_ = pd.read_json(file, dtype=str)
+        df_list.append(df_)
+    if len(df_list) > 0:
+        all_df = pd.concat(df_list)
+        return all_df

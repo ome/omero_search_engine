@@ -1727,7 +1727,7 @@ def delete_data_source_contents(data_source):
     return found
 
 
-def write_BBF(results, file_name=None, return_contents=False):
+def write_BBF(results, file_name=None, return_contents=False, save_parquer=True):
     import pandas as pd
 
     to_ignore_list = {
@@ -1787,12 +1787,12 @@ def write_BBF(results, file_name=None, return_contents=False):
         return df.to_csv()
     df.to_csv(file_name)
     df.columns = [f"col_{i}" if c is None else str(c) for i, c in enumerate(df.columns)]
-
-    df.to_parquet(
-        "%s.parquet" % file_name.replace(".csv", ""),
-        engine="fastparquet",
-        index=False,
-    )
+    if save_parquer:
+        df.to_parquet(
+            "%s.parquet" % file_name.replace(".csv", ""),
+            engine="fastparquet",
+            index=False,
+        )
     print(len(lines))
 
 
@@ -1910,31 +1910,34 @@ def get_bff_csv_file_data_(container_type, container_name, data_source):
     file_name = os.path.join(file_path, file_name_)
     print("File name: %s" % file_name)
     if not os.path.exists(file_name):
-        import pandas as pd
-        import glob
+        write_csv_parquet_from_folder(file_path, file_name)
 
-        files_list = glob.glob("%s/*.csv" % file_path)
-        df_list = []
-        # append all files together
-        for file in files_list:
-            if os.path.getsize(file) == 0:
-                continue
 
-            df_ = pd.read_csv(file, dtype=str)
-            df_list.append(df_)
-        if len(df_list) > 0:
-            all_df = pd.concat(df_list)
-            all_df = all_df.dropna(axis=1, how="all")
-            all_df.to_csv(file_name, index=False)
-            all_df.columns = [
-                f"col_{i}" if c is None else str(c)
-                for i, c in enumerate(all_df.columns)
-            ]
+def write_csv_parquet_from_folder(file_path, file_name):
+    import pandas as pd
+    import glob
 
-            all_df.to_parquet(
-                "%s.parquet" % file_name.replace(".csv", ""),
-                engine="fastparquet",
-                index=False,
-            )
-        else:
-            print("IT is zero ")
+    files_list = glob.glob("%s/*.csv" % file_path)
+    df_list = []
+    # append all files together
+    for file in files_list:
+        if os.path.getsize(file) == 0:
+            continue
+
+        df_ = pd.read_csv(file, dtype=str)
+        df_list.append(df_)
+    if len(df_list) > 0:
+        all_df = pd.concat(df_list)
+        all_df = all_df.dropna(axis=1, how="all")
+        all_df.to_csv(file_name, index=False)
+        all_df.columns = [
+            f"col_{i}" if c is None else str(c) for i, c in enumerate(all_df.columns)
+        ]
+
+        all_df.to_parquet(
+            "%s.parquet" % file_name.replace(".csv", ""),
+            engine="fastparquet",
+            index=False,
+        )
+    else:
+        print("IT is zero ")

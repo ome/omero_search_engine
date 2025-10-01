@@ -2,6 +2,7 @@ import copy
 import os
 import redis
 import json
+import shutil
 
 from elasticsearch import Elasticsearch
 
@@ -50,7 +51,7 @@ def check_jobs_queue():
 def get_query_file_name(job_id):
     file_path = f"{app_config.DATA_DUMP_FOLDER}{app_config.QUIRES_FOLDER}"
     file_name = os.path.join(file_path, f"{job_id}.csv")
-    return file_name
+    return file_path, file_name
 
 
 @celery_app.task(bind=True, queue="queries")
@@ -58,31 +59,49 @@ def add_query(self, query, data_source, submit_query=False):
     load_the_app_config()
     task_id = self.request.id
 
-    file_name = get_query_file_name(self.request.id)
+    file_path, file_name = get_query_file_name(self.request.id)
+    folder_name = os.path.join(file_path, task_id)
+
     from omero_search_engine.api.v1.resources.data_dumper import (
         get_all_query_results,
         get_submitquery_results,
     )
-    from omero_search_engine.api.v1.resources.utils import write_BBF
+    from omero_search_engine.api.v1.resources.utils import (
+        write_BBF,
+        write_csv_parquet_from_folder,
+    )
 
     query_details = copy.deepcopy(query.get("query_details"))
 
     if not submit_query:
         all_results = get_all_query_results(query, {}, data_source, [])
     else:
-        all_results = get_submitquery_results(query, data_source)
+        os.mkdir(folder_name)
+        total = get_submitquery_results(query, data_source, folder_name)
 
-    if len(all_results) == 0:
+    if total == 0:
         return "The query returned no results"
-    write_BBF(results=all_results, file_name=file_name)
-    print(len(all_results))
-    results = {
-        "total_results": len(all_results),
-        "csv": f"{self.request.id}.csv",
-        "parquet": f"{self.request.id}.parquet",
-        "query": query_details,
-        "data_source": data_source,
-    }
+    if not submit_query:
+        write_BBF(results=all_results, file_name=file_name)
+        results = {
+            "total_results": len(all_results),
+            "csv": f"{self.request.id}.csv",
+            "parquet": f"{self.request.id}.parquet",
+            "query": query_details,
+            "data_source": data_source,
+        }
+    else:
+        write_csv_parquet_from_folder(folder_name, file_name)
+        if os.path.exists(folder_name):
+            shutil.rmtree(folder_name)
+
+        results = {
+            "total_results": total,
+            "csv": f"{self.request.id}.csv",
+            "parquet": f"{self.request.id}.parquet",
+            "query": query_details,
+            "data_source": data_source,
+        }
     r.rpush("tasks_ids", task_id)
     return results
 
