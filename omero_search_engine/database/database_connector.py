@@ -44,7 +44,7 @@ class DatabaseConnector(object):
         self.DATABASE_URI = db_uri
         engine = create_engine(
             self.DATABASE_URI,
-            convert_unicode=True,
+            #convert_unicode=True,
             echo=echo_db,
             pool=QueuePool(self._conn, pool_size=20, max_overflow=3, timeout=30),
         )

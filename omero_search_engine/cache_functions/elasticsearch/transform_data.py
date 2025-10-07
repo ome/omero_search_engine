@@ -219,7 +219,18 @@ def prepare_images_data(data, data_source, doc_type):
         "plate_name",
         "well_id",
         "wellsample_id",
-        "image_size",
+        ]
+
+    new_columns=["image_size",
+        "roi_id",
+        "Channels",
+        "SizeC",
+        "SizeT",
+        "SizeX",
+        "SizeY",
+        "SizeZ",
+        "image_format",
+        "pixelstype",
     ]
     image_webclient_url, image_url, thumb_url = get_image_urls(data_source)
     total = len(data.index)
@@ -248,6 +259,36 @@ def prepare_images_data(data, data_source, doc_type):
                     continue
                 elif rcd == "data_source":
                     row_to_insert[rcd] = data_source
+                elif rcd in new_columns:
+                    if row.get(rcd):
+                        if rcd == "roi_id":
+                            nn_value = len(row.get(rcd).split(","))
+                            row_to_insert["key_values"].append(
+                                {
+                                    "name": "Number of Rois",
+                                    "value": nn_value,
+                                    "index": 0,
+                                }
+                            )
+                        elif rcd == "channel_names":
+                            value = row.get(rcd)
+                            n_value = len(row.get(rcd).split(","))
+                            row_to_insert["key_values"].append(
+                                {
+                                    "name": "Number of channels",
+                                    "value": n_value,
+                                    "get_indexindex": 0,
+                                }
+                            )
+                        else:
+                            value = row.get(rcd)
+                        row_to_insert["key_values"].append(
+                            {
+                                "name": rcd,
+                                "value": value,
+                                "index": 0,
+                            }
+                        )
                 else:
                     row_to_insert[rcd] = row.get(rcd)
 
