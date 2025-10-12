@@ -77,10 +77,9 @@ def add_query(self, query, data_source, submit_query=False):
         all_results = get_all_query_results(query, {}, data_source, [])
     else:
         os.mkdir(folder_name)
-        total = get_submitquery_results(query, data_source, folder_name)
-
-    if total == 0:
-        return "The query returned no results"
+        total, columns = get_submitquery_results(query, data_source, folder_name)
+        if total == 0:
+            return "The query returned no results"
     if not submit_query:
         write_BBF(results=all_results, file_name=file_name)
         results = {
@@ -91,8 +90,9 @@ def add_query(self, query, data_source, submit_query=False):
             "data_source": data_source,
         }
     else:
-        write_csv_parquet_from_folder(folder_name, file_name)
+        write_csv_parquet_from_folder(folder_name, file_name, columns=columns)
         if os.path.exists(folder_name):
+            print(f"FOLDER TO BE REMOVED {folder_name} ")
             shutil.rmtree(folder_name)
 
         results = {

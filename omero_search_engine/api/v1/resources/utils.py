@@ -1783,6 +1783,7 @@ def write_BBF(results, file_name=None, return_contents=False, save_parquer=True)
                     line[name] = item
 
     df = pd.DataFrame(lines)
+    columns_headers = list(df.columns)
     if return_contents:
         return df.to_csv()
     df.to_csv(file_name)
@@ -1794,6 +1795,7 @@ def write_BBF(results, file_name=None, return_contents=False, save_parquer=True)
             index=False,
         )
     print(len(lines))
+    return columns_headers
 
 
 def create_bff_file_response(file_contents, bookmark, pagination, resource):
@@ -1886,7 +1888,7 @@ def get_bff_csv_file_data(container_type, container_name, file_type, data_source
     return response
 
 
-def get_bff_csv_file_data_(container_type, container_name, data_source):
+def get_bff_csv_file_data_(container_type, container_name, data_source, columns=None):
     import os
 
     data_folder = search_omero_app.config.get("DATA_DUMP_FOLDER")
@@ -1910,34 +1912,51 @@ def get_bff_csv_file_data_(container_type, container_name, data_source):
     file_name = os.path.join(file_path, file_name_)
     print("File name: %s" % file_name)
     if not os.path.exists(file_name):
-        write_csv_parquet_from_folder(file_path, file_name)
+        write_csv_parquet_from_folder(file_path, file_name, columns)
 
 
-def write_csv_parquet_from_folder(file_path, file_name):
+def check_headers(registered_headers, new_hearders):
+    for col in new_hearders:
+        if col.lower() not in registered_headers:
+            registered_headers.append(col)
+
+
+def write_csv_parquet_from_folder(file_path, file_name, columns=None):
     import pandas as pd
     import glob
+    import fastparquet
 
     files_list = glob.glob("%s/*.csv" % file_path)
-    df_list = []
-    # append all files together
-    for file in files_list:
-        if os.path.getsize(file) == 0:
-            continue
+    first_chunk = True
+    with open(file_name, "w", newline="", encoding="utf-8") as f_out:
+        for file in files_list:
+            for chunk in pd.read_csv(file, chunksize=120000):
+                # if the first_line is True, header will be added
+                if columns:
+                    chunk = chunk.reindex(columns=columns, fill_value="None")
+                if first_chunk:
+                    chunk.to_csv(f_out, index=False, header=True)
+                    first_chunk = False
+                else:
+                    chunk.to_csv(f_out, index=False, header=False)
 
-        df_ = pd.read_csv(file, dtype=str)
-        df_list.append(df_)
-    if len(df_list) > 0:
-        all_df = pd.concat(df_list)
-        all_df = all_df.dropna(axis=1, how="all")
-        all_df.to_csv(file_name, index=False)
-        all_df.columns = [
-            f"col_{i}" if c is None else str(c) for i, c in enumerate(all_df.columns)
-        ]
-
-        all_df.to_parquet(
-            "%s.parquet" % file_name.replace(".csv", ""),
-            engine="fastparquet",
-            index=False,
-        )
-    else:
-        print("IT is zero ")
+    if os.path.getsize(file_name) == 0:
+        return
+    first_chunk = True
+    parquet_file_name = "%s.parquet" % file_name.replace(".csv", "")
+    for chunk in pd.read_csv(
+        file_name, chunksize=120000, on_bad_lines="skip", dtype=str
+    ):
+        if first_chunk:
+            fastparquet.write(
+                parquet_file_name, chunk, write_index=True, object_encoding="utf8"
+            )
+            first_chunk = False
+        else:
+            fastparquet.write(
+                parquet_file_name,
+                chunk,
+                write_index=False,
+                append=True,
+                object_encoding="utf8",
+            )

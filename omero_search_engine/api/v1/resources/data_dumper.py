@@ -54,6 +54,7 @@ def dump_data(target_folder, id, resource, over_write, bbf_format, data_source="
     folders["screen"] = screens_folder
     containers = return_containers_images(data_source)
     for container in containers["results"]["results"]:
+        headers = []
         if resource and id:
             if container["id"] == int(id) and container["type"] == resource:
                 found = True
@@ -116,12 +117,15 @@ def dump_data(target_folder, id, resource, over_write, bbf_format, data_source="
             )
             print(len(results))
             if bbf_format:
-                write_BBF(results, container_type, file_name)
+                columns = write_BBF(results, container_type, file_name)
+                for col in columns:
+                    if col not in headers:
+                        headers.append(col)
             else:
                 save_results_file(results, file_name)
             totalrecords += len(results)
         if bbf_format:
-            get_bff_csv_file_data_(container_type, container_name, data_source)
+            get_bff_csv_file_data_(container_type, container_name, data_source, headers)
         if found:
             break
     combine_sub_containers(main_containers, target_folder)
@@ -339,6 +343,7 @@ def write_BBF(results, resource, file_name):
     df = pd.DataFrame(lines)
     df.to_csv(file_name)
     print(len(lines))
+    return df.columns.values
 
 
 def get_current_page_bookmark(pagination_dict):
@@ -380,11 +385,12 @@ def get_submitquery_results(query, datasource, folder_name=None):
     total_results = []
     total = 0
     count = 1
+    columns = []
     bookmark, pagination_dict = call_omero_searchengine_lib_return_results(
         query, datasource, total_results
     )
     if not bookmark and not pagination_dict:
-        return []
+        return 0, columns
     total_pages = pagination_dict.get("total_pages")
     next_page = pagination_dict.get("next_page")
     page = pagination_dict.get("current_page")
@@ -395,7 +401,7 @@ def get_submitquery_results(query, datasource, folder_name=None):
     # write_BBF(total_results, resource, file_name)
     from omero_search_engine.api.v1.resources.utils import write_BBF
 
-    write_BBF(
+    columns = write_BBF(
         results=total_results,
         file_name=filename,
         return_contents=False,
@@ -420,12 +426,16 @@ def get_submitquery_results(query, datasource, folder_name=None):
         total_pages = pagination_dict.get("total_pages")
         next_page = pagination_dict.get("next_page")
         page = pagination_dict.get("current_page")
-        write_BBF(
+        cols = write_BBF(
             results=total_results,
             file_name=filename,
             return_contents=False,
             save_parquer=False,
         )
+        for col in cols:
+            if col not in columns:
+                columns.append(col)
+
         # write_BBF(total_results, filename)
         total = total + len(total_results)
         search_omero_app.logger.info(
@@ -433,7 +443,7 @@ def get_submitquery_results(query, datasource, folder_name=None):
             % (bookmark, page, total_pages, total)
         )
 
-    return total
+    return total, columns
 
 
 def read_total_files(folder_name):
