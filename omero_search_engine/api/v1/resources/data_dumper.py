@@ -154,7 +154,7 @@ def combine_sub_containers(main_containers, target_folder):
                     file = os.path.join(
                         resource_path, subfolder, f"{container_name}_{subfolder}.csv"
                     )
-                    if os.path.exists(file):
+                    if os.path.exists(file) and os.path.getsize(file) > 0:
                         df_list.append(pd.read_csv(file, dtype=str))
 
                 print(subfolders, resource_path, file_name)
