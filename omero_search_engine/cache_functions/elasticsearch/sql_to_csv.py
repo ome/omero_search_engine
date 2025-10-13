@@ -44,12 +44,12 @@ plate.id as plate_id, plate.name as plate_name,
 well.id as well_id,wellsample.id as wellsample_id,
 STRING_AGG(DISTINCT roi.id::text, ', ') AS roi_id,
 STRING_AGG(DISTINCT  logicalchannel.name , ', ') AS Channels,
-pixels.sizec as SizeC, 
-pixels.sizet as SizeT, 
-pixels.sizex as SizeX, 
-pixels.sizey as SizeY, 
-pixels.sizez as SizeZ, 
-format.value  as image_format, 
+pixels.sizec as SizeC,
+pixels.sizet as SizeT,
+pixels.sizex as SizeX,
+pixels.sizey as SizeY,
+pixels.sizez as SizeZ,
+format.value  as image_format,
 pixelstype.value as pixelstype
 from image
 left join imageannotationlink on image.id =imageannotationlink.parent
@@ -68,17 +68,17 @@ left join roi on roi.image=image.id
 left join format on image.format=format.id
 left join pixels on pixels.image=image.id
 left join pixelstype on pixelstype.id=pixels.pixelstype
-left join channel on channel.pixels=pixels.id 
+left join channel on channel.pixels=pixels.id
 left join logicalchannel on logicalchannel.id=channel.logicalchannel
 $whereclause
 GROUP BY image.id, annotation_mapvalue.index,
 annotation_mapvalue.name, annotation_mapvalue.value,
 annotation_mapvalue.index, project.name, project.id,
 dataset.name, dataset.id, screen.id, screen.name,
-plate.id, plate.name, well.id,wellsample.id, format.value, pixelstype.value, 
+plate.id, plate.name, well.id,wellsample.id, format.value, pixelstype.value,
 pixels.sizec,
 pixels.sizet,
-pixels.sizex , 
+pixels.sizex,
 pixels.sizey,
 pixels.sizez"""
 )

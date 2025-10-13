@@ -219,9 +219,10 @@ def prepare_images_data(data, data_source, doc_type):
         "plate_name",
         "well_id",
         "wellsample_id",
-        ]
+    ]
 
-    new_columns=["image_size",
+    new_columns = [
+        "image_size",
         "roi_id",
         "Channels",
         "SizeC",
