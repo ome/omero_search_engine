@@ -693,11 +693,10 @@ def delete_containers(
 
 
 @search_omero_app.cli.command("index_container_from_database")
-@click.command
-@click.option("-r", "--resource", default=None, help="resource name, e.g. image")
 @click.option(
-    "-d", "--data_source", default=None, help="data_source name, i.e. project or screen"
+    "-r", "--resource", default=None, help="resource name, i.e. project or screen"
 )
+@click.option("-d", "--data_source", default=None, help="data_source name, e.g. idr")
 @click.option(
     "-i",
     "--id",
