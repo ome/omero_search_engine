@@ -283,7 +283,6 @@ def prepare_images_data(data, data_source, doc_type):
                                 }
                             )
                         elif rcd == "channel_names":
-                            value = row.get(rcd)
                             n_value = len(row.get(rcd).split(","))
                             row_to_insert["key_values"].append(
                                 {
@@ -292,12 +291,10 @@ def prepare_images_data(data, data_source, doc_type):
                                     "get_indexindex": 0,
                                 }
                             )
-                        else:
-                            value = row.get(rcd)
                         row_to_insert["key_values"].append(
                             {
                                 "name": rcd,
-                                "value": value,
+                                "value": row.get(rcd),
                                 "index": 0,
                             }
                         )
