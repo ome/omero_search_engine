@@ -8,10 +8,10 @@ test -f /etc/searchengine/.app_config.yml || cp /searchengine/configurations/app
 if [[ $@ == run_app* ]] ; then
   url_perfix=${@/run_app/}
   echo using prefix: $url_perfix
-  bash start_gunicorn_serch_engine.sh $url_perfix
+  bash start_gunicorn_search_engine.sh $url_perfix
 elif [ -z  "$@" ] || [ "$@" = "run_app" ]; then
   echo "Starting the app"
-  bash start_gunicorn_serch_engine.sh
+  bash start_gunicorn_search_engine.sh
 else
   echo "$@"
   export FLASK_APP=commands.py
