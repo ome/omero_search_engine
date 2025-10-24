@@ -221,28 +221,29 @@ def prepare_images_data(data, data_source, doc_type):
         "wellsample_id",
         "image_size",
         "roi_id",
-        "Channels",
-        "SizeC",
-        "SizeT",
-        "SizeX",
-        "SizeY",
-        "SizeZ",
+        "channels",
+        "sizec",
+        "sizet",
+        "sizex",
+        "sizey",
+        "sizez",
         "image_format",
         "pixelstype",
     ]
 
-    new_columns = [
-        "image_size",
-        "roi_id",
-        "Channels",
-        "SizeC",
-        "SizeT",
-        "SizeX",
-        "SizeY",
-        "SizeZ",
-        "image_format",
-        "pixelstype",
-    ]
+    new_columns = {
+        "image_size": "image_size",
+        "roi_id": "roi_id",
+        "channels": "channels",
+        "sizec": "SizeC",
+        "sizet": "SizeT",
+        "sizex": "SizeX",
+        "sizey": "SizeY",
+        "sizez": "SizeZ",
+        "image_format": "image_format",
+        "pixelstype": "pixelstype",
+    }
+
     image_webclient_url, image_url, thumb_url = get_image_urls(data_source)
     total = len(data.index)
     counter = 0
@@ -282,7 +283,7 @@ def prepare_images_data(data, data_source, doc_type):
                                     "index": 0,
                                 }
                             )
-                        elif rcd == "channel_names":
+                        elif rcd == "channels":
                             n_value = len(row.get(rcd).split(","))
                             row_to_insert["key_values"].append(
                                 {
@@ -294,7 +295,7 @@ def prepare_images_data(data, data_source, doc_type):
                         if rcd != "roi_id":
                             row_to_insert["key_values"].append(
                                 {
-                                    "name": rcd,
+                                    "name": new_columns[rcd],
                                     "value": row.get(rcd),
                                     "index": 0,
                                 }
