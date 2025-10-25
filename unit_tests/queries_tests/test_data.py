@@ -102,9 +102,20 @@ image_owner_group = {"image": [["gene symbol", "cep120", 702, 5]]}
 
 images_keys = ["cell line", "gene symbol"]
 
-images_value_parts = ["he", "pr"]
+images_value_parts = ["hel", "prot"]
 
 csv_test_data = [
     {"key": "organism", "value": "homo sapiens", "no_results": 15756},
     {"key": "gene symbol", "value": "pcnt", "no_results": 1484},
+]
+
+new_index_attributes = [
+    "channels",
+    "SizeC",
+    "SizeT",
+    "SizeX",
+    "SizeY",
+    "SizeZ",
+    "image_format",
+    "pixelstype",
 ]
