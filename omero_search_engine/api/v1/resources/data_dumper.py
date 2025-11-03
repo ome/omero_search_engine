@@ -324,17 +324,21 @@ def write_BBF(results, resource, file_name):
     }
     col_converter = {"image_url": "File Path", "thumb_url": "Thumbnail"}
     lines = []
-    count = 0
     for row_ in results:
+        existing_key_value_header = []
         line = {}
         lines.append(line)
-        count += 1
         for name, item in row_.items():
             if name in to_ignore_list[resource]:
                 continue
             if name == "key_values" and len(item) > 0:
                 for row in item:
-                    line[row["name"]] = row["value"]
+                    name = row["name"]
+                    if name not in existing_key_value_header:
+                        line[name] = row["value"]
+                        existing_key_value_header.append(name)
+                    else:
+                        line[name] = "%s,%s" % (line[name], row["value"])
             else:
                 if name in col_converter:
                     line[col_converter[name]] = item
