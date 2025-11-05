@@ -220,7 +220,30 @@ def prepare_images_data(data, data_source, doc_type):
         "well_id",
         "wellsample_id",
         "image_size",
+        "roi_id",
+        "channels",
+        "sizec",
+        "sizet",
+        "sizex",
+        "sizey",
+        "sizez",
+        "image_format",
+        "pixelstype",
     ]
+
+    new_columns = {
+        "image_size": "image_size",
+        "roi_id": "roi_id",
+        "channels": "channels",
+        "sizec": "SizeC",
+        "sizet": "SizeT",
+        "sizex": "SizeX",
+        "sizey": "SizeY",
+        "sizez": "SizeZ",
+        "image_format": "image_format",
+        "pixelstype": "pixelstype",
+    }
+
     image_webclient_url, image_url, thumb_url = get_image_urls(data_source)
     total = len(data.index)
     counter = 0
@@ -238,6 +261,7 @@ def prepare_images_data(data, data_source, doc_type):
             row_to_insert = data_to_be_inserted[row["id"]]
         else:
             row_to_insert = {}
+            row_to_insert["key_values"] = []
             if image_webclient_url and image_url and thumb_url:
                 row_to_insert["image_webclient_url"] = image_webclient_url % row["id"]
                 row_to_insert["image_url"] = image_url % row["id"]
@@ -248,10 +272,38 @@ def prepare_images_data(data, data_source, doc_type):
                     continue
                 elif rcd == "data_source":
                     row_to_insert[rcd] = data_source
+                elif rcd in new_columns:
+                    if row.get(rcd):
+                        if rcd == "roi_id":
+                            nn_value = len(row.get(rcd).split(","))
+                            row_to_insert["key_values"].append(
+                                {
+                                    "name": "Number of Rois",
+                                    "value": nn_value,
+                                    "index": 0,
+                                }
+                            )
+                        elif rcd == "channels":
+                            n_value = len(row.get(rcd).split(","))
+                            row_to_insert["key_values"].append(
+                                {
+                                    "name": "Number of channels",
+                                    "value": n_value,
+                                    "get_indexindex": 0,
+                                }
+                            )
+                        if rcd != "roi_id":
+                            row_to_insert["key_values"].append(
+                                {
+                                    "name": new_columns[rcd],
+                                    "value": row.get(rcd),
+                                    "index": 0,
+                                }
+                            )
                 else:
                     row_to_insert[rcd] = row.get(rcd)
 
-            row_to_insert["key_values"] = []
+            # row_to_insert["key_values"] = []
             data_to_be_inserted[row["id"]] = row_to_insert
         key_value = row_to_insert["key_values"]
         key_value.append(
