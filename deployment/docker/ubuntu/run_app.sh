@@ -7,7 +7,7 @@ echo "$@"
 
 if [ -z  "$@" ] || [ "$@" = "run_app" ]; then
   echo "Starting the app"
-  bash start_gunicorn_serch_engine.sh
+  bash start_gunicorn_search_engine.sh
 else
   echo "$@"
   python3.9 manage.py "$@"
