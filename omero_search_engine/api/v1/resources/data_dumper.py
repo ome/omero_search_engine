@@ -323,6 +323,8 @@ def write_BBF(results, resource, file_name):
         ],
     }
     col_converter = {"image_url": "File Path", "thumb_url": "Thumbnail"}
+    reserved_headers = ["name", "id", "description", "data_source"]
+
     lines = []
     for row_ in results:
         existing_key_value_header = []
@@ -334,6 +336,8 @@ def write_BBF(results, resource, file_name):
             if name == "key_values" and len(item) > 0:
                 for row in item:
                     name = row["name"]
+                    if name.lower() in reserved_headers:
+                        name = "%s_" % name
                     if name not in existing_key_value_header:
                         line[name] = row["value"]
                         existing_key_value_header.append(name)
