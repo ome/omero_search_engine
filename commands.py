@@ -120,6 +120,7 @@ def create_index(resource):
         create_omero_indexes,
     )
 
+    print(resource, "===============================>>>>")
     create_omero_indexes(resource)
 
 
@@ -258,6 +259,20 @@ def set_database_configuration(
              (i.e. url, database name, username, username password)\
              should be provided"
         )
+
+
+# set_elasticsearch_password
+
+
+@search_omero_app.cli.command("set_elasticsearch_password")
+@click.option(
+    "-e", "--elasticsearch_password", default=None, help="elasticsearch password"
+)
+def set_elasticsearch_password(elasticsearch_password):
+    if elasticsearch_password:
+        update_config_file({"ELASTIC_PASSWORD": elasticsearch_password})
+    else:
+        search_omero_app.logger.info("No attribute provided")
 
 
 @search_omero_app.cli.command("set_default_datasource")
