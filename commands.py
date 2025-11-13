@@ -872,6 +872,17 @@ def set_QUIRES_TTL(quires_ttl):
         print(f"QUIRES_TTL value has to numerical value, error: {ex}")
 
 
+@search_omero_app.cli.command("set_redis_url")
+@click.option("-r", "--redis_url", default=None, help="redis url")
+def set_redis_url(redis_url):
+    print("hello")
+    try:
+        update_config_file({"REDIS_URL": redis_url})
+    except Exception as ex:
+        print(f"QUIRES_TTL value has to numerical value, error: {ex}")
+
+
+# REDIS_URL
 @search_omero_app.cli.command("set_MAX_RESULTS_FOR_ASYNC_QUERY")
 @click.option(
     "-m",
