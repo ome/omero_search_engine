@@ -908,11 +908,24 @@ def set_MAX_RESULTS_FOR_ASYNC_QUERY(max_results_for_async_query):
     help="set data dump folder",
 )
 def set_data_dump_folder(data_dump_folder):
-    print("hello")
-    try:
+    if data_dump_folder:
         update_config_file({"DATA_DUMP_FOLDER": data_dump_folder})
-    except Exception as ex:
-        print(f"data_dump_folder value has to integer value, error: {ex}")
+    else:
+        print("data_dump_folder should have a value")
+
+
+@search_omero_app.cli.command("set_cache_folder")
+@click.option(
+    "-c",
+    "--cache_folder",
+    default=None,
+    help="set data dump folder",
+)
+def set_cache_folder(cache_folder):
+    if cache_folder:
+        update_config_file({"cache_folder": cache_folder})
+    else:
+        print("cache_folder should have a value")
 
 
 "ALLOWED_ASYNCHRONIZED_PROCESS"
