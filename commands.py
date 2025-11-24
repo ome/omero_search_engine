@@ -898,3 +898,21 @@ def set_MAX_RESULTS_FOR_ASYNC_QUERY(max_results_for_async_query):
         )
     except Exception as ex:
         print(f"MAX_RESULTS_FOR_ASYNC_QUERY value has to integer value, error: {ex}")
+
+
+@search_omero_app.cli.command("set_data_dump_folder")
+@click.option(
+    "-d",
+    "--data_dump_folder",
+    default=None,
+    help="set data dump folder",
+)
+def set_data_dump_folder(data_dump_folder):
+    print("hello")
+    try:
+        update_config_file({"DATA_DUMP_FOLDER": data_dump_folder})
+    except Exception as ex:
+        print(f"data_dump_folder value has to integer value, error: {ex}")
+
+
+"ALLOWED_ASYNCHRONIZED_PROCESS"
