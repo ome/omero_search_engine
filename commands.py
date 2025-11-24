@@ -285,10 +285,10 @@ def set_default_datasource(default_data_source):
 
 
 @search_omero_app.cli.command("set_queries_folder")
-@click.option("-q", "--ueries_folder", default=None, help="QUIRES_FOLDER")
-def set_queries_folder(ueries_folder):
-    if ueries_folder:
-        update_config_file({"QUIRES_FOLDER": ueries_folder})
+@click.option("-q", "--queries_folder", default=None, help="QUIRES_FOLDER")
+def set_queries_folder(queries_folder):
+    if queries_folder:
+        update_config_file({"QUIRES_FOLDER": queries_folder})
     else:
         search_omero_app.logger.info("No attribute provided")
 
