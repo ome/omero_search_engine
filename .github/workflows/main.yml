@@ -60,7 +60,7 @@ jobs:
           #  Restore OMERO database
           flask restore_postgresql_database
           # run indexing indexing
-          flask get_index_data_from_database -b False - True
+          flask get_index_data_from_database -b False -True
           # Set up the second database
           rm app_data/omero_db_searchengine.zip
           rm app_data/omero.pgdump
