@@ -156,7 +156,13 @@ def restore_postgresql_database(source):
     default=True,
     help="if True, backup will be called ",  # noqa
 )
-def get_index_data_from_database(resource, data_source, backup):
+@click.option(
+    "-t",
+    "--test_index_data",
+    default=False,
+    help="if True, a test will carry on",  # noqa
+)
+def get_index_data_from_database(resource, data_source, backup, test_index_data):
     """
     insert data in Elasticsearch index for each resource
     It gets the data from postgres database server
@@ -199,11 +205,10 @@ def get_index_data_from_database(resource, data_source, backup):
             clean_index = False
 
         # validate the indexing
-
-        test_indexing_search_query_(
-            "app_data/test_index_data.json", data_source_, False, True
-        )
-
+        if test_index_data:
+            test_indexing_search_query_(
+                "app_data/test_index_data.json", data_source_, False, True
+            )
     # backup the index data
     if backup:
         backup_indices_data()

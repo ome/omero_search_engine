@@ -60,7 +60,7 @@ jobs:
           #  Restore OMERO database
           flask restore_postgresql_database
           # run indexing indexing
-          flask get_index_data_from_database -b False
+          flask get_index_data_from_database -b False - True
           # Set up the second database
           rm app_data/omero_db_searchengine.zip
           rm app_data/omero.pgdump
@@ -71,7 +71,7 @@ jobs:
           echo $PGPASSWORD
           psql -h localhost -U postgres -p ${{ job.services.postgres.ports[5432] }} -c 'CREATE DATABASE omero_train'
           flask restore_postgresql_database -s omero_train
-          flask get_index_data_from_database -b False -d omero_train
+          flask get_index_data_from_database -b False -d omero_train -t True
           rm app_data/omero_train.pgdump
           # set csv data source
           flask set_data_source_files -n test_csv
