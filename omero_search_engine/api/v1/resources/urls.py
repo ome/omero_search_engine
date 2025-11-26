@@ -758,8 +758,10 @@ def get_container_bff_data():
     file_type = request.args.get("file_type")
     if not file_type:
         file_type = "parquet"
-    if file_type.lower() not in supported_file_types:
-        return "File type '%s' is not supported" % file_type
+    if file_type:
+        file_type = file_type.strip()
+        if file_type.lower() not in supported_file_types:
+            return "File type '%s' is not supported" % file_type
 
     if not container_name or not container_type:
         return "Both container type and name are required attributes."
