@@ -54,6 +54,7 @@ main_folder = os.path.dirname(os.path.realpath(__file__))
 
 
 search_omero_app = Flask(__name__)
+# celery_app = Celery()
 
 search_omero_app.json_encoder = LazyJSONEncoder
 
@@ -68,7 +69,6 @@ search_omero_app.config["SWAGGER"] = {
     ),
     "termsOfService": "https://github.com/ome/omero_search_engine/blob/main/LICENSE.txt",  # noqa
 }
-
 
 swagger = Swagger(search_omero_app, template=template)
 
@@ -90,6 +90,30 @@ class ConfigHandler(FileSystemEventHandler):
                     create_app()
         except Exception as e:
             print("ERROR:   ===>>> %s" % e)
+
+
+def config_the_app(config_name=None):
+    app_config = configLooader.get(config_name)
+    load_configuration_variables_from_file(app_config)
+    set_database_connection_variables(app_config)
+    search_omero_app.config.from_object(app_config)
+    search_omero_app.app_context()
+    search_omero_app.app_context().push()
+    search_omero_app.app_context()
+    search_omero_app.app_context().push()
+    ELASTIC_PASSWORD = app_config.ELASTIC_PASSWORD
+    es_connector = Elasticsearch(
+        app_config.ELASTICSEARCH_URL.split(","),
+        verify_certs=app_config.verify_certs,
+        request_timeout=130,
+        max_retries=20,
+        retry_on_timeout=True,
+        connections_per_node=10,
+        http_auth=("elastic", ELASTIC_PASSWORD),
+    )
+    search_omero_app.config.database_connectors = app_config.database_connectors
+    print(search_omero_app.config.database_connectors)
+    search_omero_app.config["es_connector"] = es_connector
 
 
 def create_app(config_name=None):
