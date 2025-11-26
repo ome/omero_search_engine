@@ -1874,6 +1874,8 @@ def get_bff_csv_file_data(container_type, container_name, file_type, data_source
         data_source = search_omero_app.config.get("DEFAULT_DATASOURCE")
     else:
         data_source = data_source.strip()
+    if container_type:
+        container_type = container_type.strip()
     if container_type.lower() == "project":
         file_path = f"{data_source}/csv_bff/projects/{container_name}"
     elif container_type.lower() == "screen":
