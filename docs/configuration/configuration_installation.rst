@@ -15,7 +15,7 @@ The application should have the access attributes (e.g, URL, username, password,
       * ``ELASTICSEARCH__URL``
       * ``PAGE_SIZE``
       * ``ELASTIC_PASSWORD``
-    * Although the user can edit this file to set the values, there are some methods inside :omero_search_engine:`manage.py <manage.py>` which could help to set the configuration e.g.
+    * Although the user can edit this file to set the values, there are some methods inside :omero_search_engine:`commands.py <commands.py>` which could help to set the configuration e.g.
 
       * ``set_database_configuration``
       * ``set_elasticsearch_configuration``
@@ -30,14 +30,14 @@ The application should have the access attributes (e.g, URL, username, password,
 
 * The user may need to create the Elasticsearch_ indices and insert the required data in order to use the application.
 
-* The method ``get_index_data_from_database`` inside :omero_search_engine:`manage.py <manage.py>` allows indexing automatically from the app.
+* The method ``get_index_data_from_database`` inside :omero_search_engine:`commands.py <commands.py>` allows indexing automatically from the app.
 
 * Index the data using CSV files:
 
   * The data should be extracted from the IDR/OMERO database using some SQL queries and saved to CSV files using :omero_search_engine:`sql_to_csv.py <omero_search_engine/cache_functions/elasticsearch/sql_to_csv.py>`
   * The image index data is generated in a large file, so it is recommended that the user splits it into several files to facilitate the processing of the data and its insertion into the index e.g. ``split -l 2600000 images.csv``.
   * ``create_index``: Create the Elasticsearch indices no data have been previously added, it can be used to create a single index or all the indices; the default is to create all the indices.
-  * The user should add a new data source (CSV) using the ''set_data_source_files'' command inside :omero_search_engine:`manage.py <manage.py>`
+  * The user should add a new data source (CSV) using the ''set_data_source_files'' command inside :omero_search_engine:`commands.py <commands.py>`
   * ``get_index_data_from_csv_files`` is used to read the data, to format it then to push the data to the resource Elasticsearch index. The user can provide a single file (CSV format) or folder. If a folder is specified, the indexer will use all the CSV files inside the folder.
 
 Application installation using Docker
@@ -68,7 +68,7 @@ Ubuntu and Rocky Linux 9 images are provided.
 
     $ docker run -d  --name searchengine_2 -v $HOME/:/etc/searchengine/  -v $HOME/:/opt/app-root/src/logs/  --network=searchengine-net searchengine get_index_data_from_database
 
-* The user can call any method inside :omero_search_engine:`manage.py <manage.py>` by adding the method name at the end of the run command e.g.::
+* The user can call any method inside :omero_search_engine:`commands.py <commands.py>` by adding the method name at the end of the run command e.g.::
 
     $ docker run --rm -p 5577:5577 -v $HOME/:/etc/searchengine/  searchengine show_saved_indices
 
