@@ -12,7 +12,7 @@ The developer needs to set up the application configuration as it is explained i
 After that, they should run the indexer to index Omero's data using the following command::
 
     export FLASK_APP=commands.py
-    flask get_index_data_from_database
+    flask get_index_data_from_database -d datasoource_name
 
 The developer can run the application using the following command::
 
