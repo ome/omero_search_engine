@@ -177,7 +177,7 @@ OMERO Search Engine
         
         export FLASK_APP=commands.py
         flask set_cache_rows_number -s 10000
-* The system supports restoring a database from a backup using the ``restore_postgresql_database`` method inside `commands.pyy <commands.py>`_.
+* The system supports restoring a database from a backup using the ``restore_postgresql_database`` method inside `commands.py <commands.py>`_.
 
 * The data can be also moved using SQL queries which generate the CSV files; the queries are in `sql_to_csv.py <omero_search_engine/cache_functions/elasticsearch/sql_to_csv.py>`_
 
