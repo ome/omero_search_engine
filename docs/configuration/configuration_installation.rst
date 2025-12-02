@@ -96,3 +96,14 @@ The ansible playbook :omero_search_engine:`management-searchengine.yml <deployme
     * As the caching and indexing processes take a long time, there are another two playbooks that enable the user to check if they have finished or not:
 
         * :omero_search_engine:`check_indexing_service.yml <deployment/ansible/check_indexing_service.yml>`
+* We now provide an Ansible role that you can use to install the search engine.
+
+    * https://github.com/ome/ansible-role-omero-searchengine
+
+* The README includes a sample playbook to install the search engine and all required components. You’ll need to customise the variables for your environment, mainly the OMERO database server URL, username, password, and database name.
+
+    * https://github.com/ome/ansible-role-omero-searchengine?tab=readme-ov-file#example-playbook`
+
+* The role can also be used to index data, as well as to back up and restore search-engine data.
+
+* The role has been tested and used on RHEL 9–like systems, especially Rocky Linux 9.
