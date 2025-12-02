@@ -15,6 +15,7 @@ After that, they should run the indexer to index Omero's data using the followin
 
 The developer can run the application using the following command::
 
-    python manage.py runserver -p 5577
+    export FLASK_APP=commands.py
+    flask run -p 5577
 
 Running the scripts inside the examples folder can be a good starting point.
