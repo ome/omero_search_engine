@@ -825,10 +825,10 @@ def set_automatic_refresh(automatic_refresh):
     help="Over written current data if True, default",
 )
 @click.option(
-    "-b",
-    "--bb_formate",
-    default=False,
-    help="write csv file format instead of json if the value is true",
+    "-f",
+    "--file_format",
+    default="json",
+    help="output file format",
 )
 def dump_searchengine_data(
     data_source,
@@ -836,11 +836,19 @@ def dump_searchengine_data(
     id,
     resource,
     over_write,
-    bb_formate,
+    file_format,
 ):
-    from omero_search_engine.api.v1.resources.data_dumper import dump_data
+    from omero_search_engine.api.v1.resources.data_dumper import (
+        dump_data,
+        supported_file_format,
+    )
 
-    dump_data(target_folder, id, resource, over_write, bb_formate, data_source)
+    if not file_format or file_format.lower() not in supported_file_format:
+        print("%s is not supported file format" % file_format)
+    else:
+        dump_data(
+            target_folder, id, resource, over_write, file_format.lower(), data_source
+        )
 
 
 @search_omero_app.cli.command("create_container_csv")

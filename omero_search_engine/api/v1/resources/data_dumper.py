@@ -32,7 +32,10 @@ def create_container_folder(parent_folder, container_name=None):
         return folder
 
 
-def dump_data(target_folder, id, resource, over_write, bbf_format, data_source="idr"):
+supported_file_format = ["json", "bff"]
+
+
+def dump_data(target_folder, id, resource, over_write, file_format, data_source="idr"):
     from datetime import datetime
     from omero_search_engine.api.v1.resources.utils import (
         get_working_data_source,
@@ -83,7 +86,7 @@ def dump_data(target_folder, id, resource, over_write, bbf_format, data_source="
         )
         for sub_container in sub_containers["results"]["results"]:
             print(sub_container)
-            if bbf_format:
+            if file_format == "bff":
                 file_name = os.path.join(
                     container_folder, "%s.csv" % sub_container["name"].replace("/", "_")
                 )
@@ -116,7 +119,7 @@ def dump_data(target_folder, id, resource, over_write, bbf_format, data_source="
                 query, main_attributes_query, data_source, duplicated
             )
             print(len(results))
-            if bbf_format:
+            if file_format == "bff":
                 columns = write_BBF(results, container_type, file_name)
                 for col in columns:
                     if col not in headers:
@@ -124,7 +127,7 @@ def dump_data(target_folder, id, resource, over_write, bbf_format, data_source="
             else:
                 save_results_file(results, file_name)
             totalrecords += len(results)
-        if bbf_format:
+        if file_format == "bff":
             get_bff_csv_file_data_(container_type, container_name, data_source, headers)
         if found:
             break
