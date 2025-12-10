@@ -382,7 +382,7 @@ def call_omero_searchengine_lib_return_results(query, datasource, total_results)
 
     returned_results = determine_search_results_(query, data_source=datasource)
     # global page, total_pages, pagination_dict, next_page
-    if len(returned_results["results"]) == 0:
+    if not returned_results.get("results") or len(returned_results["results"]) == 0:
         search_omero_app.logger.info("Your query returns no results")
         return None, None
     # the next page of the results
