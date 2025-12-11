@@ -30,3 +30,4 @@ QUIRES_FOLDER: path/to/queries/folder
 # quires files time to live in days
 QUIRES_TTL: 7
 MAX_RESULTS_FOR_ASYNC_QUERY: 2000000
+MAX_PAGE_SIZE: 10000

@@ -942,3 +942,18 @@ def set_cache_folder(cache_folder):
 
 
 "ALLOWED_ASYNCHRONIZED_PROCESS"
+# MAX_PAGE_SIZE
+
+
+@search_omero_app.cli.command("set_MAX_PAGE_SIZE")
+@click.option(
+    "-m",
+    "--max_page_size",
+    default=None,
+    help="used to temporary increase the number of returned results for async queries",
+)
+def set_MAX_PAGE_SIZE(max_page_size):
+    try:
+        update_config_file({"MAX_PAGE_SIZE": int(max_page_size)})
+    except Exception as ex:
+        print(f"MAX_PAGE_SIZE value has to integer value, error: {ex}")
