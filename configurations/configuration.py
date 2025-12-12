@@ -57,7 +57,7 @@ def set_database_connection_variables(config):
 
     config.database_connectors = {}
     config.FILES = {}
-    if not hasattr(config, 'DATA_SOURCES'):
+    if not hasattr(config, "DATA_SOURCES"):
         return
     for source in config.DATA_SOURCES:
         if source.get("DATABASE"):
@@ -161,7 +161,7 @@ def rename_datasource(data_source_name, new_data_source_name):
     with open(app_config.INSTANCE_CONFIG) as f:
         configuration = yaml.load(f, Loader=yaml.Loader)
     if not configuration.get("DATA_SOURCES"):
-        configuration["DATA_SOURCES"]=[]
+        configuration["DATA_SOURCES"] = []
     for data_source in configuration.get("DATA_SOURCES"):
         if data_source.get("name").lower() == data_source_name.lower():
             data_source["name"] = new_data_source_name
