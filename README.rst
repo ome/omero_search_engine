@@ -5,10 +5,10 @@
     :target: https://omero-search-engine.readthedocs.io/en/latest/?badge=latest
     :alt: Documentation Status
 
-OMERO Search Engine
---------------------
+IDR searcher
+------------
 
-* OMERO search engine app is used to search metadata (``key-value`` pairs).
+* IDR searcher is used to search metadata (``key-value`` pairs).
 * It leverages Elasticsearch, a distributed, free, and open-source search and analytics engine designed for large data volumes.
 * Most of the search operators are supported, e.g. equals, not equals, contains.
 * It allows users to run complex queries on the data using ‘and’ and ‘or’.
@@ -192,9 +192,10 @@ Disclaimer
 License
 -------
 
-OMERO search engine is released under the GPL v2.
+IDR searcher is released under the GPL v2.
 
 Copyright
 ---------
 
-2022, The Open Microscopy Environment, Glencoe Software, Inc.
+2022-2025, The Open Microscopy Environment, Glencoe Software, Inc.
+
