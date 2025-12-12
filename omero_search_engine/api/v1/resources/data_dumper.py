@@ -32,7 +32,7 @@ def create_container_folder(parent_folder, container_name=None):
         return folder
 
 
-supported_file_format = ["json", "bff"]
+supported_file_format = ["json", "csv_bff"]
 
 
 def dump_data(target_folder, id, resource, over_write, file_format, data_source="idr"):
@@ -86,7 +86,7 @@ def dump_data(target_folder, id, resource, over_write, file_format, data_source=
         )
         for sub_container in sub_containers["results"]["results"]:
             print(sub_container)
-            if file_format == "bff":
+            if file_format == "csv_bff":
                 file_name = os.path.join(
                     container_folder, "%s.csv" % sub_container["name"].replace("/", "_")
                 )
@@ -119,7 +119,7 @@ def dump_data(target_folder, id, resource, over_write, file_format, data_source=
                 query, main_attributes_query, data_source, duplicated
             )
             print(len(results))
-            if file_format == "bff":
+            if file_format == "csv_bff":
                 columns = write_BBF(results, container_type, file_name)
                 for col in columns:
                     if col not in headers:
@@ -127,7 +127,7 @@ def dump_data(target_folder, id, resource, over_write, file_format, data_source=
             else:
                 save_results_file(results, file_name)
             totalrecords += len(results)
-        if file_format == "bff":
+        if file_format == "csv_bff":
             get_bff_csv_file_data_(container_type, container_name, data_source, headers)
         if found:
             break
