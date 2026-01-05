@@ -24,7 +24,7 @@ The application needs the access attributes (e.g, URL, username, password, etc.)
 * When the app runs for the first time, it looks for the application configuration file.
 
   * If the file does not exist, it will copy a default file to the user's home folder.
-  * The file contains some default values that the user should modify.
+  * The file contains some default values that can be modified by the user.
 
 * The user must install Elasticsearch_ before using the app.
 
