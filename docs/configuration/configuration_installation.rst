@@ -4,7 +4,7 @@ System configuration
 The application needs the access attributes (e.g, URL, username, password, etc.) for the PostgreSQL database server and Elasticsearch.
 
     * The configuration is saved in a yml file (``.app_config.yml``)
-    * The file is saved in the user home folder
+    * The file is saved in the users home folder
     * The configuration file template :omero_search_engine:`app_config.yml <configurations/app_config.yml>` is distributed with the code and automatically copied to the user home folder when it runs for the first time.
     * The user should edit this file and provide the required attributes , e.g.
 
