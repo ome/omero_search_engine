@@ -21,7 +21,7 @@ The application needs the access attributes (e.g, URL, username, password, etc.)
       * ``set_elasticsearch_configuration``
       * ``set_elasticsearch_password``
 
-* When the app runs for the first time, it will look for the application configuration file.
+* When the app runs for the first time, it looks for the application configuration file.
 
   * If the file does not exist, it will copy a default file to the user's home folder.
   * The file contains some default values that the user should modify.
