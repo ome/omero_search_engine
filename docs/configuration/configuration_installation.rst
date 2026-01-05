@@ -15,7 +15,7 @@ The application needs the access attributes (e.g, URL, username, password, etc.)
       * ``ELASTICSEARCH__URL``
       * ``PAGE_SIZE``
       * ``ELASTIC_PASSWORD``
-    * Although the user can edit this file to set the values, there are some methods inside :omero_search_engine:`commands.py <commands.py>` which could help to set the configuration e.g.
+    * This file can be edited manually to set/modify the values. Also, there are some methods inside :omero_search_engine:`commands.py <commands.py>` which could help to set the configuration e.g.
 
       * ``set_database_configuration``
       * ``set_elasticsearch_configuration``
