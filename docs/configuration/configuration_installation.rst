@@ -26,7 +26,7 @@ The application needs the access attributes (e.g, URL, username, password, etc.)
   * If the file does not exist, it will copy a default file to the user's home folder.
   * The file contains some default values that the user should modify.
 
-* The user needs to install Elasticsearch_ before start using the app.
+* The user must install Elasticsearch_ before using the app.
 
 * The user may need to create the Elasticsearch_ indices and insert the required data in order to use the application.
 
