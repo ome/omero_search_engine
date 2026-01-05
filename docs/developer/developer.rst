@@ -1,20 +1,20 @@
-Developer's documents
+Developer documentation
 =====================
 
-The developer should clone the code from the project repo using the following command::
+Clone the code from the project repo using the following command::
 
     git clone https://github.com/ome/omero_search_engine.git
 
-Then they need to create a Python virtual environment variable using either venv or conda and install the packages inside requirements.txt
+Then create a Python virtual environment using either venv or conda and install the packages inside requirements.txt
 
-The developer needs to set up the application configuration as it is explained in the System configuration part inside "docs\configuration\configuration_installation.rst"
+Set up the application configuration as it is explained in the System configuration part inside "docs\configuration\configuration_installation.rst"
 
-After that, they should run the indexer to index Omero's data using the following command::
+After that, run the indexer to index OMERO's data using the following command::
 
     export FLASK_APP=commands.py
     flask get_index_data_from_database -d datasoource_name
 
-The developer can run the application using the following command::
+Run the application using the following command (for developers)::
 
     export FLASK_APP=commands.py
     flask run -p 5577
