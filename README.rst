@@ -160,23 +160,24 @@ IDR searcher
   * It will display the results when they are ready
 * The app uses Elasticsearch
 
-  * The method ``create_index`` inside `manage.py <manage.py>`_ creates a separate index for image, project, dataset, screen, plate, and well using two templates:
+  * The method ``create_index`` inside `commands.py <commands.py>`_ creates a separate index for image, project, dataset, screen, plate, and well using two templates:
 
     * Image template (image_template) for image index. It is derived from some OMERO tables into a single Elasticsearch index (image, annoation_mapvalue, imageannotationlink, project, dataset, well, plate, and screen to generate a single index.
     * Non-image template (non_image_template) for other indices (project, dataset, well, plate, screen). It is derived from some OMERO tables depending on the resource; for example for the project it combines project, projectannotationlink and annotation_mapvalue.
     * Both of the templates are in `elasticsearch_templates.py <omero_search_engine/cache_functions/elasticsearch/elasticsearch_templates.py>`_
     * The data can be moved using SQL queries which generate the CSV files; the queries are in `sql_to_csv.py <omero_search_engine/cache_functions/elasticsearch/sql_to_csv.py>`_
-    * The method ``add_resource_data_to_es_index`` inside `manage.py <manage.py>`_ reads the CSV files and inserts the data to the Elasticsearch index.
-* The data can be transferred directly from the OMERO database to the Elasticsearch using the ``get_index_data_from_database`` method inside `manage.py <manage.py>`_:
+    * The method ``add_resource_data_to_es_index`` inside `commands.py <commands.py>`_ reads the CSV files and inserts the data to the Elasticsearch index.
+* The data can be transferred directly from the OMERO database to the Elasticsearch using the ``get_index_data_from_database`` method inside `commands.py <commands.py>`_:
 
   * It creates the elasticsearch indices for each resource
   * It queries the OMERO database after receiving the data, processes, and pushes it to the Elasticsearch indices.
   * This process takes a relatively long time depending on the hosting machine specs. The user can adjust how many rows can be processed per call to the OMERO database:
-    * Set the number of rows using the ``set_cache_rows_number`` method inside `manage.py <manage.py>`_, the following example will set the number to 1000::
+    * Set the number of rows using the ``set_cache_rows_number`` method inside `commands.py <commands.py>`_, the following example will set the number to 1000::
 
         
-        $ python manage.py set_cache_rows_number -s 10000
-* The system supports restoring a database from a backup using the ``restore_postgresql_database`` method inside `manage.py <manage.py>`_.
+        export FLASK_APP=commands.py
+        flask set_cache_rows_number -s 10000
+* The system supports restoring a database from a backup using the ``restore_postgresql_database`` method inside `commands.py <commands.py>`_.
 
 * The data can be also moved using SQL queries which generate the CSV files; the queries are in `sql_to_csv.py <omero_search_engine/cache_functions/elasticsearch/sql_to_csv.py>`_
 
