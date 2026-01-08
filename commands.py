@@ -167,6 +167,7 @@ def get_index_data_from_database(resource, data_source, backup):
         get_insert_data_to_index,
         save_key_value_buckets,
     )
+    from omero_search_engine.api.v1.resources.utils import delete_data_source_contents
 
     if not data_source:
         print("Data source is required to process")
@@ -179,6 +180,11 @@ def get_index_data_from_database(resource, data_source, backup):
     for data_source_ in search_omero_app.config.database_connectors.keys():
         if data_source.lower() != "all" and data_source_.lower() != data_source.lower():
             continue
+
+        search_omero_app.logger.info(
+            f"Check and delete data source: {data_source_} data if exist"
+        )
+        delete_data_source_contents(data_source)
 
         for res, sql_st in sqls_resources.items():
             if resource.lower() != "all" and resource.lower() != res.lower():

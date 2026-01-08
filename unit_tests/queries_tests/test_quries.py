@@ -29,6 +29,9 @@ from omero_search_engine.api.v1.resources.utils import (
     search_resource_annotation,
     get_data_sources,
 )
+from omero_search_engine.api.v1.resources.resource_analyser import (
+    get_resource_attributes,
+)
 
 from omero_search_engine.cache_functions.elasticsearch.elasticsearch_templates import (  # noqa
     image_template,
@@ -65,6 +68,7 @@ from test_data import (
     image_owner,
     image_group,
     image_owner_group,
+    new_index_attributes,
 )
 
 from omero_search_engine import search_omero_app, create_app
@@ -375,6 +379,15 @@ class BasicTestCase(unittest.TestCase):
                         len(validator.postgres_results),
                         validator.searchengine_results.get("size"),
                     )
+
+    def test_index_new_attributes(self):
+        """
+        Test new indexed attributes
+        """
+        for data_source in search_omero_app.config.database_connectors.keys():
+            resource_keys = get_resource_attributes("image", data_source=data_source)
+            attributes = resource_keys[0]["image"]
+            assert all(item in attributes for item in new_index_attributes)
 
     def test_data_sources(self):
         """
