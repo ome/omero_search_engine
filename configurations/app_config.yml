@@ -18,6 +18,6 @@ REDIS_URL: 127.0.0.1
 REDIS_PORT: 6379
 QUIRES_FOLDER: path/to/queries/folder
 # quires files time to live in days
-QUIRES_TTL: 7
+QUERIES_TTL: 7
 MAX_RESULTS_FOR_ASYNC_QUERY: 2000000
 MAX_PAGE_SIZE: 10000

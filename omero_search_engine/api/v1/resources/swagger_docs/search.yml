@@ -42,7 +42,7 @@ parameters:
     type: boolean
     required: false
   - name: return_bff
-    description: return csv file with BFF format
+    description: return csv file with BioFile Finder (BFF) format, BFF is a tool for filtering, sorting and grouping tabular data.
     in: query
     type: boolean
     required: false

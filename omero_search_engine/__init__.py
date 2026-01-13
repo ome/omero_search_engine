@@ -32,7 +32,7 @@ import time
 from omero_search_engine.__version__ import __version__
 
 from configurations.configuration import (
-    configLooader,
+    configLoader,
     load_configuration_variables_from_file,
     set_database_connection_variables,
     get_configuration_file,
@@ -93,7 +93,7 @@ class ConfigHandler(FileSystemEventHandler):
 
 
 def config_the_app(config_name=None):
-    app_config = configLooader.get(config_name)
+    app_config = configLoader.get(config_name)
     load_configuration_variables_from_file(app_config)
     set_database_connection_variables(app_config)
     search_omero_app.config.from_object(app_config)
@@ -123,7 +123,7 @@ def create_app(config_name=None):
     else:
         print("re-assign...")
         environment_config_name = config_name
-    app_config = configLooader.get(config_name)
+    app_config = configLoader.get(config_name)
     load_configuration_variables_from_file(app_config)
     set_database_connection_variables(app_config)
     search_omero_app.config.from_object(app_config)

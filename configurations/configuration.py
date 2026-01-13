@@ -257,7 +257,7 @@ class test_app_config(app_config):
     pass
 
 
-configLooader = {
+configLoader = {
     "development": development_app_config,
     "testing": test_app_config,
     "production": production_app_config,
