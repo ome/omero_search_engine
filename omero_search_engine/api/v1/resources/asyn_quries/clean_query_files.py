@@ -31,7 +31,7 @@ celery_app, app_config = make_celery("clean_query_files")
 )
 def clean_query_files(self):
     """
-    check quires  files and delete them after the configured time (QUIRES_TTL)
+    check queries  files and delete them after the configured time (QUIRES_TTL)
 
     """
 
