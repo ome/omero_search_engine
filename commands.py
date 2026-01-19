@@ -253,11 +253,9 @@ def set_database_configuration(
     if len(database_attrs) > 0:
         update_config_file(database_config, data_source=True)
     else:
-        search_omero_app.logger.info(
-            "At least one database attribute\
+        search_omero_app.logger.info("At least one database attribute\
              (i.e. url, database name, username, username password)\
-             should be provided"
-        )
+             should be provided")
 
 
 @search_omero_app.cli.command("set_default_datasource")
