@@ -23,7 +23,6 @@ import requests
 import sys
 from utils import base_url
 
-
 # url to send the query
 image_ext = "/resources/image/searchannotation/"
 # url to get the next page for a query, bookmark is needed

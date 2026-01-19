@@ -100,89 +100,59 @@ main_attribute_query_in_template = Template(
 )
 # Search main attribute which has long data type
 # ends with "_id" in the image index (template)
-main_attribute_query_template_id = Template(
-    """
-{"bool":{"must":{"match":{"$attribute":"$value"}}}}"""
-)
+main_attribute_query_template_id = Template("""
+{"bool":{"must":{"match":{"$attribute":"$value"}}}}""")
 
 # must_name_condition_template= Template('''{"match": {"key_values.name.keyword":"$name"}}''')  # noqa
 # support case_sensitive and case_insensitive for keys
-case_sensitive_must_name_condition_template = Template(
-    """
-{"match": {"key_values.name.keyword":"$name"}}"""
-)
-case_insensitive_must_name_condition_template = Template(
-    """
-{"match": {"key_values.name.keynamenormalize":"$name"}}"""
-)
+case_sensitive_must_name_condition_template = Template("""
+{"match": {"key_values.name.keyword":"$name"}}""")
+case_insensitive_must_name_condition_template = Template("""
+{"match": {"key_values.name.keynamenormalize":"$name"}}""")
 
-case_insensitive_must_value_condition_template = Template(
-    """
-{"match": {"key_values.value.keyvaluenormalize":"$value"}}"""
-)
+case_insensitive_must_value_condition_template = Template("""
+{"match": {"key_values.value.keyvaluenormalize":"$value"}}""")
 
 # in operator
-case_insensitive_must_in_value_condition_template = Template(
-    """
-{"terms": {"key_values.value.keyvaluenormalize":$value}}"""
-)
+case_insensitive_must_in_value_condition_template = Template("""
+{"terms": {"key_values.value.keyvaluenormalize":$value}}""")
 
-case_sensitive_must_value_condition_template = Template(
-    """
-{"match": {"key_values.value.keyvalue":"$value"}}"""
-)
+case_sensitive_must_value_condition_template = Template("""
+{"match": {"key_values.value.keyvalue":"$value"}}""")
 
-nested_query_template_must_must_not = Template(
-    """
+nested_query_template_must_must_not = Template("""
 {"nested": {"path": "key_values",
-"query":{"bool": {"must":[$must_part], "must_not":[$must_not_part]}}}}"""
-)
+"query":{"bool": {"must":[$must_part], "must_not":[$must_not_part]}}}}""")
 
 # in opeartor
-case_sensitive_must_in_value_condition_template = Template(
-    """
-{"terms": {"key_values.value.keyvalue":$value}}"""
-)
+case_sensitive_must_in_value_condition_template = Template("""
+{"terms": {"key_values.value.keyvalue":$value}}""")
 
 
-nested_keyvalue_pair_query_template = Template(
-    """
+nested_keyvalue_pair_query_template = Template("""
 {"nested": {"path": "key_values",
-"query":{"bool": {"must":[$nested ] }}}}"""
-)
-nested_query_template_must_not = Template(
-    """
+"query":{"bool": {"must":[$nested ] }}}}""")
+nested_query_template_must_not = Template("""
 {"nested": {"path": "key_values",
-"query":{"bool": {"must_not":[$must_not_value ]}}}}"""
-)
+"query":{"bool": {"must_not":[$must_not_value ]}}}}""")
 # ==> equal term
 must_term_template = Template(""""must" : [$must_term]""")
 # ==> not equal
 must_not_term_template = Template(""""must_not": [$must_not_term]""")
 # Used for contains and not contains
-case_sensitive_wildcard_value_condition_template = Template(
-    """
-{"wildcard": {"key_values.value.keyvalue":"$wild_card_value"}}"""
-)
+case_sensitive_wildcard_value_condition_template = Template("""
+{"wildcard": {"key_values.value.keyvalue":"$wild_card_value"}}""")
 
 # Used for contains and not contains
-case_insensitive_wildcard_value_condition_template = Template(
-    """
-{"wildcard": {"key_values.value.keyvaluenormalize":"$wild_card_value" }}"""
-)
-case_sensitive_range_value_condition_template = Template(
-    """
-{"range":{"key_values.value.keyvalue":{"$operator":"$value"} }}"""
-)
-case_insensitive_range_value_condition_template = Template(
-    """
-{"range":{"key_values.value.keyvaluenormalize":{"$operator":"$value"}}}"""
-)
-should_term_template = Template(
-    """
+case_insensitive_wildcard_value_condition_template = Template("""
+{"wildcard": {"key_values.value.keyvaluenormalize":"$wild_card_value" }}""")
+case_sensitive_range_value_condition_template = Template("""
+{"range":{"key_values.value.keyvalue":{"$operator":"$value"} }}""")
+case_insensitive_range_value_condition_template = Template("""
+{"range":{"key_values.value.keyvaluenormalize":{"$operator":"$value"}}}""")
+should_term_template = Template("""
 {"bool":{ "should": [$should_term],
-"minimum_should_match" : $minimum_should_match ,"boost" : 1.0 }}"""
-)  # ==> or
+"minimum_should_match" : $minimum_should_match ,"boost" : 1.0 }}""")  # ==> or
 
 
 query_template = Template("""{"query": {"bool": {$query}}}""")
@@ -195,10 +165,8 @@ count_attr_template = Template(
 )
 
 # This template is used to get the study using its idr
-res_raw_query = Template(
-    """{"query": {"bool": {"must": [{"bool": {"must": {"match":
-    {"name.keyvalue": "$idr"}}}}]}}} """
-)
+res_raw_query = Template("""{"query": {"bool": {"must": [{"bool": {"must": {"match":
+    {"name.keyvalue": "$idr"}}}}]}}} """)
 
 operators_required_list_data_type = ["in", "not_in"]
 
@@ -360,10 +328,8 @@ def elasticsearch_query_builder(
 
             except Exception as e:
                 search_omero_app.logger.info(str(e))
-                return build_error_message(
-                    "Each Filter needs to have, name,\
-                    value and operator keywords."
-                )
+                return build_error_message("Each Filter needs to have, name,\
+                    value and operator keywords.")
             search_omero_app.logger.info("%s %s %s" % (operator, key, value))
             search_omero_app.logger.info("%s %s %s" % (operator, key, value))
             _nested_must_part = []
@@ -653,10 +619,8 @@ def elasticsearch_query_builder(
                     value = or_filter["value"].strip()
                     operator = or_filter["operator"].strip()
                 except Exception:
-                    return build_error_message(
-                        "Each Filter needs to have,\
-                        name, value and operator keywords."
-                    )
+                    return build_error_message("Each Filter needs to have,\
+                        name, value and operator keywords.")
 
                 if key and key not in added_keys:
                     added_keys.append(key)
@@ -894,11 +858,8 @@ def check_filters(res_table, filters, case_sensitive):
 
     names = get_resource_attributes(res_table)
     if not names or len(names) == 0:
-        search_omero_app.logger.info(
-            "Could not check\
-                                      filters %s"
-            % str(filters)
-        )
+        search_omero_app.logger.info("Could not check\
+                                      filters %s" % str(filters))
         return
 
     search_omero_app.logger.info(str(filters))
@@ -1729,8 +1690,7 @@ def delete_data_source_contents(data_source):
     return found
 
 
-delete_container_query = Template(
-    """
+delete_container_query = Template("""
 {"query":{
       "bool":{"must":[{
                "bool":{
@@ -1742,21 +1702,17 @@ delete_container_query = Template(
                      "match":{
                         "data_source.keyvalue":"$data_source"
                      }}}}]}}}
-"""
-)
+""")
 
-delete_cache_query = Template(
-    """
+delete_cache_query = Template("""
 {"query":{"bool":{"must":[{"bool":{
                   "must":{
                      "match":{
                         "data_source.keyvalue":"$data_source"
                      }}}}]}}}
-"""
-)
+""")
 
-delete_datasource_query = Template(
-    """
+delete_datasource_query = Template("""
         {
    "query":{
       "bool":{
@@ -1767,5 +1723,4 @@ delete_datasource_query = Template(
                      "match":{
                         "data_source.keyvalue":"$data_source"
                      }}}}]}}}
-"""
-)
+""")

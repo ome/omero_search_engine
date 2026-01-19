@@ -62,12 +62,8 @@ def create_index(es_index, template):
             search_omero_app.logger.info("TYPE: %s" % error["type"])
             return False
     except Exception as ex:
-        search_omero_app.logger.info(
-            "Error while creating index {es_index},\
-             error message: {error}".format(
-                es_index=es_index, error=str(ex)
-            )
-        )
+        search_omero_app.logger.info("Error while creating index {es_index},\
+             error message: {error}".format(es_index=es_index, error=str(ex)))
         raise ex
         return False
 
@@ -228,12 +224,8 @@ def prepare_images_data(data, data_source, doc_type):
     for index, row in data.iterrows():
         counter += 1
         if counter % 100000 == 0:
-            search_omero_app.logger.info(
-                "Process:\
-                {counter}/{total}".format(
-                    counter=counter, total=total
-                )
-            )
+            search_omero_app.logger.info("Process:\
+                {counter}/{total}".format(counter=counter, total=total))
         if row["id"] in data_to_be_inserted:
             row_to_insert = data_to_be_inserted[row["id"]]
         else:
@@ -282,12 +274,8 @@ def prepare_data(data, data_source, doc_type):
     for index, row in data.iterrows():
         counter += 1
         if counter % 100000 == 0:
-            search_omero_app.logger.info(
-                "Process:\
-                {counter}/{total}".format(
-                    counter=counter, total=total
-                )
-            )
+            search_omero_app.logger.info("Process:\
+                {counter}/{total}".format(counter=counter, total=total))
 
         if row["id"] in data_to_be_inserted:
             row_to_insert = data_to_be_inserted[row["id"]]
@@ -436,26 +424,16 @@ def insert_resource_data(folder, resource, data_source, from_json, need_convert=
     no_processors = search_omero_app.config.get("NO_PROCESSES")
     if not no_processors:
         no_processors = int(multiprocessing.cpu_count() / 2)
-    search_omero_app.logger.info(
-        "Number of allowed parallel\
-        processes inside the pool: %s"
-        % no_processors
-    )
+    search_omero_app.logger.info("Number of allowed parallel\
+        processes inside the pool: %s" % no_processors)
     # create the multiprocessing pool
     pool = multiprocessing.Pool(no_processors)
 
-    search_omero_app.logger.info(
-        "Adding data to\
-        {} using {}".format(
-            resource, folder
-        )
-    )
+    search_omero_app.logger.info("Adding data to\
+        {} using {}".format(resource, folder))
     if not resource_elasticsearchindex.get(resource):
-        search_omero_app.logger.info(
-            "No index found for\
-            resource: %s"
-            % resource
-        )
+        search_omero_app.logger.info("No index found for\
+            resource: %s" % resource)
         return
 
     f_con = 0
@@ -542,11 +520,8 @@ def get_insert_data_to_index(sql_st, resource, data_source, clean_index=True):
     no_processors = search_omero_app.config.get("NO_PROCESSES")
     if not no_processors:
         no_processors = int(multiprocessing.cpu_count() / 2)
-    search_omero_app.logger.info(
-        "Number of the allowed parallel\
-        processes inside the pool: %s"
-        % no_processors
-    )
+    search_omero_app.logger.info("Number of the allowed parallel\
+        processes inside the pool: %s" % no_processors)
     # create the multiprocessing pool
     pool = multiprocessing.Pool(no_processors)
     try:
@@ -709,11 +684,8 @@ def index_containers_from_database(
         if not no_processors:
             no_processors = int(multiprocessing.cpu_count() / 2)
         no_processors = no_processors_
-        search_omero_app.logger.info(
-            "Number of allowed parallel\
-            processes inside the pool: %s"
-            % no_processors
-        )
+        search_omero_app.logger.info("Number of allowed parallel\
+            processes inside the pool: %s" % no_processors)
         # create the multiprocessing pool
         global total_process
         total_process = len(vals)
@@ -885,11 +857,8 @@ def save_key_value_buckets(
             if resource_table_ != resource_table:
                 continue
 
-        search_omero_app.logger.info(
-            "check table:\
-            %s ......."
-            % resource_table
-        )
+        search_omero_app.logger.info("check table:\
+            %s ......." % resource_table)
         from omero_search_engine.api.v1.resources.resource_analyser import (
             get_resource_keys,
         )
@@ -983,22 +952,16 @@ def save_key_value_buckets_process(lock, global_counter, vals):
     finally:
         lock.release()
     try:
-        search_omero_app.logger.info(
-            "Processing \
-            %s/%s"
-            % (global_counter.value, total)
-        )
+        search_omero_app.logger.info("Processing \
+            %s/%s" % (global_counter.value, total))
         search_omero_app.logger.info("Checking {key}".format(key=key))
         data_to_be_pushed = get_buckets(
             key, data_source, resource_table, es_index, lock
         )
 
         actions = []
-        search_omero_app.logger.info(
-            "data_to_be_pushed:\
-            %s"
-            % len(data_to_be_pushed)
-        )
+        search_omero_app.logger.info("data_to_be_pushed:\
+            %s" % len(data_to_be_pushed))
         for record in data_to_be_pushed:
             actions.append({"_index": es_index, "_source": record})
         es = search_omero_app.config.get("es_connector")
@@ -1014,11 +977,8 @@ def save_key_value_buckets_process(lock, global_counter, vals):
         finally:
             lock.release()
     except Exception as e:
-        search_omero_app.logger.info(
-            "%s, \
-            Error:%s "
-            % (global_counter.value, str(e))
-        )
+        search_omero_app.logger.info("%s, \
+            Error:%s " % (global_counter.value, str(e)))
         # raise e
         if wrong_keys.get(resource_table):
             wrong_keys[resource_table] = wrong_keys[resource_table].append(key)
@@ -1030,9 +990,7 @@ def get_keys(res_table, data_source):
     sql = "select  distinct (name) from annotation_mapvalue\
            inner join {res_table}annotationlink on\
            {res_table}annotationlink.child=\
-           annotation_mapvalue.annotation_id".format(
-        res_table=res_table
-    )
+           annotation_mapvalue.annotation_id".format(res_table=res_table)
     results = search_omero_app.config.database_connectors[data_source].execute_query(
         sql
     )

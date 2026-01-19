@@ -41,7 +41,6 @@ from logging.handlers import RotatingFileHandler
 
 from configurations.configuration import app_config as config_
 
-
 template = {
     "swaggerUiPrefix": LazyString(
         lambda: request.environ.get("SCRIPT_NAME", "")
@@ -128,12 +127,8 @@ def create_app(config_name=None):
         maxBytes=100240,
         backupCount=10,
     )
-    file_handler.setFormatter(
-        logging.Formatter(
-            "%(asctime)s %(levelname)s:\
-             %(message)s [in %(pathname)s:%(lineno)d]"
-        )
-    )
+    file_handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s:\
+             %(message)s [in %(pathname)s:%(lineno)d]"))
     file_handler.setLevel(logging.INFO)
     search_omero_app.logger.addHandler(file_handler)
 
@@ -187,11 +182,8 @@ def after_request(response):
 @search_omero_app.errorhandler(404)
 def page_not_found(error):
     search_omero_app.logger.info("Error: %s" % error)
-    resp_message = (
-        "%s, You may use '/searchengine/api/v1/resources/' to test\
-        the deployment and '/searchengine/apidocs/' for the Swagger documents."
-        % error
-    )
+    resp_message = "%s, You may use '/searchengine/api/v1/resources/' to test\
+        the deployment and '/searchengine/apidocs/' for the Swagger documents." % error
     response = make_response(resp_message, 404)
     response.mimetype = "text/plain"
     return response
