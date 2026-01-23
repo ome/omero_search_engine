@@ -97,10 +97,8 @@ def config_the_app(config_name=None):
     load_configuration_variables_from_file(app_config)
     set_database_connection_variables(app_config)
     search_omero_app.config.from_object(app_config)
-    search_omero_app.app_context()
-    search_omero_app.app_context().push()
-    search_omero_app.app_context()
-    search_omero_app.app_context().push()
+    cntx = search_omero_app.app_context()
+    cntx.push()
     ELASTIC_PASSWORD = app_config.ELASTIC_PASSWORD
     es_connector = Elasticsearch(
         app_config.ELASTICSEARCH_URL.split(","),
@@ -127,10 +125,8 @@ def create_app(config_name=None):
     load_configuration_variables_from_file(app_config)
     set_database_connection_variables(app_config)
     search_omero_app.config.from_object(app_config)
-    search_omero_app.app_context()
-    search_omero_app.app_context().push()
-    search_omero_app.app_context()
-    search_omero_app.app_context().push()
+    cntx = search_omero_app.app_context()
+    cntx.push()
     ELASTIC_PASSWORD = app_config.ELASTIC_PASSWORD
     es_connector = Elasticsearch(
         app_config.ELASTICSEARCH_URL.split(","),

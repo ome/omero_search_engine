@@ -809,14 +809,14 @@ def return_query_results():
                 from omero_search_engine import search_omero_app
                 from flask import Response
 
-                quires_folder = search_omero_app.config.get("QUIRES_FOLDER")
+                queries_folder = search_omero_app.config.get("QUERIES_FOLDER")
                 response = Response()
                 response.headers["Content-Type"] = "application/octet-stream"
                 response.headers["Content-Disposition"] = (
                     f'attachment; filename="{file_name}"'
                 )
                 response.headers["X-Accel-Redirect"] = (
-                    f"/send_file/{quires_folder}{file_name}"
+                    f"/send_file/{queries_folder}{file_name}"
                 )
                 return response
 

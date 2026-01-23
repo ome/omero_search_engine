@@ -39,7 +39,7 @@ def dump_data(target_folder, id, resource, over_write, file_format, data_source=
     from datetime import datetime
     from omero_search_engine.api.v1.resources.utils import (
         get_working_data_source,
-        get_bff_csv_file_data_,
+        write_bff_csv_file_data,
     )
 
     main_containers = {"project": [], "screen": []}
@@ -128,7 +128,9 @@ def dump_data(target_folder, id, resource, over_write, file_format, data_source=
                 save_results_file(results, file_name)
             totalrecords += len(results)
         if file_format == "csv_bff":
-            get_bff_csv_file_data_(container_type, container_name, data_source, headers)
+            write_bff_csv_file_data(
+                container_type, container_name, data_source, headers
+            )
         if found:
             break
     combine_sub_containers(main_containers, target_folder)

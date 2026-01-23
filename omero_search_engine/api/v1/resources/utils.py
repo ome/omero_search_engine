@@ -1894,7 +1894,7 @@ def get_bff_csv_file_data(container_type, container_name, file_type, data_source
     return response
 
 
-def get_bff_csv_file_data_(container_type, container_name, data_source, columns=None):
+def write_bff_csv_file_data(container_type, container_name, data_source, columns=None):
     import os
 
     data_folder = search_omero_app.config.get("DATA_DUMP_FOLDER")

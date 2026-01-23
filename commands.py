@@ -290,10 +290,10 @@ def set_default_datasource(default_data_source):
 
 
 @search_omero_app.cli.command("set_queries_folder")
-@click.option("-q", "--queries_folder", default=None, help="QUIRES_FOLDER")
+@click.option("-q", "--queries_folder", default=None, help="QUERIES_FOLDER")
 def set_queries_folder(queries_folder):
     if queries_folder:
-        update_config_file({"QUIRES_FOLDER": queries_folder})
+        update_config_file({"QUERIES_FOLDER": queries_folder})
     else:
         search_omero_app.logger.info("No attribute provided")
 
@@ -856,9 +856,9 @@ def dump_searchengine_data(
 @click.option("-t", "--container_type", default=None, help="container_type")
 @click.option("-n", "--container_name", default=None, help="container_name")
 def create_container_csv(data_source, container_type, container_name):
-    from omero_search_engine.api.v1.resources.utils import get_bff_csv_file_data_
+    from omero_search_engine.api.v1.resources.utils import write_bff_csv_file_data
 
-    get_bff_csv_file_data_(container_type, container_name, data_source)
+    write_bff_csv_file_data(container_type, container_name, data_source)
 
 
 # export FLASK_APP=commands.py
@@ -882,7 +882,7 @@ def set_QUERIES_TTL(quires_ttl):
     try:
         update_config_file({"QUERIES_TTL": float(quires_ttl)})
     except Exception as ex:
-        print(f"QUIRES_TTL value has to numerical value, error: {ex}")
+        print(f"QUERIES_TTL value has to numerical value, error: {ex}")
 
 
 @search_omero_app.cli.command("set_redis_url")
@@ -892,7 +892,7 @@ def set_redis_url(redis_url):
     try:
         update_config_file({"REDIS_URL": redis_url})
     except Exception as ex:
-        print(f"QUIRES_TTL value has to numerical value, error: {ex}")
+        print(f"set_redis_url value error, error message: {ex}")
 
 
 # REDIS_URL

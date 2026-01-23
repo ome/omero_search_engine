@@ -35,10 +35,8 @@ r = redis.Redis(host=app_config.REDIS_URL, port=app_config.REDIS_PORT, db=0)
 
 
 def load_the_app_config():
-    search_omero_app.app_context()
-    search_omero_app.app_context().push()
-    search_omero_app.app_context()
-    search_omero_app.app_context().push()
+    cntx = search_omero_app.app_context()
+    cntx.push()
     ELASTIC_PASSWORD = app_config.ELASTIC_PASSWORD
     es_connector = Elasticsearch(
         app_config.ELASTICSEARCH_URL.split(","),
@@ -56,7 +54,6 @@ def load_the_app_config():
 
 def check_jobs_queue():
     search_omero_app.config.get("REDIS_URL")
-    # app_config.REDIS_URL, app_config.REDIS_PORT
     reds = redis.Redis(host=app_config.REDIS_URL, port=app_config.REDIS_PORT, db=0)
 
     queries = reds.lrange("celery", 0, -1)
@@ -68,7 +65,7 @@ def check_jobs_queue():
 
 
 def get_query_file_name(job_id):
-    file_path = f"{app_config.DATA_DUMP_FOLDER}{app_config.QUIRES_FOLDER}"
+    file_path = f"{app_config.DATA_DUMP_FOLDER}{app_config.QUERIES_FOLDER}"
     file_name = os.path.join(file_path, f"{job_id}.csv")
     return file_path, file_name
 

@@ -16,7 +16,7 @@ NOT_INDEX_VECTOR: True
 ALLOWED_ASYNCHRONIZED_PROCESS: 8
 REDIS_URL: 127.0.0.1
 REDIS_PORT: 6379
-QUIRES_FOLDER: path/to/queries/folder
+QUERIES_FOLDER: path/to/queries/folder
 # quires files time to live in days
 QUERIES_TTL: 7
 MAX_RESULTS_FOR_ASYNC_QUERY: 2000000

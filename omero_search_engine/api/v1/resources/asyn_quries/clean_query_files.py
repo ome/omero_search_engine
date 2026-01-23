@@ -31,15 +31,15 @@ celery_app, app_config = make_celery("clean_query_files")
 )
 def clean_query_files(self):
     """
-    check queries  files and delete them after the configured time (QUIRES_TTL)
+    check queries  files and delete them after the configured time (QUERIES_TTL)
 
     """
 
-    quires_ttl = app_config.QUERIES_TTL
+    queries_ttl = app_config.QUERIES_TTL
     quires_files_path = os.path.join(
-        app_config.DATA_DUMP_FOLDER, app_config.QUIRES_FOLDER
+        app_config.DATA_DUMP_FOLDER, app_config.QUERIES_FOLDER
     )
-    quires_ttl_in_sec = time.time() - (quires_ttl * 86400)
+    quires_ttl_in_sec = time.time() - (queries_ttl * 86400)
 
     for filename in os.listdir(quires_files_path):
         file_path = os.path.join(quires_files_path, filename)
