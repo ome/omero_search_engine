@@ -858,7 +858,9 @@ def dump_searchengine_data(
 def create_container_csv(data_source, container_type, container_name):
     from omero_search_engine.api.v1.resources.utils import write_bff_csv_file_data
 
-    write_bff_csv_file_data(container_type, container_name, data_source)
+    message = write_bff_csv_file_data(container_type, container_name, data_source)
+    if message:
+        print(message)
 
 
 # export FLASK_APP=commands.py
