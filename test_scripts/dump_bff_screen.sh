@@ -1,0 +1,1 @@
+ docker run   -d -v /data/data_dump:/data/data_dump -v ~/.cache/huggingface:/root/.cache/huggingface   -v /data/searchengine/searchengine/:/etc/searchengine/  -v /data/searchengine/searchengine/logs/:/opt/app-root/src/logs/ --network searchengine-net khaledk2/searchengine:new_packages dump_searchengine_data -d idr -r screen   -f bff -t /data/data_dump/idr/csv_bff -o True
