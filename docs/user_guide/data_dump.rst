@@ -10,14 +10,14 @@
 
 - To dump data in BFF CSV format::
 
-    docker run --rm -v /data/data_dump:/data/data_dump  -v /data/searchengine/searchengine/:/etc/searchengine/  -v /data/searchengine/searchengine/logs/:/opt/app-root/src/logs/ --network searchengine-net  Docker_imag_support_data_dump dump_searchengine_data -t /data/data_dump/data_source -f bff -d data_source -r container
+    docker run --rm -v /data/data_dump:/data/data_dump  -v /data/searchengine/searchengine/:/etc/searchengine/  -v /data/searchengine/searchengine/logs/:/opt/app-root/src/logs/ --network searchengine-net  Docker_imag_support_data_dump dump_searchengine_data -t /data/data_dump/data_source -f csv_bff -d data_source -r container
 
 
 
 
 - To dump a single container (i.e. project or screen), specify its type and ID. For example, to export project 501::
 
-    docker run --rm -v /data/data_dump:/data/data_dump  -v /data/searchengine/searchengine/:/etc/searchengine/  -v /data/searchengine/searchengine/logs/:/opt/app-root/src/logs/ --network searchengine-net Docker_imag_support_data_dump  dump_searchengine_data -t /data/data_dump/data_source -d datasource -f bff -i 501 -r project
+    docker run --rm -v /data/data_dump:/data/data_dump  -v /data/searchengine/searchengine/:/etc/searchengine/  -v /data/searchengine/searchengine/logs/:/opt/app-root/src/logs/ --network searchengine-net Docker_imag_support_data_dump  dump_searchengine_data -t /data/data_dump/data_source -d datasource -f csv_bff -i 501 -r project
 
 
 
