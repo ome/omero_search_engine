@@ -27,7 +27,7 @@ from elasticsearch import Elasticsearch
 
 from omero_search_engine import search_omero_app
 
-from omero_search_engine.api.v1.resources.asyn_quries.make_celery import make_celery
+from omero_search_engine.api.v1.resources.asyn_queries.make_celery import make_celery
 
 celery_app, app_config = make_celery()
 search_omero_app.config.from_object(app_config)
@@ -83,7 +83,7 @@ def add_query(self, query, data_source, submit_query=False):
         get_submitquery_results,
     )
     from omero_search_engine.api.v1.resources.utils import (
-        write_BBF,
+        write_bff,
         write_csv_parquet_from_folder,
     )
 
@@ -97,7 +97,7 @@ def add_query(self, query, data_source, submit_query=False):
         if total == 0:
             return "The query returned no results"
     if not submit_query:
-        write_BBF(results=all_results, file_name=file_name)
+        write_bff(results=all_results, file_name=file_name)
         results = {
             "total_results": len(all_results),
             "csv": f"{self.request.id}.csv",
@@ -141,7 +141,6 @@ def check_single_task(task_id):
 def check_tasks_status(query=None, data_source=None):
     from deepdiff import DeepDiff
 
-    # r = redis.Redis(host=app_config.REDIS_URL, port=app_config.REDIS_PORT, db=0)
     tasks = r.lrange("tasks_ids", 0, -1)
     results = []
     for tid in tasks:

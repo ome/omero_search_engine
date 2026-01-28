@@ -19,7 +19,7 @@
 import os
 import time
 
-from omero_search_engine.api.v1.resources.asyn_quries.make_celery import make_celery
+from omero_search_engine.api.v1.resources.asyn_queries.make_celery import make_celery
 
 
 celery_app, app_config = make_celery("clean_query_files")
@@ -36,19 +36,19 @@ def clean_query_files(self):
     """
 
     queries_ttl = app_config.QUERIES_TTL
-    quires_files_path = os.path.join(
+    queries_files_path = os.path.join(
         app_config.DATA_DUMP_FOLDER, app_config.QUERIES_FOLDER
     )
-    quires_ttl_in_sec = time.time() - (queries_ttl * 86400)
+    queries_ttl_in_sec = time.time() - (queries_ttl * 86400)
 
-    for filename in os.listdir(quires_files_path):
-        file_path = os.path.join(quires_files_path, filename)
+    for filename in os.listdir(queries_files_path):
+        file_path = os.path.join(queries_files_path, filename)
 
         if os.path.isdir(file_path):
             continue
 
         file_last_modifiied = os.path.getmtime(file_path)
 
-        if file_last_modifiied < quires_ttl_in_sec:
+        if file_last_modifiied < queries_ttl_in_sec:
             print(f"Deleting: {file_path} ")
             # os.remove(file_path)

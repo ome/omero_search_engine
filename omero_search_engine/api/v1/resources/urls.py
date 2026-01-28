@@ -42,7 +42,7 @@ from omero_search_engine.api.v1.resources.resource_analyser import (
 from omero_search_engine.api.v1.resources.utils import (
     get_resource_annotation_table,
     create_bff_file_response,
-    write_BBF,
+    write_bff,
 )
 from omero_search_engine.api.v1.resources.query_handler import (
     determine_search_results_,
@@ -448,7 +448,7 @@ def submit_query():
                 # Restore the original page size
                 search_omero_app.config["PAGE_SIZE"] = page_size
                 resource = "image"
-                file_contents = write_BBF(
+                file_contents = write_bff(
                     results.get("results").get("results"), return_contents=return_bff
                 )
                 return create_bff_file_response(
@@ -460,12 +460,11 @@ def submit_query():
             else:
                 return jsonify(results)
         else:
-            from omero_search_engine.api.v1.resources.asyn_quries.asynchronized_queries import (  # noqa
+            from omero_search_engine.api.v1.resources.asyn_queries.asynchronized_queries import (  # noqa
                 add_query,
             )
 
             job = add_query.apply_async((query, data_source, True), queue="queries")
-            # res=add_query.apply_async(("query", "args"), queue="queries")
             return jsonify({"query_id": job.id})
 
     else:
@@ -487,7 +486,7 @@ def async_submitquery():
     data_source = get_working_data_source(request.args.get("data_source"))
     validation_results = query_validator(query)
     if validation_results == "OK":
-        from omero_search_engine.api.v1.resources.asyn_quries.asynchronized_queries import (  # noqa
+        from omero_search_engine.api.v1.resources.asyn_queries.asynchronized_queries import (  # noqa
             add_query,
             check_tasks_status,
         )
@@ -565,9 +564,9 @@ def search(resource_table):
             # restore the original page size
             search_omero_app.config["PAGE_SIZE"] = page_size
             resource = "image"
-            from utils import write_BBF
+            from utils import write_bff
 
-            file_contents = write_BBF(
+            file_contents = write_bff(
                 results.get("results").get("results"), return_contents=return_bff
             )
             bookmark = results.get("results").get("bookmark")
@@ -577,7 +576,7 @@ def search(resource_table):
             )
         return jsonify(results)
     else:
-        from omero_search_engine.api.v1.resources.asyn_quries.asynchronized_queries import (  # noqa
+        from omero_search_engine.api.v1.resources.asyn_queries.asynchronized_queries import (  # noqa
             add_query,
         )
 
@@ -773,7 +772,7 @@ def get_container_bff_data():
 
 
 def check_query_status(query_id):
-    from omero_search_engine.api.v1.resources.asyn_quries.asynchronized_queries import (
+    from omero_search_engine.api.v1.resources.asyn_queries.asynchronized_queries import (  # noqa
         check_single_task,
     )
 

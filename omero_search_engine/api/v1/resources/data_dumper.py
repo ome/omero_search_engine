@@ -412,9 +412,9 @@ def get_submitquery_results(query, datasource, folder_name=None):
     )
     filename = os.path.join(folder_name, f"{count}.csv")
     # write_BBF(total_results, resource, file_name)
-    from omero_search_engine.api.v1.resources.utils import write_BBF
+    from omero_search_engine.api.v1.resources.utils import write_bff
 
-    columns = write_BBF(
+    columns = write_bff(
         results=total_results,
         file_name=filename,
         return_contents=False,
@@ -439,7 +439,7 @@ def get_submitquery_results(query, datasource, folder_name=None):
         total_pages = pagination_dict.get("total_pages")
         next_page = pagination_dict.get("next_page")
         page = pagination_dict.get("current_page")
-        cols = write_BBF(
+        cols = write_bff(
             results=total_results,
             file_name=filename,
             return_contents=False,

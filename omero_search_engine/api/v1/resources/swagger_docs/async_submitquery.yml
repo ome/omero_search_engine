@@ -52,7 +52,7 @@ Example of using bookmark:
 
   }
 
-There is a dict (`pagination`)  is returned with results.
+A dictionary (`pagination`) containing the results is returned.
 It can be sent back with the query when calling the next page.
 Then the server will update it and send it again along with the results to the client.
 Example of using pagination:
@@ -102,7 +102,7 @@ parameters:
     in: query
     type: string
     required: false
-    description: If a specific data source is provided, results will be retrieved from that source. Otherwise, the default data source will be used. If there is no default data source configured, results will be gathered from all available sources.
+    description: If a specific data source is provided, the results will be retrieved from that source. Otherwise, the default data source will be used. If there is no default data source configured, results will be gathered from all available sources.
 
     #examples:
     #  query: {

@@ -1727,7 +1727,7 @@ def delete_data_source_contents(data_source):
     return found
 
 
-def write_BBF(results, file_name=None, return_contents=False, save_parquer=True):
+def write_bff(results, file_name=None, return_contents=False, save_parquer=True):
     import pandas as pd
 
     to_ignore_list = {
