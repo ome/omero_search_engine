@@ -120,6 +120,7 @@ def create_index(resource):
         create_omero_indexes,
     )
 
+    print(resource, "===============================>>>>")
     create_omero_indexes(resource)
 
 
@@ -155,7 +156,13 @@ def restore_postgresql_database(source):
     default=True,
     help="if True, backup will be called ",  # noqa
 )
-def get_index_data_from_database(resource, data_source, backup):
+@click.option(
+    "-t",
+    "--test_index_data",
+    default=False,
+    help="if True, a test will carry on",  # noqa
+)
+def get_index_data_from_database(resource, data_source, backup, test_index_data):
     """
     insert data in Elasticsearch index for each resource
     It gets the data from postgres database server
@@ -198,11 +205,10 @@ def get_index_data_from_database(resource, data_source, backup):
             clean_index = False
 
         # validate the indexing
-
-        test_indexing_search_query_(
-            "app_data/test_index_data.json", data_source_, False, True
-        )
-
+        if test_index_data:
+            test_indexing_search_query_(
+                "app_data/test_index_data.json", data_source_, False, True
+            )
     # backup the index data
     if backup:
         backup_indices_data()
@@ -260,11 +266,34 @@ def set_database_configuration(
         )
 
 
+# set_elasticsearch_password
+
+
+@search_omero_app.cli.command("set_elasticsearch_password")
+@click.option(
+    "-e", "--elasticsearch_password", default=None, help="elasticsearch password"
+)
+def set_elasticsearch_password(elasticsearch_password):
+    if elasticsearch_password:
+        update_config_file({"ELASTIC_PASSWORD": elasticsearch_password})
+    else:
+        search_omero_app.logger.info("No attribute provided")
+
+
 @search_omero_app.cli.command("set_default_datasource")
 @click.option("-d", "--default_data_source", default=None, help="Default data source")
 def set_default_datasource(default_data_source):
     if default_data_source:
         update_config_file({"DEFAULT_DATASOURCE": default_data_source})
+    else:
+        search_omero_app.logger.info("No attribute provided")
+
+
+@search_omero_app.cli.command("set_queries_folder")
+@click.option("-q", "--queries_folder", default=None, help="QUERIES_FOLDER")
+def set_queries_folder(queries_folder):
+    if queries_folder:
+        update_config_file({"QUERIES_FOLDER": queries_folder})
     else:
         search_omero_app.logger.info("No attribute provided")
 
@@ -452,7 +481,10 @@ def cache_key_value_index(resource, data_source, create_index, only_values):
     "-d",
     "--deep_check",
     default=False,
-    help="compare all the images from both search engine and database server, default is False so it will compare the number of images and the first searchengine page",  # noqa
+    help="compare all the images from both search engine and database server, "
+    "default is False so it will compare the number of images "
+    "and the first searchengine page",
+    # noqa
 )
 @click.option(
     "-s",
@@ -509,13 +541,12 @@ def restore_elasticsearch_data():
     from omero_search_engine.cache_functions.elasticsearch.backup_restores import (
         restore_indices_data,
     )
-    from omero_search_engine.cache_functions.elasticsearch.transform_data import (  # noqa
+    from omero_search_engine.cache_functions.elasticsearch.transform_data import (  # noqapip
         delete_index,
     )
 
-    delete_index("all", None)
-
     # first delete the current indices
+    delete_index("all")
     restore_indices_data()
 
 
@@ -691,11 +722,10 @@ def delete_containers(
 
 
 @search_omero_app.cli.command("index_container_from_database")
-@click.command
-@click.option("-r", "--resource", default=None, help="resource name, e.g. image")
 @click.option(
-    "-d", "--data_source", default=None, help="data_source name, i.e. project or screen"
+    "-r", "--resource", default=None, help="resource name, i.e. project or screen"
 )
+@click.option("-d", "--data_source", default=None, help="data_source name, e.g. idr")
 @click.option(
     "-i",
     "--id",
@@ -781,4 +811,151 @@ def set_automatic_refresh(automatic_refresh):
     update_config_file({"AUTOMATIC_REFRESH": automatic_refresh})
 
 
+@search_omero_app.cli.command("dump_searchengine_data")
+@click.option("-d", "--data_source", default=None, help="data source")
+@click.option("-t", "--target_folder", default=None, help="folder to save the files to")
+@click.option(
+    "-r", "--resource", default=None, help="resource name,  i.e. project or screen"
+)
+@click.option("-i", "--id", default=None, help="resource id")
+@click.option(
+    "-o",
+    "--over_write",
+    default=True,
+    help="Over written current data if True, default",
+)
+@click.option(
+    "-f",
+    "--file_format",
+    default="json",
+    help="output file format",
+)
+def dump_searchengine_data(
+    data_source,
+    target_folder,
+    id,
+    resource,
+    over_write,
+    file_format,
+):
+    from omero_search_engine.api.v1.resources.data_dumper import (
+        dump_data,
+        supported_file_format,
+    )
+
+    if not file_format or file_format.lower() not in supported_file_format:
+        print("%s is not supported file format" % file_format)
+    else:
+        dump_data(
+            target_folder, id, resource, over_write, file_format.lower(), data_source
+        )
+
+
+@search_omero_app.cli.command("create_container_csv")
+@click.option("-d", "--data_source", default=None, help="data source")
+@click.option("-t", "--container_type", default=None, help="container_type")
+@click.option("-n", "--container_name", default=None, help="container_name")
+def create_container_csv(data_source, container_type, container_name):
+    from omero_search_engine.api.v1.resources.utils import write_bff_csv_file_data
+
+    message = write_bff_csv_file_data(container_type, container_name, data_source)
+    if message:
+        print(message)
+
+
 # export FLASK_APP=commands.py
+
+
+@search_omero_app.cli.command("update_es_maximum_results")
+def update_es_maximum_results():
+    from omero_search_engine.api.v1.resources.utils import (
+        change_es_maximum_results_rows,
+    )
+
+    change_es_maximum_results_rows()
+
+
+@search_omero_app.cli.command("set_QUERIES_TTL")
+@click.option(
+    "-q", "--quires_ttl", default=None, help="quires files time to live in days"
+)
+def set_QUERIES_TTL(quires_ttl):
+    print("hello")
+    try:
+        update_config_file({"QUERIES_TTL": float(quires_ttl)})
+    except Exception as ex:
+        print(f"QUERIES_TTL value has to numerical value, error: {ex}")
+
+
+@search_omero_app.cli.command("set_redis_url")
+@click.option("-r", "--redis_url", default=None, help="redis url")
+def set_redis_url(redis_url):
+    print("hello")
+    try:
+        update_config_file({"REDIS_URL": redis_url})
+    except Exception as ex:
+        print(f"set_redis_url value error, error message: {ex}")
+
+
+# REDIS_URL
+@search_omero_app.cli.command("set_MAX_RESULTS_FOR_ASYNC_QUERY")
+@click.option(
+    "-m",
+    "--max_results_for_async_query",
+    default=None,
+    help="max no of returned results for async query",
+)
+def set_MAX_RESULTS_FOR_ASYNC_QUERY(max_results_for_async_query):
+    print("hello")
+    try:
+        update_config_file(
+            {"MAX_RESULTS_FOR_ASYNC_QUERY": int(max_results_for_async_query)}
+        )
+    except Exception as ex:
+        print(f"MAX_RESULTS_FOR_ASYNC_QUERY value has to integer value, error: {ex}")
+
+
+@search_omero_app.cli.command("set_data_dump_folder")
+@click.option(
+    "-d",
+    "--data_dump_folder",
+    default=None,
+    help="set data dump folder",
+)
+def set_data_dump_folder(data_dump_folder):
+    if data_dump_folder:
+        update_config_file({"DATA_DUMP_FOLDER": data_dump_folder})
+    else:
+        print("data_dump_folder should have a value")
+
+
+@search_omero_app.cli.command("set_cache_folder")
+@click.option(
+    "-c",
+    "--cache_folder",
+    default=None,
+    help="set data dump folder",
+)
+def set_cache_folder(cache_folder):
+    if cache_folder:
+        update_config_file({"cache_folder": cache_folder})
+    else:
+        print("cache_folder should have a value")
+
+
+"ALLOWED_ASYNCHRONIZED_PROCESS"
+# MAX_PAGE_SIZE
+
+
+@search_omero_app.cli.command("set_MAX_PAGE_SIZE")
+@click.option(
+    "-m",
+    "--max_page_size",
+    default=None,
+    help="used to temporary increase the number of returned results for async queries",
+)
+def set_MAX_PAGE_SIZE(max_page_size):
+    try:
+        update_config_file({"MAX_PAGE_SIZE": int(max_page_size)})
+    except Exception as ex:
+        print(f"MAX_PAGE_SIZE value has to integer value, error: {ex}")

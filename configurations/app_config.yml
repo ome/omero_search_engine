@@ -10,16 +10,14 @@ ELASTICSEARCH_BACKUP_FOLDER: "path/to/elasticsearch/backup/folder"
 verify_certs: False
 ELASTIC_PASSWORD: elasticsearch_user_password
 BASE_FOLDER: /etc/searchengine/
-#NO_PROCESSES: 1mana
-DATA_SOURCES:
-    - name: idr
-      DATABASE:
-          DATABASE_NAME: omero
-          DATABASE_USER: database_user
-          DATABASE_PASSWORD: password
-          DATABASE_SERVER_URI: 127.0.0.1
-          DATABASE_PORT: 5432
-          DATABASE_BACKUP_FILE: database.sql
 DEFAULT_DATASOURCE: default_datasource
 AUTOMATIC_REFRESH: True
 NOT_INDEX_VECTOR: True
+ALLOWED_ASYNCHRONIZED_PROCESS: 8
+REDIS_URL: 127.0.0.1
+REDIS_PORT: 6379
+QUERIES_FOLDER: path/to/queries/folder
+# quires files time to live in days
+QUERIES_TTL: 7
+MAX_RESULTS_FOR_ASYNC_QUERY: 2000000
+MAX_PAGE_SIZE: 10000

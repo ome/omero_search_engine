@@ -19,6 +19,7 @@
 
 from . import resources
 from flask import request, jsonify, make_response
+
 import json
 from omero_search_engine.api.v1.resources.utils import (
     search_resource_annotation,
@@ -38,7 +39,11 @@ from omero_search_engine.api.v1.resources.resource_analyser import (
     query_cached_bucket_part_value_keys,
     return_containers_images,
 )
-from omero_search_engine.api.v1.resources.utils import get_resource_annotation_table
+from omero_search_engine.api.v1.resources.utils import (
+    get_resource_annotation_table,
+    create_bff_file_response,
+    write_bff,
+)
 from omero_search_engine.api.v1.resources.query_handler import (
     determine_search_results_,
     simple_search,
@@ -413,7 +418,21 @@ def submit_query():
         return jsonify(build_error_message("No query is provided"))
     adjust_query_for_container(query)
     return_columns = request.args.get("return_columns")
+    return_bff = request.args.get("return_bff")
+    asynchronize_run = request.args.get("asynchronize_run")
     data_source = get_working_data_source(request.args.get("data_source"))
+    from omero_search_engine import search_omero_app
+
+    # get the original page size
+    page_size = search_omero_app.config.get("PAGE_SIZE")
+    if return_bff:
+        return_bff = json.loads(return_bff)
+        # Temporary increase the results limits to MAX_PAGE_SIZE
+        if return_bff:
+            search_omero_app.config["PAGE_SIZE"] = search_omero_app.config.get(
+                "MAX_PAGE_SIZE"
+            )
+
     if return_columns:
         try:
             return_columns = json.loads(return_columns.lower())
@@ -421,11 +440,70 @@ def submit_query():
             return_columns = False
     validation_results = query_validator(query)
     if validation_results == "OK":
-        return jsonify(
-            determine_search_results_(
+        if not asynchronize_run:
+            results = determine_search_results_(
                 query, data_source=data_source, return_columns=return_columns
             )
+            if return_bff:
+                # Restore the original page size
+                search_omero_app.config["PAGE_SIZE"] = page_size
+                resource = "image"
+                file_contents = write_bff(
+                    results.get("results").get("results"), return_contents=return_bff
+                )
+                return create_bff_file_response(
+                    file_contents,
+                    results.get("results").get("bookmark"),
+                    results.get("results").get("pagination"),
+                    resource,
+                )
+            else:
+                return jsonify(results)
+        else:
+            from omero_search_engine.api.v1.resources.asyn_queries.asynchronized_queries import (  # noqa
+                add_query,
+            )
+
+            job = add_query.apply_async((query, data_source, True), queue="queries")
+            return jsonify({"query_id": job.id})
+
+    else:
+        return jsonify(build_error_message(validation_results))
+
+
+@resources.route("/async_submitquery/", methods=["POST"])
+def async_submitquery():
+    """
+    file: swagger_docs/async_submitquery.yml
+    """
+    try:
+        query = json.loads(request.data)
+    except Exception:
+        query = None
+    if not query:
+        return jsonify(build_error_message("No query is provided"))
+    adjust_query_for_container(query)
+    data_source = get_working_data_source(request.args.get("data_source"))
+    validation_results = query_validator(query)
+    if validation_results == "OK":
+        from omero_search_engine.api.v1.resources.asyn_queries.asynchronized_queries import (  # noqa
+            add_query,
+            check_tasks_status,
         )
+
+        exist_query_id = check_tasks_status(query, data_source)
+        if exist_query_id:
+            return jsonify(
+                {
+                    "message ": "Existing query, please use the attached query id "
+                    "to retrieve the results",
+                    "query_id": exist_query_id,
+                }
+            )
+        job = add_query.apply_async((query, data_source, True), queue="queries")
+        # res=add_query.apply_async(("query", "args"), queue="queries")
+        return jsonify({"query_id": job.id})
+
     else:
         return jsonify(build_error_message(validation_results))
 
@@ -436,13 +514,27 @@ def search(resource_table):
     file: swagger_docs/search.yml
     """
     key = request.args.get("key")
+    asynchronize_run = request.args.get("asynchronize_run")
     value = request.args.get("value")
     study = request.args.get("study")
+    return_bff = request.args.get("return_bff")
     case_sensitive = request.args.get("case_sensitive")
     operator = request.args.get("operator")
     bookmark = request.args.get("bookmark")
     data_source = get_working_data_source(request.args.get("data_source"))
     random_results = request.args.get("random_results")
+    from omero_search_engine import search_omero_app
+
+    # get the original page size
+    page_size = search_omero_app.config.get("PAGE_SIZE")
+    if return_bff:
+        return_bff = json.loads(return_bff)
+        # Temporary increase the results limits to MAX_PAGE_SIZE
+        if return_bff:
+            search_omero_app.config["PAGE_SIZE"] = search_omero_app.config.get(
+                "MAX_PAGE_SIZE"
+            )
+    # data_source = get_working_data_source(request.args.get("data_source"))
     if random_results:
         if not random_results.isdigit():
             return build_error_message(
@@ -455,19 +547,63 @@ def search(resource_table):
     return_containers = request.args.get("return_containers")
     if return_containers:
         return_containers = json.loads(return_containers.lower())
-    results = simple_search(
-        key,
-        value,
-        operator,
-        case_sensitive,
-        bookmark,
-        resource_table,
-        study,
-        data_source,
-        return_containers,
-        random_results=random_results,
-    )
-    return jsonify(results)
+    if not asynchronize_run:
+        results = simple_search(
+            key,
+            value,
+            operator,
+            case_sensitive,
+            bookmark,
+            resource_table,
+            study,
+            data_source,
+            return_containers,
+            random_results=random_results,
+        )
+        if return_bff:
+            # restore the original page size
+            search_omero_app.config["PAGE_SIZE"] = page_size
+            resource = "image"
+            from utils import write_bff
+
+            file_contents = write_bff(
+                results.get("results").get("results"), return_contents=return_bff
+            )
+            bookmark = results.get("results").get("bookmark")
+            pagination = results.get("results").get("pagination")
+            return create_bff_file_response(
+                file_contents, bookmark, pagination, resource
+            )
+        return jsonify(results)
+    else:
+        from omero_search_engine.api.v1.resources.asyn_queries.asynchronized_queries import (  # noqa
+            add_query,
+        )
+
+        if not operator:
+            operator = "equals"
+        if key:
+            and_filters = [
+                {
+                    "name": key,
+                    "value": value,
+                    "operator": operator,
+                    "resource": resource_table,
+                }
+            ]
+        else:
+            and_filters = [
+                {"value": value, "operator": operator, "resource": resource_table}
+            ]
+
+        query = {"and_filters": and_filters}
+
+        query["case_sensitive"] = case_sensitive
+
+        job = add_query.apply_async((query, data_source), queue="queries")
+        # res=add_query.apply_async(("query", "args"), queue="queries")
+
+        return jsonify({"query_id": job.id})
 
 
 @resources.route("/<resource_table>/container_keyvalues/", methods=["GET"])
@@ -594,7 +730,6 @@ def container_key_values_filter(resource_table):
             )
     else:
         query = {}
-
     if len(query) > 0:
         adjust_query_for_container(query)
         validation_results = query_validator(query)
@@ -607,4 +742,109 @@ def container_key_values_filter(resource_table):
         ret_data_source=data_source,
         key=key,
         query=query,
+    )
+
+
+@resources.route("/container_bff_data/", methods=["GET"])
+def get_container_bff_data():
+    """
+    file: swagger_docs/container_bff_data.yml
+    """
+    supported_file_types = ["csv", "parquet"]
+    container_type = request.args.get("container_type")
+    container_name = request.args.get("container_name")  #
+    data_source = request.args.get("data_source")
+    file_type = request.args.get("file_type")
+    if not file_type:
+        file_type = "parquet"
+    if file_type:
+        file_type = file_type.strip()
+        if file_type.lower() not in supported_file_types:
+            return "File type '%s' is not supported" % file_type
+
+    if not container_name or not container_type:
+        return "Both container type and name are required attributes."
+    from utils import get_bff_csv_file_data
+
+    return get_bff_csv_file_data(
+        container_type, container_name, file_type.lower(), data_source
+    )
+
+
+def check_query_status(query_id):
+    from omero_search_engine.api.v1.resources.asyn_queries.asynchronized_queries import (  # noqa
+        check_single_task,
+    )
+
+    results = check_single_task(query_id)
+    return results
+
+
+@resources.route("/check_query_job/", methods=["GET"])
+def check_query_job():
+    """
+    file: swagger_docs/check_query_job.yml
+    """
+    query_id = request.args.get("query_id")
+    results = check_query_status(query_id)
+    return results
+
+
+@resources.route("/return_query_results/", methods=["GET"])
+def return_query_results():
+    """
+    file: swagger_docs/return_query_results.yml
+    """
+    query_id = request.args.get("query_id")
+    file_type = request.args.get("file_type")
+    if not file_type:
+        file_type = "parquet"
+    results = check_query_status(query_id)
+    # file_name=os.path.join(app_config.JOBS_FOLDER, f"{job_id}.csv")
+    if results.get("status") == "SUCCESS":
+        if results.get("Result") and not isinstance(results.get("Result"), str):
+            file_name = results.get("Result").get(file_type.lower())
+            if file_name:
+                from omero_search_engine import search_omero_app
+                from flask import Response
+
+                queries_folder = search_omero_app.config.get("QUERIES_FOLDER")
+                response = Response()
+                response.headers["Content-Type"] = "application/octet-stream"
+                response.headers["Content-Disposition"] = (
+                    f'attachment; filename="{file_name}"'
+                )
+                response.headers["X-Accel-Redirect"] = (
+                    f"/send_file/{queries_folder}{file_name}"
+                )
+                return response
+
+            else:
+                return (
+                    jsonify(
+                        {
+                            "error": f"The results file for this Query (query id "
+                            f"='{query_id}') is missing"
+                        }
+                    ),
+                    500,
+                )
+        else:
+            return (
+                jsonify(
+                    {
+                        "error": f"Query (query id ={query_id}') is "
+                        f"{results.get("status")}, it did not return any results"
+                    }
+                ),
+                500,
+            )
+    return (
+        jsonify(
+            {
+                "error": f"Query status for (query id ='{query_id})' "
+                f"is {results.get('status')}"
+            }
+        ),
+        500,
     )

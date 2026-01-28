@@ -11,9 +11,11 @@ RUN dnf install  python3.12  -y
 RUN dnf install -y  python3.12-pip -y
 RUN dnf clean all && rm -rf /var/cache/yum
 RUN mkdir /searchengine
+ADD .  /searchengine
 ADD  deployment/docker/rockylinux/start_gunicorn_search_engine.sh /searchengine
 ADD  deployment/docker/rockylinux/run_app.sh /searchengine
-ADD .  /searchengine
+ADD  deployment/docker/rockylinux/run_celery.sh /searchengine
+ADD  deployment/docker/rockylinux/run_celery_beat.sh /searchengine
 RUN cd /searchengine
 RUN mkdir /etc/searchengine
 RUN mkdir /etc/searchengine/chachedata

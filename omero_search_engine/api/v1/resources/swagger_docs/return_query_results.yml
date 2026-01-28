@@ -1,0 +1,24 @@
+Return the query results
+---
+tags:
+ -  Return query results
+parameters:
+  - name: query_id
+    in: query
+    type: string
+    required: true
+
+  - name: file_type
+    in: query
+    type: string
+    required: true
+
+responses:
+  200:
+    description: A JSON contains resource attributes
+    examples:
+      resource:
+        - Gene In Validation Screen"
+        - GO Molecular Function"
+    schema:
+      $ref: '#/definitions/resource'

@@ -1,0 +1,30 @@
+A searchengine endpoint to return the (BioFile Finder) BFF csv or parquet file for a container
+BFF is a tool for filtering, sorting and grouping tabular data.
+---
+tags:
+  - CSV file for a container, formatted in BFF
+parameters:
+  - name: container_name
+    description: The container name
+    in: query
+    type: string
+    required: true
+  - name: container_type
+    description: The container type (project or screen)
+    in: query
+    type: string
+    required: true
+  - name: data_source
+    description: Data source
+    in: query
+    type: string
+    required: false
+  - name: file_type
+    description: file typee (csv or parquet)
+    in: query
+    type: string
+    required: true
+
+responses:
+  200:
+    description: A CSV file with BFF format
