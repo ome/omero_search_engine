@@ -8,7 +8,7 @@
 IDR Searcher
 --------
 
-IDR Searcher is a powerful tool for searching and analysing metadata stored as key-value pairs, searching and analysing metadata, and allowing both simple inspections (like listing values for a key) and complex queries across multiple attributes and data sources. It is designed to handle large datasets efficiently and supports both synchronous and asynchronous search, enabling users to retrieve complete results in a single operation or paginate through results as needed. It leverages Elasticsearch, a distributed, open-source search and analytics engine optimized for large data volumes.
+IDR Searcher is a powerful tool for searching and analysing metadata stored as key-value pairs, allowing both simple inspections (like listing values for a key) and complex queries across multiple attributes and data sources. It is designed to handle large datasets efficiently and supports both synchronous and asynchronous search, enabling users to retrieve complete results in a single operation or paginate through results as needed. It leverages Elasticsearch, a distributed, open-source search and analytics engine optimized for large data volumes.
 
 All interactions are via standard REST APIs (GET and POST) using JSON, making it easy to integrate with web applications, scripts, or other backend services.
 
@@ -22,7 +22,7 @@ Key Features *
 * Complex Query Support:
 
   - Combine multiple conditions using AND and OR to answer advanced data queries.
-* Search Across Multiple Entity Types
+* Search Across Multiple source types
   - Search images, projects, screens, plates, and datasets.
 * Attribute-Agnostic Search:
 
@@ -31,9 +31,7 @@ Key Features *
 
   - Index data from database servers, database backups, and CSV files.
   - JSON support is currently under development.
-* Unified Cross-Source Search:
 
-  - Search seamlessly across multiple indexed data sources.
 * Resource Filtering:
 
   - Restrict search results to one or more selected data resources.
@@ -94,7 +92,7 @@ Deploy Using Ansible
 
 For Users / Integrators
 =========
-* Ensure Searchengine is running and accessible to your web application.
+* Ensure Searchengine is running and accessible to your application.
 * Submit queries via your frontend, API clients (Postman, curl), or automation scripts.
 * Export results in JSON, CSV, or Parquet format if needed.
 
@@ -116,7 +114,7 @@ IDR  Searcher is an API-only backend service. All interactions are via HTTP usin
 
 What it does:
 
-* Finds all images where **Gene Symbol** = **pdx1** and **data resource** = **IDR**
+* Finds all images where **Gene Symbol** = **pdx1** and **data resource** = **idr**
 * Returns JSON results
 
 **POST Example (Complex Query)**::
