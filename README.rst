@@ -54,10 +54,10 @@ SearcherEngine can index and query data from multiple resources, even if:
 
 **Example data resources:**
 
-* Data resource A: Database with sources metadata
-* Data resource B: Database backup
-* Data resource C: CSV files exported from a different system
-* Data resource D: Data requiring conversion to CSV before indexing
+* IDR Data resource  : Database with sources metadata
+* SSBD Data resource : CSV files exported from a different public resource
+* BIA Data resource : Data requiring conversion to CSV before indexing
+* Ome2024-ngff-challenge data resource : Data requiring conversion to CSV before indexing
 
 IDR Searcher reads data from each resource, processes it, and stores it in Elasticsearch.
 
