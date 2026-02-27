@@ -52,10 +52,13 @@ SearcherEngine can index and query data from multiple resources, even if:
 * They are in different formats
 * Some require preprocessing (e.g., converting to CSV)
 
+  - CSV files must follow the supported  structure to be indexed successfully.
+  - CSV templates are provided to guide users in preparing files that match the required format.
+
 **Example data resources:**
 
 * IDR Data resource  : Database with sources metadata
-* SSBD Data resource : CSV files exported from a different public resource
+* SSBD Data resource : CSV files exported from a different public resource and converted to the supported CSV format before indexing.
 * BIA Data resource : Data requiring conversion to CSV before indexing
 * Ome2024-ngff-challenge data resource : Data requiring conversion to CSV before indexing
 
