@@ -27,7 +27,7 @@ Key Features *
 * Attribute-Agnostic Search:
 
   - Find records by value even if the attribute name is unknown.
-* Multi-Resource Indexing:
+* Multi data Resource Indexing:
 
   - Index data from database servers, database backups, and CSV files.
   - JSON support is currently under development.
@@ -42,7 +42,7 @@ Key Features *
 * Asynchronous Search:
 
   - Fetch all matching results from large queries in one operation.
-  - Ideal for handling large datasets without multiple requests.
+  - Ideal for handling large query results without multiple requests.
 
 Multi-Data-Resource Support
 ========
@@ -54,7 +54,7 @@ SearcherEngine can index and query data from multiple resources, even if:
 
 **Example data resources:**
 
-* Data resource A: Database with project metadata
+* Data resource A: Database with sources metadata
 * Data resource B: Database backup
 * Data resource C: CSV files exported from a different system
 * Data resource D: Data requiring conversion to CSV before indexing
