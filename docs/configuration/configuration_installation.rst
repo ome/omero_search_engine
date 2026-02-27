@@ -77,7 +77,7 @@ Searchengine installation and configuration using Ansible
 
 The ansible playbook :omero_search_engine:`management-searchengine.yml <deployment/ansible/management-searchengine.yml>` has been developed to deploy the apps:
 
-* It will configure and run the search engine, Elasticsearch and the search engine client
+* It will configure and run the search engine and Elasticsearch
 * It will configure and create the required folders
 * It will configure the three apps and run them
 * There is a variables file :omero_search_engine:`searchengine_vars.yml <deployment/ansible/searchengine_vars.yml>` that the user needs to edit before running the playbook.
@@ -85,7 +85,6 @@ The ansible playbook :omero_search_engine:`management-searchengine.yml <deployme
 * To check that the apps have been installed and run, the user can use ``wget`` or ``curl`` to call:
 
     * for searchengine, http://127.0.0.1:5556/api/v1/resources/
-    * for searchengine client, http://127.0.0.1:5556
     * for Elasticsearch, http://127.0.0.1:9201
 * After deploying the apps, the user needs to run the :omero_search_engine:`run_searchengine_index_services.yml <deployment/ansible/run_searchengine_index_services.yml>` playbook for indexing:
 
@@ -96,6 +95,7 @@ The ansible playbook :omero_search_engine:`management-searchengine.yml <deployme
     * As the caching and indexing processes take a long time, there are another two playbooks that enable the user to check if they have finished or not:
 
         * :omero_search_engine:`check_indexing_service.yml <deployment/ansible/check_indexing_service.yml>`
+
 * We now provide an Ansible role that you can use to install the search engine.
 
     * https://github.com/ome/ansible-role-omero-searchengine
