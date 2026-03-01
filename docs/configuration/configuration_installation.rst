@@ -75,18 +75,18 @@ Ubuntu and Rocky Linux 9 images are provided.
 Searchengine installation and configuration using Ansible
 =========================================================
 
-The ansible playbook :omero_search_engine:`management-searchengine.yml <deployment/ansible/management-searchengine.yml>` has been developed to deploy the apps:
+The ansible playbook :omero_search_engine:`management-searchengine.yml <deployment/ansible/management-searchengine.yml>` can be used to deploy the apps:
 
 * It will configure and run the search engine and Elasticsearch
 * It will configure and create the required folders
-* It will configure the three apps and run them
-* There is a variables file :omero_search_engine:`searchengine_vars.yml <deployment/ansible/searchengine_vars.yml>` that the user needs to edit before running the playbook.
+* It will configure the apps and run them
+* The variables file :omero_search_engine:`searchengine_vars.yml <deployment/ansible/searchengine_vars.yml>` must be edited before running the playbook.
   The variable names are self-explanatory and should be customized to the host machine
-* To check that the apps have been installed and run, the user can use ``wget`` or ``curl`` to call:
+* To check that the apps have been installed and are running, the user can use ``wget`` or ``curl`` to call:
 
     * for searchengine, http://127.0.0.1:5556/api/v1/resources/
     * for Elasticsearch, http://127.0.0.1:9201
-* After deploying the apps, the user needs to run the :omero_search_engine:`run_searchengine_index_services.yml <deployment/ansible/run_searchengine_index_services.yml>` playbook for indexing:
+* After deploying the apps, run the :omero_search_engine:`run_searchengine_index_services.yml <deployment/ansible/run_searchengine_index_services.yml>` playbook for indexing:
 
     * If the PostgreSQL database server is located on the same machine which hosts the searchengine, the user needs to:
 

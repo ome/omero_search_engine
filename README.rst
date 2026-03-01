@@ -6,23 +6,25 @@
     :alt: Documentation Status
 
 IDR Searcher
---------
+------------
 
 IDR Searcher is a powerful tool for searching and analysing metadata stored as key-value pairs, allowing both simple inspections (like listing values for a key) and complex queries across multiple attributes and data sources. It is designed to handle large datasets efficiently and supports both synchronous and asynchronous search, enabling users to retrieve complete results in a single operation or paginate through results as needed. It leverages Elasticsearch, a distributed, open-source search and analytics engine optimized for large data volumes.
 
 All interactions are via standard REST APIs (GET and POST) using JSON, making it easy to integrate with web applications, scripts, or other backend services.
 
 
-Key Features *
+Key Features
+============
 
 * Fast, scalable search capable of handling large datasets efficiently
 * Flexible Search Operators:
 
-  - Supports operators such as equals, not equals, and contains.
+  - Supports operators such as ``equals``, ``not equals``, and ``contains``.
 * Complex Query Support:
 
-  - Combine multiple conditions using AND and OR to answer advanced data queries.
+  - Combine multiple conditions using ``AND`` and ``OR`` to answer advanced data queries.
 * Search Across Multiple source types
+
   - Search images, projects, screens, plates, and datasets.
 * Attribute-Agnostic Search:
 
@@ -45,7 +47,7 @@ Key Features *
   - Ideal for handling large query results without multiple requests.
 
 Multi-Data-Resource Support
-========
+===========================
 
 SearcherEngine can index and query data from multiple resources, even if:
 
@@ -57,57 +59,59 @@ SearcherEngine can index and query data from multiple resources, even if:
 
 **Example data resources:**
 
-* IDR Data resource  : Database with sources metadata
-* SSBD Data resource : CSV files exported from a different public resource and converted to the supported CSV format before indexing.
-* BIA Data resource : Data requiring conversion to CSV before indexing
-* Ome2024-ngff-challenge data resource : Data requiring conversion to CSV before indexing
+* IDR Data resource  ->  Database with sources metadata
+* SSBD Data resource -> CSV files exported from a different public resource and converted to the supported CSV format before indexing.
+* BIA Data resource -> Data requiring conversion to CSV before indexing
+* Ome2024-ngff-challenge data resource -> Data requiring conversion to CSV before indexing
 
 IDR Searcher reads data from each resource, processes it, and stores it in Elasticsearch.
 
-Once indexed, users can:
+Once indexed, you can:
 
 * Run queries across all resources simultaneously
 * Filter results by one or multiple data resources
 * Export combined search results seamlessly
-* Supports asynchronous search to fetch all results in one operation, or standard pagination for incremental retrieval.
-* Export & Analysis:
+* Use asynchronous search to fetch all results in one operation, or standard pagination for incremental retrieval.
+* Export & Analyse:
   - Search results can be exported to CSV and Parquet formats.
   - Exported files are compatible with BFF for downstream filtering and data exploration.
 
 Quick start
----------
+-----------
 Searcherengine does not provide a graphical user interface (GUI). All interactions are performed via REST APIs.
 It can be used via:
-•	Integration into backend services for other applications
-•	Automation scripts
-•	Swagger (OpenAPI) UI for testing endpoints
-•	API clients (Postman, curl)
+
+* Integration into backend services for other applications
+* Automation scripts
+* Swagger (OpenAPI) UI for testing endpoints
+* API clients (Postman, curl)
 
 For Administrators
-=================
-Deployment and configuration are handled via dedicated Ansible role, i.e. `ansible-role-omero-searchengine <https://https://github.com/ome/ansible-role-omero-searchengine?tab=readme-ov-file#example-playbook>`_  , which includes `a sample deployment playbook <https://https://github.com/ome/ansible-role-omero-searchengine?tab=readme-ov-file#example-playbook>`_ .
+==================
+Deployment and configuration are handled via dedicated Ansible role, i.e. `ansible-role-omero-searchengine <https://github.com/khaledk2/ansible-role-omero-searchengine>`_  , which includes `a sample deployment playbook <https://github.com/khaledk2/ansible-role-omero-searchengine?tab=readme-ov-file#example-playbook>`_ .
 Deploy Using Ansible
 
 1.	Review the sample playbook and adjust variables for your environment.
-2.	Run the playbook::
+2.	Run the playbook (assuming the playbook name is deploy.ym)::
 
             ansible-playbook deploy.yml
 
 For Users / Integrators
-=========
+=======================
 * Ensure Searchengine is running and accessible to your application.
 * Submit queries via your frontend, API clients (Postman, curl), or automation scripts.
 * Export results in JSON, CSV, or Parquet format if needed.
 
 For full API reference and interactive testing, use the Swagger UI:
 
-    https://idr.openmicroscopy.org/searchengine/apidocs
+    https://idr.openmicroscopy.org/searchengine/apidocs/
 
-Multiple example queries are included in the examples/ directory, ready to run or integrate.
+Wide range of example queries can be found in the examples/ directory, ready to run or integrate.
 
 Using IDR Searcher REST API
-======
-IDR  Searcher is an API-only backend service. All interactions are via HTTP using standard REST methods. Data is exchanged in JSON format.
+===========================
+IDR Searcher is an API-only backend service. All interactions are via HTTP using standard REST methods. Data is exchanged in JSON format.
+
 * GET — Used for simple queries via URL parameters
 * POST — Used for more complex queries with JSON payloads
 
@@ -122,7 +126,7 @@ What it does:
 
 **POST Example (Complex Query)**::
 
-    POST https://idr.openmicroscopy.org/searchengine/searchengine//api/v1/resources/submitquery/
+    POST https://idr.openmicroscopy.org/searchengine/api/v1/resources/submitquery/
     Content-Type: application/json
 
 
@@ -156,20 +160,24 @@ What it does:
 
 * Searches across multiples resources (**image** and **container**)
 * Filters records where **Organism** = **mus musculus** and **Imaging Method** = **spim**
-* Returns JSON results ready for your Script, web application or backend service
+* Returns JSON results ready for your script, web application or backend service
 
 For more advanced examples, see the examples/ directory or Swagger UI.
 
 Documentation
---------
-IDR Searcher includes detailed documentation for different audiences:
-* User Guide
-    How to construct queries, use filters, and interpret API responses.
-* Configuration Guide
-    Guides you through configuring data sources, Elasticsearch, deployment options, indexing, and environment settings.
-* Developer Guide
-    Technical details for extending, maintaining, or contributing to the service.
+=============
 
+IDR Searcher includes detailed documentation for different audiences:
+
+* User Guide
+
+  - How to construct queries, use filters, and interpret API responses.
+* Configuration Guide
+
+  - Guides you through configuring data sources, Elasticsearch, deployment options, indexing, and environment settings.
+* Developer Guide
+
+  - Technical details for extending, maintaining, or contributing to the service.
 
 **Not sure where to start?**
 
@@ -180,9 +188,12 @@ IDR Searcher includes detailed documentation for different audiences:
 Disclaimer
 ----------
 
-* The SearchEngine currently is intended to be used with public data.
+* The IDR-searcher currently is intended to be used with public data.
+
+  - All indexed data is publicly accessible for search
 * There is no authenticating or access permission in place yet.
-* All the indexed data is exposed publicly.
+
+  - We are working on the authentication and access permission problem solution for the private data.
 
 License
 -------
