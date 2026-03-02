@@ -7,11 +7,11 @@
 
 IDR Searcher
 ------------
+IDR-searcher is an Elasticsearch-based search engine developed for IDR (Image Data Resource) to index and analyse metadata stored as key–value pairs. It supports both simple lookups and complex queries across large datasets, with synchronous and asynchronous search capabilities.
 
-IDR Searcher is a powerful tool for searching and analysing metadata stored as key-value pairs, allowing both simple inspections (like listing values for a key) and complex queries across multiple attributes and data sources. It is designed to handle large datasets efficiently and supports both synchronous and asynchronous search, enabling users to retrieve complete results in a single operation or paginate through results as needed. It leverages Elasticsearch, a distributed, open-source search and analytics engine optimized for large data volumes.
+The system connects directly to OMERO databases and also supports CSV data sources. All functionality is exposed through REST APIs (GET/POST) using JSON, enabling easy integration with web applications and backend services.
 
-All interactions are via standard REST APIs (GET and POST) using JSON, making it easy to integrate with web applications, scripts, or other backend services.
-
+Although built for IDR, IDR-searcher can be used as a backend search service for any application where data resides in an OMERO database or supported CSV format and is intended for public access.
 
 Key Features
 ============
@@ -59,6 +59,7 @@ SearcherEngine can index and query data from multiple resources, even if:
 
 **Example data resources:**
 
+
 * IDR Data resource  ->  Database with sources metadata
 * SSBD Data resource -> CSV files exported from a different public resource and converted to the supported CSV format before indexing.
 * BIA Data resource -> Data requiring conversion to CSV before indexing
@@ -78,8 +79,18 @@ Once indexed, you can:
 
 Quick start
 -----------
+For Users / Integrators
+=======================
+
+Wide range of example queries can be found in the `examples/ <https://github.com/khaledk2/ansible-role-omero-searchengine>`_  directory, ready to run or integrate.
 Searcherengine does not provide a graphical user interface (GUI). All interactions are performed via REST APIs.
-It can be used via:
+The IDR searcher is deployed at
+
+    https://idr.openmicroscopy.org/searchengine/apidocs/
+
+That page provides a full API reference and interactive testing, searching data from the IDR.
+
+Idr-searcher APIs can be used via:
 
 * Integration into backend services for other applications
 * Automation scripts
@@ -95,18 +106,6 @@ Deploy Using Ansible
 2.	Run the playbook (assuming the playbook name is deploy.ym)::
 
             ansible-playbook deploy.yml
-
-For Users / Integrators
-=======================
-* Ensure Searchengine is running and accessible to your application.
-* Submit queries via your frontend, API clients (Postman, curl), or automation scripts.
-* Export results in JSON, CSV, or Parquet format if needed.
-
-For full API reference and interactive testing, use the Swagger UI:
-
-    https://idr.openmicroscopy.org/searchengine/apidocs/
-
-Wide range of example queries can be found in the examples/ directory, ready to run or integrate.
 
 Using IDR Searcher REST API
 ===========================
@@ -169,13 +168,13 @@ Documentation
 
 IDR Searcher includes detailed documentation for different audiences:
 
-* User Guide
+* `User Guide <https://omero-search-engine.readthedocs.io/en/latest/user_guide/user_guide.html>`_
 
   - How to construct queries, use filters, and interpret API responses.
-* Configuration Guide
+*  `Configuration Guide <https://omero-search-engine.readthedocs.io/en/latest/configuration/configuration_installation.html>`_
 
   - Guides you through configuring data sources, Elasticsearch, deployment options, indexing, and environment settings.
-* Developer Guide
+* `Developer Guide <https://omero-search-engine.readthedocs.io/en/latest/developer/developer.html>`_
 
   - Technical details for extending, maintaining, or contributing to the service.
 
