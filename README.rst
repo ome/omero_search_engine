@@ -82,7 +82,7 @@ Quick start
 For Users / Integrators
 =======================
 
-Wide range of example queries can be found in the `examples/ <https://github.com/khaledk2/ansible-role-omero-searchengine>`_  directory, ready to run or integrate.
+Wide range of example queries can be found in the `examples/ <https://github.com/ome/omero_search_engine/tree/main/examples>`_  directory, ready to run or integrate.
 Searcherengine does not provide a graphical user interface (GUI). All interactions are performed via REST APIs.
 The IDR searcher is deployed at
 
@@ -173,7 +173,7 @@ IDR Searcher includes detailed documentation for different audiences:
   - How to construct queries, use filters, and interpret API responses.
 *  `Configuration Guide <https://omero-search-engine.readthedocs.io/en/latest/configuration/configuration_installation.html>`_
 
-  - Guides you through configuring data sources, Elasticsearch, deployment options, indexing, and environment settings.
+   - Guides you through configuring data sources, Elasticsearch, deployment options, indexing, and environment settings.
 * `Developer Guide <https://omero-search-engine.readthedocs.io/en/latest/developer/developer.html>`_
 
   - Technical details for extending, maintaining, or contributing to the service.
