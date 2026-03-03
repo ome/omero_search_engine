@@ -34,7 +34,8 @@ The application needs the access attributes (e.g, URL, username, password, etc.)
 
 * Index the data using CSV files:
 
-  * The data should be extracted from the IDR/OMERO database using some SQL queries and saved to CSV files using :omero_search_engine:`sql_to_csv.py <omero_search_engine/cache_functions/elasticsearch/sql_to_csv.py>`
+  * The data should be extracted from the IDR/OMERO database using some SQL queries and saved to CSV files using :omero_search_engine:`sql_to_csv.py <omero_search_engine/cache_functions/elasticsearch/sql_to_csv.py>`.
+  * Alternatively, you can provide the data as CSV files that follows the supported CSV format. You can find more information in the :omero_search_engine:`README.md <omero_search_engine/cache_functions/elasticsearch/csv_templates/README.md>`.
   * The image index data is generated in a large file, so it is recommended that the user splits it into several files to facilitate the processing of the data and its insertion into the index e.g. ``split -l 2600000 images.csv``.
   * ``create_index``: Create the Elasticsearch indices no data have been previously added, it can be used to create a single index or all the indices; the default is to create all the indices.
   * The user must add a new data source (CSV) using the ''set_data_source_files'' command inside :omero_search_engine:`commands.py <commands.py>`
