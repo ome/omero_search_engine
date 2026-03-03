@@ -7,11 +7,11 @@
 
 IDR Searcher
 ------------
-IDR-searcher is an Elasticsearch-based search engine developed for IDR (Image Data Resource) to index and analyse metadata stored as key–value pairs. It supports both simple lookups and complex queries across large datasets, with synchronous and asynchronous search capabilities.
+IDR searcher is an Elasticsearch-based search engine developed for IDR (Image Data Resource) to index and analyse metadata stored as key–value pairs. It supports both simple lookups and complex queries across large datasets, with synchronous and asynchronous search capabilities.
 
 The system connects directly to OMERO databases and also supports CSV data sources. All functionality is exposed through REST APIs (GET/POST) using JSON, enabling easy integration with web applications and backend services.
 
-Although built for IDR, IDR-searcher can be used as a backend search service for any application where data resides in an OMERO database or supported CSV format and is intended for public access.
+Although built for IDR, IDR searcher can be used as a backend search service for any application where data resides in an OMERO database or supported CSV format and is intended for public access.
 
 Key Features
 ============
@@ -90,7 +90,7 @@ The IDR searcher is deployed at
 
 That page provides a full API reference and interactive testing, searching data from the IDR.
 
-Idr-searcher APIs can be used via:
+IDR searcher APIs can be used via:
 
 * Integration into backend services for other applications
 * Automation scripts
@@ -187,7 +187,7 @@ IDR Searcher includes detailed documentation for different audiences:
 Disclaimer
 ----------
 
-* The IDR-searcher currently is intended to be used with public data.
+* The IDR searcher currently is intended to be used with public data.
 
   - All indexed data is publicly accessible for search
 * There is no authenticating or access permission in place yet.
