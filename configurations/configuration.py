@@ -23,6 +23,9 @@ import os
 import json
 
 
+images_urls = ["image_url", "image_webclient_url", "thumb_url"]
+
+
 def load_configuration_variables_from_file(config):
     # loading application configuration variables from a file
     print("Injecting config variables from :%s" % app_config.INSTANCE_CONFIG)
@@ -145,7 +148,14 @@ def config_datasource(configuration, updated_configuration):
             if data_source["name"].lower() == updated_configuration["name"].lower():
                 found = True
                 for k, v in updated_configuration["DATABASE"].items():
-                    if data_source["DATABASE"][k] != v:
+                    if k in data_source["DATABASE"]:
+                        if data_source["DATABASE"][k] != v:
+                            data_source["DATABASE"][k] = v
+                            changed = True
+                    elif k in images_urls:
+                        data_source[k] = v
+                        changed = True
+                    else:
                         data_source["DATABASE"][k] = v
                         changed = True
                 break
