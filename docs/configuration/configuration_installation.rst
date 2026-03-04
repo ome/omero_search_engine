@@ -86,9 +86,11 @@ Configuration file details (For developer)
 Indexing the data
 =================
 
+Indexing imports data from a configured source into the search environment, preparing it for queries and analytics.
+
 Index the data from database
 ----------------------------
-* The Ansible role can be used to index using tags
+* The Ansible role can be used to index the using tags
 * Alternatively for advanced users, the method ``get_index_data_from_database`` inside :omero_search_engine:`commands.py <commands.py>` allows automatic indexing using docker commands.
 
 Index the data using CSV files:
