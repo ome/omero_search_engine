@@ -7,11 +7,11 @@
 
 IDR Searcher
 ------------
-IDR searcher is an Elasticsearch-based search engine developed for IDR (Image Data Resource) to index and analyse metadata stored as key–value pairs. It supports both simple lookups and complex queries across large datasets, with synchronous and asynchronous search capabilities.
+IDR Searcher is an Elasticsearch-based search engine developed for `IDR <idr.openmicroscopy.org>`_  (Image Data Resource) to index and analyse metadata stored as key–value pairs. It supports both simple lookups and complex queries across large datasets, with synchronous and asynchronous search capabilities.
 
-The system connects directly to OMERO databases and also supports CSV data sources. All functionality is exposed through REST APIs (GET/POST) using JSON, enabling easy integration with web applications and backend services.
+The system connects directly to OMERO databases, which run on **PostgreSQL** and also supports CSV data sources. All functionality is exposed through REST APIs (GET/POST) using JSON, enabling easy integration with web applications and backend services.
 
-Although built for IDR, IDR searcher can be used as a backend search service for any application where data resides in an OMERO database or `supported CSV format <https://github.com/ome/omero_search_engine/tree/main/omero_search_engine/cache_functions/elasticsearch/csv_templates>`_  and is intended for public access.
+Although built for IDR, IDR Searcher can be used as a backend search service for any application where data resides in an OMERO database or `supported CSV format <https://github.com/ome/omero_search_engine/tree/main/omero_search_engine/cache_functions/elasticsearch/csv_templates>`_  and is intended for public access.
 
 Key Features
 ============
@@ -33,41 +33,45 @@ Key Features
 
   - Index data from database servers, database backups, and CSV files.
   - JSON support is currently under development.
+* High-Performance Parallel Indexing
 
+  - It uses parallel processing to efficiently index large volumes of data and optimize indexing speed and scalability.
 * Resource Filtering:
 
   - Restrict search results to one or more selected data resources.
 * Data Export:
 
   - Export indexed data or search results to JSON, CSV, or Parquet format
-  - CSV and Parquet files are compatible with BFF (BioFile Finder Format). BFF is a tool for filtering, sorting and grouping tabular data) for advanced filtering and data exploration
+  - CSV and Parquet files are compatible with `BFF <https://bff.allencell.org/>`_ (BioFile Finder Format). BFF is a tool for filtering, sorting and grouping tabular data) for advanced filtering and data exploration
 * Asynchronous Search:
 
   - Fetch all matching results from large queries in one operation.
   - Ideal for handling large query results without multiple requests.
+* Dynamic Configuration Reload
 
-Multi-Data-Resource Support
-===========================
+  – The IDR Searcher API server monitors its configuration file and automatically reloads changes without requiring a restart.
+
+Multiple Data Sources Support
+=============================
 
 SearcherEngine can index and query data from multiple resources, even if:
 
 * They are in different formats
 * Some require preprocessing (e.g., converting to CSV)
 
-  - CSV files must follow the supported  structure to be indexed successfully.
+  - CSV files must follow the supported structure to be indexed successfully.
   - CSV templates are provided to guide users in preparing files that match the required format.
 
-**Example data resources:**
+**Case Study: Indexing Multiple Data Sources in a Single Deployment**
 
+In one implemented deployment, the following data sources were indexed within the same IDR Searcher instance and made searchable together:
 
 * IDR Data resource  ->  Database with sources metadata
-* SSBD Data resource -> CSV files exported from a different public resource and converted to the supported CSV format before indexing.
-* BIA Data resource -> Data requiring conversion to CSV before indexing
-* Ome2024-ngff-challenge data resource -> Data requiring conversion to CSV before indexing
+* `SSBD <https://ssbd.riken.jp/database/>`_ Data resource -> use of CSV files exported from public resource and converted to the supported CSV format before indexing.
+* `BIA <https://www.ebi.ac.uk/bioimage-archive/>`_ Data resource -> Data requiring conversion to CSV before indexing
+* `OME 2024 NGFF Challenge <https://ome.github.io/ome2024-ngff-challenge/>`_  Data resource -> Data requiring conversion to CSV before indexing
 
-IDR Searcher reads data from each resource, processes it, and stores it in Elasticsearch.
-
-Once indexed, you can:
+All of these sources were indexed into the same search environment, enabling users to:
 
 * Run queries across all resources simultaneously
 * Filter results by one or multiple data resources
@@ -75,7 +79,7 @@ Once indexed, you can:
 * Use asynchronous search to fetch all results in one operation, or standard pagination for incremental retrieval.
 * Export & Analyse:
   - Search results can be exported to CSV and Parquet formats.
-  - Exported files are compatible with BFF for downstream filtering and data exploration.
+   - The exported files are compatible with BFF for downstream filtering and data exploration.
 
 Quick start
 -----------
@@ -84,28 +88,17 @@ For Users / Integrators
 
 Wide range of example queries can be found in the `examples/ <https://github.com/ome/omero_search_engine/tree/main/examples>`_  directory, ready to run or integrate.
 Searcherengine does not provide a graphical user interface (GUI). All interactions are performed via REST APIs.
-The IDR searcher is deployed at
+The IDR S
+earcher is deployed at
 
-    https://idr.openmicroscopy.org/searchengine/apidocs/
+https://idr.openmicroscopy.org/searchengine/apidocs/
 
 That page provides a full API reference and interactive testing, searching data from the IDR.
 
-IDR searcher APIs can be used via:
-
-* Integration into backend services for other applications
-* Automation scripts
-* Swagger (OpenAPI) UI for testing endpoints
-* API clients (Postman, curl)
-
 For Administrators
 ==================
-Deployment and configuration are handled via dedicated Ansible role, i.e. `ansible-role-omero-searchengine <https://github.com/khaledk2/ansible-role-omero-searchengine>`_  , which includes `a sample deployment playbook <https://github.com/khaledk2/ansible-role-omero-searchengine?tab=readme-ov-file#example-playbook>`_ .
-Deploy Using Ansible
-
-1.	Review the sample playbook and adjust variables for your environment.
-2.	Run the playbook (assuming the playbook name is deploy.ym)::
-
-            ansible-playbook deploy.yml
+Deployment and configuration are handled via dedicated Ansible role, i.e. `ansible-role-omero-searchengine <https://github.com/ome/ansible-role-omero-searchengine>`_  , which includes `a sample deployment playbook <https://github.com/khaledk2/ansible-role-omero-searchengine?tab=readme-ov-file#example-playbook>`_ .
+Deploy Using Ansible. The sample playbook should be reviewed and the variables need to be adjusted for host environment.
 
 Using IDR Searcher REST API
 ===========================
@@ -161,7 +154,7 @@ What it does:
 * Filters records where **Organism** = **mus musculus** and **Imaging Method** = **spim**
 * Returns JSON results ready for your script, web application or backend service
 
-For more advanced examples, see the examples/ directory or Swagger UI.
+For more advanced examples, see the `examples/ <https://github.com/ome/omero_search_engine/tree/main/examples>`_ directory or `API documentation <https://idr-testing.openmicroscopy.org/searchengine/apidocs/>`_.
 
 Documentation
 =============
@@ -178,7 +171,7 @@ IDR Searcher includes detailed documentation for different audiences:
 
   - Technical details for extending, maintaining, or contributing to the service.
 
-**Not sure where to start?**
+**Getting Started**
 
 * Using the API: Read the User Guide.
 * Deploying/configuring: Read the Configuration Guide.
@@ -187,7 +180,7 @@ IDR Searcher includes detailed documentation for different audiences:
 Disclaimer
 ----------
 
-* The IDR searcher currently is intended to be used with public data.
+* The IDR Searcher currently is intended to be used with public data.
 
   - All indexed data is publicly accessible for search
 * There is no authenticating or access permission in place yet.
@@ -197,7 +190,7 @@ Disclaimer
 License
 -------
 
-IDR searcher is released under the GPL v2.
+IDR Searcher is released under the GPL v2.
 
 Copyright
 ---------
