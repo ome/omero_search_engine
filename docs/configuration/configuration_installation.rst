@@ -88,17 +88,36 @@ Indexing the data
 
 Indexing imports data from a configured source into the search environment, preparing it for queries and analytics.
 
+Key Points:
+-----------
+
+* Uses predefined schemas specified in the IDR Searcher templates (:omero_search_engine:`elasticsearch_templates.py <omero_search_engine/cache_functions/elasticsearch/elasticsearch_templates.py>`) which specify the structure and field mappings for indexed data.
+* Ensures consistency across different data sources.
+* Supports multiple types of sources: databases and CSV files.
+* Uses parallel processing to optimize performance for large datasets.
+* Typically executed during the first deployment or when adding a new data source.
+
+Workflow Overview:
+------------------
+
+* Data source connection is established.
+* Records are extracted in batches.
+* Data is transformed to match the predefined template schema.
+* Records are pushed into the Elasticsearch.
+* Logs capture success, errors, and processed record counts.
+
 Index the data from database
-----------------------------
+-----------------------------
 * The Ansible role can be used to index the using tags
 * Alternatively for advanced users, the method ``get_index_data_from_database`` inside :omero_search_engine:`commands.py <commands.py>` allows automatic indexing using docker commands.
 
 Index the data using CSV files:
 -------------------------------
-
   * Extract the data from the IDR/OMERO database using SQL queries and save them to CSV files using :omero_search_engine:`sql_to_csv.py <omero_search_engine/cache_functions/elasticsearch/sql_to_csv.py>`.
   * Alternatively, you can provide the data as CSV files that follows the supported CSV format. You can find more information in the :omero_search_engine:`README.md <omero_search_engine/cache_functions/elasticsearch/csv_templates/README.md>`.
-  * The image index data is generated in a large file, so it is recommended that the user splits it into several files to facilitate the processing of the data and its insertion into the index e.g. ``split -l 2600000 images.csv``.
+  * If the data is generated in a large file, it is recommended that the user splits it into several files to facilitate the processing of the data and its insertion into the index e.g. ``split -l 2600000 images.csv``.
   * ``create_index``: Create the Elasticsearch indices no data have been previously added, it can be used to create a single index or all the indices; the default is to create all the indices.
   * The user must add a new data source (CSV) using the ''set_data_source_files'' command inside :omero_search_engine:`commands.py <commands.py>`
   * ``get_index_data_from_csv_files`` is used to read the data, to format it then to push the data to the resource Elasticsearch index. The user can provide a single file (CSV format) or folder. If a folder is specified, the indexer will use all the CSV files inside the folder.
+
+Advanced users and system administrators can perform data indexing operations using dedicated maintenance scripts. The :omero_search_engine:`data_indexing.md <docs/user_guide/data_indexing.md>' document provides guidance on how to execute and manage these operations effectively.
