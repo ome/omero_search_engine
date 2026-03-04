@@ -262,14 +262,13 @@ def set_database_configuration(
     if backup_filename:
         database_attrs["DATABASE_BACKUP_FILE"] = backup_filename
     if image_webclient_url:
-        database_attrs["image_webclient_url"] = image_webclient_url
+        database_config["image_webclient_url"] = image_webclient_url
     if thumb_url:
-        database_attrs["thumb_url"] = thumb_url
+        database_config["thumb_url"] = thumb_url
     if image_url:
-        database_attrs["image_url"] = image_url
+        database_config["image_url"] = image_url
 
-    if len(database_attrs) > 0:
-
+    if len(database_attrs) > 0 or len(database_config) > 2:
         update_config_file(database_config, data_source=True)
     else:
         search_omero_app.logger.info(

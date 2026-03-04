@@ -152,12 +152,20 @@ def config_datasource(configuration, updated_configuration):
                         if data_source["DATABASE"][k] != v:
                             data_source["DATABASE"][k] = v
                             changed = True
-                    elif k in images_urls:
-                        data_source[k] = v
-                        changed = True
                     else:
                         data_source["DATABASE"][k] = v
                         changed = True
+                for k, v in updated_configuration.items():
+                    if k == "DATABASE":
+                        continue
+                    if k in data_source:
+                        if data_source[k] != v:
+                            data_source[k] = v
+                            changed = True
+                    else:
+                        data_source[k] = v
+                        changed = True
+                print(data_source)
                 break
 
         if not found:
