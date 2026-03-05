@@ -5,198 +5,194 @@
     :target: https://omero-search-engine.readthedocs.io/en/latest/?badge=latest
     :alt: Documentation Status
 
-IDR searcher
+IDR Searcher
 ------------
+IDR Searcher is an Elasticsearch-based search engine developed for `IDR <idr.openmicroscopy.org>`_  (Image Data Resource) to index and analyse metadata stored as key–value pairs. It supports both simple lookups and complex queries across large datasets, with synchronous and asynchronous search capabilities.
 
-* IDR searcher is used to search metadata (``key-value`` pairs).
-* It leverages Elasticsearch, a distributed, free, and open-source search and analytics engine designed for large data volumes.
-* Most of the search operators are supported, e.g. equals, not equals, contains.
-* It allows users to run complex queries on the data using ‘and’ and ‘or’.
-* It enables search for images, projects, screens, plates and datasets.
-* It enables search for any attribute value, even when the specific attribute is unknown.
+The system connects directly to OMERO databases, which run on **PostgreSQL** and also supports CSV data sources. All functionality is exposed through REST APIs (GET/POST) using JSON, enabling easy integration with web applications and backend services.
 
-* It supports indexing data from database servers, database backups, and CSV files. Support for JSON is currently being developed.
+Although built for IDR, IDR Searcher can be used as a backend search service for any application where data resides in an OMERO database or `supported CSV format <https://github.com/ome/omero_search_engine/tree/main/omero_search_engine/cache_functions/elasticsearch/csv_templates>`_  and is intended for public access.
 
-* It supports searching data from multiple data sources.
-* Once indexed, data from any source becomes readily searchable.
-* The search results can be restricted to one or multiple data sources.
+Key Features
+============
 
-* The search engine query is a dict that has three parts:
+* Fast, scalable search capable of handling large datasets efficiently
+* Flexible Search Operators:
 
-  * The **first part** is ``and_filter``, it is a list. Each item in the list is a dict that has three keys:
+  - Supports operators such as ``equals``, ``not equals``, and ``contains``.
+* Complex Query Support:
 
-    * name: attribute name (name in annotation_mapvalue table)
-    * value: attribute value (value in annotation_mapvalue table)
-    * operator: the operator, which is used to search the data, e.g. ``equals``, ``no_equals``, ``contains``, etc.
-  * The **second part** of the query is ``or_filters``; it has alternatives to search the database; it answers a question like finding the images which can satisfy one or more of conditions inside a list. It is a list of dicts and has the same format as the dict inside the ``and_filter``.
-  * The **third part** is the ``main_attribute``, it allows the user to search using one or more of ``project _id, dataset_id, group_id, owner_id, group_id, owner_id``, etc. It supports two operators, ``equals`` and ``not_equals``. Hence, it is possible to search one project instead of all the projects. Also it is possible to search the results which belong to a specific user or group.
+  - Combine multiple conditions using ``AND`` and ``OR`` to answer advanced data queries.
+* Search Across Multiple source types
 
-* The search engine returns the results in a JSON which has the following keys:
+  - Search images, projects, screens, plates, and datasets.
+* Attribute-Agnostic Search:
 
-  * ``notice``: reports a message to the sender which may include an error message.
-  * ``Error``: specific error message
-  * ``query_details``: The submitted query.
-  * ``resource``: The resource, e.g. image
-  * ``server_query_time``: The server query time in seconds
-  * ``results``: the query results, which is a dict with the following keys:
-  * ``size``: Total query results.
-  * ``page``: page number, a page contains a maximum of 10000 records. If the results have more records, they will be transformed using more than one page.
-  * ``bookmark``: Used to call the next page if the results exceed 10,000 records.
-  * ``total_pages``: Total number of pages that contains the results.
-  * ``results``: a list that contains the results. Each item inside the list is a dict. The dict key contains image id, name, and all the metadata (key/pair, i.e. "key_values") values for the image. Each item has other data such as the image owner Id,group Id, project Id and name etc.
-* It is possible to query the search engine to get all the available resources (e.g. image) and their keys (names) using the following URL::
+  - Find records by value even if the attribute name is unknown.
+* Multi data Resource Indexing:
 
-    127.0.0.01:5577/api/v1/resources/all/keys
+  - Index data from database servers, database backups, and CSV files.
+  - JSON support is currently under development.
+* High-Performance Parallel Indexing
 
-* The user can get the available values for a specific key for a resource, e.g. what are the available values for "Organism"::
+  - It uses parallel processing to efficiently index large volumes of data and optimize indexing speed and scalability.
+* Resource Filtering:
 
-    http://127.0.0.1:5577/api/v1/resources/image/getannotationvalueskey/?key=Organism
+  - Restrict search results to one or more selected data resources.
+* Data Export:
 
-* The following python script sends a query to the search engine and gets the results:
+  - Export indexed data or search results to JSON, CSV, or Parquet format
+  - CSV and Parquet files are compatible with `BFF <https://bff.allencell.org/>`_ (BioFile Finder Format). BFF is a tool for filtering, sorting and grouping tabular data) for advanced filtering and data exploration
+* Asynchronous Search:
 
-.. code-block:: python
+  - Fetch all matching results from large queries in one operation.
+  - Ideal for handling large query results without multiple requests.
+* Dynamic Configuration Reload
 
-    import logging
-    import requests
-    import json
-    from datetime import datetime
-    # url to send the query
-    image_ext = "/resources/image/searchannotation/"
-    # url to get the next page for a query, bookmark is needed
-    image_page_ext = "/resources/image/searchannotation_page/"
-    # search engine url
-    base_url = "http://127.0.0.1:5577/api/v1/"
+  – The IDR Searcher API server monitors its configuration file and automatically reloads changes without requiring a restart.
 
-    import sys
+Multiple Data Sources Support
+=============================
 
-    logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+SearcherEngine can index and query data from multiple resources, even if:
 
+* They are in different formats
+* Some require preprocessing (e.g., converting to CSV)
 
-    def query_the_search_ending(query, main_attributes):
-        query_data = {"query": {'query_details': query,"main_attributes":main_attributes}}
-        query_data_json = json.dumps(query_data)
-        resp = requests.post(url="%s%s" % (base_url, image_ext), data=query_data_json)
-        res = resp.text
-        start = datetime.now()
-        try:
-            returned_results = json.loads(res)
-        except:
-            logging.info(res)
-            return
+  - CSV files must follow the supported structure to be indexed successfully.
+  - CSV templates are provided to guide users in preparing files that match the required format.
 
-        if not returned_results.get("results"):
-            logging.info(returned_results)
-            return
+**Case Study: Indexing Multiple Data Sources in a Single Deployment**
 
-        elif len(returned_results["results"]) == 0:
-            logging.info("Your query returns no results")
-            return
+In one implemented deployment, the following data sources were indexed within the same IDR Searcher instance and made searchable together:
 
-        logging.info("Query results:")
-        total_results = returned_results["results"]["size"]
-        logging.info("Total no of result records %s" % total_results)
-        logging.info("Server query time: %s seconds" % returned_results["server_query_time"])
-        logging.info("Included results in the current page %s" % len(returned_results["results"]["results"]))
+* IDR Data resource  ->  Database with sources metadata
+* `SSBD <https://ssbd.riken.jp/database/>`_ Data resource -> use of CSV files exported from public resource and converted to the supported CSV format before indexing.
+* `BIA <https://www.ebi.ac.uk/bioimage-archive/>`_ Data resource -> Data requiring conversion to CSV before indexing
+* `OME 2024 NGFF Challenge <https://ome.github.io/ome2024-ngff-challenge/>`_  Data resource -> Data requiring conversion to CSV before indexing
 
-        received_results_data = []
-        for res in returned_results["results"]["results"]:
-            received_results_data.append(res)
+All of these sources were indexed into the same search environment, enabling users to:
 
-        received_results = len(returned_results["results"]["results"])
-        #set the bookmark to be used in the next the page if the number of pages is greater than 1
-        bookmark = returned_results["results"]["bookmark"]
-        #get the total number of pages
-        total_pages = returned_results["results"]["total_pages"]
-        page = 1
-        logging.info("bookmark: %s, page: %s, received results: %s" % (
-        bookmark, (str(page) + "/" + str(total_pages)), (str(received_results) + "/" + str(total_results))))
-        while received_results < total_results:
-            page += 1
-            query_data = {"query": {'query_details': returned_results["query_details"]}, "bookmark": bookmark}
-            query_data_json = json.dumps(query_data)
-            resp = requests.post(url="%s%s" % (base_url, image_page_ext), data=query_data_json)
-            res = resp.text
-            try:
-                returned_results = json.loads(res)
-            except Exception as e:
-                logging.info("%s, Error: %s"%(resp.text,e))
-                return
-            bookmark = returned_results["results"]["bookmark"]
-            received_results = received_results + len(returned_results["results"]["results"])
-            for res in returned_results["results"]["results"]:
-                received_results_data.append(res)
+* Run queries across all resources simultaneously
+* Filter results by one or multiple data resources
+* Export combined search results seamlessly
+* Use asynchronous search to fetch all results in one operation, or standard pagination for incremental retrieval.
+* Export & Analyse:
+  - Search results can be exported to CSV and Parquet formats.
+   - The exported files are compatible with BFF for downstream filtering and data exploration.
 
-            logging.info("bookmark: %s, page: %s, received results: %s" % (
-            bookmark, (str(page) + "/" + str(total_pages)), (str(received_results) + "/" + str(total_results))))
+Quick start
+-----------
+For Users / Integrators
+=======================
 
-        logging.info("Total received results: %s" % len(received_results_data))
-        return received_results_data
+Wide range of example queries can be found in the `examples/ <https://github.com/ome/omero_search_engine/tree/main/examples>`_  directory, ready to run or integrate.
+Searcherengine does not provide a graphical user interface (GUI). All interactions are performed via REST APIs.
+The IDR S
+earcher is deployed at
+
+https://idr.openmicroscopy.org/searchengine/apidocs/
+
+That page provides a full API reference and interactive testing, searching data from the IDR.
+
+For Administrators
+==================
+Deployment and configuration are handled via dedicated Ansible role, i.e. `ansible-role-omero-searchengine <https://github.com/ome/ansible-role-omero-searchengine>`_  , which includes `a sample deployment playbook <https://github.com/khaledk2/ansible-role-omero-searchengine?tab=readme-ov-file#example-playbook>`_ .
+Deploy Using Ansible. The sample playbook should be reviewed and the variables need to be adjusted for host environment.
+
+Using IDR Searcher REST API
+===========================
+IDR Searcher is an API-only backend service. All interactions are via HTTP using standard REST methods. Data is exchanged in JSON format.
+
+* GET — Used for simple queries via URL parameters
+* POST — Used for more complex queries with JSON payloads
+
+**GET Example (Simple Query):**
+
+    https://idr.openmicroscopy.org/searchengine/api/v1/resources/image/search/?key=Gene%20Symbol&value=pdx1&data_source=idr
+
+What it does:
+
+* Finds all images where **Gene Symbol** = **pdx1** and **data resource** = **idr**
+* Returns JSON results
+
+**POST Example (Complex Query)**::
+
+    POST https://idr.openmicroscopy.org/searchengine/api/v1/resources/submitquery/
+    Content-Type: application/json
 
 
-    query_1 = {"and_filters": [{"name": "Organism", "value": "Homo sapiens", "operator": "equals"},
-                               {"name": "Antibody Identifier", "value": "CAB034889", "operator": "equals"}],
-               "or_filters": [[{"name": "Organism Part", "value": "Prostate", "operator": "equals"},
-                              {"name": "Organism Part Identifier", "value": "T-77100", "operator": "equals"}]]}
-    query_2 = {"and_filters": [{"name": "Organism", "value": "Mus musculus", 'operator': 'equals'}]}
-    main_attributes=[]
-    logging.info("Sending the first query:")
-    results_1 = query_the_search_ending(query_1,main_attributes)
-    logging.info("=========================")
-    logging.info("Sending the second query:")
-    results_2 = query_the_search_ending(query_2,main_attributes)
-    #The above returns 130834 within 23 projects
-    #[101, 301, 351, 352, 353, 405, 502, 504, 801, 851, 852, 853, 1151, 1158, 1159, 1201, 1202, 1451, 1605, 1606, 1701, 1902, 1903]
-    #It is possible to get the results in one project, e.g. 101 by using the main_attributes filter
-    main_attributes_2={ "and_main_attributes": [{
-        "name":"project_id","value": 101, "operator":"equals"}]}
-    results_3=query_the_search_ending(query_2,main_attributes_2)
-    #It is possible to get the results and exculde one project, e.g. 101
-    main_attributes_3={"and_main_attributes":[{"name":"project_id","value": 101, "operator":"not_equals"}]}
-    results_4=query_the_search_ending(query_2,main_attributes_3)
+.. code-block:: json
 
-* There is a `simple GUI <https://github.com/ome/omero_search_engine_client/tree/elastic_search>`_ to build the query and send it to the search engine
+    {
+       "resource":"image",
+       "query_details":{
+          "and_filters":[
+             {
+                "name":"Organism",
+                "value":"mus musculus",
+                "operator":"equals",
+                "resource":"image"
+             },
+             {
+                "name":"Imaging Method",
+                "value":"spim",
+                "operator":"equals",
+                "resource":"container"
+             }
+          ],
+          "or_filters":[
 
-  * It is used to build the query
-  * It will display the results when they are ready
-* The app uses Elasticsearch
+          ],
+          "case_sensitive":false
+       }
+    }
 
-  * The method ``create_index`` inside `commands.py <commands.py>`_ creates a separate index for image, project, dataset, screen, plate, and well using two templates:
+What it does:
 
-    * Image template (image_template) for image index. It is derived from some OMERO tables into a single Elasticsearch index (image, annoation_mapvalue, imageannotationlink, project, dataset, well, plate, and screen to generate a single index.
-    * Non-image template (non_image_template) for other indices (project, dataset, well, plate, screen). It is derived from some OMERO tables depending on the resource; for example for the project it combines project, projectannotationlink and annotation_mapvalue.
-    * Both of the templates are in `elasticsearch_templates.py <omero_search_engine/cache_functions/elasticsearch/elasticsearch_templates.py>`_
-    * The data can be moved using SQL queries which generate the CSV files; the queries are in `sql_to_csv.py <omero_search_engine/cache_functions/elasticsearch/sql_to_csv.py>`_
-    * The method ``add_resource_data_to_es_index`` inside `commands.py <commands.py>`_ reads the CSV files and inserts the data to the Elasticsearch index.
-* The data can be transferred directly from the OMERO database to the Elasticsearch using the ``get_index_data_from_database`` method inside `commands.py <commands.py>`_:
+* Searches across multiples resources (**image** and **container**)
+* Filters records where **Organism** = **mus musculus** and **Imaging Method** = **spim**
+* Returns JSON results ready for your script, web application or backend service
 
-  * It creates the elasticsearch indices for each resource
-  * It queries the OMERO database after receiving the data, processes, and pushes it to the Elasticsearch indices.
-  * This process takes a relatively long time depending on the hosting machine specs. The user can adjust how many rows can be processed per call to the OMERO database:
-    * Set the number of rows using the ``set_cache_rows_number`` method inside `commands.py <commands.py>`_, the following example will set the number to 1000::
+For more advanced examples, see the `examples/ <https://github.com/ome/omero_search_engine/tree/main/examples>`_ directory or `API documentation <https://idr-testing.openmicroscopy.org/searchengine/apidocs/>`_.
 
-        
-        export FLASK_APP=commands.py
-        flask set_cache_rows_number -s 10000
-* The system supports restoring a database from a backup using the ``restore_postgresql_database`` method inside `commands.py <commands.py>`_.
+Documentation
+=============
 
-* The data can be also moved using SQL queries which generate the CSV files; the queries are in `sql_to_csv.py <omero_search_engine/cache_functions/elasticsearch/sql_to_csv.py>`_
+IDR Searcher includes detailed documentation for different audiences:
 
-For the configuration and installation instructions, please read the following document `configuration_installation <docs/configuration/configuration_installation.rst>`_
+* `User Guide <https://omero-search-engine.readthedocs.io/en/latest/user_guide/user_guide.html>`_
+
+  - How to construct queries, use filters, and interpret API responses.
+*  `Configuration Guide <https://omero-search-engine.readthedocs.io/en/latest/configuration/configuration_installation.html>`_
+
+   - Guides you through configuring data sources, Elasticsearch, deployment options, indexing, and environment settings.
+* `Developer Guide <https://omero-search-engine.readthedocs.io/en/latest/developer/developer.html>`_
+
+  - Technical details for extending, maintaining, or contributing to the service.
+
+**Getting Started**
+
+* Using the API: Read the User Guide.
+* Deploying/configuring: Read the Configuration Guide.
+* Extending or contributing: Read the Developer Guide.
 
 Disclaimer
 ----------
 
-* The SearchEngine currently is intended to be used with public data.
+* The IDR Searcher currently is intended to be used with public data.
+
+  - All indexed data is publicly accessible for search
 * There is no authenticating or access permission in place yet.
-* All the data in the Elasticsearch indices is exposed publicly.
+
+  - We are working on the authentication and access permission problem solution for the private data.
 
 License
 -------
 
-IDR searcher is released under the GPL v2.
+IDR Searcher is released under the GPL v2.
 
 Copyright
 ---------
 
-2022-2025, The Open Microscopy Environment, Glencoe Software, Inc.
-
+2022-2026, The Open Microscopy Environment, Glencoe Software, Inc.
