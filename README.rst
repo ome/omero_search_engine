@@ -6,6 +6,20 @@
     :alt: Documentation Status
 
 IDR Searcher
+============
+
+Table of Contents
+-----------------
+
+- `Introduction <#introduction>`_
+- `Key Features <#Key Features>`_
+- `Multiple Data Sources Supports <#Multiple Data Sources Support>`_
+- `Quick start <#Quick start>`_
+- `Documentation <#Documentation>`_
+- `Disclaimer <#Disclaimer>`_
+- `License <#License>`_
+
+Introduction
 ------------
 IDR Searcher is an Elasticsearch-based search engine developed for `IDR <idr.openmicroscopy.org>`_  (Image Data Resource) to index and analyse metadata stored as key–value pairs. It supports both simple lookups and complex queries across large datasets, with synchronous and asynchronous search capabilities.
 
@@ -14,7 +28,7 @@ The system connects directly to OMERO databases, which run on **PostgreSQL** and
 Although built for IDR, IDR Searcher can be used as a backend search service for any application where data resides in an OMERO database or `supported CSV format <https://github.com/ome/omero_search_engine/tree/main/omero_search_engine/cache_functions/elasticsearch/csv_templates>`_  and is intended for public access.
 
 Key Features
-============
+------------
 
 * Fast, scalable search capable of handling large datasets efficiently
 * Flexible Search Operators:
@@ -52,7 +66,7 @@ Key Features
   – The IDR Searcher API server monitors its configuration file and automatically reloads changes without requiring a restart.
 
 Multiple Data Sources Support
-=============================
+-----------------------------
 
 SearcherEngine can index and query data from multiple resources, even if:
 
@@ -82,27 +96,13 @@ All of these sources were indexed into the same search environment, enabling use
    - The exported files are compatible with BFF for downstream filtering and data exploration.
 
 Quick start
------------
+------------
 For Users / Integrators
-=======================
+~~~~~~~~~~~~~~~~~~~~~~~
 
-Wide range of example queries can be found in the `examples/ <https://github.com/ome/omero_search_engine/tree/main/examples>`_  directory, ready to run or integrate.
-Searcherengine does not provide a graphical user interface (GUI). All interactions are performed via REST APIs.
-The IDR S
-earcher is deployed at
+IDR Searcher is an API-only backend service. All interactions with the system are performed through HTTP using standard REST methods. Data is exchanged in JSON format.
 
-https://idr.openmicroscopy.org/searchengine/apidocs/
-
-That page provides a full API reference and interactive testing, searching data from the IDR.
-
-For Administrators
-==================
-Deployment and configuration are handled via dedicated Ansible role, i.e. `ansible-role-omero-searchengine <https://github.com/ome/ansible-role-omero-searchengine>`_  , which includes `a sample deployment playbook <https://github.com/khaledk2/ansible-role-omero-searchengine?tab=readme-ov-file#example-playbook>`_ .
-Deploy Using Ansible. The sample playbook should be reviewed and the variables need to be adjusted for host environment.
-
-Using IDR Searcher REST API
-===========================
-IDR Searcher is an API-only backend service. All interactions are via HTTP using standard REST methods. Data is exchanged in JSON format.
+The API supports the following request methods:
 
 * GET — Used for simple queries via URL parameters
 * POST — Used for more complex queries with JSON payloads
@@ -156,8 +156,13 @@ What it does:
 
 For more advanced examples, see the `examples/ <https://github.com/ome/omero_search_engine/tree/main/examples>`_ directory or `API documentation <https://idr-testing.openmicroscopy.org/searchengine/apidocs/>`_.
 
+For Administrators
+~~~~~~~~~~~~~~~~~~
+Deployment and configuration are handled via dedicated Ansible role, i.e. `ansible-role-omero-searchengine <https://github.com/ome/ansible-role-omero-searchengine>`_  , which includes `a sample deployment playbook <https://github.com/khaledk2/ansible-role-omero-searchengine?tab=readme-ov-file#example-playbook>`_ .
+Deploy Using Ansible. The sample playbook should be reviewed and the variables need to be adjusted for host environment.
+
 Documentation
-=============
+-------------
 
 IDR Searcher includes detailed documentation for different audiences:
 
@@ -170,12 +175,6 @@ IDR Searcher includes detailed documentation for different audiences:
 * `Developer Guide <https://omero-search-engine.readthedocs.io/en/latest/developer/developer.html>`_
 
   - Technical details for extending, maintaining, or contributing to the service.
-
-**Getting Started**
-
-* Using the API: Read the User Guide.
-* Deploying/configuring: Read the Configuration Guide.
-* Extending or contributing: Read the Developer Guide.
 
 Disclaimer
 ----------
