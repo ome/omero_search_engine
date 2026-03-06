@@ -57,6 +57,9 @@ Key Features
 
   - Export indexed data or search results to JSON, CSV, or Parquet format
   - CSV and Parquet files are compatible with `BFF <https://bff.allencell.org/>`_ (BioFile Finder Format). BFF is a tool for filtering, sorting and grouping tabular data) for advanced filtering and data exploration
+  - Export full study data in CSV or Parquet format. The system provides a download link, e.g.,
+    https://idr.openmicroscopy.org/searchengine//api/v1/resources/container_bff_data/?container_name=idr0092-ostrop-organoid%2FscreenA%20&container_type=screen&file_type=csv
+
 * Asynchronous Search:
 
   - Fetch all matching results from large queries in one operation.
