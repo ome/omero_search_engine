@@ -63,7 +63,7 @@ Key Features
   - Ideal for handling large query results without multiple requests.
 * Dynamic Configuration Reload
 
-  – The IDR Searcher API server monitors its configuration file and automatically reloads changes without requiring a restart.
+  - The IDR Searcher API server monitors its configuration file and automatically reloads changes without requiring a restart.
 
 Multiple Data Sources Support
 -----------------------------
