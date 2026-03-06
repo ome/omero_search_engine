@@ -12,9 +12,9 @@ Table of Contents
 -----------------
 
 - `Introduction <#introduction>`_
-- `Key Features <#Key Features>`_
-- `Multiple Data Sources Supports <#Multiple Data Sources Support>`_
-- `Quick start <#Quick start>`_
+- `Key Features <#Key-Features>`_
+- `Multiple Data Sources Supports <#Multiple-Data-Sources-Support>`_
+- `Quick Start <#Quick-Start>`_
 - `Documentation <#Documentation>`_
 - `Disclaimer <#Disclaimer>`_
 - `License <#License>`_
@@ -95,7 +95,7 @@ All of these sources were indexed into the same search environment, enabling use
   - Search results can be exported to CSV and Parquet formats.
    - The exported files are compatible with BFF for downstream filtering and data exploration.
 
-Quick start
+Quick Start
 ------------
 For Users / Integrators
 ~~~~~~~~~~~~~~~~~~~~~~~
