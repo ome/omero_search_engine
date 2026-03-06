@@ -13,7 +13,7 @@ Table of Contents
 
 - `Introduction <#introduction>`_
 - `Key Features <#Key-Features>`_
-- `Multiple Data Sources Supports <#Multiple-Data-Sources-Support>`_
+- `Multiple Data Sources Support <#Multiple-Data-Sources-Support>`_
 - `Quick Start <#Quick-Start>`_
 - `Documentation <#Documentation>`_
 - `Disclaimer <#Disclaimer>`_
