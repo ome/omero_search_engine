@@ -84,7 +84,7 @@ Start with the two examples below. For more advanced examples, see the `examples
 
 Deployment
 ----------
-Deployment and configuration are handled via dedicated `Ansible role <https://github.com/ome/ansible-role-omero-searchengine>`_ which includes `a sample deployment playbook <https://github.com/khaledk2/ansible-role-omero-searchengine?tab=readme-ov-file#example-playbook>`_. Review and adjust the variables in `the deployment playbook <https://github.com/khaledk2/ansible-role-omero-searchengine?tab=readme-ov-file#example-playbook>`_ for particular host environment as needed.
+Deployment and configuration are handled via dedicated `Ansible role <https://github.com/ome/ansible-role-omero-searchengine>`_ which includes `a sample deployment playbook <https://github.com/ome/ansible-role-omero-searchengine?tab=readme-ov-file#example-playbook>`_. Review and adjust the variables in the sample playbook for particular host environment as needed.
 
 Key Features
 ------------
