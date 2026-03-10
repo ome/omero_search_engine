@@ -105,7 +105,7 @@ Key Features
 Multiple Data Sources Support
 -----------------------------
 
-The search engine can index and query data from multiple resources, even if their format is not unified. In some cases, preprocessing (converting to `supported CSV format <https://github.com/ome/omero_search_engine/tree/main/omero_search_engine/cache_functions/elasticsearch/csv_templates>`_ ) is necessary, see `Case Studies <https://github.com/ome/omero_search_engine/tree/main/omero_search_engine/CASE_STUDIES.rst>`_ for concrete examples.
+The search engine can index and query data from multiple resources, even if their format is not unified. In some cases, preprocessing (converting to `supported CSV format <https://github.com/ome/omero_search_engine/tree/main/omero_search_engine/cache_functions/elasticsearch/csv_templates>`_ ) is necessary, see `Case Studies <CASE_STUDIES.rst>`_ for concrete examples.
 
 Documentation
 -------------
