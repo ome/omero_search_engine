@@ -22,7 +22,7 @@ Table of Contents
 
 Introduction
 ------------
-IDR searcher is an Elasticsearch-based search engine developed for `Image Data Resource (IDR <idr.openmicroscopy.org>`_ to index and analyse metadata stored as key–value pairs. It supports both simple lookups and complex queries across large datasets, with synchronous and asynchronous search capabilities.
+IDR searcher is an Elasticsearch-based search engine developed for `Image Data Resource (IDR) <https://idr.openmicroscopy.org>`_ to index and analyse metadata stored as key–value pairs. It supports both simple lookups and complex queries across large datasets, with synchronous and asynchronous search capabilities.
 
 The system connects directly to OMERO databases and also supports Comma Separated Values (CSV) data sources, see `supported CSV format <https://github.com/ome/omero_search_engine/tree/main/omero_search_engine/cache_functions/elasticsearch/csv_templates>`_. All functionality is exposed through REST APIs (GET/POST) using JSON.
 
