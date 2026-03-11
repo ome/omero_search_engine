@@ -21,8 +21,8 @@ Table of Contents
 - `License <#License>`_
 
 
-🎥 Introduction video
----------------------
+🎥 Watch short video
+--------------------
 👉 `IDR searcher video <https://youtu.be/sxgfFXgpJ7U>`_
 
 Introduction
