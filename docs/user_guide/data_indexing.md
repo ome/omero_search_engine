@@ -1,9 +1,12 @@
-Data Indexing: Instructions and Guidelines for Using Maintenance Scripts
-========================================================================
+Data Indexing: Instructions and Guidelines 
+==========================================
+The `ansible-role-omero-searchengine <https://github.com/ome/ansible-role-omero-searchengine/>`_  can automate index the data and run it remotely.
+  - For more information, refer to the Ansible role README.
+
+An alternative approach is to use ``maintenance scripts`` that run locally.
 * The maintenance scripts are copied automatically to the following folder:
 ``$App_folder/searchengine/searchengine/test_scripts``
-
-***These scripts assist the user in running the indexing functions, as described below:***
+  ***These scripts assist the user in running the indexing functions, as described below:***
 
 * Index the data from a database data source
   - ``get_data_from_datasource_database.sh``
