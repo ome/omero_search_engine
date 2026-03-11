@@ -7,7 +7,7 @@ can trigger exporting the data remotely without the need to log in to the server
 Alternatively, export the data by running a Docker command on the host where the IDR Search resides.
 
 - SSH into the machine where the IDR-Searcher is deployed.
-- Replace the Docker image with one that supports the data dump functionality, i.e. openmicroscopy/omero-searchengine:0.8.0 or recent
+- Replace the Docker image with one that supports the data dump functionality, i.e. openmicroscopy/omero-searchengine:0.8.0 or a more recent version
 
 - To export the data in JSON format .::
 

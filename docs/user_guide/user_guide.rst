@@ -21,7 +21,7 @@ Table of Contents
 Introduction
 ------------
 This Guide will explain queries structure, use filters, and interpret API responses.
-The IDR searcher is deployed on https://idr.openmicroscopy.org/searchengine/api/v1/resources/ , as the public user has API access, and the IDR indexed data is available for search.
+The IDR searcher is deployed on https://idr.openmicroscopy.org/searchengine/apidocs/ , its API is publicly accessible, and the IDR indexed data is available for search.
 
 Overview of IDR Searcher
 ------------------------
