@@ -45,7 +45,7 @@ The API supports the following request methods:
 * GET — Used for simple queries via URL parameters
 * POST — Used for more complex queries with JSON payloads
 
-Start with the two examples below. For more advanced examples, see the `examples/ <https://github.com/ome/omero_search_engine/tree/main/examples>`_ directory or `API documentation <https://idr-testing.openmicroscopy.org/searchengine/apidocs/>`_.
+Start with the two examples below. For more advanced examples, see the `examples <https://github.com/ome/omero_search_engine/tree/main/examples>`_ directory or `API documentation <https://idr-testing.openmicroscopy.org/searchengine/apidocs/>`_.
 
 *GET Example (Simple Query)*
 
@@ -100,7 +100,7 @@ Key Features
 - Supports operators such as ``equals``, ``not equals``, and ``contains``.
 - Combines multiple conditions using ``AND`` and ``OR`` to answer advanced data queries.
 - Exports indexed data or search results to JSON, CSV, or Parquet format. For IDR, full study data in CSV or Parquet format can be obtained using a link, try the `CSV example <https://idr.openmicroscopy.org/searchengine//api/v1/resources/container_bff_data/?container_name=idr0092-ostrop-organoid%2FscreenA%20&container_type=screen&file_type=csv>`_ (Parquet format is not human readable)
-- CSV and Parquet files are compatible with `BFF <https://bff.allencell.org/>`_ (BioFile Finder). BFF is a tool for filtering, sorting and grouping tabular data for advanced filtering and data exploration.
+- CSV and Parquet files are compatible with `BioFile Finder <https://bff.allencell.org/>`_ (BFF). BFF is a tool for filtering, sorting and grouping tabular data for advanced filtering and data exploration.
 - Searches Across Multiple source types, e.g. images, projects, screens, plates, and datasets.
 - Attribute-Agnostic Search, which finds records by value even if the attribute name is unknown.
 - Multi data Resource Indexing, such as indexing of data from database servers, database backups, and CSV files.
@@ -136,5 +136,6 @@ Copyright
 ---------
 
 2022-2026, The Open Microscopy Environment.
+
 
 
