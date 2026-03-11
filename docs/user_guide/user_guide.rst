@@ -445,7 +445,7 @@ Submitting Queries for Metadata
 The user knows a value (or part of it) and wants to identify which keys contain this value, along with the number of items in each bucket.
 Then, they can use this endpoint::
 
-    /searchvalues
+    searchvalues/
 
 Example:
 
@@ -494,11 +494,9 @@ This IDR Searcher endpoint returns the available containers and their image coun
 
 https://idr.openmicroscopy.org/searchengine//api/v1/resources/container_images/
 
-
 Common Workflows
 -----------------
 Provides practical examples.
 
 Examples:
 
-This section is very valuable for users.
