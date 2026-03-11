@@ -20,6 +20,11 @@ Table of Contents
 - `Public data note <#Note-on-public-data>`_
 - `License <#License>`_
 
+
+🎥 Introduction video
+---------------------
+👉 `IDR searcher video <https://youtu.be/sxgfFXgpJ7U>`_
+
 Introduction
 ------------
 IDR searcher is an Elasticsearch-based search engine developed for `Image Data Resource (IDR) <https://idr.openmicroscopy.org>`_ to index and analyse metadata stored as key–value pairs. It supports both simple lookups and complex queries across large datasets, with synchronous and asynchronous search capabilities.
