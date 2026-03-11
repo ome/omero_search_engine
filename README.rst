@@ -5,7 +5,7 @@
     :target: https://omero-search-engine.readthedocs.io/en/latest/?badge=latest
     :alt: Documentation Status
 
-IDR Searcher
+IDR searcher
 ============
 
 Table of Contents
@@ -22,13 +22,13 @@ Table of Contents
 
 Introduction
 ------------
-IDR Searcher is an Elasticsearch-based search engine developed for `IDR <idr.openmicroscopy.org>`_  (Image Data Resource) to index and analyse metadata stored as key–value pairs. It supports both simple lookups and complex queries across large datasets, with synchronous and asynchronous search capabilities.
+IDR searcher is an Elasticsearch-based search engine developed for `Image Data Resource (IDR <idr.openmicroscopy.org>`_ to index and analyse metadata stored as key–value pairs. It supports both simple lookups and complex queries across large datasets, with synchronous and asynchronous search capabilities.
 
-The system connects directly to OMERO databases, which run on PostgreSQL and also supports CSV data sources, see `supported CSV format <https://github.com/ome/omero_search_engine/tree/main/omero_search_engine/cache_functions/elasticsearch/csv_templates>`_. All functionality is exposed through REST APIs (GET/POST) using JSON.
+The system connects directly to OMERO databases and also supports Comma Separated Values (CSV) data sources, see `supported CSV format <https://github.com/ome/omero_search_engine/tree/main/omero_search_engine/cache_functions/elasticsearch/csv_templates>`_. All functionality is exposed through REST APIs (GET/POST) using JSON.
 
 .. code-block::
 
-    ⚠️ IDR Searcher ignores the OMERO permissions system. 
+    ⚠️ IDR searcher ignores the OMERO permissions system. 
     It assumes that all data are to be indexed and all indexed
     data are publicly available. Do not run IDR Searcher on
     authenticated/private OMERO instances.
@@ -38,7 +38,7 @@ Although built for IDR, IDR Searcher can be used as a backend search service for
 Quick Start
 ------------
 
-IDR Searcher is an API-only backend service. All interactions with the system are performed through HTTP using standard REST methods. Data is exchanged in JSON format.
+IDR searcher is an API-only backend service. All interactions with the system are performed through HTTP using standard REST methods. Data is exchanged in JSON format.
 
 The API supports the following request methods:
 
@@ -57,7 +57,7 @@ Start with the two examples below. For more advanced examples, see the `examples
 
 *POST Example (Complex Query)*
 
-- Search across 2 resources (**image** and **container**), filter records where **Organism** = **mus musculus** and **Imaging Method** = **spim** and return JSON results ready for a script, web application or backend service::
+- Search across two resources (**image** and **container**), filter records where **Organism** = **mus musculus** and **Imaging Method** = **spim** and return JSON results ready for a script, web application or backend service::
 
     POST https://idr.openmicroscopy.org/searchengine/api/v1/resources/submitquery/
     Content-Type: application/json
@@ -112,7 +112,7 @@ Key Features
 Multiple Data Sources Support
 -----------------------------
 
-The search engine can index and query data from multiple resources, even if their format is not unified. In some cases, preprocessing (converting to `supported CSV format <https://github.com/ome/omero_search_engine/tree/main/omero_search_engine/cache_functions/elasticsearch/csv_templates>`_ ) is necessary, see `Case Studies <CASE_STUDIES.rst>`_ for concrete examples.
+IDR searcher can index and query data from multiple resources, even if their format is not unified. In some cases, preprocessing (converting to `supported CSV format <https://github.com/ome/omero_search_engine/tree/main/omero_search_engine/cache_functions/elasticsearch/csv_templates>`_ ) is necessary, see `Case Studies <CASE_STUDIES.rst>`_ for concrete examples.
 
 Documentation
 -------------
@@ -124,15 +124,16 @@ Documentation
 Note on public data
 -------------------
 
-* The IDR Searcher currently assumes that all indexed data is publicly accessible for search.
+* The IDR searcher currently assumes that all indexed data is publicly accessible for search.
 * There is no authentication or access permissions system in place yet. IDR Searcher is bypassing OMERO authentication and permissions system by connecting directly to the Database.
 
 License
 -------
 
-IDR Searcher is released under the GPL v2.
+IDR searcher is released under the GPL v2.
 
 Copyright
 ---------
 
 2022-2026, The Open Microscopy Environment, Glencoe Software, Inc.
+
