@@ -21,9 +21,7 @@ Table of Contents
 - `License <#License>`_
 
 
-🎥 Watch short video
---------------------
-👉 `IDR searcher video <https://youtu.be/sxgfFXgpJ7U>`_
+🎥 The `Image Data Resource (IDR) <https://idr.openmicroscopy.org>`_ web site (not part of this repo) includes search pages that are powered by the IDR search engine backend. `Watch a demo of the IDR search on YouTube <https://youtu.be/sxgfFXgpJ7U>`_.
 
 Introduction
 ------------
