@@ -96,7 +96,7 @@ Deployment and configuration are handled via dedicated `Ansible role <https://gi
 Key Features
 ------------
 
-- Fast, scalable search capable of handling large datasets efficiently
+- Fast, scalable search capable of handling large datasets efficiently.
 - Supports operators such as ``equals``, ``not equals``, and ``contains``.
 - Combines multiple conditions using ``AND`` and ``OR`` to answer advanced data queries.
 - Exports indexed data or search results to JSON, CSV, or Parquet format. For IDR, full study data in CSV or Parquet format can be obtained using a link, try the `CSV example <https://idr.openmicroscopy.org/searchengine//api/v1/resources/container_bff_data/?container_name=idr0092-ostrop-organoid%2FscreenA%20&container_type=screen&file_type=csv>`_ (Parquet format is not human readable)
@@ -107,7 +107,7 @@ Key Features
 - High-Performance Parallel Indexing uses parallel processing to efficiently index large volumes of data.
 - Resource Filtering restricts search results to one or more selected data resources.
 - Asynchronous Search (for large queries), which fetches all matching results from large queries in one operation.
-- Dynamic Configuration Reload
+- Dynamic Configuration Reload.
 
 Multiple Data Sources Support
 -----------------------------
@@ -135,5 +135,6 @@ IDR searcher is released under the GPL v2.
 Copyright
 ---------
 
-2022-2026, The Open Microscopy Environment, Glencoe Software, Inc.
+2022-2026, The Open Microscopy Environment.
+
 
