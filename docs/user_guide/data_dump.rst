@@ -1,13 +1,13 @@
 Dumping Container Data
 ======================
 
-The `ansible-role-omero-searchengine <https://github.com/ome/ansible-role-omero-searchengine/>`_  can automate exporting the data and run it remotely.
-    - For more information, refer to the Ansible role README.
+The `ansible-role-omero-searchengine <https://github.com/ome/ansible-role-omero-searchengine/>`_
+can trigger exporting the data remotely without the need to log in to the server directly. For more information, refer to the Ansible role README.
 
-An alternative approach is to use a Docker command on the local host to export the data.
+Alternatively, export the data by running a Docker command on the host where the IDR Search resides.
 
 - SSH into the machine where the IDR-Searcher is deployed.
-- Replace the Docker image with one that supports the data dump functionality.
+- Replace the Docker image with one that supports the data dump functionality, i.e. openmicroscopy/omero-searchengine:0.8.0 or recent
 
 - To export the data in JSON format .::
 

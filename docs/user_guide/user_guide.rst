@@ -7,6 +7,8 @@ Table of Contents
 - `Introduction <#introduction>`_
 - `Overview of IDR Searcher <#Overview-of-IDR-Searcher>`_
     - `API-based search <#API-based-search>`_
+    - `Exporting results <Exporting-results>`_
+    - `Supported data formats <Supported-data-formats>`_
 - `Querying Data <#Querying-Data>`_
     - `Query request structure <#Query-request-structure>`_
     - `Search Response Structure <#Search-Response-Structure>`_
@@ -18,13 +20,13 @@ Table of Contents
 
 Introduction
 ------------
-The User Guide will explain queries structure, use filters, and interpret API responses.
+This Guide will explain queries structure, use filters, and interpret API responses.
 The IDR searcher is deployed on https://idr.openmicroscopy.org/searchengine/api/v1/resources/ , as the public user has API access, and the IDR indexed data is available for search.
 
 Overview of IDR Searcher
 ------------------------
 
-App Searcher is an API-only backend service. All interactions with the system are performed over HTTP using standard REST methods. Requests and responses are exchanged in JSON format.
+IDR Searcher is an API-only backend service. All interactions with the system are performed over HTTP using standard REST methods. Requests and responses are exchanged in JSON format.
 
 The API supports the following request methods:
 
@@ -47,12 +49,14 @@ It’s also possible to combine multiple AND and OR conditions in the same query
 For metadata, they can retrieve information such as the number of values for a specific key, the count of each value, and the total number of keys available for a given resource.
 They can also view how many projects have been indexed, how many items each project contains, and the metadata available for each project.
 
-**Exporting results**
+Exporting results
+~~~~~~~~~~~~~~~~~
 
 The returned results are provided as a JSON object, which includes several sections such as the query details, the results themselves, and the total number of results.
 For large result sets, the user can use pagination to retrieve the data in smaller chunks, or they can run an asynchronous query to fetch all results in a single operation.
 
-**Supported data formats**
+Supported data formats
+~~~~~~~~~~~~~~~~~~~~~~
 
 The default output is a JSON string, but users can also choose to retrieve the data in CSV or Parquet format. These alternative formats are available when using an asynchronous query.
 
@@ -63,12 +67,14 @@ This section explains how users search the indexed data.
 **The search parameters include**
 
  - ``value`` is the required attribute value
- - ``data_source`` is used to filter the data for a specific data resource/s
+ - ``data_source`` is used to filter the data for a specific data resource/s.
  - ``operator``, the supported values are  equals, not_equals, contains, not_contains, in, not_in
  - ``Key`` or ``name`` is the attribute name, i.e. Organism, Cell line, Gene symbol, etc.
  - ``resource``, the available values are image, project, screen, well, plate
  - ``case_sensitive``, false or true, default is false
  - ``bookmark`` is used to the call the next page if number of results is bigger than 1000, it returns with each result page.
+
+If data source is specified in the request, it will be used. Otherwise, the default data source will be used. If no default data source is configured, results from all available data sources will be returned.
 
 Query request structure
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -83,9 +89,9 @@ for this particular search the attributes will be
  - data_source=idr
  - organism part = image
 
-This should be included in the url for the GET ''search'' request
+This should be included in the url for the GET ``search`` request
 
-https://idr.openmicroscopy.org/searchengine/api/v1/resources/image/search/?key=organism%20part&value=brain&operator=equals&data_source=idr&random_results=0
+https://idr.openmicroscopy.org/searchengine/api/v1/resources/image/search/?key=organism%20part&value=brain&operator=equals&data_source=idr
 
 This can be achieved also, using POST request, and the query should be a JSON.
 
@@ -131,6 +137,9 @@ JSON details
        }
     }
 
+Users can try out the examples above directly in the API IDR Searcher Swagger documentation.
+https://idr.openmicroscopy.org/searchengine/apidocs/#/Mixed%20Complex%20query/post_searchengine__api_v1_resources_submitquery_
+
 Search Response Structure
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -153,10 +162,10 @@ Filtering Results
 As mentioned, the user can use more than condition in one query, for example
 the user needs to search for unhealthy human female breast images, then they should use 4 filters,
 
-1. Organism=Homo sapiens
-2. Sex= Female
-3. Organism Part=Breast
-4. Pathology= Normal tissue, NOS
+1. Organism = Homo sapiens
+2. Sex = Female
+3. Organism Part = Breast
+4. Pathology != Normal tissue, NOS
 
 All of these filters should be added to ``and_filters`` list to search for images that satisfy all the conditions.
 The ``and_filters`` list should look like this:
@@ -185,7 +194,7 @@ The ``and_filters`` list should look like this:
        {
           "name":"Pathology",
           "value":"Normal tissue, NOS",
-          "operator":"equals",
+          "operator":"not_equals",
           "resource":"image"
        }
     ]
@@ -223,7 +232,7 @@ The query sent to the IDR Searcher should look like this
              {
                 "name":"Pathology",
                 "value":"Normal tissue, NOS",
-                "operator":"equals",
+                "operator":"not_equals",
                 "resource":"image"
              }
           ]
@@ -236,10 +245,10 @@ It also includes the following informative sections::
 
 
  "bookmark": [
-      3648312
+      3533681
     ],
- "size": 52051,
- "total_pages": 53
+ "size": 253387,
+ "total_pages": 254
 
 
 The next page of results can be retrieved by adding the returned ``bookmark`` value to your query as follows
@@ -270,13 +279,13 @@ The next page of results can be retrieved by adding the returned ``bookmark`` va
              {
                 "name":"Pathology",
                 "value":"Normal tissue, NOS",
-                "operator":"equals",
+                "operator":"not_equals",
                 "resource":"image"
              }
           ]
        },
        "bookmark":[
-          3648312
+          3533681
        ]
     }
 
