@@ -17,14 +17,14 @@ Table of Contents
 - `Key Features <#Key-Features>`_
 - `Multiple Data Sources Support <#Multiple-Data-Sources-Support>`_
 - `Documentation <#Documentation>`_
-- `Note on private data <#Note-on-private-data>`_
+- `Public data note <#Note-on-public-data>`_
 - `License <#License>`_
 
 Introduction
 ------------
 IDR Searcher is an Elasticsearch-based search engine developed for `IDR <idr.openmicroscopy.org>`_  (Image Data Resource) to index and analyse metadata stored as key–value pairs. It supports both simple lookups and complex queries across large datasets, with synchronous and asynchronous search capabilities.
 
-The system connects directly to OMERO databases, which run on **PostgreSQL** and also supports CSV data sources, see `supported CSV format <https://github.com/ome/omero_search_engine/tree/main/omero_search_engine/cache_functions/elasticsearch/csv_templates>`_. All functionality is exposed through REST APIs (GET/POST) using JSON.
+The system connects directly to OMERO databases, which run on PostgreSQL and also supports CSV data sources, see `supported CSV format <https://github.com/ome/omero_search_engine/tree/main/omero_search_engine/cache_functions/elasticsearch/csv_templates>`_. All functionality is exposed through REST APIs (GET/POST) using JSON. **Pulic data note: IDR Searcher ignores the OMERO permissions system. It assumes that all data to be indexed and all indexed data are publicly available. Do not run IDR Searcher on authenticated/private OMERO instances.**
 
 Although built for IDR, IDR Searcher can be used as a backend search service for any application where data resides in an OMERO database or `supported CSV format <https://github.com/ome/omero_search_engine/tree/main/omero_search_engine/cache_functions/elasticsearch/csv_templates>`_.
 
@@ -114,11 +114,11 @@ Documentation
 *  `Configuration Guide <https://omero-search-engine.readthedocs.io/en/latest/configuration/configuration_installation.html>`_ Leads through configurations of data sources, Elasticsearch, deployment options, indexing, and environment settings.
 * `Developer Guide <https://omero-search-engine.readthedocs.io/en/latest/developer/developer.html>`_ Gives technical details for extending, maintaining, or contributing to the service.
 
-Note on private data
---------------------
+Note on public data
+-------------------
 
 * The IDR Searcher currently assumes that all indexed data is publicly accessible for search.
-* There is no authentication or access permissions system in place yet.
+* There is no authentication or access permissions system in place yet. IDR Searcher is bypassing OMERO authentication and permissions system by connecting directly to the Database.
 
 License
 -------
