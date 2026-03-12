@@ -4,34 +4,40 @@ User Guide
 Table of Contents
 -----------------
 
-- `Introduction <#introduction>`_
-- `Overview of IDR Searcher <#Overview-of-IDR-Searcher>`_
-    - `API-based search <#API-based-search>`_
-    - `Exporting results <Exporting-results>`_
-    - `Supported data formats <Supported-data-formats>`_
-- `Querying Data <#Querying-Data>`_
-    - `Query request structure <#Query-request-structure>`_
-    - `Search Response Structure <#Search-Response-Structure>`_
-    - `Filtering Results <#Filtering-Results>`_
-- `Asynchronous Search <#Asynchronous-Search>`_
-- `Exporting Containers data files <Exporting-Containers-data-files>`_
-- `Submitting Queries for Metadata <#Submitting-Queries-for-Metadata>`_
-- `Common Workflows <#Common-Workflows>`_
+- `Introduction <introduction_>`_
+- `Overview of IDR searcher <overview_of_idr_searcher_>`_
+    - `API-based search <api_based_search_>`_
+    - `Exporting Results <exporting_results_>`_
+    - `Supported Data Formats <supported_data_formats_>`_
+- `Querying Data <querying_data_>`_
+    - `Query Request structure <query_request_structure_>`_
+    - `Search Response Structure <search_response_structure_>`_
+    - `Filtering Results <filtering_results_>`_
+- `Asynchronous Search <asynchronous_search_>`_
+- `Exporting Containers data files <exporting_containers_data_files_>`_
+- `Submitting Queries for Metadata <submitting_queries_for_metadata_>`_
+- `Common Workflows <common_workflows_>`_
+
+.. _introduction:
 
 Introduction
 ------------
 This Guide will explain queries structure, use filters, and interpret API responses.
 The IDR searcher is deployed on https://idr.openmicroscopy.org/searchengine/apidocs/ , its API is publicly accessible, and the IDR indexed data is available for search.
 
-Overview of IDR Searcher
+.. _overview_of_idr_searcher:
+
+Overview of IDR searcher
 ------------------------
 
-IDR Searcher is an API-only backend service. All interactions with the system are performed over HTTP using standard REST methods. Requests and responses are exchanged in JSON format.
+IDR searcher is an API-only backend service. All interactions with the system are performed over HTTP using standard REST methods. Requests and responses are exchanged in JSON format.
 
 The API supports the following request methods:
 
 GET — Used for simple queries where parameters are passed through the URL.
 POST — Used for more complex queries that require a structured JSON request body.
+
+.. _api_based_search:
 
 API-based search
 ~~~~~~~~~~~~~~~~
@@ -49,18 +55,24 @@ It’s also possible to combine multiple AND and OR conditions in the same query
 For metadata, they can retrieve information such as the number of values for a specific key, the count of each value, and the total number of keys available for a given resource.
 They can also view how many projects have been indexed, how many items each project contains, and the metadata available for each project.
 
+.. _exporting_results:
+
 Exporting results
 ~~~~~~~~~~~~~~~~~
 
 The returned results are provided as a JSON object, which includes several sections such as the query details, the results themselves, and the total number of results.
 For large result sets, the user can use pagination to retrieve the data in smaller chunks, or they can run an asynchronous query to fetch all results in a single operation.
 
+.. _supported_data_formats:
+
 Supported data formats
 ~~~~~~~~~~~~~~~~~~~~~~
 
 The default output is a JSON string, but users can also choose to retrieve the data in CSV or Parquet format. These alternative formats are available when using an asynchronous query.
 
-Querying Data
+.. _querying_data:
+
+Querying data
 -------------
 This section explains how users search the indexed data.
 
@@ -75,6 +87,8 @@ This section explains how users search the indexed data.
  - ``bookmark`` is used to the call the next page if number of results is bigger than 1000, it returns with each result page.
 
 If data source is specified in the request, it will be used. Otherwise, the default data source will be used. If no default data source is configured, results from all available data sources will be returned.
+
+.. _query_request_structure:
 
 Query request structure
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -137,8 +151,10 @@ JSON details
        }
     }
 
-Users can try out the examples above directly in the API IDR Searcher Swagger documentation.
+Users can try out the examples above directly in the API IDR searcher Swagger documentation.
 https://idr.openmicroscopy.org/searchengine/apidocs/#/Mixed%20Complex%20query/post_searchengine__api_v1_resources_submitquery_
+
+.. _search_response_structure:
 
 Search Response Structure
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -156,6 +172,8 @@ The search response is a dictionary containing the results and associated metada
   - ``size``:	     The total number of result objects
   - ``total_pages``: Total number of pages needed to retrieve all results.
 ``server_query_time``:	The server processing time for the query
+
+.. _filtering_results:
 
 Filtering Results
 ~~~~~~~~~~~~~~~~~
@@ -204,7 +222,7 @@ THe query needs to have such format::
     {"query_details": {"and_filters": and_filters_list}}
 
 
-The query sent to the IDR Searcher should look like this
+The query sent to the IDR searcher should look like this
 
 .. code-block:: json
 
@@ -291,13 +309,15 @@ The next page of results can be retrieved by adding the returned ``bookmark`` va
 
 Each subsequent result page includes a ``bookmark`` that can be used to request the next page.
 
+.. _asynchronous_search:
+
 Asynchronous Search
 -------------------
 
 This section describes how to run asynchronous queries and retrieve large result sets in a single request.
 
 Asynchronous search allows users to submit a query and retrieve results without waiting for the query to complete immediately.
-Instead of blocking until all results are ready, the IDR Searcher processes the query in the background, returning results once the entire query is complete.
+Instead of blocking until all results are ready, the IDR searcher processes the query in the background, returning results once the entire query is complete.
 Ideal for handling large query results without requiring multiple requests.
 
 The query format remains the same, but users must submit their queries using the following endpoint::
@@ -431,6 +451,8 @@ The results are ready for download via the following GET request using the ``que
 
 https://idr.openmicroscopy.org/searchengine//api/v1/resources/return_query_results/?query_id=360f8047-97ed-4e55-9604-8a0892a3a56b&file_type=csv
 
+.. _exporting_containers_data_files:
+
 Exporting Containers data files
 -------------------------------
 
@@ -445,6 +467,8 @@ The export endpoint is ``container_bff_data/``, and the following parameters are
 For example, to download the `CSV` file format for the PR container `idr0161-yayon-thymus/experimentA``, the user should use the following URL:
 
 https://idr.openmicroscopy.org/searchengine//api/v1/resources/container_bff_data/?container_name=idr0161-yayon-thymus%2FexperimentA%20&container_type=project&file_type=csv
+
+.. _submitting_queries_for_metadata:
 
 Submitting Queries for Metadata
 -------------------------------
@@ -499,9 +523,11 @@ https://idr.openmicroscopy.org/searchengine//api/v1/resources/project/searchvalu
 
 **Containers and the number of images in each container*
 
-This IDR Searcher endpoint returns the available containers and their image counts
+This IDR searcher endpoint returns the available containers and their image counts
 
 https://idr.openmicroscopy.org/searchengine//api/v1/resources/container_images/
+
+.. _common_workflows:
 
 Common Workflows
 -----------------
