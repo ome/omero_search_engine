@@ -36,7 +36,7 @@ The system connects directly to OMERO databases and also supports Comma Separate
 
 Although initially built for IDR, IDR searcher can be used as a backend search service for any application where data resides in an OMERO database or supported CSV format.
 
-🎥 The `Image Data Resource (IDR) <https://idr.openmicroscopy.org>`_ web site (not part of this repo) includes search pages that are powered by the IDR search engine backend. `Watch a demo of the IDR search on YouTube <https://youtu.be/sxgfFXgpJ7U>`_.
+🎥 The `Image Data Resource (IDR) <https://idr.openmicroscopy.org>`_ web site includes search pages that are powered by the IDR search engine backend. `Watch a demo of the IDR search on YouTube <https://youtu.be/sxgfFXgpJ7U>`_.
 
 Quick Start
 ------------
@@ -139,6 +139,7 @@ Copyright
 ---------
 
 2022-2026, The Open Microscopy Environment.
+
 
 
 
