@@ -1,4 +1,4 @@
- API endpoint to search the annotation (key/value pair) for a resource (e.g. image, project, study)
+ API endpoint to search the metadat (key/value pair) for a resource (e.g. image, project, study)
  The request contains a dict (query) which has the following format:
  {'query_details':{"and_filters":and_filters,"or_filters":or_filters}}
  each of and_filters and or_filters is a list of dicts whihc contains the search conditions, an example of and_filters is:

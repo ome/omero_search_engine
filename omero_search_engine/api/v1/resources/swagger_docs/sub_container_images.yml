@@ -1,5 +1,5 @@
-A searchengine endpoint to return the available sub-container in a container (e.g. dataset in project).
-A query can be provided to return only the search results.
+An endpoint to return the available sub-container in a container (e.g. dataset in project).
+A query can be provided to return only the search results in this conttainer.
 This a query example:
 {
   "resource": "image",

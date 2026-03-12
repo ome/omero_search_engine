@@ -1,4 +1,4 @@
-A searchengine endpoint to accept search by value only (no key is provided), for example, find all the images which have value = "Homo sapiens".
+An endpoint to search by value only (no key is provided), for example, find all the images which have value = "Homo sapiens".
 ---
 tags:
  - Search by value
