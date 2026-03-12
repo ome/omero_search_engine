@@ -60,7 +60,7 @@ Start with the two examples below. For more advanced examples, see the `examples
 
 *POST Example (Complex Query)*
 
-- Search across two resources (**image** and **container**), filter records where **Organism** = **mus musculus** and **Imaging Method** = **spim** and return JSON results ready for a script, web application or backend service::
+- Search across two resources: **image** and **container** (a container is a Project or a Screen), filter records where **Organism** = **mus musculus** and **Imaging Method** = **spim** and return JSON results ready for a script, web application or backend service::
 
     POST https://idr.openmicroscopy.org/searchengine/api/v1/resources/submitquery/
     Content-Type: application/json
@@ -139,6 +139,7 @@ Copyright
 ---------
 
 2022-2026, The Open Microscopy Environment.
+
 
 
 
