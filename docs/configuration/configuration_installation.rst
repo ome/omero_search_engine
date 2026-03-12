@@ -53,7 +53,7 @@ Configuration Overview
 ----------------------
 * The IDR searcher needs the access attributes (e.g, URL, username, password, etc.) for the PostgreSQL database server and Elasticsearch.
 * Settings include data sources, indexing behavior, and environment-specific options are also needed.
-* ISR Searcher persists configuration settings in a file to ensure they are retained across restarts.
+* IDR searcher persists configuration settings in a file to ensure they are retained across restarts.
 * All configuration changes made are automatically saved, making deployment and updates seamless.
 * The Ansible role handle all necessary setup, including data sources, indexing behavior, and environment settings.
 * Configuration is persisted automatically, so users do not need to manually edit configuration files; the changes can be made through via Ansible role.
@@ -91,7 +91,7 @@ Indexing imports data from a configured source into the search environment, prep
 Key Points:
 -----------
 
-* Uses predefined schemas specified in the IDR Searcher templates (:omero_search_engine:`elasticsearch_templates.py <omero_search_engine/cache_functions/elasticsearch/elasticsearch_templates.py>`) which specify the structure and field mappings for indexed data.
+* Uses predefined schemas specified in the IDR searcher templates (:omero_search_engine:`elasticsearch_templates.py <omero_search_engine/cache_functions/elasticsearch/elasticsearch_templates.py>`) which specify the structure and field mappings for indexed data.
 * Ensures consistency across different data sources.
 * Supports multiple types of sources: databases and CSV files.
 * Uses parallel processing to optimize performance for large datasets.
