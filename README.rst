@@ -20,6 +20,9 @@ Table of Contents
 - `Public data note <#Note-on-public-data>`_
 - `License <#License>`_
 
+
+🎥 The `Image Data Resource (IDR) <https://idr.openmicroscopy.org>`_ web site (not part of this repo) includes search pages that are powered by the IDR search engine backend. `Watch a demo of the IDR search on YouTube <https://youtu.be/sxgfFXgpJ7U>`_.
+
 Introduction
 ------------
 IDR searcher is an `Elasticsearch-based <https://www.elastic.co/elasticsearch>`_ search engine developed for `Image Data Resource (IDR) <https://idr.openmicroscopy.org>`_ to index and analyse metadata stored as key–value pairs. It supports both simple lookups and complex queries across large datasets, with synchronous and asynchronous search capabilities.
