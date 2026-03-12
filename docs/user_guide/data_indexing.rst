@@ -1,9 +1,11 @@
-Data Indexing: Instructions and Guidelines for Using Maintenance Scripts
-========================================================================
-* The maintenance scripts are copied automatically to the following folder:
-``$App_folder/searchengine/searchengine/test_scripts``
+Data Indexing: Instructions and Guidelines 
+==========================================
+The `ansible-role-omero-searchengine <https://github.com/ome/ansible-role-omero-searchengine/>`_  allows the user to trigger the indexing process on a remote server.For more information, refer to the Ansible role README.
 
-***These scripts assist the user in running the indexing functions, as described below:***
+An alternative approach is to use ``maintenance scripts`` that run locally.
+When the Searcher runs for the first time, it copies the maintenance scripts to the following folder on the host machine:
+``$App_folder/searchengine/searchengine/test_scripts``
+  ***These scripts assist the user in running the indexing functions, as described below:***
 
 * Index the data from a database data source
   - ``get_data_from_datasource_database.sh``

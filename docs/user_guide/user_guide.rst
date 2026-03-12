@@ -1,58 +1,511 @@
 User Guide
-===========
-A search engine is a tool that is used to search the metadata (key/value pairs). ELasticsearch_ search engine is utilized to perform the search.
-Special indices are created to facilitate querying the data and searching the values. It supports almost all SQL like search operators.
-It is fast, scalable, and future proof as it is possible to deploy more than one Elastic search node to improve search efficiency.
+==========
 
-* Get all the available resources (image, project, plate, etc.) and their keys (names) using the following URL::
+Table of Contents
+-----------------
 
-    $ /api/v1/resources/all/keys
+- `Introduction <#introduction>`_
+- `Overview of IDR Searcher <#Overview-of-IDR-Searcher>`_
+    - `API-based search <#API-based-search>`_
+    - `Exporting results <Exporting-results>`_
+    - `Supported data formats <Supported-data-formats>`_
+- `Querying Data <#Querying-Data>`_
+    - `Query request structure <#Query-request-structure>`_
+    - `Search Response Structure <#Search-Response-Structure>`_
+    - `Filtering Results <#Filtering-Results>`_
+- `Asynchronous Search <#Asynchronous-Search>`_
+- `Exporting Containers data files <Exporting-Containers-data-files>`_
+- `Submitting Queries for Metadata <#Submitting-Queries-for-Metadata>`_
+- `Common Workflows <#Common-Workflows>`_
 
- * It will return a JSON string that contains the resources and all available keywords (names) for all the resources, i.e. image, project, plate, well, and well sample.
+Introduction
+------------
+This Guide will explain queries structure, use filters, and interpret API responses.
+The IDR searcher is deployed on https://idr.openmicroscopy.org/searchengine/apidocs/ , its API is publicly accessible, and the IDR indexed data is available for search.
 
-* If the user wants to know the available values for a keyword in a particular resource, they can use this URL::
+Overview of IDR Searcher
+------------------------
 
-    $ /api/v1/resources/{resource}/getannotationvalueskey/?key={keyword}
+IDR Searcher is an API-only backend service. All interactions with the system are performed over HTTP using standard REST methods. Requests and responses are exchanged in JSON format.
 
-* for example, the following URL will return all the available values for the "Organism" keyword for an image::
+The API supports the following request methods:
 
-    $ /api/v1/resources/image/getannotationvalueskey/?key=Organism
+GET — Used for simple queries where parameters are passed through the URL.
+POST — Used for more complex queries that require a structured JSON request body.
 
-* The query is a JSON string that contains two parts:
-    * ``query_details`` which has two parts:
-    * ``and_filters``, a list of dicts, the dict takes this form:
-        ``{"name": {keyword}, "value": {value}, "operator": {operator}``
+API-based search
+~~~~~~~~~~~~~~~~
 
-        * ``keyword``: the name of the attribute to search for
-        * ``value``: the value for which the attribute should be searched; the search is dependant on the operator
-        * ``operator`` is the search criteria which is used to search the keyword value, it can be either:
+**Querying indexed data**
 
-            * ``equals, not_equals, contains (like), not_contains (not like), lt (<), gt (>), lte (<=), and gte (>=)``
+The user can query the indexed data or the metadata.
 
-        * The user can use a combination of keywords, values, and operators in  this search:
-        * Example of ``and_filters``: the following filter searchs the data using these conditions: ``(Organism ="'Mus musculus" and "Organism Part" ="Prostate")``
+The user can send a request to query the data using filters, including single or multiple conditions. For example, they can request items where:
+- attribute1 = value1
+- attribute1 = value1 AND attribute2 = value2
+- attribute1 = value1 OR attribute2 = value2
+It’s also possible to combine multiple AND and OR conditions in the same query
 
-          * ``[{"name":"Organism", "value": "Mus musculus", 'operator': 'equals'},{"name":"Organism Part", "operator":"equals", "value": "Prostate"}]``
+For metadata, they can retrieve information such as the number of values for a specific key, the count of each value, and the total number of keys available for a given resource.
+They can also view how many projects have been indexed, how many items each project contains, and the metadata available for each project.
 
-    * ``or_filters``, is a list that also contains dicts, each of them has the same format as in ``and_filters``
-        * it searches the data to satisfy at least one condition in this list
-            * Example of ``or filters``: the following example queries the database with these conditions ``(Organism Part = "Prostate" OR Organism Part Identifier = "T-77100")``
+Exporting results
+~~~~~~~~~~~~~~~~~
 
-              * ``[[{"name": "Organism Part", "value": "Prostate", "operator": "equals"},{"name": "Organism Part Identifier", "value": "T-77100", "operator": "equals"}]]``
+The returned results are provided as a JSON object, which includes several sections such as the query details, the results themselves, and the total number of results.
+For large result sets, the user can use pagination to retrieve the data in smaller chunks, or they can run an asynchronous query to fetch all results in a single operation.
 
-    * ``main_attributes`` allows the user to search using one or more of:
-        * ``project _id, dataset_id, owner_id, group_id, owner_id,`` etc.
-        * It supports two operators: ``equals`` and ``not_equals``.
-        * Hence, it is possible to search one project instead of all the projects or exclude one project from the search
-        * Also, it is possible to search the results which belong to a specific user or group.
-        * The dict has the same format as the one inside and_filters
-        * It supports also ``and (and_main_attributes)`` and ``or (or_main_attributes)`` filters
-        * For example, the following query will limit the search to the project with Id =501 (HPA)
-            * ``{"and_main_attributes": [{"name": "project_id", "value":501, "operator": "equals"}]}``
+Supported data formats
+~~~~~~~~~~~~~~~~~~~~~~
 
-* The user can combine one or more of these parts:
-    * Example of a query to be sent to the search engine, it will search project with id = 501 with the following criterias:
-        * ``Organism ="Homo sapiens" and "Antibody Identifier" ="CAB034889" and (Organism Part = "Prostate" OR Organism Part Identifier = "T-77100")``
-        * ``query = {"and_filters": [{"name": "Organism", "value": "Homo sapiens", "operator": "equals"}, {"name": "Antibody Identifier", "value": "CAB034889", "operator": "equals"}], "or_filters": [[{"name": "Organism Part", "value": "Prostate", "operator": "equals"}, {"name": "Organism Part Identifier", "value": "T-77100", "operator": "equals"}]]}``
-        * ``main_attributes_query={"and_main_attributes":[{"name": "project_id", "value":501, "operator": "equals"}]}``
-        * ``query_details = {"query": {"query_details": query,"main_attributes":main_attributes}}``
+The default output is a JSON string, but users can also choose to retrieve the data in CSV or Parquet format. These alternative formats are available when using an asynchronous query.
+
+Querying Data
+-------------
+This section explains how users search the indexed data.
+
+**The search parameters include**
+
+ - ``value`` is the required attribute value
+ - ``data_source`` is used to filter the data for a specific data resource/s.
+ - ``operator``, the supported values are  equals, not_equals, contains, not_contains, in, not_in
+ - ``Key`` or ``name`` is the attribute name, i.e. Organism, Cell line, Gene symbol, etc.
+ - ``resource``, the available values are image, project, screen, well, plate
+ - ``case_sensitive``, false or true, default is false
+ - ``bookmark`` is used to the call the next page if number of results is bigger than 1000, it returns with each result page.
+
+If data source is specified in the request, it will be used. Otherwise, the default data source will be used. If no default data source is configured, results from all available data sources will be returned.
+
+Query request structure
+~~~~~~~~~~~~~~~~~~~~~~~
+**Basic search query**
+
+GET request which is used for simple search (no ``and`` or ``or`` filters, i.e. single filter), the search parameters are included in the url
+Example, the user wants to search for the images which has the ``organism part`` is ``brain`` within the ``idr`` data resource,
+for this particular search the attributes will be
+ - key = organism part
+ - value = brain
+ - operator= equals
+ - data_source=idr
+ - organism part = image
+
+This should be included in the url for the GET ``search`` request
+
+https://idr.openmicroscopy.org/searchengine/api/v1/resources/image/search/?key=organism%20part&value=brain&operator=equals&data_source=idr
+
+This can be achieved also, using POST request, and the query should be a JSON.
+
+The query JSON  contains two parts:
+* ``query_details`` which has two parts:
+  - ``and_filters``, a list of filters (i.e. dicts), the filter takes this form:
+    ``{"name": {keyword}, "value": {value}, "operator": {operator}, "resource": {resource}}``
+
+     ``keyword``: the name of the attribute to search for
+
+     ``value``: the value for which the attribute should be searched; the search is dependant on the operator
+
+     ``operator``: operator criteria which is used to search the keyword value, it can be either:
+        ``equals, not_equals, contains (like), not_contains (not like), lt (<), gt (>), lte (<=), and gte (>=)``
+
+    ``resource``: such as image, project, screen, or container in case the user is not sure if the study is project or screen
+
+  - ``or_filters``, a list of filters (i.e. dicts), the filter takes the same form illustrated above
+
+* ``main_attributes`` this is an optional part which allows the user to search using one or more of:
+   ``project _id, dataset_id, owner_id, group_id, owner_id,`` etc.
+
+Request details::
+
+    POST https://idr.openmicroscopy.org/searchengine/api/v1/resources/submitquery/
+    Content-Type: application/json
+JSON details
+
+.. code-block:: json
+
+    {
+       "query_details":{
+          "and_filters":[
+             {
+                "name":"organism part",
+                "value":"brain",
+                "operator":"equals",
+                "resource":"image"
+             }
+          ],
+          "or_filters":[],
+          "case_sensitive":false
+       }
+    }
+
+Users can try out the examples above directly in the API IDR Searcher Swagger documentation.
+https://idr.openmicroscopy.org/searchengine/apidocs/#/Mixed%20Complex%20query/post_searchengine__api_v1_resources_submitquery_
+
+Search Response Structure
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The search response is a dictionary containing the results and associated metadata fields (e.g., size, total_pages).
+
+**Result structure**
+
+`` query_details``: The query processed by the searchenginee
+`` resource``: is resource which is searched
+`` results``:
+
+  - ``bookmark``:	 Use this token to fetch the next batch of results when the total results exceed the batch size
+  - ``results``:	 An array of result objects included in the current response based searchengine data schema (based on Elasticsearch template)
+  - ``size``:	     The total number of result objects
+  - ``total_pages``: Total number of pages needed to retrieve all results.
+``server_query_time``:	The server processing time for the query
+
+Filtering Results
+~~~~~~~~~~~~~~~~~
+As mentioned, the user can use more than condition in one query, for example
+the user needs to search for unhealthy human female breast images, then they should use 4 filters,
+
+1. Organism = Homo sapiens
+2. Sex = Female
+3. Organism Part = Breast
+4. Pathology != Normal tissue, NOS
+
+All of these filters should be added to ``and_filters`` list to search for images that satisfy all the conditions.
+The ``and_filters`` list should look like this:
+
+.. code-block:: json
+
+     [
+       {
+          "name":"Organism",
+          "value":"Homo sapiens",
+          "operator":"equals",
+          "resource":"image"
+       },
+       {
+          "name":"Organism Part",
+          "value":"Breast",
+          "operator":"equals",
+          "resource":"image"
+       },
+       {
+          "name":"Sex",
+          "value":"Female",
+          "operator":"equals",
+          "resource":"image"
+       },
+       {
+          "name":"Pathology",
+          "value":"Normal tissue, NOS",
+          "operator":"not_equals",
+          "resource":"image"
+       }
+    ]
+
+THe query needs to have such format::
+
+    {"query_details": {"and_filters": and_filters_list}}
+
+
+The query sent to the IDR Searcher should look like this
+
+.. code-block:: json
+
+    {
+       "query_details":{
+          "and_filters":[
+             {
+                "name":"Organism",
+                "value":"Homo sapiens",
+                "operator":"equals",
+                "resource":"image"
+             },
+             {
+                "name":"Organism Part",
+                "value":"Breast",
+                "operator":"equals",
+                "resource":"image"
+             },
+             {
+                "name":"Sex",
+                "value":"Female",
+                "operator":"equals",
+                "resource":"image"
+             },
+             {
+                "name":"Pathology",
+                "value":"Normal tissue, NOS",
+                "operator":"not_equals",
+                "resource":"image"
+             }
+          ]
+       }
+    }
+
+The response includes the first batch of results. The default batch size is 1,000 images (configurable by an administrator up to 10,000).
+
+It also includes the following informative sections::
+
+
+ "bookmark": [
+      3533681
+    ],
+ "size": 253387,
+ "total_pages": 254
+
+
+The next page of results can be retrieved by adding the returned ``bookmark`` value to your query as follows
+
+.. code-block:: json
+
+    {
+       "query_details":{
+          "and_filters":[
+             {
+                "name":"Organism",
+                "value":"Homo sapiens",
+                "operator":"equals",
+                "resource":"image"
+             },
+             {
+                "name":"Organism Part",
+                "value":"Breast",
+                "operator":"equals",
+                "resource":"image"
+             },
+             {
+                "name":"Sex",
+                "value":"Female",
+                "operator":"equals",
+                "resource":"image"
+             },
+             {
+                "name":"Pathology",
+                "value":"Normal tissue, NOS",
+                "operator":"not_equals",
+                "resource":"image"
+             }
+          ]
+       },
+       "bookmark":[
+          3533681
+       ]
+    }
+
+Each subsequent result page includes a ``bookmark`` that can be used to request the next page.
+
+Asynchronous Search
+-------------------
+
+This section describes how to run asynchronous queries and retrieve large result sets in a single request.
+
+Asynchronous search allows users to submit a query and retrieve results without waiting for the query to complete immediately.
+Instead of blocking until all results are ready, the IDR Searcher processes the query in the background, returning results once the entire query is complete.
+Ideal for handling large query results without requiring multiple requests.
+
+The query format remains the same, but users must submit their queries using the following endpoint::
+
+    async_submitquery/
+
+Example:
+
+The user wants to search all the images which have
+
+ - Sex=Female
+ - Organism=Homo sapiens
+ - Organism part=Kidney
+
+This is the request::
+
+    POST https://idr.openmicroscopy.org/searchengine//api/v1/resources/async_submitquery/
+    Content-Type: application/json
+
+.. code-block:: json
+
+    {
+       "query_details":{
+          "and_filters":[
+             {
+                "name":"Sex",
+                "value":"Female",
+                "operator":"equals",
+                "resource":"image"
+             },
+             {
+                "name":"Organism",
+                "value":"Homo sapiens",
+                "operator":"equals",
+                "resource":"image"
+             },
+             {
+                "name":"Organism part",
+                "value":"kidney",
+                "operator":"equals",
+                "resource":"image"
+             }
+          ],
+          "or_filters":[
+
+          ]
+       }
+    }
+
+The response will be a dict which contains the query id::
+
+    {
+      "query_id": "360f8047-97ed-4e55-9604-8a0892a3a56b"
+    }
+
+To check the status of the query, the user should use the following GET request.
+
+https://idr.openmicroscopy.org/searchengine//api/v1/resources/check_query_job/?query_id=ce4256a9-f230-4be5-bbab-485430777b29
+
+The status can be PENDING, SUCCESS, or FAILED. When the status is SUCCESS.
+
+When the job status is ``SUCCESS``, the response includes the status, the original query, and the total number of results
+
+.. code-block:: json
+
+    {
+      "Result": {
+        "csv": "360f8047-97ed-4e55-9604-8a0892a3a56b.csv",
+        "data_source": "idr",
+        "parquet": "360f8047-97ed-4e55-9604-8a0892a3a56b.parquet",
+        "query": {
+          "and_filters": [
+            {
+              "name": "Sex",
+              "operator": "equals",
+              "resource": "image",
+              "value": "Female"
+            },
+            {
+              "name": "Organism",
+              "operator": "equals",
+              "resource": "image",
+              "value": "Homo sapiens"
+            },
+            {
+              "name": "Organism part",
+              "operator": "equals",
+              "resource": "image",
+              "value": "kidney"
+            }
+          ],
+          "or_filters": []
+        },
+        "total_results": 146440
+      },
+      "status": "SUCCESS"
+    }{
+      "Result": {
+        "csv": "360f8047-97ed-4e55-9604-8a0892a3a56b.csv",
+        "data_source": "idr",
+        "parquet": "360f8047-97ed-4e55-9604-8a0892a3a56b.parquet",
+        "query": {
+          "and_filters": [
+            {
+              "name": "Sex",
+              "operator": "equals",
+              "resource": "image",
+              "value": "Female"
+            },
+            {
+              "name": "Organism",
+              "operator": "equals",
+              "resource": "image",
+              "value": "Homo sapiens"
+            },
+            {
+              "name": "Organism part",
+              "operator": "equals",
+              "resource": "image",
+              "value": "kidney"
+            }
+          ],
+          "or_filters": []
+        },
+        "total_results": 146440
+      },
+      "status": "SUCCESS"
+    }
+
+The results are ready for download via the following GET request using the ``query_id`` and the ``file-type`` (``csv`` or ``parquet``) parameter. This is the link for  the previous query:
+
+https://idr.openmicroscopy.org/searchengine//api/v1/resources/return_query_results/?query_id=360f8047-97ed-4e55-9604-8a0892a3a56b&file_type=csv
+
+Exporting Containers data files
+-------------------------------
+
+Container data can be exported in CSV or Parquet format for further analysis or exploration (for example, using BFF).
+
+The export endpoint is ``container_bff_data/``, and the following parameters are required:
+
+    - the container name,
+    - container type (``Project`` or ``Screen``),
+    - file format (``CSV`` or ``Parquet``).
+
+For example, to download the `CSV` file format for the PR container `idr0161-yayon-thymus/experimentA``, the user should use the following URL:
+
+https://idr.openmicroscopy.org/searchengine//api/v1/resources/container_bff_data/?container_name=idr0161-yayon-thymus%2FexperimentA%20&container_type=project&file_type=csv
+
+Submitting Queries for Metadata
+-------------------------------
+
+**Search for any value**
+
+The user knows a value (or part of it) and wants to identify which keys contain this value, along with the number of items in each bucket.
+Then, they can use this endpoint::
+
+    searchvalues/
+
+Example:
+
+To get all image keys with the value  (or part of it) ``normal tissue``, the user submits the following query:
+
+https://idr.openmicroscopy.org/searchengine//api/v1/resources/image/searchvalues/?value=normal%20tissue
+
+The results are returned in the following JSON:
+
+.. code-block:: json
+
+    {
+      "data": [
+        {
+          "Key": "Pathology",
+          "Number of images": 1654117,
+          "Value": "normal tissue, nos",
+          "data_source": "idr"
+        },
+        {
+          "Key": "Compound Description",
+          "Number of images": 96,
+          "Value": "radioprotective agent; selectively protects normal tissues from the damaging effects of anti-neoplastic radiation therapy",
+          "data_source": "idr"
+        }
+      ],
+      "total_number_of_all_buckets": 2,
+      "total_number_of_buckets": 2,
+      "total_number_of_image": 1654213
+}
+
+
+**Available values for a resource key**
+
+his endpoint returns the available values for a specific key along with their numbers::
+
+    searchvaluesusingkey/
+
+For example, to see the values for the key ``Organism`` in images, the user can use this request:
+
+https://idr.openmicroscopy.org/searchengine//api/v1/resources/project/searchvaluesusingkey/?key=Organism
+
+**Containers and the number of images in each container*
+
+This IDR Searcher endpoint returns the available containers and their image counts
+
+https://idr.openmicroscopy.org/searchengine//api/v1/resources/container_images/
+
+Common Workflows
+-----------------
+Provides practical examples.
+
+Examples:
+
