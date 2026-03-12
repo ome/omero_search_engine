@@ -46,9 +46,11 @@ API-based search
 The user can query the indexed data or the metadata.
 
 The user can send a request to query the data using filters, including single or multiple conditions. For example, they can request items where:
+
 - attribute1 = value1
 - attribute1 = value1 AND attribute2 = value2
 - attribute1 = value1 OR attribute2 = value2
+
 It’s also possible to combine multiple AND and OR conditions in the same query
 
 For metadata, they can retrieve information such as the number of values for a specific key, the count of each value, and the total number of keys available for a given resource.
