@@ -83,8 +83,8 @@ Configuration file details (For developer)
   * If the file does not exist, it will copy a default file to the user's home folder.
   * The file contains some default values that can be modified by the user.
 
-Indexing the data
-=================
+Data Indexing Overview
+=======================
 
 Indexing imports data from a configured source into the search environment, preparing it for queries and analytics.
 
