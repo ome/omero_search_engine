@@ -1,5 +1,4 @@
-API endpoint to asynchronously search the annotation (key/value pair), the user should provide the query in the standard JSON format with an optional data_source parameter. The endpoint returns a unique 
-query_id upon submission.
+This endpoint enables asynchronous search. The query must be provided in JSON format and may optionally include a data_source parameter. The endpoint returns a unique job ID, which can be used to retrieve the results.
 
 Example:
    {
