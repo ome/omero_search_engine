@@ -7,5 +7,7 @@ These documents will cover the main omer search engine APIs
    :maxdepth: 1
 
    configuration/configuration_installation
+   user_guide/data_indexing
+   user_guide/data_dump
    user_guide/user_guide
    developer/developer

@@ -16,7 +16,6 @@ Table of Contents
 - `Asynchronous Search <asynchronous_search_>`_
 - `Exporting Containers data files <exporting_containers_data_files_>`_
 - `Submitting Queries for Metadata <submitting_queries_for_metadata_>`_
-- `Common Workflows <common_workflows_>`_
 
 .. _introduction:
 
@@ -78,13 +77,13 @@ This section explains how users search the indexed data.
 
 **The search parameters include**
 
- - ``value`` is the required attribute value
- - ``data_source`` is used to filter the data for a specific data resource/s.
- - ``operator``, the supported values are  equals, not_equals, contains, not_contains, in, not_in
- - ``Key`` or ``name`` is the attribute name, i.e. Organism, Cell line, Gene symbol, etc.
- - ``resource``, the available values are image, project, screen, well, plate
- - ``case_sensitive``, false or true, default is false
- - ``bookmark`` is used to the call the next page if number of results is bigger than 1000, it returns with each result page.
+* ``value`` is the required attribute value
+* ``data_source`` is used to filter the data for a specific data resource/s.
+* ``operator``, the supported values are  equals, not_equals, contains, not_contains, in, not_in
+* ``Key`` or ``name`` is the attribute name, i.e. Organism, Cell line, Gene symbol, etc.
+* ``resource``, the available values are image, project, screen, well, plate
+* ``case_sensitive``, false or true, default is false
+* ``bookmark`` is used to the call the next page if number of results is bigger than 1000, it returns with each result page.
 
 If data source is specified in the request, it will be used. Otherwise, the default data source will be used. If no default data source is configured, results from all available data sources will be returned.
 
@@ -97,11 +96,12 @@ Query request structure
 GET request which is used for simple search (no ``and`` or ``or`` filters, i.e. single filter), the search parameters are included in the url
 Example, the user wants to search for the images which has the ``organism part`` is ``brain`` within the ``idr`` data resource,
 for this particular search the attributes will be
- - key = organism part
- - value = brain
- - operator= equals
- - data_source=idr
- - organism part = image
+
+- key = organism part
+- value = brain
+- operator= equals
+- data_source=idr
+- organism part = image
 
 This should be included in the url for the GET ``search`` request
 
@@ -109,29 +109,29 @@ https://idr.openmicroscopy.org/searchengine/api/v1/resources/image/search/?key=o
 
 This can be achieved also, using POST request, and the query should be a JSON.
 
-The query JSON  contains two parts:
+The query JSON contains two parts:
+
 * ``query_details`` which has two parts:
-  - ``and_filters``, a list of filters (i.e. dicts), the filter takes this form:
-    ``{"name": {keyword}, "value": {value}, "operator": {operator}, "resource": {resource}}``
+    - ``and_filters``, a list of filters (i.e. dicts), the filter takes this form:
 
-     ``keyword``: the name of the attribute to search for
+     + ``{"name": {keyword}, "value": {value}, "operator": {operator}, "resource": {resource}}``
 
-     ``value``: the value for which the attribute should be searched; the search is dependant on the operator
+       + ``keyword``: the name of the attribute to search for
+       + ``value``: the value for which the attribute should be searched; the search is dependant on the operator
+       + `operator``: operator criteria which is used to search the keyword value, it can be either:
+       + ``equals, not_equals, contains (like), not_contains (not like), lt (<), gt (>), lte (<=), and gte (>=)``
+       + `resource``: such as image, project, screen, or container in case the user is not sure if the study is project or screen
 
-     ``operator``: operator criteria which is used to search the keyword value, it can be either:
-        ``equals, not_equals, contains (like), not_contains (not like), lt (<), gt (>), lte (<=), and gte (>=)``
-
-    ``resource``: such as image, project, screen, or container in case the user is not sure if the study is project or screen
-
-  - ``or_filters``, a list of filters (i.e. dicts), the filter takes the same form illustrated above
+    - ``or_filters``, a list of filters (i.e. dicts), the filter takes the same form illustrated above
 
 * ``main_attributes`` this is an optional part which allows the user to search using one or more of:
-   ``project _id, dataset_id, owner_id, group_id, owner_id,`` etc.
+   + ``project _id, dataset_id, owner_id, group_id, owner_id,`` etc.
 
 Request details::
 
     POST https://idr.openmicroscopy.org/searchengine/api/v1/resources/submitquery/
     Content-Type: application/json
+
 JSON details
 
 .. code-block:: json
@@ -163,15 +163,16 @@ The search response is a dictionary containing the results and associated metada
 
 **Result structure**
 
-`` query_details``: The query processed by the searchenginee
-`` resource``: is resource which is searched
-`` results``:
+* ``query_details``: The query processed by the searchenginee
+* ``resource``: is resource which is searched
+* ``results``:
 
-  - ``bookmark``:	 Use this token to fetch the next batch of results when the total results exceed the batch size
-  - ``results``:	 An array of result objects included in the current response based searchengine data schema (based on Elasticsearch template)
-  - ``size``:	     The total number of result objects
+  - ``bookmark``: Use this token to fetch the next batch of results when the total results exceed the batch size
+  - ``results``: An array of result objects included in the current response, based on the IDR searcher’s data schema. (:omero_search_engine:`elasticsearch_templates.py <omero_search_engine/cache_functions/elasticsearch/elasticsearch_templates.py>`)
+  - ``size``: The total number of result objects
   - ``total_pages``: Total number of pages needed to retrieve all results.
-``server_query_time``:	The server processing time for the query
+
+* ``server_query_time``:	The server processing time for the query
 
 .. _filtering_results:
 
@@ -328,9 +329,9 @@ Example:
 
 The user wants to search all the images which have
 
- - Sex=Female
- - Organism=Homo sapiens
- - Organism part=Kidney
+- Sex=Female
+- Organism=Homo sapiens
+- Organism part=Kidney
 
 This is the request::
 
@@ -377,8 +378,7 @@ To check the status of the query, the user should use the following GET request.
 
 https://idr.openmicroscopy.org/searchengine//api/v1/resources/check_query_job/?query_id=ce4256a9-f230-4be5-bbab-485430777b29
 
-The status can be PENDING, SUCCESS, or FAILED. When the status is SUCCESS.
-
+The status can be ``PENDING``, ``SUCCESS``, or ``FAILED``.
 When the job status is ``SUCCESS``, the response includes the status, the original query, and the total number of results
 
 .. code-block:: json
@@ -456,13 +456,17 @@ https://idr.openmicroscopy.org/searchengine//api/v1/resources/return_query_resul
 Exporting Containers data files
 -------------------------------
 
-Container data can be exported in CSV or Parquet format for further analysis or exploration (for example, using BFF).
+Container data can be exported in ``CSV`` or ``Parquet`` file format for further analysis or exploration (for example, using `BioFile Finder <https://bff.allencell.org/>`_).
 
-The export endpoint is ``container_bff_data/``, and the following parameters are required:
+The container export endpoint is::
 
-    - the container name,
-    - container type (``Project`` or ``Screen``),
-    - file format (``CSV`` or ``Parquet``).
+    container_bff_data/
+
+The following parameters are required:
+
+- the container name,
+- container type (``Project`` or ``Screen``),
+- file format (``CSV`` or ``Parquet``).
 
 For example, to download the `CSV` file format for the PR container `idr0161-yayon-thymus/experimentA``, the user should use the following URL:
 
@@ -508,8 +512,7 @@ The results are returned in the following JSON:
       "total_number_of_all_buckets": 2,
       "total_number_of_buckets": 2,
       "total_number_of_image": 1654213
-}
-
+    }
 
 **Available values for a resource key**
 
@@ -521,17 +524,8 @@ For example, to see the values for the key ``Organism`` in images, the user can 
 
 https://idr.openmicroscopy.org/searchengine//api/v1/resources/project/searchvaluesusingkey/?key=Organism
 
-**Containers and the number of images in each container*
+**Containers and the number of images in each container**
 
 This IDR searcher endpoint returns the available containers and their image counts
 
 https://idr.openmicroscopy.org/searchengine//api/v1/resources/container_images/
-
-.. _common_workflows:
-
-Common Workflows
------------------
-Provides practical examples.
-
-Examples:
-
