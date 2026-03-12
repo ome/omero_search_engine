@@ -33,8 +33,8 @@ IDR searcher is an API-only backend service. All interactions with the system ar
 
 The API supports the following request methods:
 
-GET — Used for simple queries where parameters are passed through the URL.
-POST — Used for more complex queries that require a structured JSON request body.
+| GET — Used for simple queries where parameters are passed through the URL.
+| POST — Used for more complex queries that require a structured JSON request body.
 
 .. _api_based_search:
 
