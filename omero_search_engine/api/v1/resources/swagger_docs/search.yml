@@ -1,4 +1,4 @@
-An endpoint to process a simple queries (single query), for example, find all the images which have "Organism" = "Homo sapiens".
+An endpoint to process a simple query (single query), for example, find all the images which have "Organism" = "Homo sapiens".
 ---
 tags:
  - Single query
@@ -47,7 +47,7 @@ parameters:
     type: boolean
     required: false
   - name: asynchronize_run
-    description: query will be performed in asynchronize mode  when set to true
+    description: query will be performed in asynchronous mode  when set to true
     in: query
     type: boolean
     required: false
@@ -61,7 +61,7 @@ parameters:
     type: integer
     required: false
     default: 0
-    description: If the value is greater than 0, it will return a randomised list of the query results, the size of the list is equal to the provided value.
+    description: If the value is greater than 0, it will return a randomised list of the query results; the size of the list is equal to the provided value.
 responses:
   200:
     description: A JSON contains the search results
