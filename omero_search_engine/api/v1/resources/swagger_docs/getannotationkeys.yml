@@ -8,7 +8,7 @@ parameters:
     type: string
     enum: ['image', 'project', 'screen', 'well', 'plate', 'all']
     required: true
-  - name : mode
+  - name: mode
     in: query
     enum: ['searchterms']
   - name: data_source
