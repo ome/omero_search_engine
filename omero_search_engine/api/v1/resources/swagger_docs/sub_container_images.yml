@@ -1,6 +1,6 @@
-An endpoint to return the available sub-container in a container (e.g. dataset in project).
-A query can be provided to return only the search results in this conttainer.
-This a query example:
+An endpoint to return the available sub-container in a container (e.g., a dataset in a project).
+A query can be provided to return only the search results in this container.
+This is a query example:
 {
   "resource": "image",
   "query_details": {
@@ -32,7 +32,7 @@ This a query example:
 }
 and the user should provide the container name, e.g. idr0043-uhlen-humanproteinatlas/experimentA
 
-This will return the dataset inside the project with several images in each, this is within the search results.
+This will return the dataset inside the project with several images in each, which is within the search results.
 ---
 tags:
   - Available sub-containers inside a container
