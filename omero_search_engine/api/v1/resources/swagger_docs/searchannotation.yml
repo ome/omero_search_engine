@@ -41,6 +41,7 @@ parameters:
     in: query
     type: boolean
     required: false
+    description: If set to true, it returns only the containers (screens or projects) that include images matching the search criteria.
   - name: data_source
     in: query
     type: string
