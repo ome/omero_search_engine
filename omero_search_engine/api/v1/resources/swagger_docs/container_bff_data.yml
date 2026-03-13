@@ -27,4 +27,4 @@ parameters:
 
 responses:
   200:
-    description: A CSV file with BFF format
+    description: Returns the file in the format specified by the request.
