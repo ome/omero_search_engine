@@ -1,7 +1,7 @@
 An endpoint that returns the list of available containers along with the number of images contained in each one
 Example
 
-In this example the search will use the provided query results within the specified container and provides the available values for the specified key.
+In this example, the search will use the provided query results within the specified container and provide the available values for the specified key.
 
 The query:
 
@@ -31,9 +31,9 @@ The query:
 
 The user needs to specify
 - the container name, e.g. "idr0043-uhlen-humanproteinatlas/experimentA"
-- the key e.g. "Gene Symbol"
+- the key, e.g. "Gene Symbol"
 
-the results should contain buckets like this:
+The results should contain buckets like this:
 {
         "key": "Gene symbol",
         "no_image": 146,
@@ -41,7 +41,7 @@ the results should contain buckets like this:
 }
 ---
 tags:
- - Return available key values with a search results in a container
+ - Return available key values with a search result in a container
 parameters:
   - name: resource_table
     in: path
