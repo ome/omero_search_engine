@@ -1,33 +1,31 @@
-An endpoint that returns the list of available containers along with the number of images contained in each one
-Example
+An endpoint that returns the list of available containers along with the number of images contained in each one.
+In this endpoint the search will use the provided query results within the specified container and provide the available values for the specified key.
 
-In this example, the search will use the provided query results within the specified container and provide the available values for the specified key.
+This is a sample query to be used to explore this endpoint
 
-The query:
+  {
+    "resource": "image",
+      "query_details": {
+        "and_filters": [
+          {
+            "name": "Organism",
+            "value": "homo sapiens",
+            "operator": "equals",
+            "resource": "image"
+          },
+          {
+            "name": "Organism part",
+            "value": "Brain",
+            "operator": "equals",
+            "resource": "image"
+          }
+        ],
+        "or_filters": [
 
-{
-  "resource": "image",
-    "query_details": {
-      "and_filters": [
-        {
-          "name": "Organism",
-          "value": "homo sapiens",
-          "operator": "equals",
-          "resource": "image"
-        },
-        {
-          "name": "Organism part",
-          "value": "Brain",
-          "operator": "equals",
-          "resource": "image"
-        }
-      ],
-      "or_filters": [
-
-      ],
-      "case_sensitive": false
+        ],
+        "case_sensitive": false
+      }
     }
-  }
 
 The user needs to specify
 - the container name, e.g. "idr0043-uhlen-humanproteinatlas/experimentA"
@@ -39,6 +37,7 @@ The results should contain buckets like this:
         "no_image": 146,
         "value": "NBPF12"
 }
+
 ---
 tags:
  - Return available key values with a search result in a container

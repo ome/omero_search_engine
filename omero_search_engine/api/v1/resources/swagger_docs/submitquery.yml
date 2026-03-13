@@ -1,29 +1,31 @@
 API endpoint to search the metadata (key/value pair), the main difference between this endpoint and searchannotation is that this one can be used to search different resources and return the images which satisfy the search conditions.
 The container can be used as a resource instead of a project or screen if the user is not sure about the container type.
 The query data has a similar format to the query for searchannotation.
-Example:
-   {
-     "query_details": {
-       "and_filters": [
-         {
-           "name": "Cell Line",
-           "value": "hela",
-           "operator": "equals",
-           "resource": "image"
-         },
-         {
-           "name": "name",
-           "value": "idr0008-rohn-actinome/screenB",
-           "operator": "equals",
-           "resource": "container"
-         }
-       ],
-       "or_filters": [
 
-       ],
-       "case_sensitive": false
-     }
-    }
+This is a sample example which can be used to explore how the endpoint behaves
+
+     {
+       "query_details": {
+         "and_filters": [
+           {
+             "name": "Cell Line",
+             "value": "hela",
+             "operator": "equals",
+             "resource": "image"
+           },
+           {
+             "name": "name",
+             "value": "idr0008-rohn-actinome/screenB",
+             "operator": "equals",
+             "resource": "container"
+           }
+         ],
+         "or_filters": [
+
+         ],
+         "case_sensitive": false
+       }
+      }
 
 
 The maximum number of returned results is 1000, so if the number of results is bigger than that, a `bookmark` should be added to the query to call the next page.

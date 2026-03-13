@@ -1,4 +1,4 @@
- API endpoint to search the metadata (key/value pair) for a resource (e.g. image, project, study)
+ An endpoint to search the metadata (key/value pair) for a resource (e.g. image, project, study)
  The request contains a dict (query) which has the following format:
  {'query_details':{"and_filters":and_filters,"or_filters":or_filters}}
  each of and_filters and or_filters is a list of dicts which contains the search conditions, an example of and_filters is:
@@ -6,22 +6,23 @@
  This means that it returns all images which each has (Organism" = "Homo sapiens" and "Gene Symbol"= "NCAPD2" and "Cell Cycle Phase" ="anaphase")
  or_filters means that the results should satisfy at least one condition inside the or_filters list
 
- Example:
-   {
-     "query_details": {
-         "and_filters": [
-           {
-             "name": "Gene Symbol",
-             "value": "pdx1",
-             "operator": "equals"
-           }
-         ],
-         "or_filters": [
+ Use this sample query to explore how the endpoint behaves
 
-         ],
-         "case_sensitive": false
-       }
-       }
+     {
+       "query_details": {
+           "and_filters": [
+             {
+               "name": "Gene Symbol",
+               "value": "pdx1",
+               "operator": "equals"
+             }
+           ],
+           "or_filters": [
+
+           ],
+           "case_sensitive": false
+         }
+         }
 
 ---
 tags:
