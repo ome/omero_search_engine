@@ -1,4 +1,4 @@
-An endpoint to return the (BioFile Finder) BFF csv or parquet file for a container
+An endpoint to return the (BioFile Finder) BFF CSV or Parquet file for a container
 BFF is a tool for filtering, sorting and grouping tabular data.
 ---
 tags:
