@@ -34,10 +34,8 @@ Get a list of studies which satisfy the following conditions:
  and
 "Imaging Method"="spim"
 """
-logging.info(
-    "Get a study list for:  (Organism= mus musculus) and \
-    (Imaging Method=spim)"
-)
+logging.info("Get a study list for:  (Organism= mus musculus) and \
+    (Imaging Method=spim)")
 
 """
 url="%s%s?key=Organism&value=Homo sapiens&return_containers=true"%(base_url,image_search)  # noqa
