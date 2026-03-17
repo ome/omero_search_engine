@@ -1,4 +1,4 @@
-A searchengine endpoint to return the available data sources
+An endpoint to return the available data sources
 ---
 tags:
  - Data Sources

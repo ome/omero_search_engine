@@ -58,10 +58,10 @@ search_omero_app = Flask(__name__)
 search_omero_app.json_encoder = LazyJSONEncoder
 
 search_omero_app.config["SWAGGER"] = {
-    "title": "OMERO Search Engine API",
+    "title": "IDR searcher API",
     "version": str(__version__),
     "description": LazyString(
-        lambda: "OMERO search engine app is used to search metadata"
+        lambda: "The IDR searcher is used to search metadata"
         " (key-value pairs).\n"
         "For additional details, please refer to the following link:\n"
         "https://github.com/ome/omero_search_engine/blob/main/README.rst"

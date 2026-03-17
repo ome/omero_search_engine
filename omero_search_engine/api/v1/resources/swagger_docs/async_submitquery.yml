@@ -1,94 +1,35 @@
-API endpoint to asynchronously search the annotation (key/value pair), the user should provide the query in the standard JSON format with an optional data_source parameter. The endpoint returns a unique 
-query_id upon submission.
-
-Example:
-   {
-     "query_details": {
-       "and_filters": [
-         {
-           "name": "Cell Line",
-           "value": "hela",
-           "operator": "equals",
-           "resource": "image"
-         },
-         {
-           "name": "name",
-           "value": "idr0008-rohn-actinome/screenB",
-           "operator": "equals",
-           "resource": "container"
-         }
-       ],
-       "or_filters": [
-
-       ],
-       "case_sensitive": false
-     }
-    }
-
-
-The maximum number of returned results is 1000, so if the number of results is bigger than that, a `bookmark` should be added to the query to call the next page.
-`bookmark` is returned with each page of results and should be used to call the next page.
-Example of using bookmark:
+This endpoint enables asynchronous search
+The query must be provided in JSON format and may optionally include a data_source parameter. The endpoint returns a unique job ID, which can be used to retrieve the results.
+The response should be something like this:
 
   {
-     "resource":"image",
-     "query_details":{
-        "and_filters":[
-           {
-              "name":"Cell Line",
-              "operator":"equals",
-              "query_type":"keyvalue",
-              "resource":"image",
-              "value":"hela"
-           }
-        ],
-        "case_sensitive":false,
-        "or_filters":[
-
-        ]
-     },
-     "bookmark":
-  [107448]
-
+      "query_id": "360f8047-97ed-4e55-9604-8a0892a3a56b"
   }
 
-A dictionary (`pagination`) containing the results is returned.
-It can be sent back with the query when calling the next page.
-Then the server will update it and send it again along with the results to the client.
-Example of using pagination:
+The following example query can be used to explore this endpoint
 
-{
-"resource":"image",
-"query_details":{
-"and_filters":[
-{
-"name":"Cell Line",
-"operator":"equals",
-"query_type":"keyvalue",
-"resource":"image",
-"value":"hela"
-}
-],
-"case_sensitive":false,
-"or_filters":[
+          {
+             "query_details": {
+               "and_filters": [
+                 {
+                   "name": "Cell Line",
+                   "value": "hela",
+                   "operator": "equals",
+                   "resource": "image"
+                 },
+                 {
+                   "name": "name",
+                   "value": "idr0008-rohn-actinome/screenB",
+                   "operator": "equals",
+                   "resource": "container"
+                 }
+               ],
+               "or_filters": [
 
-]
-},
-"pagination": {
-      "current_page": 1,
-      "next_page": 2,
-      "page_records": [
-        {
-          "bookmark": [
-            107448
-          ],
-          "page": 2
-        }
-      ],
-      "total_pages": 1578
-    }
-
-}
+               ],
+               "case_sensitive": false
+             }
+            }
 
 ---
 tags:
@@ -103,26 +44,6 @@ parameters:
     type: string
     required: false
     description: If a specific data source is provided, the results will be retrieved from that source. Otherwise, the default data source will be used. If there is no default data source configured, results will be gathered from all available sources.
-
-    #examples:
-    #  query: {
-    #    "resource": "image",
-    #    "query_details": {
-    #      "and_filters": [
-    #        {
-    #          "name": "Gene Symbol",
-    #          "value": "pdx1",
-    #          "operator": "equals",
-    #          "resource": "image"
-    #        }
-    #      ],
-    #      "or_filters": [#
-
-    #      ],
-    #      "case_sensitive": false
-    #    },
-    #    "mode": "usesearchterms"
-    #  }
 
 responses:
   200:
