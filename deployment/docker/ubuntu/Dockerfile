@@ -5,7 +5,7 @@ RUN apt-get -y upgrade
 RUN apt-get install -y build-essential
 RUN apt-get clean
 ADD  omero_search_engine  /searchengine
-ADD start_gunicorn_serch_engine.sh /searchengine
+ADD start_gunicorn_search_engine.sh /searchengine
 ADD run_app.sh /searchengine
 RUN cd /searchengine
 WORKDIR /searchengine

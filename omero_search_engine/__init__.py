@@ -21,12 +21,21 @@ from flask import Flask, make_response, request
 import os
 import logging
 from elasticsearch import Elasticsearch
-from flasgger import Swagger, LazyString, LazyJSONEncoder
-from omero_search_engine.database.database_connector import DatabaseConnector
+from flasgger import Swagger, LazyJSONEncoder
+from flask_babel import LazyString
+
+from watchdog.observers import Observer
+from watchdog.events import FileSystemEventHandler
+import threading
+import time
+
+from omero_search_engine.__version__ import __version__
+
 from configurations.configuration import (
-    configLooader,
+    configLoader,
     load_configuration_variables_from_file,
     set_database_connection_variables,
+    get_configuration_file,
 )
 from logging.handlers import RotatingFileHandler
 from configurations.configuration import app_config as config_
@@ -41,6 +50,7 @@ template = {
     )  # noqa
 }
 
+environment_config_name = "development"
 
 main_folder = os.path.dirname(os.path.realpath(__file__))
 
@@ -49,10 +59,16 @@ search_omero_app = Flask(__name__)
 
 search_omero_app.json_encoder = LazyJSONEncoder
 
-
 search_omero_app.config["SWAGGER"] = {
-    "title": "OMERO Search Engine API",
-    "version": "0.2.0",
+    "title": "IDR searcher API",
+    "version": str(__version__),
+    "description": LazyString(
+        lambda: "The IDR searcher is used to search metadata"
+        " (key-value pairs).\n"
+        "For additional details, please refer to the following link:\n"
+        "https://github.com/ome/omero_search_engine/blob/main/README.rst"
+    ),
+    "termsOfService": "https://github.com/ome/omero_search_engine/blob/main/LICENSE.txt",  # noqa
 }
 
 swagger = Swagger(search_omero_app, template=template)
@@ -60,32 +76,70 @@ swagger = Swagger(search_omero_app, template=template)
 app_config = load_configuration_variables_from_file(config_)
 
 
-def create_app(config_name="development"):
-    app_config = configLooader.get(config_name)
+class ConfigHandler(FileSystemEventHandler):
+    def on_modified(self, event):
+        self.reload_configuration_from_file(event)
+
+    def on_created(self, event):
+        self.reload_configuration_from_file(event)
+
+    def reload_configuration_from_file(self, event):
+        try:
+            if event.src_path.endswith(".app_config.yml"):
+                if search_omero_app.config.get("AUTOMATIC_REFRESH"):
+                    print("Configuration reloaded!")
+                    create_app()
+        except Exception as e:
+            print("ERROR:   ===>>> %s" % e)
+
+
+def config_the_app(config_name=None):
+    app_config = configLoader.get(config_name)
     load_configuration_variables_from_file(app_config)
     set_database_connection_variables(app_config)
-    database_connector = DatabaseConnector(
-        app_config.DATABASE_NAME, app_config.DATABASE_URI
-    )
     search_omero_app.config.from_object(app_config)
-    search_omero_app.app_context()
-    search_omero_app.app_context().push()
-    search_omero_app.app_context()
-    search_omero_app.app_context().push()
+    cntx = search_omero_app.app_context()
+    cntx.push()
     ELASTIC_PASSWORD = app_config.ELASTIC_PASSWORD
-
     es_connector = Elasticsearch(
         app_config.ELASTICSEARCH_URL.split(","),
         verify_certs=app_config.verify_certs,
-        timeout=130,
+        request_timeout=130,
         max_retries=20,
         retry_on_timeout=True,
         connections_per_node=10,
-        scheme="https",
         http_auth=("elastic", ELASTIC_PASSWORD),
     )
+    search_omero_app.config.database_connectors = app_config.database_connectors
+    print(search_omero_app.config.database_connectors)
+    search_omero_app.config["es_connector"] = es_connector
 
-    search_omero_app.config["database_connector"] = database_connector
+
+def create_app(config_name=None):
+    global environment_config_name
+    if not config_name:
+        config_name = environment_config_name
+    else:
+        print("re-assign...")
+        environment_config_name = config_name
+    app_config = configLoader.get(config_name)
+    load_configuration_variables_from_file(app_config)
+    set_database_connection_variables(app_config)
+    search_omero_app.config.from_object(app_config)
+    cntx = search_omero_app.app_context()
+    cntx.push()
+    ELASTIC_PASSWORD = app_config.ELASTIC_PASSWORD
+    es_connector = Elasticsearch(
+        app_config.ELASTICSEARCH_URL.split(","),
+        verify_certs=app_config.verify_certs,
+        request_timeout=130,
+        max_retries=20,
+        retry_on_timeout=True,
+        connections_per_node=10,
+        http_auth=("elastic", ELASTIC_PASSWORD),
+    )
+    search_omero_app.config.database_connectors = app_config.database_connectors
+    print(search_omero_app.config.database_connectors)
     search_omero_app.config["es_connector"] = es_connector
     log_folder = os.path.join(os.path.expanduser("~"), "logs")
     if not os.path.exists(log_folder):
@@ -106,15 +160,32 @@ def create_app(config_name="development"):
 
     search_omero_app.logger.setLevel(logging.INFO)
     search_omero_app.logger.info("app assistant startup")
-    # Copy the script folder to the user machine.
-    from tools.utils.util import copy_tools_subfolder
 
-    copy_tools_subfolder()
+    from test_scripts.utils import copy_scripts_subfolder
+
+    copy_scripts_subfolder()
 
     return search_omero_app
 
 
-create_app()
+def start_watcher():
+    observer = Observer()
+    observer.schedule(
+        ConfigHandler(), path=os.path.dirname(get_configuration_file()), recursive=False
+    )
+    observer.start()
+    try:
+        while True:
+            time.sleep(1)  # Prevents thread from exiting
+    except Exception as ex:
+        print("Error ,, %s" % ex)
+        observer.stop()
+    finally:
+        observer.join()
+
+
+watcher_thread = threading.Thread(target=start_watcher, daemon=True)
+watcher_thread.start()
 
 
 @auth.verify_password
@@ -163,3 +234,8 @@ def page_not_found(error):
     response = make_response(resp_message, 404)
     response.mimetype = "text/plain"
     return response
+
+
+if __name__ == "__main__":
+    print("hi")
+    create_app()

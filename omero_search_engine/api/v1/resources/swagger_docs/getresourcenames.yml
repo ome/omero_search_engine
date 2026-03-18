@@ -1,4 +1,4 @@
-Get the available name attributes for a resource. For example, it can return a list which contains all the projects' names.
+Return the container names attributes for a resource. For example, it can return a list which contains all the projects' names.
 ---
 tags:
  - Available names for a resource
@@ -12,6 +12,11 @@ parameters:
     in: query
     type: string
     required: false
+  - name: data_source
+    in: query
+    type: string
+    required: false
+    description: If a specific data source is provided, results will be retrieved from that source. Otherwise, the default data source will be used. If there is no default data source configured, results will be gathered from all available sources.
 definitions:
   names:
     type: array

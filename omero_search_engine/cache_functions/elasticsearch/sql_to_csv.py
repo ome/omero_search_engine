@@ -23,6 +23,14 @@ import os
 from string import Template
 
 
+"""
+originalfile.size as image_size,
+
+inner join fileset on image.fileset=fileset.id
+inner join filesetentry on filesetentry.fileset=fileset.id
+inner join originalfile on filesetentry.originalfile = originalfile.id
+
+"""
 image_sql = Template(
     """
 select image.id, image.description, image.owner_id, image.experiment, image.group_id,
@@ -103,7 +111,6 @@ WITH CSV HEADER""".format(
     project_sql=project_sql.substitute(whereclause="")
 )
 
-
 screen_sql = Template(
     """
 select screen.id, screen.owner_id, screen.group_id,
@@ -139,6 +146,7 @@ $whereclause
 GROUP BY well.id,  annotation_mapvalue.index,
 annotation_mapvalue.name, annotation_mapvalue.value"""
 )
+
 
 well_sql_to_csv = """
 copy ({well_sql}) TO 'wells_sorted_ids.csv'  WITH CSV HEADER""".format(
@@ -235,3 +243,49 @@ sqls_resources = {
     "plate": plate_sql,
     "screen": screen_sql,
 }
+
+
+well_screen_clause = Template(
+    """
+inner join wellsample on wellsample.well= well.id
+inner join plate on well.plate=plate.id
+inner join screenplatelink on plate.id=screenplatelink.child
+inner join screen on screen.id=screenplatelink.parent
+where screen.id in ($screen_id)
+"""
+)
+
+plate_screen_clause = Template(
+    """
+inner join screenplatelink on plate.id=screenplatelink.child
+inner join screen on screen.id=screenplatelink.parent
+where screen.id in ($screen_id)
+"""
+)
+
+images_ids_screen = Template(
+    """
+    select  image.id
+from image
+left join imageannotationlink on image.id =imageannotationlink.parent
+left join wellsample on wellsample.image=image.id
+left join well on wellsample.well= well.id
+left join plate on well.plate=plate.id
+left join screenplatelink on plate.id=screenplatelink.child
+left join screen on screen.id=screenplatelink.parent
+where screen.id in ($ids) group by image.id ORDER BY image.id;
+    """
+)
+
+images_ids_project = Template(
+    """
+    select image.id
+from image
+left join datasetimagelink on datasetimagelink.child=image.id
+left join dataset on datasetimagelink.parent=dataset.id
+left join projectdatasetlink on dataset.id=projectdatasetlink.child
+left join project on project.id=projectdatasetlink.parent
+where project.id in ($ids)
+GROUP BY image.id order by image.id
+    """
+)

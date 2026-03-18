@@ -1,4 +1,5 @@
-Search for a value whose attribute is not known. if a key (attribute) is submitted, it will search for and obtain the available values for an attribute and part of the value for one or all resources e.g. 'homo' to return all values which contain 'homo' for the provided attribute and resource.
+Search for a value when the attribute is not known. If a key (attribute) is provided, the system searches for and returns all available values for that attribute that partially match the submitted input. 
+For example, submitting ‘homo’ will return all values containing ‘homo’ for the specified attribute and resource
 It returns a JSON string containing the results.
 ---
 tags:
@@ -24,6 +25,12 @@ parameters:
     in: query
     type: string
     required: false
+  - name: data_source
+    in: query
+    type: string
+    required: false
+    description: If a specific data source is provided, results will be retrieved from that source. Otherwise, the default data source will be used. If there is no default data source configured, results will be gathered from all available sources.
+
 definitions:
  data:
     type: object

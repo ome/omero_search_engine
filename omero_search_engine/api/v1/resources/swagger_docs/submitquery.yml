@@ -1,30 +1,31 @@
-A searchengine endpoint to accept complex query
-API endpoint to search the annotation (key/value pair), the main difference between this endpoint and searchannotation is this one can be used to search different resources and return the images which satisfy the search conditions.
+API endpoint to search the metadata (key/value pair), the main difference between this endpoint and searchannotation is that this one can be used to search different resources and return the images which satisfy the search conditions.
 The container can be used as a resource instead of a project or screen if the user is not sure about the container type.
 The query data has a similar format to the query for searchannotation.
-Example:
-   {
-     "query_details": {
-       "and_filters": [
-         {
-           "name": "Cell Line",
-           "value": "hela",
-           "operator": "equals",
-           "resource": "image"
-         },
-         {
-           "name": "name",
-           "value": "idr0008-rohn-actinome/screenB",
-           "operator": "equals",
-           "resource": "project"
-         }
-       ],
-       "or_filters": [
 
-       ],
-       "case_sensitive": false
-     }
-    }
+This is a sample example which can be used to explore how the endpoint behaves
+
+     {
+       "query_details": {
+         "and_filters": [
+           {
+             "name": "Cell Line",
+             "value": "hela",
+             "operator": "equals",
+             "resource": "image"
+           },
+           {
+             "name": "name",
+             "value": "idr0008-rohn-actinome/screenB",
+             "operator": "equals",
+             "resource": "container"
+           }
+         ],
+         "or_filters": [
+
+         ],
+         "case_sensitive": false
+       }
+      }
 
 
 The maximum number of returned results is 1000, so if the number of results is bigger than that, a `bookmark` should be added to the query to call the next page.
@@ -53,9 +54,9 @@ Example of using bookmark:
 
   }
 
-There is a dict (`pagination`)  is returned with results.
+There is a dict (`pagination`) returned with results.
 It can be sent back with the query when calling the next page.
-Then the server will update it and send it again along with the results to the client.
+Then the server will update it and send it again, along with the results, to the client.
 Example of using pagination:
 
 {
@@ -100,10 +101,25 @@ parameters:
     description: return additional columns to help display the results in a table
     in: query
     type: boolean
+  - name: return_bff
+    description: return CSV file with BFF format
+    in: query
+    type: boolean
     required: false
   - name: data
     in: body
     required: true
+  - name: data_source
+    in: query
+    type: string
+    required: false
+    description: If a specific data source is provided, results will be retrieved from that source. Otherwise, the default data source will be used. If there is no default data source configured, results will be gathered from all available sources.
+
+  - name: asynchronize_run
+    description: query will be performed in asynchronous mode  when set to true
+    in: query
+    type: boolean
+    required: false
     #examples:
     #  query: {
     #    "resource": "image",

@@ -22,8 +22,8 @@ annotation_resource_link = {
     "image": "imageannotationlink",
     "project": "projectannotationlink",
     "plate": "plateannotationlink",
-    "screen": "screenannotationlink",
     "well": "wellannotationlink",
+    "screen": "screenannotationlink",
 }
 # screen ==> study
 distinct_study_name = """

@@ -1,4 +1,4 @@
-A searchengine endpoint to accept simple queries (single query), for example, find all the images which have "Organism" = "Homo sapiens".
+An endpoint to process a simple query (single query), for example, find all the images which have "Organism" = "Homo sapiens".
 ---
 tags:
  - Single query
@@ -13,7 +13,7 @@ parameters:
     description: the resource attribute
     in: query
     type: string
-    required: true
+    required: False
   - name: value
     description: the attribute value
     in: query
@@ -23,7 +23,7 @@ parameters:
     description: filter by study name
     in: query
     type: string
-    required: False
+    required: false
   - name: operator
     description: operator, default equals
     in: query
@@ -41,6 +41,28 @@ parameters:
     in: query
     type: boolean
     required: false
+    description: If set to true, it returns only the containers (screens or projects) that include images matching the search criteria
+  - name: return_bff
+    description: return csv file with BioFile Finder (BFF) format, BFF is a tool for filtering, sorting and grouping tabular data.
+    in: query
+    type: boolean
+    required: false
+  - name: asynchronize_run
+    description: query will be performed in asynchronous mode  when set to true
+    in: query
+    type: boolean
+    required: false
+  - name: data_source
+    in: query
+    type: string
+    required: false
+    description: If a specific data source is provided, results will be retrieved from that source. Otherwise, the default data source will be used. If there is no default data source configured, results will be gathered from all available sources.
+  - name: random_results
+    in: query
+    type: integer
+    required: false
+    default: 0
+    description: If the value is greater than 0, it will return a randomised list of the query results; the size of the list is equal to the provided value.
 responses:
   200:
     description: A JSON contains the search results
