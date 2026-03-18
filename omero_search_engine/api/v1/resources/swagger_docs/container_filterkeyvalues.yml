@@ -1,47 +1,46 @@
-Return the available key values within a container from the query results.
-Example
+An endpoint that returns the list of available buckets along with the number of images contained in each one for a specific container.
+In this endpoint the search will use the provided query results within the specified container and provide the available values for the specified key.
 
-In this example the search will use the provided query results within the specified container and provides the available values for the specified key.
+This is a sample query to be used to explore this endpoint
 
-The query:
+  {
+    "resource": "image",
+      "query_details": {
+        "and_filters": [
+          {
+            "name": "Organism",
+            "value": "homo sapiens",
+            "operator": "equals",
+            "resource": "image"
+          },
+          {
+            "name": "Organism part",
+            "value": "Brain",
+            "operator": "equals",
+            "resource": "image"
+          }
+        ],
+        "or_filters": [
 
-{
-  "resource": "image",
-    "query_details": {
-      "and_filters": [
-        {
-          "name": "Organism",
-          "value": "homo sapiens",
-          "operator": "equals",
-          "resource": "image"
-        },
-        {
-          "name": "Organism part",
-          "value": "Brain",
-          "operator": "equals",
-          "resource": "image"
-        }
-      ],
-      "or_filters": [
-
-      ],
-      "case_sensitive": false
+        ],
+        "case_sensitive": false
+      }
     }
-  }
 
 The user needs to specify
 - the container name, e.g. "idr0043-uhlen-humanproteinatlas/experimentA"
-- the key e.g. "Gene Symbol"
+- the key, e.g. "Gene Symbol"
 
-the results should contain buckets like this:
+The results should contain buckets like this:
 {
         "key": "Gene symbol",
         "no_image": 146,
         "value": "NBPF12"
 }
+
 ---
 tags:
- - Return available key values with a search results in a container
+ - Return available key values with a search result for a specific container
 parameters:
   - name: resource_table
     in: path

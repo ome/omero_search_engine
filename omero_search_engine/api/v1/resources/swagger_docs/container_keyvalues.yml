@@ -1,4 +1,4 @@
-A searchengine endpoint to return the available values for a key in specific container
+An endpoint to return the available values for a key in specific container
 ---
 tags:
   - Available values for a key in specific container

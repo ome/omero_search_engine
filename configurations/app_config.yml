@@ -12,7 +12,8 @@ ELASTIC_PASSWORD: elasticsearch_user_password
 BASE_FOLDER: /etc/searchengine/
 DEFAULT_DATASOURCE: default_datasource
 AUTOMATIC_REFRESH: True
-NOT_INDEX_VECTOR: True
+BASE_URL: http://127.0.0.1:5577/api/v1/resources/
+NOT_INDEX_VECTOR: True 
 ALLOWED_ASYNCHRONIZED_PROCESS: 8
 REDIS_URL: 127.0.0.1
 REDIS_PORT: 6379

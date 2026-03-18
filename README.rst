@@ -31,7 +31,7 @@ The system connects directly to OMERO databases and also supports Comma Separate
 
     ⚠️ IDR searcher currently ignores the OMERO permissions system. 
     It assumes that all data is to be indexed and all indexed
-    data is publicly available. **Do not** run IDR Searcher on
+    data is publicly available. **Do not** run IDR searcher on
     authenticated/private OMERO instances.
 
 Although initially built for IDR, IDR searcher can be used as a backend search service for any application where data resides in an OMERO database or supported CSV format.
@@ -128,7 +128,7 @@ Note on public data
 -------------------
 
 * The IDR searcher currently assumes that all indexed data is publicly accessible for search.
-* There is no authentication or access permissions system in place yet. IDR Searcher is bypassing OMERO authentication and permissions system by connecting directly to the Database.
+* There is no authentication or access permissions system in place yet. IDR searcher is bypassing OMERO authentication and permissions system by connecting directly to the Database.
 
 License
 -------
