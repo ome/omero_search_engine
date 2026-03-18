@@ -1727,7 +1727,6 @@ def delete_data_source_contents(data_source):
     return found
 
 
-
 def query_vector(data_source, query_text):
     from sentence_transformers import SentenceTransformer
     import datetime
