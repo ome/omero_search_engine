@@ -58,7 +58,7 @@ def call_omero_return_results(url, data=None, method="post"):
         for res in returned_results["results"]["results"]:
             received_results.append(res)
             if res["id"] in ids:
-                raise Exception("Dublicated ids %s" % res["id"])
+                raise Exception("Duplicate ids %s" % res["id"])
             ids.append(res["id"])
         global total_pages
         total_pages = returned_results["results"]["total_pages"]

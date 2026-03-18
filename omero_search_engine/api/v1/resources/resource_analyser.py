@@ -1250,7 +1250,7 @@ def get_containets_using_id_or_name(
                     or (
                         container_id
                         and name["id"]
-                        and int(container_id) == int(name["id"])
+                        and str(container_id) == str(name["id"])
                     )
                 )
                 and (not returned_data_source or data_source in returned_data_source)

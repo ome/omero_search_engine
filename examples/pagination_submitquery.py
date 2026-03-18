@@ -74,7 +74,7 @@ def call_omero_searchengine_return_results(url, data=None, method="post"):
         for res in returned_results["results"]["results"]:
             received_results.append(res)
             if res["id"] in ids:
-                raise Exception(" Id dublicated error  %s" % res["id"])
+                raise Exception(" Duplicate id error  %s" % res["id"])
             ids.append(res["id"])
         return bookmark, total_results
 

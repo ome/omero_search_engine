@@ -170,10 +170,10 @@ class BasicTestCase(unittest.TestCase):
         es_index_2 = "key_values_resource_cached"
         create_es_index_2 = True
         all_all_indices = get_all_indexes_from_elasticsearch()
-        if es_index_2 in all_all_indices.keys():
+        if es_index_2 in all_all_indices:
             create_es_index_2 = False
 
-        if es_index not in all_all_indices.keys():
+        if es_index not in all_all_indices:
             self.assertTrue(create_index(es_index, image_template))
         if create_es_index_2:
             self.assertTrue(

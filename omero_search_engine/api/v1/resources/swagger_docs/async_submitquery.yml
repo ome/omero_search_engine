@@ -1,0 +1,52 @@
+This endpoint enables asynchronous search
+The query must be provided in JSON format and may optionally include a data_source parameter. The endpoint returns a unique job ID, which can be used to retrieve the results.
+The response should be something like this:
+
+  {
+      "query_id": "360f8047-97ed-4e55-9604-8a0892a3a56b"
+  }
+
+The following example query can be used to explore this endpoint
+
+          {
+             "query_details": {
+               "and_filters": [
+                 {
+                   "name": "Cell Line",
+                   "value": "hela",
+                   "operator": "equals",
+                   "resource": "image"
+                 },
+                 {
+                   "name": "name",
+                   "value": "idr0008-rohn-actinome/screenB",
+                   "operator": "equals",
+                   "resource": "container"
+                 }
+               ],
+               "or_filters": [
+
+               ],
+               "case_sensitive": false
+             }
+            }
+
+---
+tags:
+ - Async Mixed Complex query
+
+parameters:
+  - name: data
+    in: body
+    required: true
+  - name: data_source
+    in: query
+    type: string
+    required: false
+    description: If a specific data source is provided, the results will be retrieved from that source. Otherwise, the default data source will be used. If there is no default data source configured, results will be gathered from all available sources.
+
+responses:
+  200:
+    description: A JSON contains the results
+    examples:
+      results: []

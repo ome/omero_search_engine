@@ -21,7 +21,9 @@ from flask import Flask, make_response, request
 import os
 import logging
 from elasticsearch import Elasticsearch
-from flasgger import Swagger, LazyString, LazyJSONEncoder
+from flasgger import Swagger, LazyJSONEncoder
+from flask_babel import LazyString
+
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 import threading
@@ -30,7 +32,7 @@ import time
 from omero_search_engine.__version__ import __version__
 
 from configurations.configuration import (
-    configLooader,
+    configLoader,
     load_configuration_variables_from_file,
     set_database_connection_variables,
     get_configuration_file,
@@ -56,17 +58,16 @@ search_omero_app = Flask(__name__)
 search_omero_app.json_encoder = LazyJSONEncoder
 
 search_omero_app.config["SWAGGER"] = {
-    "title": "OMERO Search Engine API",
+    "title": "IDR searcher API",
     "version": str(__version__),
     "description": LazyString(
-        lambda: "OMERO search engine app is used to search metadata"
+        lambda: "The IDR searcher is used to search metadata"
         " (key-value pairs).\n"
         "For additional details, please refer to the following link:\n"
         "https://github.com/ome/omero_search_engine/blob/main/README.rst"
     ),
     "termsOfService": "https://github.com/ome/omero_search_engine/blob/main/LICENSE.txt",  # noqa
 }
-
 
 swagger = Swagger(search_omero_app, template=template)
 
@@ -90,6 +91,28 @@ class ConfigHandler(FileSystemEventHandler):
             print("ERROR:   ===>>> %s" % e)
 
 
+def config_the_app(config_name=None):
+    app_config = configLoader.get(config_name)
+    load_configuration_variables_from_file(app_config)
+    set_database_connection_variables(app_config)
+    search_omero_app.config.from_object(app_config)
+    cntx = search_omero_app.app_context()
+    cntx.push()
+    ELASTIC_PASSWORD = app_config.ELASTIC_PASSWORD
+    es_connector = Elasticsearch(
+        app_config.ELASTICSEARCH_URL.split(","),
+        verify_certs=app_config.verify_certs,
+        request_timeout=130,
+        max_retries=20,
+        retry_on_timeout=True,
+        connections_per_node=10,
+        http_auth=("elastic", ELASTIC_PASSWORD),
+    )
+    search_omero_app.config.database_connectors = app_config.database_connectors
+    print(search_omero_app.config.database_connectors)
+    search_omero_app.config["es_connector"] = es_connector
+
+
 def create_app(config_name=None):
     global environment_config_name
     if not config_name:
@@ -97,23 +120,20 @@ def create_app(config_name=None):
     else:
         print("re-assign...")
         environment_config_name = config_name
-    app_config = configLooader.get(config_name)
+    app_config = configLoader.get(config_name)
     load_configuration_variables_from_file(app_config)
     set_database_connection_variables(app_config)
     search_omero_app.config.from_object(app_config)
-    search_omero_app.app_context()
-    search_omero_app.app_context().push()
-    search_omero_app.app_context()
-    search_omero_app.app_context().push()
+    cntx = search_omero_app.app_context()
+    cntx.push()
     ELASTIC_PASSWORD = app_config.ELASTIC_PASSWORD
     es_connector = Elasticsearch(
         app_config.ELASTICSEARCH_URL.split(","),
         verify_certs=app_config.verify_certs,
-        timeout=130,
+        request_timeout=130,
         max_retries=20,
         retry_on_timeout=True,
         connections_per_node=10,
-        scheme="https",
         http_auth=("elastic", ELASTIC_PASSWORD),
     )
     search_omero_app.config.database_connectors = app_config.database_connectors
@@ -139,6 +159,9 @@ def create_app(config_name=None):
     search_omero_app.logger.setLevel(logging.INFO)
     search_omero_app.logger.info("app assistant startup")
 
+    from test_scripts.utils import copy_scripts_subfolder
+
+    copy_scripts_subfolder()
     return search_omero_app
 
 

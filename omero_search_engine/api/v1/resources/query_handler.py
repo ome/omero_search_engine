@@ -629,7 +629,12 @@ def combine_conds(curnt_cond, new_cond, resource):
 
 def get_ids(results, resource, data_source, org_type):
     ids = []
-    if results.get("results") and results.get("results").get("results"):
+    if (
+        isinstance(results, dict)
+        and results.get("results")
+        and isinstance(results.get("results"), dict)
+        and results.get("results").get("results")
+    ):
         for item in results["results"]["results"]:
             qur_item = {}
             # ids.append(qur_item)

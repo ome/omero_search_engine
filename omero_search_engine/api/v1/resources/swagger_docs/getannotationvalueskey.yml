@@ -1,4 +1,4 @@
-Get the available values for a resource n key (attribute), for example, it can return the available values for the "Cell Line" attribute for "image".
+Get the available values for a key (attribute) for a resource, for example, it can return the available values for the "Cell Line" attribute for "image".
 ---
 tags:
  - Available values for a resource key (attribute)

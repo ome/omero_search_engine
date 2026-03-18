@@ -1,4 +1,4 @@
-A searchengine endpoint to return the available keys for a container
+An endpoint to return the available keys for a container
 ---
 tags:
   - Container keys

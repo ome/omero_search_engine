@@ -1,4 +1,4 @@
-A searchengine endpoint to accept search by value only (no key is provided), for example, find all the images which have value = "Homo sapiens".
+An endpoint to search by value only (no key is provided), for example, find all the images which have a value = "Homo sapiens".
 ---
 tags:
  - Search by value
@@ -29,7 +29,7 @@ parameters:
     in: query
     type: boolean
   - name: bookmark
-    description: bookmark is used to call the next page if the number of results is bigger than 1000, it returns with each result page.
+    description: bookmark is used to call the next page if the number of results is bigger than 1000; it returns with each result page.
     in: query
     type: integer
   - name: data_source
