@@ -238,9 +238,11 @@ def prepare_images_data(data, data_source, doc_type):
             row_to_insert = data_to_be_inserted[row["id"]]
         else:
             row_to_insert = {}
-            if image_webclient_url and image_url and thumb_url:
+            if image_webclient_url:
                 row_to_insert["image_webclient_url"] = image_webclient_url % row["id"]
+            if image_url:
                 row_to_insert["image_url"] = image_url % row["id"]
+            if thumb_url:
                 row_to_insert["thumb_url"] = thumb_url % row["id"]
             row_to_insert["doc_type"] = doc_type
             for rcd in data_record:
