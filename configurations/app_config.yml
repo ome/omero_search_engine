@@ -9,6 +9,8 @@ MAX_RETUNED_ITEMS : 1000
 ELASTICSEARCH_BACKUP_FOLDER: "path/to/elasticsearch/backup/folder"
 verify_certs: False
 ELASTIC_PASSWORD: elasticsearch_user_password
+SEARCHENGINE_LOGS_FOLDER: path/to/search/logs/folder
+SEARCHENGINE_ADMIN_PASSWD: "hashed_admin_password"
 BASE_FOLDER: /etc/searchengine/
 DEFAULT_DATASOURCE: default_datasource
 AUTOMATIC_REFRESH: True
@@ -21,3 +23,4 @@ QUERIES_FOLDER: path/to/queries/folder
 QUERIES_TTL: 7
 MAX_RESULTS_FOR_ASYNC_QUERY: 2000000
 MAX_PAGE_SIZE: 10000
+

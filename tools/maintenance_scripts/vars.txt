@@ -1,0 +1,6 @@
+SEARCHENGINE_IMAGE=openmicroscopy/omero-searchengine:latest
+ELASTICSEARCH_IMAGE=docker.elastic.co/elasticsearch/elasticsearch:8.8.1
+elast_certs_folder=/data/searchengine/elasticsearch/certs
+elastic_ca_password=replace_with_ca_password
+keystore_password=replace_with_keystore_password
+elastic_password=replace_with_elastic_password

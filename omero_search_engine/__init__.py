@@ -38,9 +38,11 @@ from configurations.configuration import (
     get_configuration_file,
 )
 from logging.handlers import RotatingFileHandler
-
 from configurations.configuration import app_config as config_
+from flask_httpauth import HTTPBasicAuth
+from werkzeug.security import check_password_hash
 
+auth = HTTPBasicAuth()
 
 template = {
     "swaggerUiPrefix": LazyString(
@@ -162,6 +164,7 @@ def create_app(config_name=None):
     from test_scripts.utils import copy_scripts_subfolder
 
     copy_scripts_subfolder()
+
     return search_omero_app
 
 
@@ -184,12 +187,29 @@ def start_watcher():
 watcher_thread = threading.Thread(target=start_watcher, daemon=True)
 watcher_thread.start()
 
+
+@auth.verify_password
+def verify_password(username, password):
+    h_pass = search_omero_app.config.get("SEARCHENGINE_ADMIN_PASSWD")
+    if username.upper() == "SEARCHENGINE_ADMIN" and h_pass:
+        return check_password_hash(h_pass, password)
+    return False
+
+
 from omero_search_engine.api.v1.resources import (  # noqa
     resources as resources_routers_blueprint_v1,
 )
 
 search_omero_app.register_blueprint(
     resources_routers_blueprint_v1, url_prefix="/api/v1/resources"
+)
+
+from omero_search_engine.api.stats import (  # noqa
+    stats as resources_routers_blueprint_stats,
+)
+
+search_omero_app.register_blueprint(
+    resources_routers_blueprint_stats, url_prefix="/api/stats/"
 )
 
 
