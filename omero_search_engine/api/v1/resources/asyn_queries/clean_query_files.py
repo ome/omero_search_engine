@@ -51,4 +51,4 @@ def clean_query_files(self):
 
         if file_last_modifiied < queries_ttl_in_sec:
             print(f"Deleting: {file_path} ")
-            # os.remove(file_path)
+            os.remove(file_path)

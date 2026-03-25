@@ -228,6 +228,9 @@ def backup_elasticsearch_data():
 @click.option("-b", "--backup_filename", default=None, help="database backup filename")
 @click.option("-p", "--password", default=None, help="database username password")
 @click.option("-w", "--working_data_source", default=None, help="data source")
+@click.option("-t", "--thumb_url", default=None, help="thumb url")
+@click.option("-c", "--image_webclient_url", default=None, help="image webclient url")
+@click.option("-i", "--image_url", default=None, help="image url")
 def set_database_configuration(
     working_data_source,
     url,
@@ -236,6 +239,9 @@ def set_database_configuration(
     backup_filename,
     name,
     password,
+    image_webclient_url,
+    thumb_url,
+    image_url,
 ):
     if not working_data_source:
         print("Data source is required to process")
@@ -255,8 +261,14 @@ def set_database_configuration(
         database_attrs["DATABASE_PORT"] = server_port_number
     if backup_filename:
         database_attrs["DATABASE_BACKUP_FILE"] = backup_filename
+    if image_webclient_url:
+        database_config["image_webclient_url"] = image_webclient_url
+    if thumb_url:
+        database_config["thumb_url"] = thumb_url
+    if image_url:
+        database_config["image_url"] = image_url
 
-    if len(database_attrs) > 0:
+    if len(database_attrs) > 0 or len(database_config) > 2:
         update_config_file(database_config, data_source=True)
     else:
         search_omero_app.logger.info(
