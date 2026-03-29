@@ -36,6 +36,7 @@ tzdata==2025.2
 update==0.0.1
 urllib3==2.6.3
 watchdog==6.0.0
+##sentence-transformers==4.1.0
 fastparquet==2024.11.0
 Werkzeug==3.1.5
 celery==5.5.3
