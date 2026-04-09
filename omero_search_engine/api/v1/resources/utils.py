@@ -1867,7 +1867,8 @@ def change_es_maximum_results_rows():
 
 
 # /data/data_dump/idr/csv_bff
-def get_bff_csv_file_data(container_type, container_name, file_type, data_source):
+# /data/data_dump/idr/json
+def get_file_data(container_type, container_name, file_type, data_source):
     if container_name:
         container_name = container_name.strip()
     if not data_source:
@@ -1877,15 +1878,23 @@ def get_bff_csv_file_data(container_type, container_name, file_type, data_source
     if container_type:
         container_type = container_type.strip()
     if container_type.lower() == "project":
-        file_path = f"{data_source}/csv_bff/projects/{container_name}"
+        if file_type in ["csv", "parquet"]:
+            file_path = f"{data_source}/csv_bff/projects/{container_name}"
+        elif file_type == "json":
+            file_path = f"{data_source}/json/projects/{container_name}"
     elif container_type.lower() == "screen":
-        file_path = f"{data_source}/csv_bff/screens/{container_name}"
+        if file_type in ["csv", "parquet"]:
+            file_path = f"{data_source}/csv_bff/screens/{container_name}"
+        elif file_type == "json":
+            file_path = f"{data_source}/json/screens/{container_name}"
     else:
         return f"Container type '{container_type}' is not supported"
     if file_type == "csv":
         file_name_ = "%s.csv" % container_name.replace("/", "_")
-    else:
+    elif file_type == "parquet":
         file_name_ = "%s.parquet" % container_name.replace("/", "_")
+    elif file_type == "json":
+        file_name_ = "%s.json" % container_name.replace("/", "_")
     # file_name = os.path.join(file_path, file_name_)
     response = Response()
     response.headers["Content-Type"] = "application/octet-stream"
@@ -1966,3 +1975,48 @@ def write_csv_parquet_from_folder(file_path, file_name, columns=None):
                 append=True,
                 object_encoding="utf8",
             )
+    for file_ in files_list:
+        os.remove(file_)
+
+
+def write_json_from_folder(container_name, container_type, data_source=None):
+    import glob
+
+    data_folder = search_omero_app.config.get("DATA_DUMP_FOLDER")
+    if not data_source:
+        data_source = search_omero_app.config.get("DEFAULT_DATASOURCE")
+    if container_type.lower() == "project":
+        file_path = "%s%s/json/projects/%s" % (
+            data_folder,
+            data_source,
+            container_name,
+        )
+    elif container_type.lower() == "screen":
+        file_path = "%s%s/json/screens/%s" % (
+            data_folder,
+            data_source,
+            container_name,
+        )
+    else:
+        return "Container type '%s' is not supported" % container_type
+    file_name_ = "%s.json" % container_name.replace("/", "_")
+    file_name = os.path.join(file_path, file_name_)
+    if os.path.isfile(file_name):
+        os.remove(file_name)
+
+    files_list = glob.glob("%s/*.json" % file_path)
+    with open(file_name, "w", newline="", encoding="utf-8") as f_out:
+        f_out.write("[")
+        first = True
+        for file_ in files_list:
+            with open(file_) as f:
+                data = json.load(f)
+                for item in data:
+                    if not first:
+                        f_out.write(",")
+                    json.dump(item, f_out)
+                    first = False
+
+        f_out.write("]")
+    for file_ in files_list:
+        os.remove(file_)

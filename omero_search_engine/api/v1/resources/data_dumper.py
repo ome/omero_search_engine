@@ -40,6 +40,7 @@ def dump_data(target_folder, id, resource, over_write, file_format, data_source=
     from omero_search_engine.api.v1.resources.utils import (
         get_working_data_source,
         write_bff_csv_file_data,
+        write_json_from_folder,
     )
 
     main_containers = {"project": [], "screen": []}
@@ -130,6 +131,8 @@ def dump_data(target_folder, id, resource, over_write, file_format, data_source=
             write_bff_csv_file_data(
                 container_type, container_name, data_source, headers
             )
+        else:
+            write_json_from_folder(container_name, container_type, data_source)
         if found:
             break
     combine_sub_containers(main_containers, target_folder)
