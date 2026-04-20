@@ -1,8 +1,8 @@
-An endpoint to return the BioFile Finder (BFF) CSV or Parquet file for a container
+An endpoint to return JSON file or the BioFile Finder (BFF) CSV or Parquet file for a container
 BFF is a tool for filtering, sorting and grouping tabular data.
 ---
 tags:
-  - CSV file for a container, formatted in BFF
+  - JSON file or CSV/Parquet file formatted in BFF for a container
 parameters:
   - name: container_name
     description: The container name
@@ -20,7 +20,7 @@ parameters:
     type: string
     required: false
   - name: file_type
-    description: file typee (csv or parquet)
+    description: file typee (json, csv or parquet)
     in: query
     type: string
     required: true
