@@ -768,6 +768,7 @@ def get_container_data():
 
     return get_file_data(container_type, container_name, file_type.lower(), data_source)
 
+
 def check_query_status(query_id):
     from omero_search_engine.api.v1.resources.asyn_queries.asynchronized_queries import (  # noqa
         check_single_task,
