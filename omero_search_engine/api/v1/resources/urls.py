@@ -768,31 +768,6 @@ def get_container_data():
 
     return get_file_data(container_type, container_name, file_type.lower(), data_source)
 
-
-@resources.route("/container_bff_data/", methods=["GET"])
-def get_container_bff_data():
-    """
-    file: swagger_docs/container_bff_data.yml
-    """
-    supported_file_types = ["csv", "parquet"]
-    container_type = request.args.get("container_type")
-    container_name = request.args.get("container_name")  #
-    data_source = request.args.get("data_source")
-    file_type = request.args.get("file_type")
-    if not file_type:
-        file_type = "parquet"
-    if file_type:
-        file_type = file_type.strip()
-        if file_type.lower() not in supported_file_types:
-            return "File type '%s' is not supported" % file_type
-
-    if not container_name or not container_type:
-        return "Both container type and name are required attributes."
-    from utils import get_file_data
-
-    return get_file_data(container_type, container_name, file_type.lower(), data_source)
-
-
 def check_query_status(query_id):
     from omero_search_engine.api.v1.resources.asyn_queries.asynchronized_queries import (  # noqa
         check_single_task,
