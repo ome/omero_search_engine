@@ -597,11 +597,9 @@ def search_query(
         return ress
     except Exception as ex:
         search_omero_app.logger.info("Error: " + str(ex))
-        return {
-            "Error": "Something went wrong, please try later.\
+        return {"Error": "Something went wrong, please try later.\
             If you have this error again, please contact the\
-            system administrator."
-        }
+            system administrator."}
 
 
 def combine_conditions(curnt_cond, new_cond, resource):
