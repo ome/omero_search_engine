@@ -20,7 +20,6 @@
 import sys
 from utils import query_the_search_ending, logging
 
-
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 query_1 = {

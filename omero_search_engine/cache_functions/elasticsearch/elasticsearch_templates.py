@@ -23,6 +23,7 @@ It is derived from some Omero tables depending on the resource.
 For example for the project, it combines project,
 projectannotationlink and annotation_mapvalue.
 """
+
 non_image_template = {
     "settings": {
         "analysis": {

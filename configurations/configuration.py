@@ -22,7 +22,6 @@ from shutil import copyfile
 import os
 import json
 
-
 images_urls = ["image_url", "image_webclient_url", "thumb_url"]
 
 
