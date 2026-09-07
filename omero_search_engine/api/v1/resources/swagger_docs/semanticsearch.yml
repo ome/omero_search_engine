@@ -1,0 +1,16 @@
+A search engine endpoint enables the user to perform a semantic search, example of quert text is: 'Provide me with images related to cancer'.
+---
+tags:
+  - semantic search
+parameters:
+  - name: query_text
+    in: query
+    type: string
+    required: True
+    description: Query term to be used in the search,
+
+responses:
+  200:
+    description: A JSON containing the search results
+    examples:
+      results: []
