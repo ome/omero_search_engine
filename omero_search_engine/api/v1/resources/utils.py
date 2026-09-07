@@ -1789,17 +1789,19 @@ def query_vector(data_source, query_text):
                     hit["_source"]["Attribute"],
                     hit["_source"]["Value"],
                 ),
-                "gallery url":"%s/search/?key=%s&value=%s&operator=equals"
-                %(
-                    base_url.replace("/searchengine//api/v1/resources/",""),
+                "gallery url": "%s/search/?key=%s&value=%s&operator=equals"
+                % (
+                    base_url.replace("/searchengine//api/v1/resources/", ""),
                     hit["_source"]["Attribute"],
                     hit["_source"]["Value"],
-                              )
+                ),
             }
         )
     return query_results
-#http://134.36.7.74/search/?key=Organism&value=homo+sapiens&operator=equals
-#http://134.36.5.37/searchengine//api/v1/resources/
+
+
+# http://134.36.7.74/search/?key=Organism&value=homo+sapiens&operator=equals
+# http://134.36.5.37/searchengine//api/v1/resources/
 def write_bff(results, file_name=None, return_contents=False, save_parquer=True):
     import pandas as pd
 
