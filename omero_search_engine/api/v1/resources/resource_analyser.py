@@ -30,71 +30,56 @@ from omero_search_engine.api.v1.resources.utils import (
 import math
 from flask import jsonify, Response
 
-key_number_search_template_ = Template(
-    """
+key_number_search_template_ = Template("""
 {"size":0,"aggs":{"value_search":{"nested":{"path":"key_values"},
 "aggs":{"value_filter":{"filter":{"terms":
 {"key_values.name.keyword":["$key"]}},
 "aggs":{"required_values":{"cardinality":
 {"field":"key_values.value.keyvalue","precision_threshold":4000
-}}}}}}}}"""
-)
+}}}}}}}}""")
 
-key_number_search_template = Template(
-    """
+key_number_search_template = Template("""
 {"size":0,"query":{ "bool": {"must": {"match":
 {"data_source.keyvalue":"$data_source"}}}},
 "aggs":{"value_search":{"nested":{"path":"key_values"},"aggs":{"value_filter":{"filter":{"terms":{
 "key_values.name.keyword":["$key"]}},"aggs":{"required_values":{"cardinality":{
-"field":"key_values.value.keyvalue","precision_threshold":4000}}}}}}}}"""
-)
+"field":"key_values.value.keyvalue","precision_threshold":4000}}}}}}}}""")
 
-search_by_value_only = Template(
-    """
+search_by_value_only = Template("""
 {"query":{"bool":{"must":[{"nested":
 {"path":"key_values","query":{"bool":{"must":[{"wildcard":
-{"key_values.value.keyvaluenormalize":"*eLa*"}}]}}}}]}}}"""
-)
+{"key_values.value.keyvaluenormalize":"*eLa*"}}]}}}}]}}}""")
 
-value_number_search_template = Template(
-    """
+value_number_search_template = Template("""
 {"size": 0,"aggs": {"name_search": {"nested":
 {"path": "key_values"},"aggs": {"value_filter": {"filter": {
 "terms": {"key_values.value.keyvaluenormalize":
 ["$value"]}},"aggs": {"required_name": {"cardinality": {
-"field": "key_values.name.keyword","precision_threshold": 4000}}}}}}}}"""
-)
+"field": "key_values.name.keyword","precision_threshold": 4000}}}}}}}}""")
 
-value_search_template = Template(
-    """
+value_search_template = Template("""
 {"size": 0,"aggs": {"name_search":
 {"nested": {"path": "key_values"},"aggs": {"value_filter": {
 "filter": {"terms": {"key_values.value.keyvaluenormalize":
 ["$value"]}},"aggs": {"required_name": {
-"terms": {"field": "key_values.name.keyword","size": 9999}}}}}}}}"""
-)
+"terms": {"field": "key_values.name.keyword","size": 9999}}}}}}}}""")
 
-value_search_contain_template = Template(
-    """
+value_search_contain_template = Template("""
 {"size": 0,"aggs": {"name_search": {"nested": {"path": "key_values"},
 "aggs": {"value_filter": {"terms":
 {"field":"key_values.value.keyvaluenormalize","include": ".*$value.*"},
 "aggs": {"required_name": {"terms":
-{"field": "key_values.name.keyword","size": 9999}}}}}}}}"""
-)
+{"field": "key_values.name.keyword","size": 9999}}}}}}}}""")
 
-key_search_template = Template(
-    """
+key_search_template = Template("""
 {"size": 0,"aggs": {"name_search": {"nested": {"path": "key_values"},
 "aggs": {"value_filter": {
 "filter": {"terms": {"key_values.name.keyword": ["$key"]}},
 "aggs": {"required_values": {
 "terms": {"field": "key_values.value.keyvaluenormalize",
-"size": 9999}}}}}}}}"""
-)
+"size": 9999}}}}}}}}""")
 
-values_for_key_template = Template(
-    """
+values_for_key_template = Template("""
 {"size":0, "query":{ "bool" : {"must": {"match":{
 "data_source.keyvalue":"$data_source"}}}},
 "aggs":{"name_search":{"nested":{ "path":"key_values"},
@@ -102,8 +87,7 @@ values_for_key_template = Template(
 "terms":{"key_values.name.keyword":["$key"]}},"aggs":{"required_values":{
 "terms":{"field":"key_values.value.keyvaluenormalize",
 "include": {"partition": "$cur","num_partitions": "$total"},
-"size":10000 }}}}}}}}"""
-)
+"size":10000 }}}}}}}}""")
 
 
 def search_index_for_value(e_index, query, get_size=False):
@@ -160,11 +144,8 @@ def search_index_for_values_get_all_buckets(e_index, query):
         returened_results.append(res)
         co += page_size
         if len(res["hits"]["hits"]) == 0:
-            search_omero_app.logger.info(
-                "No result is found in the final\
-                loop: %s for size %s"
-                % (co, size)
-            )
+            search_omero_app.logger.info("No result is found in the final\
+                loop: %s for size %s" % (co, size))
             return returened_results
         bookmark = [
             int(res["hits"]["hits"][-1]["sort"][0]),
@@ -580,16 +561,14 @@ def search_value_for_resource(
 """
 Search using key and resource
 """
-key_values_buckets_template = Template(
-    """
+key_values_buckets_template = Template("""
 {
 "query":{"bool":{"must":[{"bool":{
 "must":{"match":{"Attribute.keynamenormalize":"$name"}}}},{"bool":{"must":{
 "match":{"resource.keyresource":"$resource"}}}
 },{"bool":{"must":{"terms":{"data_source.keyvalue":$data_source}
 }}}]}}}
-"""
-)
+""")
 
 """
 Search using key, part of the value and resource
@@ -607,42 +586,34 @@ key_part_values_buckets_template = Template(
 # "fields": ["Attribute","Value","items_in_the_bucket",
 # "total_items_in_saved_buckets","total_buckets","total_items"],
 # "_source": false,
-ss = Template(
-    """
+ss = Template("""
 {"query":{"bool":{"must":[{"bool":{
 "must":{"match":{"Attribute.keyname":"$name"}}}},{"bool": {
 "must": {"match": {"resource.keyresource": "$resource"}}}}]}}
-"size": 9999}"""
-)
+"size": 9999}""")
 
 """
 Search using value and resource
 """
-key_values_search_buckets_template = Template(
-    """
+key_values_search_buckets_template = Template("""
 {"query":{"bool":{"must":[{"bool":{
 "must":{"match":{"Value.keyvalue":"$value"}}}},{
-"bool": {"must": {"match":{"resource.keyresource": "$resource"}}}}]}},"size": 9999}"""
-)
+"bool": {"must": {"match":{"resource.keyresource": "$resource"}}}}]}},"size": 9999}""")
 
 """
 Search using value or part of value and return all the posible mathes
 """
 
-value_all_buckets_template = Template(
-    """
+value_all_buckets_template = Template("""
 {"query":{"bool":{"must":[{"bool":{
 "must":{"wildcard":
-{"Value.keyvaluenormalize":"*$value*"}}}}]}},"size": 9999}"""
-)
+{"Value.keyvaluenormalize":"*$value*"}}}}]}},"size": 9999}""")
 
-resource_key_values_buckets_size_template = Template(
-    """
+resource_key_values_buckets_size_template = Template("""
 {"query":{"bool":{"must":[{"bool":{
 "must":{"wildcard":{"Value.keyvaluenormalize":"*$value*"}}}},{"bool":{
 "must":{"terms":{"data_source.keyvalue":$data_source}}}},{
-"bool": {"must": {"match":{"resource.keyresource": "$resource"}}}}]}}}"""
-)
+"bool": {"must": {"match":{"resource.keyresource": "$resource"}}}}]}}}""")
 
 resource_key_values_buckets_template = Template(  # noqa
     """
@@ -697,11 +668,9 @@ def get_resource_attributes(
     return the available attributes for one or all resources
     """
     if mode and mode != "searchterms":
-        return build_error_message(
-            "The mode parameter supports only 'searchterms'\
+        return build_error_message("The mode parameter supports only 'searchterms'\
             to return the common search terms,\
-            you may remove it to return all the keys."
-        )
+            you may remove it to return all the keys.")
     returned_results = []
     if data_source and data_source.lower() != "all":
         data_source = [itm.strip().lower() for itm in data_source.split(",")]
@@ -757,13 +726,11 @@ def get_resource_attributes(
     return returned_results
 
 
-attribute_search_values_template = Template(
-    """
+attribute_search_values_template = Template("""
 {"query":{"bool":{"must":[
 {"bool":{"must":{"match":{"resource.keyresource":"$resource"}}}},
 {"bool": {"must":
-{"match": {"Attribute.keyname":"$name"}}}}]}},"size":9999}"""
-)
+{"match": {"Attribute.keyname":"$name"}}}}]}},"size":9999}""")
 
 
 def get_resource_attribute_search_values(
@@ -1087,8 +1054,7 @@ container_project_keys_template = """
 }},"uniquesTerms": {"terms": {"field":
 "key_values.name.keynamenormalize", "size": 10000}}}}}"""
 
-resource_keys_template = Template(
-    """
+resource_keys_template = Template("""
 {"size":0,"query":{ "bool" : {"must": {"match":{
 "data_source.keyvalue":"$data_source"}}}},
 "aggs":{"value_search":{"nested":{"path":"key_values"},
@@ -1096,8 +1062,7 @@ resource_keys_template = Template(
 "field":"key_values.name.keyword","precision_threshold":4000}}},
 "aggs": {"required_name": {
 "terms": {"field": "key_values.name.keyword","size": 9999}}}}}}
-"""
-)
+""")
 
 
 def get_resource_keys(resource, data_source):
@@ -1112,8 +1077,7 @@ def get_resource_keys(resource, data_source):
 # Return sub container using a container attribute
 # for example get the number of sub-containers e.g. datasets names,
 # inside a container, e.g. project using name.
-container_returned_sub_container_template = Template(
-    """
+container_returned_sub_container_template = Template("""
     {
    "values":{
       "filter":{
@@ -1139,8 +1103,7 @@ container_returned_sub_container_template = Template(
       }
    }
 }
-"""
-)
+""")
 
 
 def get_containers_no_images(
