@@ -21,7 +21,6 @@ import time
 
 from omero_search_engine.api.v1.resources.asyn_queries.make_celery import make_celery
 
-
 celery_app, app_config = make_celery("clean_query_files")
 
 
