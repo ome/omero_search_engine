@@ -41,7 +41,11 @@ project.name as project_name, project.id as project_id,
 dataset.name as dataset_name, dataset.id as dataset_id,
 screen.id as screen_id, screen.name as screen_name,
 plate.id as plate_id, plate.name as plate_name,
-well.id as well_id,wellsample.id as wellsample_id
+well.id as well_id,wellsample.id as wellsample_id,
+annotation.textvalue as annotation_text_value,
+annotation.discriminator as discriminator,
+annotation.file as annotation_file,
+annotation.description as annotation_description
 from image
 left join imageannotationlink on image.id =imageannotationlink.parent
 left join annotation_mapvalue on
@@ -55,12 +59,14 @@ left join well on wellsample.well= well.id
 left join plate on well.plate=plate.id
 left join screenplatelink on plate.id=screenplatelink.child
 left join screen on screen.id=screenplatelink.parent
+left join annotation ON imageannotationlink.child = annotation.id
 $whereclause
 GROUP BY image.id, annotation_mapvalue.index,
 annotation_mapvalue.name, annotation_mapvalue.value,
 annotation_mapvalue.index, project.name, project.id,
 dataset.name, dataset.id, screen.id, screen.name,
-plate.id, plate.name, well.id,wellsample.id"""
+plate.id, plate.name, well.id,wellsample.id,annotation.textvalue,
+annotation.discriminator,annotation.file,annotation.description"""
 )
 
 images_sql_to_csv = (
@@ -95,14 +101,22 @@ project_sql = Template(
 select project.id, project.owner_id, project.group_id, project.description,
 project.name as name, annotation_mapvalue.name as mapvalue_name,
 annotation_mapvalue.value as mapvalue_value,
-annotation_mapvalue.index as mapvalue_index
+annotation_mapvalue.index as mapvalue_index,
+annotation.textvalue as annotation_text_value,
+annotation.discriminator as discriminator,
+annotation.file as annotation_file,
+annotation.description as annotation_description
 from project
 left join projectannotationlink on project.id =projectannotationlink.parent
 left join annotation_mapvalue on
 annotation_mapvalue.annotation_id=projectannotationlink.child
+left join annotation ON projectannotationlink.child = annotation.id
 $whereclause
 GROUP BY project.id, annotation_mapvalue.index,
-annotation_mapvalue.name, annotation_mapvalue.value"""
+annotation_mapvalue.name, annotation_mapvalue.value,
+annotation.textvalue,
+annotation.discriminator,
+annotation.file,annotation.description"""
 )
 
 project_sql_to_csv = """
@@ -117,13 +131,21 @@ select screen.id, screen.owner_id, screen.group_id,
 screen.name as name,screen.description,
 annotation_mapvalue.name as mapvalue_name,
 annotation_mapvalue.value as mapvalue_value,
-annotation_mapvalue.index as mapvalue_index from screen
+annotation_mapvalue.index as mapvalue_index,
+annotation.textvalue as annotation_text_value,
+annotation.discriminator as discriminator,
+annotation.file as annotation_file,
+annotation.description as annotation_description
+from screen
 left join screenannotationlink on screen.id =screenannotationlink.parent
 left join annotation_mapvalue on
 annotation_mapvalue.annotation_id=screenannotationlink.child
+left join annotation ON screenannotationlink.child = annotation.id
 $whereclause
 GROUP BY screen.id, annotation_mapvalue.index,
-annotation_mapvalue.name, annotation_mapvalue.value"""
+annotation_mapvalue.name, annotation_mapvalue.value,
+annotation.textvalue, annotation.discriminator,
+annotation.file,annotation.description"""
 )
 
 screen_sql_to_csv = """

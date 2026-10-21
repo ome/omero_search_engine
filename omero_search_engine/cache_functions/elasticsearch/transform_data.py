@@ -221,6 +221,8 @@ def prepare_images_data(data, data_source, doc_type):
         "well_id",
         "wellsample_id",
         "image_size",
+        "discriminator",
+        "annotation_text_value",
     ]
     image_webclient_url, image_url, thumb_url = get_image_urls(data_source)
     total = len(data.index)
@@ -247,23 +249,37 @@ def prepare_images_data(data, data_source, doc_type):
                 row_to_insert["thumb_url"] = thumb_url % row["id"]
             row_to_insert["doc_type"] = doc_type
             for rcd in data_record:
-                if rcd in ["mapvalue_name", "mapvalue_value"]:
+                if rcd in [
+                    "mapvalue_name",
+                    "mapvalue_value",
+                    "discriminator",
+                    "annotation_text_value",
+                ]:
                     continue
                 elif rcd == "data_source":
                     row_to_insert[rcd] = data_source
                 else:
                     row_to_insert[rcd] = row.get(rcd)
-
             row_to_insert["key_values"] = []
             data_to_be_inserted[row["id"]] = row_to_insert
         key_value = row_to_insert["key_values"]
-        key_value.append(
-            {
-                "name": row["mapvalue_name"],
-                "value": row["mapvalue_value"],
-                "index": row["mapvalue_index"],
-            }
-        )
+        if row.get("mapvalue_name"):
+            key_value.append(
+                {
+                    "name": row["mapvalue_name"],
+                    "value": row["mapvalue_value"],
+                    "index": row["mapvalue_index"],
+                }
+            )
+        if row.get("discriminator") and row.get("annotation_text_value"):
+            if row.get("discriminator") == "/basic/text/tag/":
+                key_value.append(
+                    {
+                        "name": row["discriminator"].split("/")[-2],
+                        "value": row["annotation_text_value"],
+                        "index": 0,
+                    }
+                )
 
     return data_to_be_inserted
 
@@ -278,12 +294,16 @@ def prepare_data(data, data_source, doc_type):
         "description",
         "mapvalue_name",
         "mapvalue_value",
+        "discriminator",
+        "annotation_text_value",
     ]
     total = len(data.index)
     counter = 0
     data_to_be_inserted = {}
+    annotation_added = {}
     for index, row in data.iterrows():
         counter += 1
+        annotatios = {}
         if counter % 100000 == 0:
             search_omero_app.logger.info(
                 "Process:\
@@ -298,7 +318,12 @@ def prepare_data(data, data_source, doc_type):
             row_to_insert = {}
             row_to_insert["doc_type"] = doc_type
             for rcd in data_record:
-                if rcd in ["mapvalue_name", "mapvalue_value"]:
+                if rcd in [
+                    "mapvalue_name",
+                    "mapvalue_value",
+                    "discriminator",
+                    "annotation_text_value",
+                ]:
                     continue
                 elif rcd == "data_source":
                     row_to_insert[rcd] = data_source
@@ -315,6 +340,16 @@ def prepare_data(data, data_source, doc_type):
                     "index": row.get("mapvalue_index"),
                 }
             )
+        if row.get("discriminator") and row.get("annotation_text_value"):
+            if row.get("discriminator") == "/basic/text/tag/":
+                key_value.append(
+                    {
+                        "name": row["discriminator"].split("/")[-2],
+                        "value": row["annotation_text_value"],
+                        "index": 0,
+                    }
+                )
+            annotation_added[row["id"]] = annotatios
 
     return data_to_be_inserted
 
