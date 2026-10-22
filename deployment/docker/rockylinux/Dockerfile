@@ -20,9 +20,9 @@ RUN cd /searchengine
 RUN mkdir /etc/searchengine
 RUN mkdir /etc/searchengine/chachedata
 RUN mkdir /etc/searchengine/logs
-RUN python3.12 -m pip install --upgrade pip
+RUN python3.12 -m pip install --upgrade "pip>=26.2.2"
 WORKDIR /searchengine
-RUN pip3.12 install -r  requirements.txt
-RUN pip3.12 install gunicorn
+RUN python3.12 -m pip install -r  requirements.txt
+RUN python3.12 -m pip install gunicorn
 EXPOSE 5577
 ENTRYPOINT ["bash", "run_app.sh"]
