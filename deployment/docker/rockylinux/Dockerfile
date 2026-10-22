@@ -20,6 +20,7 @@ RUN cd /searchengine
 RUN mkdir /etc/searchengine
 RUN mkdir /etc/searchengine/chachedata
 RUN mkdir /etc/searchengine/logs
+RUN python3.12 -m pip install --upgrade pip
 WORKDIR /searchengine
 RUN pip3.12 install -r  requirements.txt
 RUN pip3.12 install gunicorn
