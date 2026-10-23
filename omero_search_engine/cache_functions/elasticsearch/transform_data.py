@@ -272,14 +272,13 @@ def prepare_images_data(data, data_source, doc_type):
                 }
             )
         if row.get("discriminator") and row.get("annotation_text_value"):
-            if row.get("discriminator") == "/basic/text/tag/":
-                key_value.append(
-                    {
-                        "name": row["discriminator"].split("/")[-2],
-                        "value": row["annotation_text_value"],
-                        "index": 0,
-                    }
-                )
+            key_value.append(
+                {
+                    "name": row["discriminator"].split("/")[-2],
+                    "value": row["annotation_text_value"],
+                    "index": 0,
+                }
+            )
 
     return data_to_be_inserted
 
@@ -341,14 +340,13 @@ def prepare_data(data, data_source, doc_type):
                 }
             )
         if row.get("discriminator") and row.get("annotation_text_value"):
-            if row.get("discriminator") == "/basic/text/tag/":
-                key_value.append(
-                    {
-                        "name": row["discriminator"].split("/")[-2],
-                        "value": row["annotation_text_value"],
-                        "index": 0,
-                    }
-                )
+            key_value.append(
+                {
+                    "name": row["discriminator"].split("/")[-2],
+                    "value": row["annotation_text_value"],
+                    "index": 0,
+                }
+            )
             annotation_added[row["id"]] = annotatios
 
     return data_to_be_inserted
