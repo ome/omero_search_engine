@@ -91,11 +91,12 @@ Example of using pagination:
     }
 
 }
-
 ---
 tags:
  - Mixed Complex query
-
+security:
+    - bearerAuth: []  # Option 1: Send the JWT token
+    - {}
 parameters:
   - name: return_columns
     description: return additional columns to help display the results in a table

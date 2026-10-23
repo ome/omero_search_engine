@@ -36,6 +36,11 @@ siRNA Pool Identifier
 ---
 tags:
  -  Available keys (attributes) for a resource
+
+security:
+    - bearerAuth: []  # Option 1: Send the JWT token
+    - {}
+
 parameters:
   - name: resource_table
     in: path

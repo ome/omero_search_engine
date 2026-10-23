@@ -1,0 +1,23 @@
+Verify token from JWT
+---
+openapi: 3.0.3
+info:
+  title: Fixed Token API
+  version: 1.0.0
+
+tags:
+ - Verify Token
+
+summary: Test your token
+description: This endpoint requires the Bearer token and custom parameters.
+security:
+    - bearerAuth: []  # Option 1: Send the JWT token
+    - {}
+
+responses:
+  200:
+    description: A JWT token
+    examples:
+      results: []
+#eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJvbWVuYW1lIjoidXNlci00OSIsImV4cCI6MTc4NzMyNDQ0MCwiaXNfYWRtaW4iOmZhbHNlLCJzZXNzaW9uX2lkIjoiNjE5ZDAwYzMtYWE0My00NjQ1LThmMjUtODYzZmRmMzE1YzViIiwic2Vzc2lvbklkIjoxNzYyNzAsInVzZXJfaWQiOjgwOSwiZ3JvdXBzIjp7IjYiOnsibmFtZSI6IkxhYjMifSwiMyI6eyJuYW1lIjoiTGFiNCJ9LCI1Ijp7Im5hbWUiOiJMYWIxIn0sIjQiOnsibmFtZSI6IkxhYjIifX19.2w4LX-t7Z59BInl_i5TvYquyLguy1weba9qhkgMS0FA"
+

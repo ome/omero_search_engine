@@ -41,6 +41,9 @@ The results should contain buckets like this:
 ---
 tags:
  - Return available key values with a search result for a specific container
+security:
+    - bearerAuth: []  # Option 1: Send the JWT token
+    - {}
 parameters:
   - name: resource_table
     in: path

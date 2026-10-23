@@ -4,6 +4,9 @@ It returns a JSON string containing the results.
 ---
 tags:
  - Search for any value
+security:
+    - bearerAuth: []  # Option 1: Send the JWT token
+    - {}
 parameters:
   - name: resource_table
     in: path

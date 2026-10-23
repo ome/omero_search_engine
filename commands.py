@@ -231,6 +231,13 @@ def backup_elasticsearch_data():
 @click.option("-t", "--thumb_url", default=None, help="thumb url")
 @click.option("-c", "--image_webclient_url", default=None, help="image webclient url")
 @click.option("-i", "--image_url", default=None, help="image url")
+@click.option(
+    "-o", "--ome_public_user_name", default=None, help="omero public username"
+)
+@click.option("-m", "--me_user_password", default=None, help="omero public username")
+@click.option(
+    "-c", "--conf_is_public", default=True, help="public datasource if set to true"
+)
 def set_database_configuration(
     working_data_source,
     url,
@@ -242,6 +249,9 @@ def set_database_configuration(
     image_webclient_url,
     thumb_url,
     image_url,
+    conf_is_public,
+    ome_public_user_name,
+    me_user_password,
 ):
     if not working_data_source:
         print("Data source is required to process")
@@ -267,7 +277,12 @@ def set_database_configuration(
         database_config["thumb_url"] = thumb_url
     if image_url:
         database_config["image_url"] = image_url
-
+    if ome_public_user_name and me_user_password:
+        database_config["public_username"] = ome_public_user_name
+        database_config["public_user_password"] = me_user_password
+    if type(conf_is_public) is bool:
+        print(conf_is_public)
+        database_config["public"] = conf_is_public
     if len(database_attrs) > 0 or len(database_config) > 2:
         update_config_file(database_config, data_source=True)
     else:
@@ -332,6 +347,12 @@ def set_queries_folder(queries_folder):
     help="path to a file containing the screens data",
 )
 @click.option(
+    "-p",
+    "--public",
+    default=True,
+    help="public datasource if set to true",
+)
+@click.option(
     "-o", "--origin_type", default=None, help="data source origin  type; supports CSV"
 )
 def set_data_source_files(
@@ -340,6 +361,7 @@ def set_data_source_files(
     projects_file,
     screens_file,
     origin_type,
+    public,
 ):
     source = {}
     if not name:
@@ -355,6 +377,7 @@ def set_data_source_files(
         source_attrs["projects_file"] = projects_file
     if screens_file:
         source_attrs["screens_file"] = screens_file
+    source["public"] = public
 
     update_config_file(source, True)
 
@@ -971,3 +994,17 @@ def set_MAX_PAGE_SIZE(max_page_size):
         update_config_file({"MAX_PAGE_SIZE": int(max_page_size)})
     except Exception as ex:
         print(f"MAX_PAGE_SIZE value has to integer value, error: {ex}")
+
+
+@search_omero_app.cli.command("set_JWT_expire_time")
+@click.option(
+    "-j",
+    "--jwt_expire_time",
+    default=120,
+    help="set expire time for JWT (minutes)",
+)
+def set_JWT_expire_time(jwt_expire_time):
+    try:
+        update_config_file({"JWT_EXPIRE_TIME": jwt_expire_time})
+    except Exception as ex:
+        print(f"expire_time for the JWT value  error: {ex}")

@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from flask import Flask, make_response, request
+from flask import Flask, make_response, request, g, jsonify
 import os
 import logging
 from elasticsearch import Elasticsearch
@@ -58,6 +58,7 @@ search_omero_app = Flask(__name__)
 search_omero_app.json_encoder = LazyJSONEncoder
 
 search_omero_app.config["SWAGGER"] = {
+    # "openapi": "3.0.3",
     "title": "IDR searcher API",
     "version": str(__version__),
     "description": LazyString(
@@ -66,9 +67,31 @@ search_omero_app.config["SWAGGER"] = {
         "For additional details, please refer to the following link:\n"
         "https://github.com/ome/omero_search_engine/blob/main/README.rst"
     ),
+    #############
+    "securityDefinitions": {
+        "bearerAuth": {
+            "type": "apiKey",
+            "name": "Authorization",  # 👈 Tells it which header to populate
+            "in": "header",
+            "description": "Enter your token with the prefix: Bearer <your_jwt>",
+        }
+    },
+    ##############
     "termsOfService": "https://github.com/ome/omero_search_engine/blob/main/LICENSE.txt",  # noqa
 }
 
+"""
+     "components": {
+        "securitySchemes": {
+            "bearerAuth": {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "JWT"
+            }
+        }
+    },
+
+    """
 swagger = Swagger(search_omero_app, template=template)
 
 app_config = load_configuration_variables_from_file(config_)
@@ -192,6 +215,75 @@ search_omero_app.register_blueprint(
     resources_routers_blueprint_v1, url_prefix="/api/v1/resources"
 )
 
+from omero_search_engine.api.auth import (  # noqa
+    auth_resources as resources_auth,
+)
+
+search_omero_app.register_blueprint(resources_auth, url_prefix="/auth")
+
+
+# 12439
+@search_omero_app.before_request
+def before_request():
+    from omero_search_engine.api.auth.utils import (
+        get_jwt_from_request,
+        is_datasource_public,
+        check_for_public_user,
+        combine_tokens,
+    )
+    from omero_search_engine.api.v1.resources.utils import get_working_data_source
+
+    # do not check for a token in case of login function
+    exempt_path = [
+        "/auth/login",
+        "/data_sources/",
+        "/apidocs/",
+        "/favicon.ico",
+        "/flasgger_static",
+        "/apispec_1.json",
+        "/check_query_job",
+        "/searchengine/auth/login",
+        "/searchengine/data_sources/",
+        "/searchengine/apidocs/",
+        "/searchengine/favicon.ico",
+        "/searchengine/flasgger_static",
+        "/searchengine/apispec_1.json",
+        "/searchengine/check_query_job",
+    ]
+    for path in exempt_path:
+        if request.path.__contains__(path):
+            return
+
+    # Extract the token from the Authorization header
+    data_source = get_working_data_source(request.args.get("data_source"))
+    if not is_datasource_public(data_source):
+        token = get_jwt_from_request()
+        public_token = check_for_public_user(data_source)
+        token = combine_tokens(token, public_token, data_source)
+        print("TOKEN IS %s" % token)
+        g.token = token
+        if (
+            not token
+            or not token.get(data_source)
+            or not token.get(data_source).get("is_valid")
+        ):
+            # Returning a value here immediately in case of private datasource
+            # and there is no token is provided
+            # aborts the request and responds to the user
+            return (
+                jsonify(
+                    {
+                        "status": "error",
+                        "message": "Data source is private, request.path is: %s"
+                        "please provide JWT token." % request.path,
+                    }
+                ),
+                401,
+            )
+        # Unauthorized status code
+
+    return None
+
 
 # add it to account for CORS
 @search_omero_app.after_request
@@ -217,5 +309,4 @@ def page_not_found(error):
 
 
 if __name__ == "__main__":
-    print("hi")
     create_app()

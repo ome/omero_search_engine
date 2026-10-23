@@ -18,7 +18,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from . import resources
-from flask import request, jsonify, make_response
+from flask import request, jsonify, make_response, g
+from omero_search_engine.api.v1.resources.utils import is_datasource_public
 
 import json
 from omero_search_engine.api.v1.resources.utils import (
@@ -29,6 +30,7 @@ from omero_search_engine.api.v1.resources.utils import (
     # check_empty_string,
     search_resource_annotation_return_containers_only,
     get_working_data_source,
+    is_authorized,
 )
 from omero_search_engine.api.v1.resources.resource_analyser import (
     search_value_for_resource,
@@ -50,6 +52,8 @@ from omero_search_engine.api.v1.resources.query_handler import (
     query_validator,
 )
 
+# from ...auth.utils import get_jwt_from_request, isd datasource_public
+
 
 @resources.route("/", methods=["GET"])
 def index():
@@ -64,7 +68,19 @@ def return_data_resources():
     """
     used to return the available data resources
     """
-    return jsonify(get_data_sources())
+    data_sources = get_data_sources()
+    datasources = {}
+    for ds in data_sources:
+        if not is_datasource_public(ds):
+            public = False
+            if is_authorized(ds):
+                public = False
+            else:
+                continue
+        else:
+            public = True
+        datasources[ds] = {"Public": public}
+    return jsonify(datasources)
 
 
 @resources.route("/<resource_table>/searchannotation_page/", methods=["POST"])
@@ -99,7 +115,7 @@ def search_resource_page(resource_table):
         validation_results = query_validator(query)
         if validation_results == "OK":
             bookmark = data.get("bookmark")
-            raw_elasticsearch_query = data.get("raw_elasticsearch_query")
+            raw_elasticsearch_query = None  # data.get("raw_elasticsearch_query")
             pagination_dict = data.get("pagination")
             return_containers = data.get("return_containers")
             data_source = get_working_data_source(request.args.get("data_source"))
@@ -513,6 +529,10 @@ def search(resource_table):
     """
     file: swagger_docs/search.yml
     """
+    from omero_search_engine import search_omero_app
+
+    data_source = get_working_data_source(request.args.get("data_source"))
+    search_omero_app.config.get("PAGE_SIZE")
     key = request.args.get("key")
     asynchronize_run = request.args.get("asynchronize_run")
     value = request.args.get("value")
@@ -521,9 +541,7 @@ def search(resource_table):
     case_sensitive = request.args.get("case_sensitive")
     operator = request.args.get("operator")
     bookmark = request.args.get("bookmark")
-    data_source = get_working_data_source(request.args.get("data_source"))
     random_results = request.args.get("random_results")
-    from omero_search_engine import search_omero_app
 
     # get the original page size
     page_size = search_omero_app.config.get("PAGE_SIZE")
@@ -638,6 +656,13 @@ def container_images():
     file: swagger_docs/container_images.yml
     """
     data_source = get_working_data_source(request.args.get("data_source"))
+    if not is_datasource_public(data_source):
+        token = getattr(g, "token", None).get(data_source)
+        if not token or not token["is_valid"] or not token["is_admin"]:
+            return build_error_message(
+                "Data source is private, "
+                "Admin only can access this url, please provide an authorization token"
+            )
     return return_containers_images(data_source)
 
 
@@ -673,6 +698,7 @@ def sub_container_images():
     """
     file: swagger_docs/sub_container_images.yml
     """
+    from omero_search_engine import search_omero_app
     from omero_search_engine.api.v1.resources.resource_analyser import (
         get_containers_no_images,
     )
@@ -684,12 +710,12 @@ def sub_container_images():
         )
     data = request.data
     data_source = get_working_data_source(request.args.get("data_source"))
-
     query = {}
     if data:
         try:
             data = json.loads(data)
-        except Exception:
+        except Exception as e:
+            search_omero_app.logger.info("Error : %s" % str(e))
             return jsonify(
                 build_error_message(
                     "{error}".format(error="No proper query data provided.")
@@ -750,10 +776,19 @@ def get_container_data():
     """
     file: swagger_docs/container_data.yml
     """
+
     supported_file_types = ["csv", "parquet", "json"]
     container_type = request.args.get("container_type")
     container_name = request.args.get("container_name")  #
     data_source = request.args.get("data_source")
+
+    if not is_datasource_public(data_source):
+        token = getattr(g, "token", None).get("data_source")
+        if not token or not token["is_valid"] or not token["is_admin"]:
+            return build_error_message(
+                "Data source is private, "
+                "Admin only can access this url, please provide an authorization token"
+            )
     file_type = request.args.get("file_type")
     if not file_type:
         file_type = "parquet"

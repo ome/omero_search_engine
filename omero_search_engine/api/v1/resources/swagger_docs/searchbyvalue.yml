@@ -2,7 +2,9 @@ An endpoint to search by value only (no key is provided), for example, find all 
 ---
 tags:
  - Search by value
-
+security:
+    - bearerAuth: []  # Option 1: Send the JWT token
+    - {}
 parameters:
   - name: resource_table
     in: path

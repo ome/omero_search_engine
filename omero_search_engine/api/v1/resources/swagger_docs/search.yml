@@ -3,6 +3,9 @@ An endpoint to process a simple query (single query), for example, find all the 
 tags:
  - Single query
 
+security:
+    - bearerAuth: []  # Option 1: Send the JWT token
+    - {}
 parameters:
   - name: resource_table
     in: path

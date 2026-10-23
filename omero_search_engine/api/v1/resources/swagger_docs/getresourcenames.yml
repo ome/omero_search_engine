@@ -2,6 +2,9 @@ Return the container names attributes for a resource. For example, it can return
 ---
 tags:
  - Available names for a resource
+security:
+    - bearerAuth: []  # Option 1: Send the JWT token
+    - {}
 parameters:
   - name: resource_table
     in: path

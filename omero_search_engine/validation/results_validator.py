@@ -421,6 +421,9 @@ class Validator(object):
             searchengine_results = determine_search_results_(
                 query_data, data_source=self.data_source
             )
+            if searchengine_results.get("results") == "Non valid token":
+                raise Exception(searchengine_results.get("results"))
+
             if searchengine_results.get("results"):
                 size = searchengine_results.get("results").get("size")
                 ids = [
@@ -591,9 +594,9 @@ class Validator(object):
         Get and compare the results between the database and the searchengine
         """
         st_time = datetime.now()
-        self.get_results_db(operator)
-        st2_time = datetime.now()
         self.get_results_searchengine(operator)
+        st2_time = datetime.now()
+        self.get_results_db(operator)
         st3_time = datetime.now()
         sql_time = st2_time - st_time
         searchengine_time = st3_time - st2_time
@@ -1347,7 +1350,7 @@ def check_container_keys_vakues():
 
 
 def test_csv_data_sources(data_source="test_csv"):
-    from unit_tests.queries_tests.test_data import csv_test_data
+    from unit_tests.test_data import csv_test_data
 
     is_valid = True
     for data in csv_test_data:

@@ -2,6 +2,9 @@ An endpoint to return the available values for a key in specific container
 ---
 tags:
   - Available values for a key in specific container
+security:
+    - bearerAuth: []  # Option 1: Send the JWT token
+    - {}
 parameters:
   - name: resource_table
     in: path

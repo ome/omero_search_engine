@@ -36,6 +36,9 @@ The following are the most common attributes for each resource
  ---
 tags:
  -  Available values for a resource key (attribute)
+security:
+    - bearerAuth: []  # Option 1: Send the JWT token
+    - {}
 parameters:
   - name: resource_table
     in: path

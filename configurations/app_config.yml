@@ -1,5 +1,5 @@
 CACHE_FOLDER : "path/to/folder/app_data"
-SECRET_KEY : "fsdasdh3424vvcsd467fgh"
+SECRET_KEY: "replace_With_your_key"
 ASYNCHRONOUS_SEARCH : True
 ELASTICSEARCH_URL : "https://localhost:9200"
 IDR_TEST_FILE_URL : "https://raw.githubusercontent.com/IDR/idr.openmicroscopy.org/master/_data/studies.tsv"
@@ -21,3 +21,7 @@ QUERIES_FOLDER: path/to/queries/folder
 QUERIES_TTL: 7
 MAX_RESULTS_FOR_ASYNC_QUERY: 2000000
 MAX_PAGE_SIZE: 10000
+OMERO_URL: "127.0.0.1"
+OMERO_PORT: 4064
+#JWT expire time in minutes
+JWT_expire_time: 120

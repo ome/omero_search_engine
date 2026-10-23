@@ -35,6 +35,10 @@ The following example query can be used to explore this endpoint
 tags:
  - Async Mixed Complex query
 
+security:
+    - bearerAuth: []  # Option 1: Send the JWT token
+    - {}
+
 parameters:
   - name: data
     in: body

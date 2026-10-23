@@ -2,6 +2,9 @@ Get the available values for a key (attribute) for a resource, for example, it c
 ---
 tags:
  - Available values for a resource key (attribute)
+security:
+    - bearerAuth: []  # Option 1: Send the JWT token
+    - {}
 parameters:
   - name: resource_table
     in: path

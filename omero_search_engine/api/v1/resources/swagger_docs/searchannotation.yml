@@ -27,6 +27,9 @@
 ---
 tags:
  - Build a complex search
+security:
+    - bearerAuth: []  # Option 1: Send the JWT token
+    - {}
 parameters:
   - name: resource_table
     in: path

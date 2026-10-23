@@ -71,7 +71,7 @@ def get_query_file_name(job_id):
 
 
 @celery_app.task(bind=True, queue="queries")
-def add_query(self, query, data_source, submit_query=False):
+def add_query(self, query, data_source, submit_query=False, token=None):
     load_the_app_config()
     task_id = self.request.id
 
