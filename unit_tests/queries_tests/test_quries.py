@@ -289,6 +289,7 @@ class BasicTestCase(unittest.TestCase):
                 validator = Validator(data_source, deep_check)
                 validator.set_simple_query("image", None, part, type="buckets")
                 validator.compare_results()
+                print ("Checking %s"%part)
                 self.assertEqual(
                     len(validator.postgres_results),
                     validator.searchengine_results.get("total_number_of_buckets"),
