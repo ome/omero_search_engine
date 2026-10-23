@@ -21,6 +21,7 @@ RUN mkdir /etc/searchengine
 RUN mkdir /etc/searchengine/chachedata
 RUN mkdir /etc/searchengine/logs
 RUN python3.12 -m pip install --upgrade "pip>=26.2.2"
+RUN python3.12 -m pip install --upgrade "certifi>=2026.10.19"
 WORKDIR /searchengine
 RUN python3.12 -m pip install -r  requirements.txt
 RUN python3.12 -m pip install gunicorn
