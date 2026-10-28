@@ -1,0 +1,16 @@
+Login and return JWT, login data is a JSON string, e.g. {"username": "user-name", "password": "omero", "data_source":"datasource"}
+---
+tags:
+ - login
+
+parameters:
+  - name: data
+    description: Json contains OMERO username and password
+    in: body
+    required: true
+
+responses:
+  200:
+    description: A JSON contains the token
+    examples:
+      results: []

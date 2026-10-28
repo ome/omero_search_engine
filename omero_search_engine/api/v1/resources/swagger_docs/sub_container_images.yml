@@ -38,6 +38,9 @@ This will return the dataset inside the project with several images in each, whi
 ---
 tags:
   - Available sub-containers inside a container
+security:
+    - bearerAuth: []  # Option 1: Send the JWT token
+    - {}
 parameters:
   - name: data
     in: body

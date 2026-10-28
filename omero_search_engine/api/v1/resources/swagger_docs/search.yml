@@ -3,11 +3,14 @@ An endpoint to process a simple query (single query), for example, find all the 
 tags:
  - Single query
 
+security:
+    - bearerAuth: []  # Option 1: Send the JWT token
+    - {}
 parameters:
   - name: resource_table
     in: path
     type: string
-    enum: ['image', 'project', 'screen', 'well', 'plate']
+    enum: ['image', 'project', 'dataset', 'screen', 'well', 'plate']
     required: true
   - name: key
     description: the resource attribute

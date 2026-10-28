@@ -4,11 +4,14 @@ It returns a JSON string containing the results.
 ---
 tags:
  - Search for any value
+security:
+    - bearerAuth: []  # Option 1: Send the JWT token
+    - {}
 parameters:
   - name: resource_table
     in: path
     type: string
-    enum: ['image', 'project', 'screen', 'well', 'plate', 'all']
+    enum: ['image', 'project', 'dataset', 'screen', 'well', 'plate', 'all']
     required: true
   - name: value
     description: search term

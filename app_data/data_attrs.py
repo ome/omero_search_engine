@@ -21,6 +21,7 @@ tables = ["projects", "images", "datasets", "plates"]
 annotation_resource_link = {
     "image": "imageannotationlink",
     "project": "projectannotationlink",
+    "dataset": "datasetannotationlink",
     "plate": "plateannotationlink",
     "well": "wellannotationlink",
     "screen": "screenannotationlink",

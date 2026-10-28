@@ -47,7 +47,7 @@ non_image_template = {
             },  # noqa
             "description": {
                 "type": "text",
-                "fields": {"keyvalue": {"type": "keyword"}},
+                "fields": {"keyvalue": {"type": "text"}},
             },  # noqa
             "owner_id": {"type": "long"},
             "group_id": {"type": "long"},
@@ -123,7 +123,7 @@ image_template = {
             },  # noqa
             "description": {
                 "type": "text",
-                "fields": {"keyvalue": {"type": "keyword"}},
+                "fields": {"keyvalue": {"type": "text"}},  # ""keyword"}},
             },  # noqa
             "project_name": {
                 "type": "text",

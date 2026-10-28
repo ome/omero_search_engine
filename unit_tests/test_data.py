@@ -102,9 +102,48 @@ image_owner_group = {"image": [["gene symbol", "cep120", 702, 5]]}
 
 images_keys = ["cell line", "gene symbol"]
 
-images_value_parts = ["he", "pr"]
+images_value_parts = ["hel", "prost"]
 
 csv_test_data = [
     {"key": "organism", "value": "homo sapiens", "no_results": 15756},
     {"key": "gene symbol", "value": "pcnt", "no_results": 1484},
 ]
+
+expired_token_wrong_sign = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJvbWVuYW1lIjoidXNlci00OSIsImV4cCI6MTc4ODM2MzYyMCwiaXNfYWRtaW4iOmZhbHNlLCJzZXNzaW9uX2lkIjoiMjMxZTJjZGEtNzNhMC00YWNjLWExZmUtZGIxZDNjM2JlNzg5Iiwic2Vzc2lvbklkIjoxNzY4NTQsInVzZXJfaWQiOjgwOSwiZ3JvdXBzIjp7IjYiOnsibmFtZSI6IkxhYjMifSwiMyI6eyJuYW1lIjoiTGFiNCJ9LCI1Ijp7Im5hbWUiOiJMYWIxIn0sIjQiOnsibmFtZSI6IkxhYjIifX0sImRhdGFfc291cmNlIjoiaWRyIn0.pNmjqVXfga4hWUK7Qh5pHhkQmxCoqgUSBZcpAcdEmwI"  # noqa
+
+expired_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJvbWVuYW1lIjoidXNlci00OSIsImV4cCI6MTc5MTIzMTA0MSwiaXNfYWRtaW4iOmZhbHNlLCJzZXNzaW9uX2lkIjoiN2E3NTMzOGQtMTAwYi00NWUxLTllNjYtYzhjNGVmMmU3Y2JhIiwic2Vzc2lvbklkIjoxNzY4NTgsInVzZXJfaWQiOjgwOSwiZ3JvdXBzIjp7IjYiOnsibmFtZSI6IkxhYjMifSwiMyI6eyJuYW1lIjoiTGFiNCJ9LCI1Ijp7Im5hbWUiOiJMYWIxIn0sIjQiOnsibmFtZSI6IkxhYjIifX0sImRhdGFfc291cmNlIjoib21lcm9fdHJhaW4ifQ.QQXJCV7XsYJvbO18UIOSOVG5cI6jOO3WLPiGiZu0C6A"  # noqa
+
+omename = "user-49"
+public_user = "user-10"
+data_source = "omero_train"
+user_data = {
+    "is_admin": False,
+    "session_id": "7a75338d-100b-45e1-9e66-c8c4ef2e7cba",
+    "sessionId": 176858,
+    "user_id": 809,
+    "groups": {
+        6: {"name": "Lab3"},
+        3: {"name": "Lab4"},
+        5: {"name": "Lab1"},
+        4: {"name": "Lab2"},
+    },
+    "data_source": data_source,
+}
+
+public_user_data = {
+    "is_admin": False,
+    "session_id": "538d0482-3d6f-4691-873b-af654a740fe9",
+    "sessionId": 177794,
+    "user_id": 13,
+    "groups": {6: {"name": "Lab3"}, 5: {"name": "Lab1"}, 4: {"name": "Lab2"}},
+    "data_source": data_source,
+}
+
+user_2_data = {
+    "is_admin": False,
+    # "is_expired": False,
+    # "is_valid": True,
+    "user_groups": {"153": {"name": "group1"}},
+    "user_id": 252,
+    "data_source": data_source,
+}

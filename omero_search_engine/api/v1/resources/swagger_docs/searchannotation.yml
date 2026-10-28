@@ -27,11 +27,14 @@
 ---
 tags:
  - Build a complex search
+security:
+    - bearerAuth: []  # Option 1: Send the JWT token
+    - {}
 parameters:
   - name: resource_table
     in: path
     type: string
-    enum: ['image', 'project', 'screen', 'well', 'plate']
+    enum: ['image', 'project', 'dataset',  'screen', 'well', 'plate']
     required: true
     default: 'image'
   - name: data

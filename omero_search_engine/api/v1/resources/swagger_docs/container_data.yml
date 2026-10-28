@@ -3,6 +3,10 @@ BFF is a tool for filtering, sorting and grouping tabular data.
 ---
 tags:
   - JSON file or CSV/Parquet file formatted in BFF for a container
+
+security:
+    - bearerAuth: []  # Option 1: Send the JWT token
+    - {}
 parameters:
   - name: container_name
     description: The container name
