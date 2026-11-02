@@ -35,10 +35,8 @@ Get a list of studies which satisfy the following conditions:
 "Imaging Method"="light sheet fluorescence microscopy, spim"
 """
 
-logging.info(
-    "Get a study list for:  (Organism= mus musculus) and \
-    (Imaging Method=light sheet fluorescence microscopy, spim)"
-)
+logging.info("Get a study list for:  (Organism= mus musculus) and \
+    (Imaging Method=light sheet fluorescence microscopy, spim)")
 
 """
 url="%s%s?key=Organism&value=Homo sapiens&return_containers=true"%(base_url,image_search)  # noqa
